@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; }
+::selection { background: #54BCEB55; }
+input:focus, textarea:focus { box-shadow: 0 0 0 3px #0066B326; border-color: #0066B3 !important; }
