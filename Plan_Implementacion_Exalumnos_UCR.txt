@@ -1,0 +1,49 @@
+PLAN DE PROYECTO Y DIVISIÓN DE TAREAS (FUNDACIÓN EXALUMNOS UCR)
+================================================================
+Proyecto: Plataforma Digital para Conectar Exalumnos y Estudiantes UCR
+Equipo: 7 Desarrolladores (4 Backend, 3 Frontend)
+Arquitectura: Monorepo (Frontend en Next.js, Backend en Node/Express + Supabase Postgres)
+
+--- EQUIPO DE BACKEND (4 Personas) ---
+Objetivo: Terminar los motores complejos, ya que la arquitectura base (Controladores, Servicios, Repositorios) de las 12 entidades ya esta modularizada.
+
+Backend Dev 1 (BE1) - Autenticacion y Seguridad
+- Flujo de Auth: Implementar envío y verificación de Magic Links vía correo (ej. Resend o nodemailer).
+- Validación de Estudiantes: Asegurar que el dominio de registro sea estrictamente @ucr.ac.cr.
+- Anti-fraude: Crear API de reportes de perfiles (RF-09). Suspender automáticamente cuentas al recibir 3 reportes.
+- Middlewares: Proteger endpoints asegurando validacion de sesión y nivel de permisos (Admin, Exalumno, Estudiante).
+
+Backend Dev 2 (BE2) - Algoritmo de Matching
+- Motor de Puntuacion (RF-06): Desarrollar el servicio que cruce atributos de exalumnos y estudiantes, calculando el Score (0-100) sumando pesos por: carrera, áreas de interés, sector y tipo de apoyo.
+- Matching Extendida (RF-10): Reutilizar el algoritmo para cruzar el perfil del estudiante con las Posiciones (empleos/pasantías) publicadas.
+- Flujo de Conexion: APIs para iniciar interacciones, aceptar sugerencias, rechazarlas (sin notificar) y cerrarlas.
+
+Backend Dev 3 (BE3) - Inteligencia Artificial (Claude API)
+- API de IA (RF-12): Implementar conexión al LLM Claude (claude-sonnet-4-6).
+- Prompt Engineering: Instruir al bot para actuar como reclutador senior que mejore los CVs para sistemas ATS (verbos de acción, métricas).
+- Streaming de Respuestas: Exponer el endpoint usando Server-Sent Events (SSE) para enviar sugerencias viñeta por viñeta en tiempo real al frontend (< 15 seg).
+- Persistencia de CVs: Guardar en base de datos las diferentes versiones de CV generadas amarradas a cada puesto.
+
+Backend Dev 4 (BE4) - Storage, Donaciones y Admin
+- Integracion Supabase Storage: Crear APIs para subir/descargar comprobantes de pago (PDFs/Imágenes) y fotos de perfil de forma segura.
+- Transacciones (RF-07): Endpoints para iniciar y validar (Admin) donaciones vía SINPE/IBAN.
+- Dashboard Administrativo (RF-08.3): Crear endpoints analíticos complejos (queries pesados) que entreguen: Total donado, distribución por sedes, carreras y nuevos donantes vs recurrentes.
+
+
+--- EQUIPO DE FRONTEND (3 Personas) ---
+Objetivo: Construir interfaces interactivas, consumir la nueva API modularizada y unificar la experiencia del usuario.
+
+Frontend Dev 1 (FE1) - Onboarding y Exploracion de Directorios
+- Registro y Login: Interfaces duales (Exalumno/Estudiante) y pantalla de espera para el Magic Link.
+- Constructores de Perfil: Implementar formularios largos divididos en pasos (Información Personal, Académica, Intereses, Tipo de Apoyo).
+- Tarjetas y Directorios: Construir el Directorio de Estudiantes y de Exalumnos con los paneles de filtros combinables laterales (carrera, sede, interés, etc).
+
+Frontend Dev 2 (FE2) - Core Innovador: CV Builder y Adaptacion IA
+- Editor de CV Estructurado (RF-11): UI para que el estudiante arme su base de datos curricular (listas de experiencia, habilidades, certificaciones).
+- Interfaz Lado-a-Lado (RF-12): Interfaz crítica donde la izquierda muestre el CV original y la derecha vaya pintando (en tiempo real por SSE) lo que redacta la IA.
+- Controles Individuales: Botones dinámicos para Aceptar, Editar o Descartar las sugerencias de la IA, y luego exportar el resultado final.
+
+Frontend Dev 3 (FE3) - Administracion, Transacciones y Módulo de Empleos
+- Panel de Posiciones (RF-13): UI para que los exalumnos publiquen trabajos/pasantías y administren (aceptar/descartar) a los aplicantes ordenados por score.
+- Flujo de Donacion: UX de donación (selección de cuenta bancaria y recuadro de Drag & Drop para arrastrar el comprobante).
+- Dashboard UCR (Admin): Vistas exclusivas con gráficos (usando librerías como Recharts o Chart.js), visor de PDFs incrustado para recibos de donaciones y tablas exportables a CSV.
