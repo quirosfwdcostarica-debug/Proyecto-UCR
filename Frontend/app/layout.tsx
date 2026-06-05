@@ -1,27 +1,31 @@
-import React from "react";
-import "./globals.css";
-import { C, FONT_BODY } from "@/lib/theme";
-import DemoSwitcher from "@/components/DemoSwitcher";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Toaster } from "@/components/ui/toaster"
+import { AppSidebar } from "@/components/layout/AppSidebar"
 
-export const metadata = {
-  title: "Alumni UCR · Fundación Exalumnos de la UCR",
-  description: "Conectamos exalumnos UCR con estudiantes que transforman el futuro.",
-};
+const inter = Inter({ subsets: ["latin"] })
 
-export default function RootLayout({ children }: any) {
+export const metadata: Metadata = {
+  title: "Fundación Exalumnos UCR",
+  description: "Plataforma de mentoría, donaciones y empleo para la comunidad de egresados de la Universidad de Costa Rica.",
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
     <html lang="es">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body style={{ fontFamily: FONT_BODY, color: C.ink, background: C.bg, minHeight: "100vh", margin: 0 }}>
-        {children}
-        <DemoSwitcher />
+      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/30`}>
+        {/* Aquí podemos inyectar un Navbar en un layout superior o directamente aquí */}
+        <div className="relative flex min-h-screen flex-col bg-[#f8fafc]">
+          <AppSidebar />
+          <main className="flex-1 ml-64 flex flex-col">{children}</main>
+        </div>
+        <Toaster />
       </body>
     </html>
-  );
+  )
 }
