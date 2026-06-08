@@ -17,6 +17,16 @@ module.exports = {
     },
     extend: {
       colors: {
+        ucr: {
+          celeste: "#00C0F3",
+          azul1: "#0C344E",
+          azul2: "#02477B",
+          negro: "#000000",
+          blanco: "#FFFFFF",
+          gris1: "#F2F2F2",
+          gris2: "#666666",
+          gris3: "#232323",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -20,3 +20,19 @@ export const exalumnoProfileSchema = z.object({
 
 export type EstudianteProfileFormValues = z.infer<typeof estudianteProfileSchema>;
 export type ExalumnoProfileFormValues = z.infer<typeof exalumnoProfileSchema>;
+
+export const userProfileUpdateSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
+  email: z.string().email("Correo electrónico inválido."),
+  phone: z.string().optional(),
+  image: z.string().url("Debe ser una URL válida.").optional().or(z.literal("")),
+  bio: z.string().max(500, "La biografía no puede exceder 500 caracteres.").optional(),
+  socialLinks: z.object({
+    linkedin: z.string().url("URL inválida").optional().or(z.literal("")),
+    twitter: z.string().url("URL inválida").optional().or(z.literal("")),
+    github: z.string().url("URL inválida").optional().or(z.literal("")),
+    website: z.string().url("URL inválida").optional().or(z.literal(""))
+  }).optional()
+});
+
+export type UserProfileUpdateValues = z.infer<typeof userProfileUpdateSchema>;
