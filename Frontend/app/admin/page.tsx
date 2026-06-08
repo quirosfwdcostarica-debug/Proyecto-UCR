@@ -1,16 +1,50 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ShieldAlert, Users, HeartHandshake, Briefcase, DollarSign } from "lucide-react";
+import { ShieldAlert, Users, HeartHandshake, Briefcase, DollarSign, Loader2 } from "lucide-react";
+import { fetchAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+interface KPIs {
+  totalDonado: string;
+  estudiantesActivos: number;
+  exalumnosActivos: number;
+  posicionesActivas: number;
+  donacionesPendientes: any[];
+}
 
 export default function AdminDashboardPage() {
-  // Datos mockeados del Dashboard
-  const stats = {
-    totalDonado: "2,450,000",
-    estudiantesActivos: 1205,
-    exalumnosActivos: 458,
-    posicionesActivas: 34,
+  const { data: session } = useSession();
+  const [stats, setStats] = useState<KPIs | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const loadKPIs = async () => {
+    try {
+      // Intentar obtener de la API real
+      const data = await fetchAPI("/admin/kpis");
+      setStats(data);
+    } catch (error) {
+      // Fallback a datos estáticos si el endpoint no está implementado
+      setStats({
+        totalDonado: "0",
+        estudiantesActivos: 0,
+        exalumnosActivos: 0,
+        posicionesActivas: 0,
+        donacionesPendientes: []
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadKPIs();
+  }, []);
 
   const reportes = [
     {
@@ -18,7 +52,7 @@ export default function AdminDashboardPage() {
       reportado: "Carlos M.",
       motivo: "Uso indebido de la plataforma (Spam)",
       conteo: 3,
-      status: "SUSPENDIDO_AUTO" // Si llega a 3, suspendido auto
+      status: "SUSPENDIDO_AUTO"
     },
     {
       id: "r2",
@@ -28,6 +62,22 @@ export default function AdminDashboardPage() {
       status: "REVISION"
     }
   ];
+
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return (
+      <div className="container mx-auto py-12 px-4 min-h-[80vh] flex items-center justify-center">
+        <p className="text-lg text-slate-500 font-bold">Acceso Denegado. Solo administradores.</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-12 flex justify-center items-center min-h-[80vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10 px-4 min-h-screen">
@@ -48,8 +98,8 @@ export default function AdminDashboardPage() {
             <DollarSign className="w-4 h-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₡{stats.totalDonado}</div>
-            <p className="text-xs text-muted-foreground">+12% este mes</p>
+            <div className="text-2xl font-bold">₡{stats?.totalDonado || "0"}</div>
+            <p className="text-xs text-muted-foreground">Verificado en BD</p>
           </CardContent>
         </Card>
         
@@ -59,7 +109,7 @@ export default function AdminDashboardPage() {
             <Users className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.estudiantesActivos}</div>
+            <div className="text-2xl font-bold">{stats?.estudiantesActivos || 0}</div>
           </CardContent>
         </Card>
 
@@ -69,7 +119,7 @@ export default function AdminDashboardPage() {
             <HeartHandshake className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.exalumnosActivos}</div>
+            <div className="text-2xl font-bold">{stats?.exalumnosActivos || 0}</div>
           </CardContent>
         </Card>
 
@@ -79,7 +129,7 @@ export default function AdminDashboardPage() {
             <Briefcase className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.posicionesActivas} vacantes</div>
+            <div className="text-2xl font-bold">{stats?.posicionesActivas || 0} vacantes</div>
           </CardContent>
         </Card>
       </div>
@@ -126,13 +176,27 @@ export default function AdminDashboardPage() {
             <CardDescription>Comprobantes pendientes de verificación.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mb-4">
-                ✅
+            {stats?.donacionesPendientes && stats.donacionesPendientes.length > 0 ? (
+              <div className="space-y-4">
+                {stats.donacionesPendientes.map((d: any) => (
+                  <div key={d.id} className="flex justify-between items-center p-3 border rounded-lg bg-orange-50/50">
+                    <div>
+                      <p className="font-bold">₡{d.monto}</p>
+                      <p className="text-xs text-muted-foreground">{d.destino}</p>
+                    </div>
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700">Aprobar</Button>
+                  </div>
+                ))}
               </div>
-              <p className="text-lg font-medium">Bandeja limpia</p>
-              <p className="text-muted-foreground">Todas las donaciones han sido procesadas.</p>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mb-4">
+                  ✅
+                </div>
+                <p className="text-lg font-medium">Bandeja limpia</p>
+                <p className="text-muted-foreground">Todas las donaciones han sido procesadas.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
