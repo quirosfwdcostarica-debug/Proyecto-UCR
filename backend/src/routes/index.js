@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
+// 🔐 Auth (registro, login, magic link)
+router.use('/auth', require('./auth.routes'));
+
+// 🛡️ Admin (KPIs, moderación)
+router.use('/admin', require('./admin.routes'));
+
+// ─── Entidades ─────────────────────────────────────────────────────────────
 router.use('/users', require('./user.routes'));
 router.use('/exalumnos', require('./exalumno.routes'));
 router.use('/estudiantes', require('./estudiante.routes'));
