@@ -16,6 +16,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["'Barlow Semi Condensed'", "sans-serif"],
+        body: ["'Work Sans'", "sans-serif"],
+      },
       colors: {
         ucr: {
           celeste: "#00C0F3",
