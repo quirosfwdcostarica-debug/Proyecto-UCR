@@ -6,16 +6,24 @@ export function AppSidebar() {
   const navItems = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
     { label: "Directory", href: "/directorio/estudiantes", icon: Users },
-    { label: "Jobs", href: "/posiciones/nueva", icon: Briefcase },
+    { label: "Jobs", href: "/posiciones", icon: Briefcase },
     { label: "Donations", href: "/donaciones", icon: Heart },
     { label: "Profile", href: "/cv", icon: UserCircle },
+    { label: "Edit Profile", href: "/perfil/editar", icon: Settings },
   ];
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-64 bg-white border-r border-border flex flex-col z-20">
-      <div className="p-6">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">EXALUMNOS UCR</h1>
-        <p className="text-sm text-muted-foreground mt-1">Impacto y Legado</p>
+      <div className="px-6 pt-4 pb-4 flex flex-col items-start gap-0">
+        <img 
+          src="/logo.png" 
+          alt="Logo UCR" 
+          className="h-16 w-auto object-contain -ml-1"
+        />
+        <div className="-mt-1">
+          <h1 className="text-lg font-bold tracking-tight text-[#1a75d2]">EXALUMNOS UCR</h1>
+          <p className="text-xs font-medium text-[#1a75d2]/80">Impacto y Legado</p>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -40,7 +48,7 @@ export function AppSidebar() {
           <HelpCircle className="mr-2 h-4 w-4" />
           Help
         </Button>
-        <Button className="w-full bg-[#005eb8] hover:bg-[#004a94] text-white">
+        <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 text-white">
           Start a Project
         </Button>
       </div>
