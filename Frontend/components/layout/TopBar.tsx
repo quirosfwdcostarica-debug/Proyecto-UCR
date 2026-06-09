@@ -2,6 +2,7 @@ import { Bell, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
+import { UserDropdown } from "./UserDropdown";
 
 interface TopBarProps {
   title: string;
@@ -26,9 +27,7 @@ export function TopBar({ title }: TopBarProps) {
         
         <NotificationsDropdown />
         
-        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center cursor-pointer ring-2 ring-offset-2 ring-transparent hover:ring-[#0f4c81] transition-all overflow-hidden">
-          <img src="https://github.com/shadcn.png" alt="User" className="h-full w-full object-cover" />
-        </div>
+        <UserDropdown />
       </div>
     </header>
   );

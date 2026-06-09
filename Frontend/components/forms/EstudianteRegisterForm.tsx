@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -153,6 +154,9 @@ export function EstudianteRegisterForm() {
             "Crear cuenta"
           )}
         </Button>
+        <div className="text-center mt-4 text-sm text-slate-600">
+          ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] hover:underline font-medium">Volver al login</Link>
+        </div>
       </form>
     </Form>
   );
