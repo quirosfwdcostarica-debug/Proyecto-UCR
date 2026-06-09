@@ -50,12 +50,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 días
   },
   callbacks: {
-<<<<<<< HEAD
     async jwt({ token, user, trigger, session }) {
       // Guardar info del usuario y token en el JWT
       if (user) {
         token.id = user.id;
-        token.tipo = (user as any).tipo;
+        token.tipo = (user as any).tipo || (user as any).role;
+        token.role = (user as any).role || (user as any).tipo;
         token.accessToken = (user as any).accessToken;
         token.foto_url = (user as any).foto_url;
       }
@@ -65,30 +65,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.foto_url = session.user.image;
       }
       
-=======
-    async jwt({ token, user }) {
-      // Guardar info del usuario y token en el JWT
-      if (user) {
-        token.id = user.id;
-        token.tipo = (user as any).tipo || (user as any).role;
-        token.role = (user as any).role || (user as any).tipo;
-        token.accessToken = (user as any).accessToken;
-        token.foto_url = (user as any).foto_url;
-      }
->>>>>>> 9219c068a57a9100e7b6440df479107ea21a9f7b
       return token;
     },
     async session({ session, token }) {
       // Pasar del JWT a la sesión para que esté disponible en el cliente
       if (session.user) {
         session.user.id = token.id as string;
-<<<<<<< HEAD
         session.user.image = token.foto_url as string; // Usar 'image' estándar de Next-Auth
-        (session.user as any).tipo = token.tipo;
-=======
         (session.user as any).tipo = token.tipo || token.role;
         (session.user as any).role = token.role || token.tipo;
->>>>>>> 9219c068a57a9100e7b6440df479107ea21a9f7b
         (session.user as any).accessToken = token.accessToken;
         (session.user as any).foto_url = token.foto_url;
       }
