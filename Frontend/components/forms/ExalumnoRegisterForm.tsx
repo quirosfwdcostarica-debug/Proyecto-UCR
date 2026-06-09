@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -214,6 +215,9 @@ export function ExalumnoRegisterForm() {
               "Crear cuenta y solicitar aprobación"
             )}
           </Button>
+          <div className="text-center mt-4 text-sm text-slate-600">
+            ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] hover:underline font-medium">Volver al login</Link>
+          </div>
           <p className="text-xs text-center text-slate-500 mt-4">
             Al registrarte, tu perfil entrará en estado pendiente y será verificado por el equipo de la Fundación.
           </p>

@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
 import { TopBar } from "@/components/layout/TopBar";
 import { StudentApplicationModal } from "@/components/donaciones/StudentApplicationModal";
 import { StudentProjectsList } from "@/components/donaciones/StudentProjectsList";
@@ -15,16 +14,10 @@ export default async function DonacionesPage({ searchParams }: { searchParams: {
   let role = searchParams?.role?.toUpperCase() || "ESTUDIANTE";
   let userName = "Estudiante";
 
-  // 2. Si hay sesión, obtener el rol del usuario desde la base de datos
-  if (session?.user?.email) {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true, name: true },
-    });
-    if (user) {
-      role = user.role;
-      userName = user.name || userName;
-    }
+  // Si hay sesión, obtener el rol del usuario desde la sesión
+  if (session?.user) {
+    role = (session.user as any).tipo || role;
+    userName = session.user.name || userName;
   }
 
   return (
