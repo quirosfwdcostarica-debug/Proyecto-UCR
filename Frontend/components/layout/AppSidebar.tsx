@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/Button";
 
 export function AppSidebar() {
   const navItems = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "Directory", href: "/directorio/estudiantes", icon: Users },
-    { label: "Jobs", href: "/posiciones", icon: Briefcase },
-    { label: "Donations", href: "/donaciones", icon: Heart },
-    { label: "Profile", href: "/cv", icon: UserCircle },
-    { label: "Edit Profile", href: "/perfil/editar", icon: Settings },
+    { label: "Tablero", href: "/", icon: LayoutDashboard },
+    { label: "Directorio", href: "/directorio/estudiantes", icon: Users },
+    { label: "Posiciones", href: "/posiciones", icon: Briefcase },
+    { label: "Donaciones", href: "/donaciones", icon: Heart },
+    { label: "Perfil", href: "/cv", icon: UserCircle },
+    { label: "Editar Perfil", href: "/perfil/editar", icon: Settings },
   ];
 
   return (
@@ -42,14 +42,14 @@ export function AppSidebar() {
       <div className="p-4 space-y-2 border-t border-border mt-auto">
         <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-slate-100">
           <Settings className="mr-2 h-4 w-4" />
-          Settings
+          Ajustes
         </Button>
         <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:bg-slate-100 mb-4">
           <HelpCircle className="mr-2 h-4 w-4" />
-          Help
+          Ayuda
         </Button>
         <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 text-white">
-          Start a Project
+          Iniciar un Proyecto
         </Button>
       </div>
     </aside>

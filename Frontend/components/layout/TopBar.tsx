@@ -20,7 +20,7 @@ export function TopBar({ title }: TopBarProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             type="search" 
-            placeholder="Search opportunities..." 
+            placeholder="Buscar oportunidades..." 
             className="pl-8 bg-slate-50 border-slate-200 rounded-full h-9"
           />
         </div>

@@ -39,7 +39,7 @@ const mockProjects = [
     projectName: "Sistema de Alertas Tempranas",
     studentName: "Andrea Gómez",
     age: 20,
-    major: "Ingeniería de Software",
+    major: "Computación e Informática",
     grade: "3er Año",
     scholarshipType: "Beca 5",
     github: "https://github.com/andreag/alertas",

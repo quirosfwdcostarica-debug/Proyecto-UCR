@@ -6,7 +6,63 @@ import { Progress } from "@/components/ui/Progress";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-export default function DirectorioEstudiantes() {
+export default async function DirectorioEstudiantes() {
+  let estudiantesFromDB: any[] = [];
+  
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/estudiante`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      estudiantesFromDB = await res.json();
+    }
+  } catch (error) {
+    console.error("Error fetching estudiantes:", error);
+  }
+
+  // 1. Proyectos requeridos fijos (siempre aparecerán al inicio)
+  const mandatoryProjects = [
+    {
+      name: "Ana Martínez",
+      carrera: "Biología", // Biotecnología no es de grado en UCR
+      sede: "Sede Rodrigo Facio",
+      proyecto: "Desarrollo de Bioplásticos con Residuos Agrícolas",
+      progreso: 10, // Viene empezando
+      tags: ["PASANTÍA", "MONETARIA", "MENTORÍA TÉCNICA"]
+    },
+    {
+      name: "Diego Castro",
+      carrera: "Informática Empresarial", // Eléctrica no se da en el Pacífico
+      sede: "Sede del Pacífico",
+      proyecto: "Sistema de Alerta Temprana para Inundaciones (IoT)",
+      progreso: 90, // Avanzado casi terminado
+      tags: ["MONETARIA", "EQUIPO TÉCNICO"]
+    }
+  ];
+
+  // 2. Proyectos provenientes de la base de datos
+  const dbProjects = estudiantesFromDB
+    .filter((est) => est.proyecto_titulo) // Solo estudiantes con proyecto registrado
+    .map((est) => {
+      const tags = [];
+      if (est.busca_financiamiento) tags.push("MONETARIA");
+      if (est.busca_mentoria) tags.push("MENTORÍA");
+      if (est.busca_empleo) tags.push("EMPLEO");
+      if (est.busca_pasantia) tags.push("PASANTÍA");
+
+      return {
+        name: "Estudiante UCR", // Como no traemos el User model, usamos un genérico por privacidad o falta de join
+        carrera: est.carrera || "Carrera No Especificada",
+        sede: est.sede || "Sede Universitaria",
+        proyecto: est.proyecto_titulo,
+        progreso: 50, // Progreso por defecto
+        tags: tags.length > 0 ? tags : ["APOYO GENERAL"]
+      };
+    });
+
+  // 3. Unimos los fijos con los de la base de datos
+  const allStudents = [...mandatoryProjects, ...dbProjects];
+
   return (
     <div className="min-h-full bg-[#f8fafc]">
       <TopBar title="Directory" />
@@ -15,9 +71,9 @@ export default function DirectorioEstudiantes() {
         
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0f4c81] mb-2">Directorio de Estudiantes</h1>
+          <h1 className="text-3xl font-bold text-[#0f4c81] mb-2">Directorio de Proyectos Estudiantiles</h1>
           <p className="text-slate-600 max-w-2xl text-base">
-            Conectando el talento emergente de la UCR con nuestra red global de exalumnos. Descubre proyectos innovadores y ofrece tu mentoría.
+            Conectando el talento emergente de la UCR con nuestra red global de exalumnos. Descubre proyectos innovadores que necesitan tu apoyo, desde etapas iniciales hasta fases finales.
           </p>
         </div>
 
@@ -27,58 +83,25 @@ export default function DirectorioEstudiantes() {
             <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
             <Input 
               type="text" 
-              placeholder="Buscar por nombre, carrera o proyecto..." 
+              placeholder="Buscar por carrera, proyecto o tipo de apoyo..." 
               className="pl-10 h-12 bg-white border-slate-200 shadow-sm text-base"
             />
           </div>
           <Button className="h-12 px-6 bg-[#0a192f] hover:bg-[#061121] text-white">
             <SlidersHorizontal className="mr-2 h-5 w-5" />
-            Ver Filtros Avanzados
+            Filtros Avanzados
           </Button>
-        </div>
-
-        {/* Dropdowns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "CARRERA", value: "Todas las carreras" },
-            { label: "SEDE", value: "Todas las sedes" },
-            { label: "APOYO REQUERIDO", value: "Cualquier tipo" },
-            { label: "HABILIDADES", value: "Todas" }
-          ].map(filter => (
-            <div key={filter.label}>
-              <label className="block text-xs font-semibold text-slate-500 tracking-wide mb-1.5">{filter.label}</label>
-              <select className="w-full h-10 border-slate-200 rounded-md bg-white text-sm text-slate-700 shadow-sm px-3 focus:border-[#0f4c81] focus:ring-1 focus:ring-[#0f4c81] outline-none appearance-none">
-                <option>{filter.value}</option>
-              </select>
-            </div>
-          ))}
         </div>
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
-          {[
-            { 
-              name: "Maria Gonzalez", carrera: "Ingeniería de Software", sede: "Sede Rodrigo Facio", 
-              proyecto: "Plataforma de IA para Diagnóstico Rural", progreso: 75,
-              tags: ["MENTORÍA TÉCNICA", "CLOUD CREDITS"]
-            },
-            { 
-              name: "Carlos Mora", carrera: "Arquitectura", sede: "Sede de Occidente", 
-              proyecto: "Vivienda Sostenible Modulada", progreso: 40,
-              tags: ["MODELADO 3D", "MATERIALES"]
-            },
-            { 
-              name: "Elena Solano", carrera: "Medicina", sede: "Sede Rodrigo Facio", 
-              proyecto: "Análisis de Datos en Salud Pública", progreso: 90,
-              tags: ["PASANTÍA CLÍNICA", "RED CONTACTOS"]
-            }
-          ].map((student, i) => (
+          {allStudents.map((student, i) => (
             <Card key={i} className="p-6 border-border shadow-sm bg-white flex flex-col h-full">
               
               <div className="flex gap-4 mb-5">
                 <div className="h-14 w-14 rounded-md bg-slate-200 overflow-hidden shrink-0">
-                  <img src={`https://i.pravatar.cc/150?u=${student.name}`} alt={student.name} className="h-full w-full object-cover" />
+                  <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random`} alt={student.name} className="h-full w-full object-cover" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-foreground leading-tight">{student.name}</h3>
@@ -94,7 +117,9 @@ export default function DirectorioEstudiantes() {
 
               <div className="mb-4 mt-auto">
                 <div className="flex justify-between text-xs font-medium mb-1.5">
-                  <span className="text-slate-500">Progreso del Proyecto</span>
+                  <span className="text-slate-500">
+                    {student.progreso < 30 ? "Fase Inicial" : student.progreso > 80 ? "Fase Final" : "En Desarrollo"}
+                  </span>
                   <span className="text-green-600 font-bold">{student.progreso}%</span>
                 </div>
                 <Progress value={student.progreso} className="h-1.5 bg-slate-100" />
@@ -108,7 +133,7 @@ export default function DirectorioEstudiantes() {
 
               <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
                 <HeartIcon className="mr-2 h-4 w-4" />
-                Offer Support
+                Ofrecer Apoyo
               </Button>
             </Card>
           ))}
