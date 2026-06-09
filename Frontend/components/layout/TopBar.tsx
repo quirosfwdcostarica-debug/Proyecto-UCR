@@ -1,4 +1,6 @@
 import { Bell, Search } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
@@ -15,6 +17,19 @@ export function TopBar({ title }: TopBarProps) {
       </div>
       
       <div className="flex items-center gap-6">
+        <div className="flex gap-2">
+          <Link href="/login">
+            <Button variant="outline" size="sm" className="border-ucr-celeste text-[#0f4c81] hover:bg-ucr-celeste/10 font-body font-semibold">
+              Iniciar Sesión
+            </Button>
+          </Link>
+          <Link href="/registro/estudiante">
+            <Button size="sm" className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-body font-semibold">
+              Registrarse
+            </Button>
+          </Link>
+        </div>
+
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 

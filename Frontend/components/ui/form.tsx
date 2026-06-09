@@ -27,8 +27,8 @@ type FormFieldContextValue<
 const FormFieldContext = React.createContext<FormFieldContextValue | null>(null)
 
 const FormField = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
