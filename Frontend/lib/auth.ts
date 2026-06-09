@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.NEXTAUTH_SECRET || "ucr-alumni-nextauth-secret-2026-change-in-prod",
   providers: [
     CredentialsProvider({
       name: "Credentials",

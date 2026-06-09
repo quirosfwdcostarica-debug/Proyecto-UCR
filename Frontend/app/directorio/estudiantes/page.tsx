@@ -10,7 +10,7 @@ export default async function DirectorioEstudiantes() {
   let estudiantesFromDB: any[] = [];
   
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/estudiante`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/estudiantes`, {
       cache: "no-store",
     });
     if (res.ok) {
