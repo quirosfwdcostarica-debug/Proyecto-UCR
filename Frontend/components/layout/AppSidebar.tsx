@@ -8,7 +8,7 @@ export function AppSidebar() {
     { label: "Directory", href: "/directorio/estudiantes", icon: Users },
     { label: "Jobs", href: "/posiciones", icon: Briefcase },
     { label: "Donations", href: "/donaciones", icon: Heart },
-    { label: "Profile", href: "/cv", icon: UserCircle },
+    { label: "My CV", href: "/cv", icon: UserCircle },
     { label: "Edit Profile", href: "/perfil/editar", icon: Settings },
   ];
 
