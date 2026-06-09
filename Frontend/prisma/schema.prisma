@@ -32,6 +32,9 @@ model User {
   status        UserStatus @default(PENDIENTE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  phone         String?
+  bio           String?
+  socialLinks   Json?
 
   // Perfiles extendidos
   estudiante    Estudiante?
