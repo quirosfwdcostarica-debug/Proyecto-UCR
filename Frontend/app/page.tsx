@@ -5,11 +5,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import { CheckCircle2, Circle, Sparkles, Building2, Users, UserCircle } from "lucide-react";
 import Image from "next/image";
+import { IntroVideo } from "@/components/layout/IntroVideo";
 
 export default function Dashboard() {
   return (
     <div className="min-h-full bg-[#f8fafc]">
-      <TopBar title="Tablero" />
+      <IntroVideo />
+      <div id="dashboard-main-content">
+        <TopBar title="Tablero" />
       
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         
@@ -208,6 +211,7 @@ export default function Dashboard() {
         </div>
 
       </div>
+    </div>
     </div>
   );
 }
