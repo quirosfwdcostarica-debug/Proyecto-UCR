@@ -35,14 +35,9 @@ sequelize.authenticate()
   })
   .then(() => console.log('✅ Modelos sincronizados con la base de datos.'))
   .catch(err => {
-    console.warn('⚠️  No se pudo conectar a la BD directamente. El servidor sigue operativo via Supabase REST API.');
-    console.warn('   → Para conectar Sequelize, usa la URL del Pooler de Supabase (IPv4, puerto 6543).');
-    console.warn('   → Ve a: Supabase Dashboard → Settings → Database → Connection Pooling → Transaction');
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('   Error:', err.message);
-  console.error('\n=== DATABASE ERROR ===');
-  console.error(err);
-  console.error('======================\n');
+    console.warn('⚠️  Sequelize no pudo conectar directamente (puerto bloqueado por red). El servidor opera normalmente via Supabase REST API.');
+    if (process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true') {
+      console.warn('   Error técnico:', err.message);
     }
   });
 
