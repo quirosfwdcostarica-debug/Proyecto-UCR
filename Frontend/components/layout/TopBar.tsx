@@ -1,6 +1,8 @@
 import { Bell, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { NotificationsDropdown } from "./NotificationsDropdown";
+import { UserDropdown } from "./UserDropdown";
 
 interface TopBarProps {
   title: string;
@@ -23,14 +25,9 @@ export function TopBar({ title }: TopBarProps) {
           />
         </div>
         
-        <button className="text-muted-foreground hover:text-foreground relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        <NotificationsDropdown />
         
-        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center cursor-pointer ring-2 ring-offset-2 ring-transparent hover:ring-[#0f4c81] transition-all overflow-hidden">
-          <img src="https://github.com/shadcn.png" alt="User" className="h-full w-full object-cover" />
-        </div>
+        <UserDropdown />
       </div>
     </header>
   );

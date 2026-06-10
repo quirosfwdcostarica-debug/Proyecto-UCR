@@ -1,154 +1,136 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail } from "lucide-react";
-import Image from "next/image";
-
-const loginSchema = z.object({
-  email: z.string().email("Por favor, ingresa un correo válido."),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
   const { toast } = useToast();
-
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "" },
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsPending(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      const res = await signIn("resend", {
-        email: data.email,
+      const result = await signIn("credentials", {
         redirect: false,
-        callbackUrl: "/",
+        email: formData.email,
+        password: formData.password,
       });
 
-      if (res?.error) {
-        throw new Error(res.error);
+      if (result?.error) {
+        console.log("el error es", result?.error);  
+        toast({
+          title: "Error de autenticación " + (result.error === "Email no verificado" ? "(Correo no verificado)" : ""),
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: "Redirigiendo a tu panel...",
+        });
+        router.push("/");
+        router.refresh();
       }
-
+    } catch (error: any) {
       toast({
-        title: "¡Enlace enviado!",
-        description: "Revisa tu bandeja de entrada para iniciar sesión.",
-      });
-      form.reset();
-    } catch (error) {
-      toast({
+        title: "Error",
+        description: "Ocurrió un error inesperado.",
         variant: "destructive",
-        title: "Error de acceso",
-        description: "No pudimos enviar el enlace. Intenta nuevamente.",
       });
     } finally {
-      setIsPending(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-ucr-gris-1">
-      {/* Columna Izquierda: Decorativa */}
-      <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-ucr-azul-1 to-ucr-azul-2 overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-[url('https://www.ucr.ac.cr/medios/fotos/2021/girasoles-ucr.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-        
-        {/* Patrón Decorativo Glassmorphism */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-ucr-celeste rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-ucr-azul-1 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-
-        <div className="relative z-10 p-12 text-center text-ucr-blanco">
-          <img 
-            src="/logo.png" 
-            alt="Logo UCR Blanco" 
-            className="h-28 w-auto mx-auto mb-8 brightness-0 invert mix-blend-screen"
-          />
-          <h1 className="text-4xl font-extrabold tracking-tight mb-4 text-ucr-blanco">
-            Fundación Exalumnos UCR
-          </h1>
-          <p className="text-lg text-ucr-blanco/80 max-w-md mx-auto">
-            Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
-          </p>
-        </div>
-      </div>
-
-      {/* Columna Derecha: Formulario de Login */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
-        {/* Círculo decorativo azul brillante detrás del form */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-ucr-celeste/20 rounded-full blur-[100px] -z-10"></div>
-
-        <div className="w-full max-w-md glass p-10 rounded-3xl shadow-2xl bg-ucr-blanco/70 backdrop-blur-xl border border-white/50">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-ucr-azul-2 mb-2">Bienvenido de vuelta</h2>
-            <p className="text-sm text-ucr-gris-2">
-              Ingresa tu correo para recibir un enlace mágico de acceso seguro. Sin contraseñas.
-            </p>
+    <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md shadow-xl border-border">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-[#0f4c81] h-12 w-12 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
+          <CardTitle className="text-2xl font-bold tracking-tight text-[#0f4c81]">Bienvenido de vuelta</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Ingresa a la plataforma de Exalumnos UCR
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-ucr-azul-1 font-semibold">Correo Electrónico</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2" />
-                        <Input 
-                          placeholder="juan.perez@ucr.ac.cr" 
-                          {...field} 
-                          className="pl-10 h-12 bg-white/80 border-gray-200 focus:border-ucr-celeste focus:ring-ucr-celeste transition-all shadow-sm"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                type="email"
+                placeholder="nombre@ejemplo.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
               />
-
-              <Button 
-                type="submit" 
-                disabled={isPending}
-                className="w-full h-12 bg-gradient-to-r from-ucr-azul-2 to-ucr-azul-1 hover:from-ucr-azul-1 hover:to-ucr-azul-1 text-ucr-blanco text-base font-semibold shadow-lg hover:shadow-ucr-azul-2/30 transition-all rounded-xl"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Enviando enlace...
-                  </>
-                ) : (
-                  "Enviar Enlace Mágico"
-                )}
-              </Button>
-            </form>
-          </Form>
-
-          <div className="mt-8 text-center text-sm text-ucr-gris-2">
-            ¿No tienes cuenta?{" "}
-            <a href="/registro/estudiante" className="text-ucr-celeste hover:text-ucr-azul-2 font-semibold transition-colors">
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Contraseña</Label>
+                <Link href="/forgot-password" className="text-xs font-medium text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                "Iniciar sesión"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4 text-center text-sm border-t border-border pt-4 text-slate-500">
+          <div>
+            ¿No tienes una cuenta?{" "}
+            <Link href="/registro" className="font-semibold text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
               Regístrate aquí
-            </a>
+            </Link>
           </div>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
