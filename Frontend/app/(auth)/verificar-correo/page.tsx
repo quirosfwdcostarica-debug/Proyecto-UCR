@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { MailCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function VerificarCorreoPage() {
+import { Suspense } from "react";
+
+function VerificarCorreoContent() {
   const searchParams = useSearchParams();
   const email = searchParams?.get("email") || "tu correo institucional";
   const { toast } = useToast();
@@ -87,5 +89,20 @@ export default function VerificarCorreoPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function VerificarCorreoPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[80vh] items-center justify-center py-12 px-4">
+        <Card className="w-full max-w-md text-center shadow-xl border-slate-200 p-8 flex flex-col items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+          <p className="text-slate-600">Cargando...</p>
+        </Card>
+      </div>
+    }>
+      <VerificarCorreoContent />
+    </Suspense>
   );
 }

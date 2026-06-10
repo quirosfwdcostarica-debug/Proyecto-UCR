@@ -1,12 +1,15 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export function UserDropdown() {
+  const { data: session } = useSession();
+  const imageUrl = session?.user?.image || "https://github.com/shadcn.png";
+
   return (
     <div className="relative group">
       <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center cursor-pointer ring-2 ring-offset-2 ring-transparent group-hover:ring-[#0f4c81] transition-all overflow-hidden">
-        <img src="https://github.com/shadcn.png" alt="User" className="h-full w-full object-cover" />
+        <img src={imageUrl} alt="User" className="h-full w-full object-cover" />
       </div>
       
       {/* Dropdown Menu (Hover) */}

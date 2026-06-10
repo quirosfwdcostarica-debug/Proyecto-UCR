@@ -40,7 +40,7 @@ export function EstudianteRegisterForm() {
   const { toast } = useToast();
 
   const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(registerSchema) as any,
     defaultValues: {
       nombre: "",
       email: "",

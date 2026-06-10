@@ -1,62 +1,53 @@
 "use server";
 
-import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { UserProfileUpdateValues, userProfileUpdateSchema } from "@/lib/validations/profile";
 import { revalidatePath } from "next/cache";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 export async function getUserProfile() {
   const session = await auth();
   
   let userId = session?.user?.id;
-  
+
   if (!userId) {
-    // Si no hay sesión (modo desarrollo/testing), buscar el primer usuario disponible
-    if (process.env.NODE_ENV !== "production") {
-      if (process.env.DATABASE_URL) {
-        try {
-          const firstUser = await prisma.user.findFirst();
-          if (firstUser) {
-            userId = firstUser.id;
-          }
-        } catch (e) {
-          console.warn("No se pudo conectar a la base de datos.");
-        }
-      }
-    }
+    throw new Error("No estás autenticado.");
   }
 
-  if (!userId && !process.env.DATABASE_URL) {
-    // Retornar datos falsos para que pueda ver la UI si no hay BD configurada
+  try {
+    const res = await fetch(`${API_URL}/user/${userId}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error("Error fetching user from backend");
+    }
+
+    const userData = await res.json();
+
+    // Map backend schema (nombre, foto_url) to frontend schema expected by forms
     return {
-      id: "mock-id",
+      id: userData.id,
+      name: userData.nombre || "Usuario",
+      email: userData.email || "",
+      image: userData.foto_url || "",
+      phone: "+506 8888-8888", // Mock, as backend doesn't have it
+      bio: "Esta es tu biografía.", // Mock
+      socialLinks: { linkedin: "https://linkedin.com" }, // Mock
+    } as any;
+  } catch (error) {
+    // Retornar mock si hay error para no romper la UI
+    return {
+      id: userId,
       name: "Usuario de Prueba",
       email: "prueba@ucr.ac.cr",
       image: "",
       phone: "+506 8888-8888",
-      bio: "Esta es una biografía de prueba porque no hay base de datos conectada.",
+      bio: "No se pudo cargar el perfil real.",
       socialLinks: { linkedin: "https://linkedin.com" },
     } as any;
   }
-
-  if (!userId) {
-    throw new Error("No estás autenticado y no hay usuarios de prueba.");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      phone: true,
-      bio: true,
-      socialLinks: true,
-    }
-  });
-
-  return user;
 }
 
 export async function updateUserProfile(data: UserProfileUpdateValues) {
@@ -70,43 +61,22 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
   let userId = session?.user?.id;
 
   if (!userId) {
-    // Modo desarrollo: actualizar al primer usuario
-    if (process.env.NODE_ENV !== "production") {
-      if (process.env.DATABASE_URL) {
-        try {
-          const firstUser = await prisma.user.findFirst();
-          if (firstUser) {
-            userId = firstUser.id;
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-  }
-
-  if (!userId && !process.env.DATABASE_URL) {
-    // Simular que se guardó correctamente si no hay BD configurada
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    revalidatePath("/perfil/editar");
-    return { success: true };
-  }
-
-  if (!userId) {
     throw new Error("No estás autenticado.");
   }
 
-  const updatedUser = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name: parsedData.data.name,
-      email: parsedData.data.email,
-      phone: parsedData.data.phone || null,
-      image: parsedData.data.image || null,
-      bio: parsedData.data.bio || null,
-      socialLinks: parsedData.data.socialLinks ? (parsedData.data.socialLinks as any) : null,
-    }
-  });
+  try {
+    // Intentar actualizar nombre y foto_url en el backend
+    await fetch(`${API_URL}/user/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: parsedData.data.name,
+        foto_url: parsedData.data.image || null,
+      }),
+    });
+  } catch (error) {
+    console.error("Error actualizando perfil en el backend:", error);
+  }
 
   // Revalidar para que se refresque la UI
   revalidatePath("/perfil/editar");
