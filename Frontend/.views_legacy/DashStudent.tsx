@@ -38,7 +38,7 @@ export function DashStudent({ nav }: any) {
           <Card>
             <h3 className="font-bold text-[16px] mb-4" style={{ color: C.ink }}>Donaciones recibidas</h3>
             <div className="text-center py-2"><div className="text-[30px] font-extrabold" style={{ color: C.greenDk, fontFamily: FONT_DISP }}>₡525K</div><div className="text-[13px]" style={{ color: C.sub }}>de ₡800K objetivo</div><Progress value={66} tone={C.green} h={10} /></div>
-            <Btn variant="green" full className="mt-3" onClick={() => nav("donations")}>Ver módulo de donaciones</Btn>
+            <Btn variant="green" full className="mt-3" onClick={() => nav("")}>Ver módulo de donaciones</Btn>
           </Card>
           <Card>
             <h3 className="font-bold text-[16px] mb-4" style={{ color: C.ink }}>Aplicaciones enviadas</h3>
