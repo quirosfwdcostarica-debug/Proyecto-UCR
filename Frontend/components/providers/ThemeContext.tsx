@@ -18,8 +18,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+    // Se ignora la preferencia del sistema ya que el modo oscuro no está completo en toda la app
+    const initialTheme = savedTheme || "light";
     
     setThemeState(initialTheme);
     setMounted(true);
