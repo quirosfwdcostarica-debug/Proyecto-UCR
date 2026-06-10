@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Language = "es" | "en";
+export type Language = "es" | "en" | "pt" | "fr";
 
 export type TranslationKeys = 
   | "sidebar.dashboard"
@@ -106,6 +106,74 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Send Message",
     "settings.help.contact.success": "Message sent successfully! We will get in touch with you soon.",
     "settings.help.contact.sending": "Sending...",
+  },
+  pt: {
+    "sidebar.dashboard": "Painel",
+    "sidebar.directory": "Diretório",
+    "sidebar.positions": "Vagas",
+    "sidebar.donations": "Doações",
+    "sidebar.profile": "Perfil",
+    "sidebar.editProfile": "Editar Perfil",
+    "sidebar.settings": "Configurações",
+    "sidebar.help": "Ajuda",
+    "sidebar.startProject": "Iniciar um Projeto",
+    "settings.title": "Configurações da Plataforma",
+    "settings.subtitle": "Configure suas preferências de idioma, tema e acesse o suporte legal e técnico.",
+    "settings.tab.general": "Geral",
+    "settings.tab.terms": "Termos e Condições",
+    "settings.tab.help": "Ajuda e Suporte",
+    "settings.lang.title": "Idioma da interface",
+    "settings.lang.desc": "Selecione o idioma no qual deseja ver a plataforma.",
+    "settings.theme.title": "Tema visual",
+    "settings.theme.desc": "Escolha entre a aparência clara ou escura para a interface.",
+    "settings.theme.light": "Modo Claro",
+    "settings.theme.dark": "Modo Escuro",
+    "settings.terms.title": "Termos de Serviço e Privacidade",
+    "settings.terms.desc": "Leia atentamente os termos e condições de uso da Fundação Exalumnos UCR.",
+    "settings.help.faq.title": "Perguntas Frequentes (FAQs)",
+    "settings.help.faq.desc": "Encontre respostas rápidas para as dúvidas comuns sobre a rede.",
+    "settings.help.contact.title": "Formulário de Contato",
+    "settings.help.contact.desc": "Se você tiver algum problema ou sugestão, envie-nos uma mensagem.",
+    "settings.help.contact.name": "Nome Completo",
+    "settings.help.contact.email": "Endereço de E-mail",
+    "settings.help.contact.message": "Mensagem ou Consulta",
+    "settings.help.contact.send": "Enviar Mensagem",
+    "settings.help.contact.success": "Mensagem enviada com sucesso! Entraremos em contato em breve.",
+    "settings.help.contact.sending": "Enviando...",
+  },
+  fr: {
+    "sidebar.dashboard": "Tableau de Bord",
+    "sidebar.directory": "Annuaire",
+    "sidebar.positions": "Postes",
+    "sidebar.donations": "Dons",
+    "sidebar.profile": "Profil",
+    "sidebar.editProfile": "Modifier le Profil",
+    "sidebar.settings": "Paramètres",
+    "sidebar.help": "Aide",
+    "sidebar.startProject": "Démarrer un Projet",
+    "settings.title": "Paramètres de la Plateforme",
+    "settings.subtitle": "Configurez vos préférences de langue, de thème et accédez à l'assistance juridique et technique.",
+    "settings.tab.general": "Général",
+    "settings.tab.terms": "Conditions d'Utilisation",
+    "settings.tab.help": "Aide et Support",
+    "settings.lang.title": "Langue de l'interface",
+    "settings.lang.desc": "Sélectionnez la langue dans laquelle vous souhaitez afficher la plateforme.",
+    "settings.theme.title": "Thème visuel",
+    "settings.theme.desc": "Choisissez entre une apparence claire ou sombre pour l'interface.",
+    "settings.theme.light": "Mode Clair",
+    "settings.theme.dark": "Mode Sombre",
+    "settings.terms.title": "Conditions de Service et Confidentialité",
+    "settings.terms.desc": "Veuillez lire attentivement les conditions d'utilisation de la Fondation Exalumnos UCR.",
+    "settings.help.faq.title": "Foire Aux Questions (FAQ)",
+    "settings.help.faq.desc": "Trouvez des réponses rapides aux questions courantes sur le réseau.",
+    "settings.help.contact.title": "Formulaire de Contact",
+    "settings.help.contact.desc": "Si vous avez un problème ou une suggestion, envoyez-nous un message.",
+    "settings.help.contact.name": "Nom Complet",
+    "settings.help.contact.email": "Adresse E-mail",
+    "settings.help.contact.message": "Message ou Demande",
+    "settings.help.contact.send": "Envoyer le Message",
+    "settings.help.contact.success": "Message envoyé avec succès ! Nous vous contacterons bientôt.",
+    "settings.help.contact.sending": "Envoi en cours...",
   }
 };
 
@@ -123,7 +191,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as Language | null;
-    if (savedLang === "es" || savedLang === "en") {
+    if (savedLang === "es" || savedLang === "en" || savedLang === "pt" || savedLang === "fr") {
       setLanguageState(savedLang);
     }
     setMounted(true);
