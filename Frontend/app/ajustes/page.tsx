@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { useTheme } from "@/components/providers/ThemeContext";
-import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User } from "lucide-react";
+import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, Bell, BellRing, BellOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 
@@ -17,6 +17,7 @@ function AjustesContent() {
 
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [notifications, setNotifications] = useState(true);
   
   // Contact form state
   const [name, setName] = useState("");
@@ -48,28 +49,44 @@ function AjustesContent() {
 
   const faqs = [
     {
-      q: language === "es" ? "¿Cómo funciona la red de Exalumnos UCR?" : "How does the UCR Alumni Network work?",
+      q: language === "es" ? "¿Cómo funciona la red de Exalumnos UCR?" : language === "en" ? "How does the UCR Alumni Network work?" : language === "pt" ? "Como funciona a rede de Ex-alunos da UCR?" : "Comment fonctionne le réseau des Anciens Élèves de l'UCR ?",
       a: language === "es" 
         ? "La plataforma permite a egresados y estudiantes de la Universidad de Costa Rica conectarse, buscar y publicar ofertas de empleo, realizar donaciones para proyectos estudiantiles y solicitar o brindar mentoría profesional."
-        : "The platform allows graduates and students of the University of Costa Rica to connect, search and post job openings, make donations for student projects, and request or provide professional mentoring."
+        : language === "en"
+        ? "The platform allows graduates and students of the University of Costa Rica to connect, search and post job openings, make donations for student projects, and request or provide professional mentoring."
+        : language === "pt"
+        ? "A plataforma permite que ex-alunos e estudantes da Universidade de Costa Rica se conectem, procurem e publiquem vagas de emprego, façam doações para projetos estudantis e solicitem ou ofereçam mentoria profissional."
+        : "La plateforme permet aux diplômés et aux étudiants de l'Université du Costa Rica de se connecter, de rechercher et de publier des offres d'emploi, de faire des dons pour des projets étudiants, et de demander ou de fournir un mentorat professionnel."
     },
     {
-      q: language === "es" ? "¿Quiénes pueden registrarse?" : "Who can register?",
+      q: language === "es" ? "¿Quiénes pueden registrarse?" : language === "en" ? "Who can register?" : language === "pt" ? "Quem pode se registrar?" : "Qui peut s'inscrire ?",
       a: language === "es"
         ? "Cualquier estudiante activo de la UCR o graduado (exalumno) puede crear una cuenta de forma gratuita."
-        : "Any active UCR student or graduate (alumnus) can create an account for free."
+        : language === "en"
+        ? "Any active UCR student or graduate (alumnus) can create an account for free."
+        : language === "pt"
+        ? "Qualquer estudante ativo da UCR ou graduado (ex-aluno) pode criar uma conta gratuitamente."
+        : "Tout étudiant actif ou diplômé de l'UCR peut créer un compte gratuitement."
     },
     {
-      q: language === "es" ? "¿Cómo puedo cambiar mis datos de perfil?" : "How can I update my profile data?",
+      q: language === "es" ? "¿Cómo puedo cambiar mis datos de perfil?" : language === "en" ? "How can I update my profile data?" : language === "pt" ? "Como posso alterar meus dados de perfil?" : "Comment puis-je modifier les données de mon profil ?",
       a: language === "es"
         ? "Dirígete a la sección de 'Editar Perfil' en la barra lateral, donde podrás actualizar tu información personal, enlaces de redes sociales y descripción profesional."
-        : "Go to the 'Edit Profile' section in the sidebar, where you can update your personal information, social media links, and professional description."
+        : language === "en"
+        ? "Go to the 'Edit Profile' section in the sidebar, where you can update your personal information, social media links, and professional description."
+        : language === "pt"
+        ? "Vá para a seção 'Editar Perfil' na barra lateral, onde você poderá atualizar suas informações pessoais, links de redes sociais e descrição profissional."
+        : "Allez dans la section 'Modifier le Profil' dans la barre latérale, où vous pourrez mettre à jour vos informations personnelles, vos liens de réseaux sociaux et votre description professionnelle."
     },
     {
-      q: language === "es" ? "¿Es seguro realizar donaciones?" : "Is it safe to make donations?",
+      q: language === "es" ? "¿Es seguro realizar donaciones?" : language === "en" ? "Is it safe to make donations?" : language === "pt" ? "É seguro fazer doações?" : "Est-il sûr de faire des dons ?",
       a: language === "es"
         ? "Sí, todas las donaciones se procesan a través de pasarelas de pago seguras y se destinan directamente a los proyectos aprobados por la Fundación UCR."
-        : "Yes, all donations are processed through secure payment gateways and go directly to projects approved by the UCR Foundation."
+        : language === "en"
+        ? "Yes, all donations are processed through secure payment gateways and go directly to projects approved by the UCR Foundation."
+        : language === "pt"
+        ? "Sim, todas as doações são processadas através de gateways de pagamento seguros e são destinadas diretamente aos projetos aprovados pela Fundação UCR."
+        : "Oui, tous les dons sont traités via des passerelles de paiement sécurisées et vont directement aux projets approuvés par la Fondation UCR."
     }
   ];
 
@@ -114,6 +131,48 @@ In no event shall the Foundation or its suppliers be liable for any damages (inc
 
 5. PRIVACY POLICY
 Your privacy is very important to us. Accordingly, we have developed this policy in order for you to understand how we collect, use, communicate, and disclose personal information. We are committed to conducting our business in accordance with these principles in order to ensure that the confidentiality of personal information is protected and maintained.`;
+
+  const termsPt = `TERMOS E CONDIÇÕES DE USO
+
+1. ACEITAÇÃO DOS TERMOS
+Ao acessar e usar a plataforma da Fundação de Ex-alunos da UCR, você concorda em ficar vinculado a estes termos e condições de uso e a todas as leis e regulamentos aplicáveis. Se você não concordar com qualquer um destes termos, está proibido de usar ou acessar este site.
+
+2. LICENÇA DE USO
+É concedida permissão para baixar temporariamente uma cópia dos materiais (informações ou software) no site apenas para visualização transitória pessoal e não comercial. Esta é a concessão de uma licença, não uma transferência de título, e sob esta licença você não pode:
+- Modificar ou copiar os materiais.
+- Usar os materiais para qualquer finalidade comercial, ou para qualquer exibição pública (comercial ou não comercial).
+- Tentar descompilar ou fazer engenharia reversa de qualquer software contido no site.
+- Remover quaisquer direitos autorais ou outras notações proprietárias dos materiais.
+
+3. RESPONSABILIDADE
+Os materiais no site são fornecidos 'como estão'. A Fundação de Ex-alunos da UCR não oferece garantias, expressas ou implícitas, e por meio deste renuncia e nega todas as outras garantias, incluindo, sem limitação, garantias implícitas ou condições de comercialização, adequação a um fim específico ou não violação de propriedade intelectual ou outra violação de direitos.
+
+4. LIMITAÇÕES
+Em nenhum caso a Fundação ou seus fornecedores serão responsáveis por quaisquer danos (incluindo, sem limitação, danos por perda de dados ou lucros, ou devido a interrupção de negócios) decorrentes do uso ou incapacidade de usar os materiais.
+
+5. POLÍTICA DE PRIVACIDADE
+Sua privacidade é muito importante para nós. Por isso, desenvolvemos esta política para que você entenda como coletamos, usamos, comunicamos e divulgamos informações pessoais. Estamos empenhados em conduzir nossos negócios de acordo com esses princípios para garantir que a confidencialidade das informações pessoais seja protegida e mantida.`;
+
+  const termsFr = `CONDITIONS D'UTILISATION
+
+1. ACCEPTATION DES CONDITIONS
+En accédant et en utilisant la plateforme de la Fondation des Anciens Élèves de l'UCR, vous acceptez d'être lié par ces conditions d'utilisation et par toutes les lois et réglementations applicables. Si vous n'êtes pas d'accord avec l'une de ces conditions, il vous est interdit d'utiliser ou d'accéder à ce site.
+
+2. LICENCE D'UTILISATION
+Il est permis de télécharger temporairement une copie des documents (informations ou logiciels) sur le site Web pour une visualisation transitoire personnelle et non commerciale uniquement. Ceci est la concession d'une licence, non un transfert de titre, et sous cette licence vous ne pouvez pas :
+- Modifier ou copier les documents.
+- Utiliser les documents à des fins commerciales ou pour toute présentation publique (commerciale ou non commerciale).
+- Tenter de décompiler ou de faire de l'ingénierie inverse de tout logiciel contenu sur le site.
+- Supprimer tout droit d'auteur ou autres notations de propriété des documents.
+
+3. RESPONSABILITÉ
+Les documents sur le site sont fournis 'tels quels'. La Fondation des Anciens Élèves de l'UCR n'offre aucune garantie, explicite ou implicite, et rejette et nie par la présente toutes les autres garanties, y compris, sans limitation, les garanties implicites ou les conditions de qualité marchande, d'adéquation à un usage particulier ou de non-violation de la propriété intellectuelle ou d'autre violation des droits.
+
+4. LIMITATIONS
+En aucun cas la Fondation ou ses fournisseurs ne seront responsables des dommages (y compris, sans s'y limiter, les dommages pour perte de données ou de profit, ou en raison d'une interruption d'activité) découlant de l'utilisation ou de l'impossibilité d'utiliser les documents.
+
+5. POLITIQUE DE CONFIDENTIALITÉ
+Votre confidentialité est très importante pour nous. En conséquence, nous avons développé cette politique afin que vous compreniez comment nous collectons, utilisons, communiquons et divulguons les informations personnelles. Nous nous engageons à mener nos activités conformément à ces principes afin de garantir que la confidentialité des informations personnelles soit protégée et maintenue.`;
 
   return (
     <div className="flex-1 overflow-y-auto w-full relative bg-slate-50 dark:bg-slate-900 min-h-screen transition-colors duration-300">
@@ -204,7 +263,7 @@ Your privacy is very important to us. Accordingly, we have developed this policy
                       </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col gap-3">
                       <button
                         onClick={() => setLanguage("es")}
                         className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
@@ -227,6 +286,28 @@ Your privacy is very important to us. Accordingly, we have developed this policy
                         <span className="text-xl">🇺🇸</span>
                         English
                       </button>
+                      <button
+                        onClick={() => setLanguage("pt")}
+                        className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
+                          language === "pt"
+                            ? "bg-gradient-to-r from-[#02477B] to-[#005eb8] text-white border-transparent shadow-lg shadow-blue-500/20 scale-[1.02]"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <span className="text-xl">🇧🇷</span>
+                        Português
+                      </button>
+                      <button
+                        onClick={() => setLanguage("fr")}
+                        className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
+                          language === "fr"
+                            ? "bg-gradient-to-r from-[#02477B] to-[#005eb8] text-white border-transparent shadow-lg shadow-blue-500/20 scale-[1.02]"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <span className="text-xl">🇫🇷</span>
+                        Français
+                      </button>
                     </div>
                   </div>
 
@@ -242,7 +323,7 @@ Your privacy is very important to us. Accordingly, we have developed this policy
                       </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col gap-3">
                       <button
                         onClick={() => setTheme("light")}
                         className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
@@ -267,6 +348,48 @@ Your privacy is very important to us. Accordingly, we have developed this policy
                       </button>
                     </div>
                   </div>
+
+                  {/* Notifications Card */}
+                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
+                      <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
+                        <Bell className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400 font-display">
+                          {language === "es" ? "Notificaciones" : language === "en" ? "Notifications" : language === "pt" ? "Notificações" : "Notifications"}
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-body">
+                          {language === "es" ? "Activa o desactiva las alertas del sistema." : language === "en" ? "Enable or disable system alerts." : language === "pt" ? "Ative ou desative os alertas do sistema." : "Activez ou désactivez les alertes du système."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => setNotifications(true)}
+                        className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
+                          notifications
+                            ? "bg-gradient-to-r from-[#02477B] to-[#005eb8] text-white border-transparent shadow-lg shadow-blue-500/20 scale-[1.02]"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <BellRing className="w-5 h-5" />
+                        {language === "es" ? "Activadas" : language === "en" ? "Enabled" : language === "pt" ? "Ativadas" : "Activées"}
+                      </button>
+                      <button
+                        onClick={() => setNotifications(false)}
+                        className={`flex-1 py-4 px-6 rounded-2xl font-bold border transition-all flex items-center justify-center gap-3 font-body ${
+                          !notifications
+                            ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white border-transparent shadow-md scale-[1.02]"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <BellOff className="w-5 h-5" />
+                        {language === "es" ? "Desactivadas" : language === "en" ? "Disabled" : language === "pt" ? "Desativadas" : "Désactivées"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -284,7 +407,7 @@ Your privacy is very important to us. Accordingly, we have developed this policy
 
                   <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 h-[380px] overflow-y-auto custom-scrollbar">
                     <pre className="whitespace-pre-wrap font-body text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
-                      {language === "es" ? termsEs : termsEn}
+                      {language === "es" ? termsEs : language === "en" ? termsEn : language === "pt" ? termsPt : termsFr}
                     </pre>
                   </div>
                 </div>
