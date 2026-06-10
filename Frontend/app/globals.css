@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Work+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,6 +35,36 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%; /* Deep Slate-950 background */
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 8%; /* Slightly lighter slate for cards */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 6%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 199 89% 48%; /* Celeste UCR in dark mode */
+    --primary-foreground: 222.2 84% 4.9%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
