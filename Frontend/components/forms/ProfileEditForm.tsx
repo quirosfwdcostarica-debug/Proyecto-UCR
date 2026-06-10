@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "next-auth/react";
 import { Loader2, User, Mail, Phone, ImageIcon, LinkIcon, Save, Briefcase } from "lucide-react";
 import {
   Form,
@@ -26,6 +27,7 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { update } = useSession();
 
   const form = useForm<UserProfileUpdateValues>({
     resolver: zodResolver(userProfileUpdateSchema),
@@ -49,6 +51,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       try {
         const result = await updateUserProfile(data);
         if (result.success) {
+          if (data.image) {
+            await update({ user: { image: data.image } });
+          }
           toast({
             title: "¡Perfil actualizado!",
             description: "Tus datos se han guardado correctamente.",
@@ -99,22 +104,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Correo Electrónico</FormLabel>
-                  <FormControl>
-                    <div className="relative group">
-                      <Mail className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
-                      <Input placeholder="correo@ucr.ac.cr" {...field} className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <FormField
               control={form.control}
@@ -136,13 +126,26 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             <FormField
               control={form.control}
               name="image"
-              render={({ field }) => (
+              render={({ field: { value, onChange, ...fieldProps } }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">URL Foto de Perfil</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1">Foto de Perfil</FormLabel>
                   <FormControl>
                     <div className="relative group">
                       <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
-                      <Input placeholder="https://..." {...field} className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                      <Input 
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Simulamos la subida convirtiendo el archivo en un Blob URL
+                            const url = URL.createObjectURL(file);
+                            onChange(url);
+                          }
+                        }}
+                        {...fieldProps}
+                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer" 
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
