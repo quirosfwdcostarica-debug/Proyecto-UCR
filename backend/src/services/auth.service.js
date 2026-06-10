@@ -14,6 +14,28 @@ const isValidPassword = (password) => {
   return true;
 };
 
+// Generar contraseña temporal segura (8+ caracteres, una mayúscula, un número)
+const generateTemporaryPassword = () => {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*';
+  
+  let password = '';
+  // Garantizar al menos una mayúscula
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  // Garantizar al menos un número
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  // Agregar 6 caracteres más aleatorios
+  const all = uppercase + lowercase + numbers + special;
+  for (let i = 0; i < 6; i++) {
+    password += all[Math.floor(Math.random() * all.length)];
+  }
+  
+  // Mezclar la contraseña
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};
+
 class AuthService {
 
   /**
@@ -201,15 +223,35 @@ class AuthService {
 
   /**
    * RF-01: Recuperación de contraseña
+   * Genera contraseña temporal, la actualiza en Supabase y envía por email
    */
   async forgotPassword({ email }) {
     // No revelar si el correo existe por seguridad
     const user = await db.User.findOne({ where: { email } });
     if (user) {
-      const token = crypto.randomBytes(32).toString('hex');
-      await sendPasswordReset(email, token);
+      try {
+        // Generar contraseña temporal
+        const tempPassword = generateTemporaryPassword();
+        
+        // Actualizar contraseña en Supabase
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { password: tempPassword }
+        );
+        
+        if (updateError) {
+          console.error('Error actualizando contraseña en Supabase:', updateError);
+          throw { status: 500, message: 'Error al procesar la recuperación de contraseña.' };
+        }
+        
+        // Enviar email con contraseña temporal usando EmailJS
+        await sendPasswordReset(email, user.nombre, tempPassword);
+      } catch (error) {
+        console.error('Error en forgotPassword:', error);
+        // No revelar el error al usuario por seguridad, pero loguearlo
+      }
     }
-    return { message: 'Si existe una cuenta con ese correo, recibirás un enlace de recuperación.' };
+    return { message: 'Si existe una cuenta con ese correo, recibirás tu contraseña temporal por email.' };
   }
 
   /**
