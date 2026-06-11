@@ -2,14 +2,23 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Language = "es" | "en";
+export type Language = "es" | "en" | "pt" | "fr";
 
 export type TranslationKeys = 
   | "sidebar.dashboard"
   | "sidebar.directory"
+  | "sidebar.directory.student"
+  | "sidebar.directory.exalumno"
   | "sidebar.positions"
+  | "sidebar.positions.student"
+  | "sidebar.positions.exalumno"
   | "sidebar.donations"
+  | "sidebar.donations.student"
+  | "sidebar.donations.exalumno"
   | "sidebar.profile"
+  | "sidebar.profile.student"
+  | "sidebar.profile.exalumno"
+  | "sidebar.cv"
   | "sidebar.editProfile"
   | "sidebar.connections"
   | "sidebar.settings"
@@ -43,9 +52,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   es: {
     "sidebar.dashboard": "Tablero",
     "sidebar.directory": "Directorio",
+    "sidebar.directory.student": "Directorio Estudiantes",
+    "sidebar.directory.exalumno": "Buscar Mentores",
     "sidebar.positions": "Posiciones",
+    "sidebar.positions.student": "Bolsa de Empleo",
+    "sidebar.positions.exalumno": "Publicar Empleo",
     "sidebar.donations": "Donaciones",
+    "sidebar.donations.student": "Solicitar Apoyo",
+    "sidebar.donations.exalumno": "Donar a Proyectos",
     "sidebar.profile": "Perfil",
+    "sidebar.profile.student": "Mi Perfil",
+    "sidebar.profile.exalumno": "Mi Perfil",
+    "sidebar.cv": "Optimizar CV",
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
@@ -77,9 +95,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   en: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.directory": "Directory",
+    "sidebar.directory.student": "Student Directory",
+    "sidebar.directory.exalumno": "Find Mentors",
     "sidebar.positions": "Positions",
+    "sidebar.positions.student": "Job Board",
+    "sidebar.positions.exalumno": "Post a Job",
     "sidebar.donations": "Donations",
+    "sidebar.donations.student": "Request Funding",
+    "sidebar.donations.exalumno": "Donate to Projects",
     "sidebar.profile": "Profile",
+    "sidebar.profile.student": "My Profile",
+    "sidebar.profile.exalumno": "My Profile",
+    "sidebar.cv": "Optimize CV",
     "sidebar.editProfile": "Edit Profile",
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
@@ -107,6 +134,92 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Send Message",
     "settings.help.contact.success": "Message sent successfully! We will get in touch with you soon.",
     "settings.help.contact.sending": "Sending...",
+  },
+  pt: {
+    "sidebar.dashboard": "Painel",
+    "sidebar.directory": "Diretório",
+    "sidebar.directory.student": "Diretório de Estudantes",
+    "sidebar.directory.exalumno": "Buscar Mentores",
+    "sidebar.positions": "Vagas",
+    "sidebar.positions.student": "Vagas de Emprego",
+    "sidebar.positions.exalumno": "Publicar Vaga",
+    "sidebar.donations": "Doações",
+    "sidebar.donations.student": "Solicitar Apoio",
+    "sidebar.donations.exalumno": "Doar para Projetos",
+    "sidebar.profile": "Perfil",
+    "sidebar.profile.student": "Meu Perfil",
+    "sidebar.profile.exalumno": "Meu Perfil",
+    "sidebar.cv": "Otimizar Currículo",
+    "sidebar.editProfile": "Editar Perfil",
+    "sidebar.settings": "Configurações",
+    "sidebar.help": "Ajuda",
+    "sidebar.startProject": "Iniciar um Projeto",
+    "settings.title": "Configurações da Plataforma",
+    "settings.subtitle": "Configure suas preferências de idioma, tema e acesse o suporte legal e técnico.",
+    "settings.tab.general": "Geral",
+    "settings.tab.terms": "Termos e Condições",
+    "settings.tab.help": "Ajuda e Suporte",
+    "settings.lang.title": "Idioma da interface",
+    "settings.lang.desc": "Selecione o idioma no qual deseja ver a plataforma.",
+    "settings.theme.title": "Tema visual",
+    "settings.theme.desc": "Escolha entre a aparência clara ou escura para a interface.",
+    "settings.theme.light": "Modo Claro",
+    "settings.theme.dark": "Modo Escuro",
+    "settings.terms.title": "Termos de Serviço e Privacidade",
+    "settings.terms.desc": "Leia atentamente os termos e condições de uso da Fundação Exalumnos UCR.",
+    "settings.help.faq.title": "Perguntas Frequentes (FAQs)",
+    "settings.help.faq.desc": "Encontre respostas rápidas para as dúvidas comuns sobre a rede.",
+    "settings.help.contact.title": "Formulário de Contato",
+    "settings.help.contact.desc": "Se você tiver algum problema ou sugestão, envie-nos uma mensagem.",
+    "settings.help.contact.name": "Nome Completo",
+    "settings.help.contact.email": "Endereço de E-mail",
+    "settings.help.contact.message": "Mensagem ou Consulta",
+    "settings.help.contact.send": "Enviar Mensagem",
+    "settings.help.contact.success": "Mensagem enviada com sucesso! Entraremos em contato em breve.",
+    "settings.help.contact.sending": "Enviando...",
+  },
+  fr: {
+    "sidebar.dashboard": "Tableau de Bord",
+    "sidebar.directory": "Annuaire",
+    "sidebar.directory.student": "Annuaire des Étudiants",
+    "sidebar.directory.exalumno": "Trouver des Mentors",
+    "sidebar.positions": "Postes",
+    "sidebar.positions.student": "Offres d'Emploi",
+    "sidebar.positions.exalumno": "Publier un Emploi",
+    "sidebar.donations": "Dons",
+    "sidebar.donations.student": "Demander un Financement",
+    "sidebar.donations.exalumno": "Faire un Don",
+    "sidebar.profile": "Profil",
+    "sidebar.profile.student": "Mon Profil",
+    "sidebar.profile.exalumno": "Mon Profil",
+    "sidebar.cv": "Optimiser le CV",
+    "sidebar.editProfile": "Modifier le Profil",
+    "sidebar.settings": "Paramètres",
+    "sidebar.help": "Aide",
+    "sidebar.startProject": "Démarrer un Projet",
+    "settings.title": "Paramètres de la Plateforme",
+    "settings.subtitle": "Configurez vos préférences de langue, de thème et accédez à l'assistance juridique et technique.",
+    "settings.tab.general": "Général",
+    "settings.tab.terms": "Conditions d'Utilisation",
+    "settings.tab.help": "Aide et Support",
+    "settings.lang.title": "Langue de l'interface",
+    "settings.lang.desc": "Sélectionnez la langue dans laquelle vous souhaitez afficher la plateforme.",
+    "settings.theme.title": "Thème visuel",
+    "settings.theme.desc": "Choisissez entre une apparence claire ou sombre pour l'interface.",
+    "settings.theme.light": "Mode Clair",
+    "settings.theme.dark": "Mode Sombre",
+    "settings.terms.title": "Conditions de Service et Confidentialité",
+    "settings.terms.desc": "Veuillez lire attentivement les conditions d'utilisation de la Fondation Exalumnos UCR.",
+    "settings.help.faq.title": "Foire Aux Questions (FAQ)",
+    "settings.help.faq.desc": "Trouvez des réponses rapides aux questions courantes sur le réseau.",
+    "settings.help.contact.title": "Formulaire de Contact",
+    "settings.help.contact.desc": "Si vous avez un problème ou une suggestion, envoyez-nous un message.",
+    "settings.help.contact.name": "Nom Complet",
+    "settings.help.contact.email": "Adresse E-mail",
+    "settings.help.contact.message": "Message ou Demande",
+    "settings.help.contact.send": "Envoyer le Message",
+    "settings.help.contact.success": "Message envoyé avec succès ! Nous vous contacterons bientôt.",
+    "settings.help.contact.sending": "Envoi en cours...",
   }
 };
 
@@ -124,7 +237,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as Language | null;
-    if (savedLang === "es" || savedLang === "en") {
+    if (savedLang === "es" || savedLang === "en" || savedLang === "pt" || savedLang === "fr") {
       setLanguageState(savedLang);
     }
     setMounted(true);

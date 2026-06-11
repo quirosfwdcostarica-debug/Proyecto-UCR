@@ -70,12 +70,12 @@ class ExalumnoRepository {
     return await Exalumno.create(data);
   }
 
-  async update(user_id, data) {
-    return await Exalumno.update(data, { where: { user_id } });
+  async update(id, data) {
+    return await Exalumno.update(data, { where: { user_id: id } });
   }
 
-  async delete(user_id) {
-    return await Exalumno.destroy({ where: { user_id } });
+  async delete(id) {
+    return await Exalumno.destroy({ where: { user_id: id } });
   }
 }
 

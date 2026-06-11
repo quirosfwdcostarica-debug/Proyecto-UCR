@@ -15,11 +15,11 @@ class EstudianteRepository {
   }
 
   async update(id, data) {
-    return await Estudiante.update(data, { where: { id } });
+    return await Estudiante.update(data, { where: { user_id: id } });
   }
 
   async delete(id) {
-    return await Estudiante.destroy({ where: { id } });
+    return await Estudiante.destroy({ where: { user_id: id } });
   }
 }
 
