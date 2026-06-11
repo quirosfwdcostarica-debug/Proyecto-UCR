@@ -24,6 +24,18 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Mapeo de códigos de error de NextAuth v5 a mensajes en español
+  const getErrorMessage = (errorCode: string): string => {
+    const messages: Record<string, string> = {
+      "CredentialsSignin": "Correo o contraseña incorrectos.",
+      "Credenciales inválidas": "Correo o contraseña incorrectos.",
+      "Configuration": "Error de configuración del servidor. Intenta de nuevo.",
+      "AccessDenied": "Acceso denegado. Tu cuenta puede estar pendiente de verificación.",
+      "Email no verificado": "Debes verificar tu correo antes de iniciar sesión.",
+    };
+    return messages[errorCode] || errorCode || "Error al iniciar sesión.";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -36,10 +48,10 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        console.log("el error es", result?.error);  
+        const msg = getErrorMessage(result.error);
         toast({
-          title: "Error de autenticación " + (result.error === "Email no verificado" ? "(Correo no verificado)" : ""),
-          description: result.error,
+          title: "Error de autenticación",
+          description: msg,
           variant: "destructive",
         });
       } else {
@@ -53,7 +65,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Ocurrió un error inesperado.",
+        description: "Ocurrió un error inesperado. Verifica tu conexión.",
         variant: "destructive",
       });
     } finally {
