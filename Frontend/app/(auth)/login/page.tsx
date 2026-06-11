@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,58 +62,98 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-xl border-border">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto bg-[#0f4c81] h-12 w-12 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+    <div className="flex min-h-screen bg-slate-50 font-body">
+      {/* Panel Izquierdo (Imagen y Texto) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/pretilUCR.png')" }}
+        />
+        <div className="absolute inset-0 bg-[#02477B]/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#02477B]/90 via-[#02477B]/30 to-transparent" />
+        
+        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-12 py-16">
+          <div className="absolute top-16 left-0 right-0 flex justify-center">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg font-display leading-tight text-center">
+              Fundación Exalumnos<br/>UCR
+            </h1>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-[#0f4c81]">Bienvenido de vuelta</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Ingresa a la plataforma de Exalumnos UCR
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-lg md:text-xl text-sky-100 max-w-lg font-medium drop-shadow-md text-center mt-10">
+            Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
+          </p>
+        </div>
+      </div>
+
+      {/* Panel Derecho (Formulario) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 relative">
+        <Link href="/" className="absolute top-8 left-8 sm:top-10 sm:left-10 z-50 flex items-center gap-2 text-slate-500 hover:text-[#0f4c81] transition-colors font-bold">
+          <ArrowLeft className="w-5 h-5" />
+          <span className="hidden sm:inline">Volver al Dashboard</span>
+        </Link>
+        <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-30 bg-cover bg-bottom mix-blend-multiply pointer-events-none"></div>
+        <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative z-10">
+          <div className="text-center mb-10">
+            <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
+              Bienvenido de vuelta
+            </h2>
+            <p className="text-slate-500 font-medium">
+              Ingresa a la plataforma de Exalumnos UCR
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nombre@ejemplo.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
-              />
+              <Label htmlFor="email" className="font-bold text-slate-800">Correo Electrónico</Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="juan.perez@ucr.ac.cr"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-14 rounded-xl border-slate-200 focus:ring-[#0f4c81] focus:border-[#0f4c81] bg-slate-50/50 text-base"
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Contraseña</Label>
-                <Link href="/forgot-password" className="text-xs font-medium text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
+                <Label htmlFor="password" className="font-bold text-slate-800">Contraseña</Label>
+                <Link href="/forgot-password" className="text-sm font-semibold text-[#00c0f3] hover:text-[#00a0cc] hover:underline transition-colors">
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-14 rounded-xl border-slate-200 focus:ring-[#0f4c81] focus:border-[#0f4c81] bg-slate-50/50 text-base"
+                />
+              </div>
             </div>
+
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2"
+              className="w-full h-14 text-base rounded-xl bg-gradient-to-r from-[#02477B] to-[#005eb8] hover:from-[#01355e] hover:to-[#004a94] text-white font-bold shadow-lg shadow-blue-900/20 transition-all hover:shadow-blue-900/40"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Iniciando sesión...
                 </>
               ) : (
@@ -121,16 +161,15 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4 text-center text-sm border-t border-border pt-4 text-slate-500">
-          <div>
-            ¿No tienes una cuenta?{" "}
-            <Link href="/registro" className="font-semibold text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
+
+          <div className="mt-10 text-center text-slate-500 font-medium">
+            ¿No tienes cuenta?{" "}
+            <Link href="/registro" className="font-bold text-[#00c0f3] hover:text-[#00a0cc] hover:underline transition-colors">
               Regístrate aquí
             </Link>
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

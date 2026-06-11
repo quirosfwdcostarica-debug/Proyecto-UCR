@@ -7,7 +7,12 @@ class UserRepository {
   }
 
   async findById(id) {
-    return await User.findByPk(id);
+    return await User.findByPk(id, {
+      include: [
+        { model: db.Estudiante },
+        { model: db.Exalumno }
+      ]
+    });
   }
 
   async create(data) {

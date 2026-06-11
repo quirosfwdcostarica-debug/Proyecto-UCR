@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 
 export function UserDropdown() {
   const { data: session } = useSession();
@@ -15,6 +16,13 @@ export function UserDropdown() {
       {/* Dropdown Menu (Hover) */}
       <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
         <div className="py-1">
+          <Link 
+            href="/perfil/editar"
+            className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 font-medium transition-colors"
+          >
+            Mi Perfil
+          </Link>
+          <div className="border-t border-slate-100 my-1"></div>
           <button 
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
