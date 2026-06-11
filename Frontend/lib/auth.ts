@@ -13,18 +13,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
         try {
-          // Llamar a nuestro backend Express
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+          const res = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             body: JSON.stringify(credentials),
-            headers: { "Content-Type": "application/json" }
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store'
           });
-          
-          const data = await res.json();
-          
-          if (res.ok && data.user) {
-            // Devolver el usuario junto con el token
+
+          const data = await res.json().catch(() => null);
+
+          if (res.ok && data?.user) {
             return {
               id: data.user.id,
               name: data.user.nombre,
@@ -34,10 +35,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               foto_url: data.user.foto_url
             } as any;
           }
-          // Lanza un error para ser capturado en el frontend
-          throw new Error(data.message || "Credenciales inválidas");
+
+          const message = data?.message || (res.status === 401 ? 'Correo o contraseña incorrectos.' : 'Credenciales inválidas.');
+          throw new Error(message);
         } catch (error: any) {
-          throw new Error(error.message || "Error de conexión con el servidor");
+          throw new Error(error?.message || 'Error de conexión con el servidor de autenticación');
         }
       }
     })
