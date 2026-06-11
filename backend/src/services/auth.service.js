@@ -170,8 +170,9 @@ class AuthService {
   async login({ email, password }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      throw { status: 401, message: 'Correo o contraseña incorrectos.' };
+    if (error || !data?.session) {
+      const message = error?.message || 'Correo o contraseña incorrectos.';
+      throw { status: 401, message };
     }
 
     // Verificar el usuario en nuestra BD
@@ -186,9 +187,14 @@ class AuthService {
       throw { status: 403, message: 'Tu cuenta está pendiente de verificación o ha sido suspendida.' };
     }
 
+    const session = data.session;
+    if (!session?.access_token || !session?.refresh_token) {
+      throw { status: 500, message: 'No se pudo iniciar sesión. Intenta de nuevo más tarde.' };
+    }
+
     return {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
       user: {
         id: user.id,
         email: user.email,

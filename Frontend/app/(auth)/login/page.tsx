@@ -36,10 +36,15 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        console.log("el error es", result?.error);  
+        console.log("el error es", result?.error);
+        const errorMessage = result.error === "CredentialsSignin"
+          ? "Correo o contraseña incorrectos o tu cuenta no está activa."
+          : result.error;
+        const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
+
         toast({
-          title: "Error de autenticación " + (result.error === "Email no verificado" ? "(Correo no verificado)" : ""),
-          description: result.error,
+          title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
