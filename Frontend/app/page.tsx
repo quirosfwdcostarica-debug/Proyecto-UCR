@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import { CheckCircle2, Circle, Sparkles, Building2, Users, UserCircle } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
@@ -189,7 +190,9 @@ export default function Dashboard() {
                       <span key={tag} className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">{tag}</span>
                     ))}
                   </div>
-                  <Button className="w-full mt-auto bg-blue-50 text-[#0f4c81] hover:bg-blue-100 font-semibold border-0">Solicitar Café Virtual</Button>
+                  <Link href={`/mentoria/solicitud?mentor=${encodeURIComponent(mentor.name)}`} className="w-full mt-auto">
+                    <Button className="w-full bg-blue-50 text-[#0f4c81] hover:bg-blue-100 font-semibold border-0">Solicitar Café Virtual</Button>
+                  </Link>
                 </div>
               </Card>
             ))}
@@ -201,7 +204,9 @@ export default function Dashboard() {
               </div>
               <h4 className="font-bold text-base text-[#0f4c81] mb-2">Encontrar Más Mentores</h4>
               <p className="text-sm text-slate-500 mb-6">Explora nuestra base de datos con más de 5,000 exalumnos verificados.</p>
-              <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">Explorar Directorio</Button>
+              <Link href="/directorio/exalumnos" className="w-full">
+                <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">Explorar Directorio</Button>
+              </Link>
             </Card>
 
           </div>

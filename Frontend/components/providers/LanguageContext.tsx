@@ -11,6 +11,7 @@ export type TranslationKeys =
   | "sidebar.donations"
   | "sidebar.profile"
   | "sidebar.editProfile"
+  | "sidebar.connections"
   | "sidebar.settings"
   | "sidebar.help"
   | "sidebar.startProject"
