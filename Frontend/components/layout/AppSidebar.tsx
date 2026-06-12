@@ -76,9 +76,11 @@ export function AppSidebar() {
             {t("sidebar.help")}
           </Button>
         </Link>
-        <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
-          {t("sidebar.startProject")}
-        </Button>
+        <Link href="/proyectos/nuevo" className="block w-full">
+          <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
+            {t("sidebar.startProject")}
+          </Button>
+        </Link>
       </div>
     </aside>
   );
