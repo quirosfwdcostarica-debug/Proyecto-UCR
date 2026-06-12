@@ -30,6 +30,7 @@ export default function NuevoProyecto() {
     descripcion: "",
     categoria: "",
     objetivos: "",
+    estado: "Iniciando",
   });
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
   const [errorCategoriaPersonalizada, setErrorCategoriaPersonalizada] = useState(false);
@@ -212,6 +213,29 @@ export default function NuevoProyecto() {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Estado */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="estado"
+                  className="block text-sm font-semibold text-slate-700"
+                >
+                  Estado del Proyecto <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="estado"
+                  name="estado"
+                  required
+                  value={form.estado}
+                  onChange={handleChange}
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2 text-foreground"
+                >
+                  <option value="Iniciando">Iniciando</option>
+                  <option value="En proceso">En proceso</option>
+                  <option value="Pausado">Pausado</option>
+                  <option value="Finalizado">Finalizado</option>
+                </select>
               </div>
 
               {/* Objetivos */}

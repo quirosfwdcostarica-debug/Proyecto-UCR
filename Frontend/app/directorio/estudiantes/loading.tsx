@@ -9,7 +9,7 @@ export default function LoadingEstudiantes() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <UCRLoader message="Cargando directorio estudiantil..." shieldSize={84} />
+          <UCRLoader message="Cargando directorio de estudiantes..." />
         </div>
       </div>
     </div>
