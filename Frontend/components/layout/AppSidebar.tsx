@@ -19,18 +19,7 @@ export function AppSidebar() {
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
 
-<<<<<<< HEAD
-  const navItems: NavItem[] = [
-    { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
-    { labelKey: "sidebar.directory", href: "/directorio/estudiantes", icon: Users },
-    { labelKey: "sidebar.positions", href: "/posiciones", icon: Briefcase },
-    { labelKey: "sidebar.donations", href: "/donaciones", icon: Heart },
-    { labelKey: "sidebar.profile", href: "/cv", icon: UserCircle },
-    { labelKey: "sidebar.editProfile", href: "/perfil/editar", icon: Settings },
-    { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
-  ];
-=======
-  const navItems: NavItem[] = isEstudiante 
+  const navItems: NavItem[] = isEstudiante
     ? [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
@@ -45,8 +34,8 @@ export function AppSidebar() {
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ];
->>>>>>> 356aae223bb52f80e95b504796dcc3c311c739cc
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-20 transition-colors duration-300">
@@ -88,9 +77,11 @@ export function AppSidebar() {
             {t("sidebar.help")}
           </Button>
         </Link>
-        <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
-          {t("sidebar.startProject")}
-        </Button>
+        <Link href="/proyectos/nuevo" className="block w-full">
+          <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
+            {t("sidebar.startProject")}
+          </Button>
+        </Link>
       </div>
     </aside>
   );
