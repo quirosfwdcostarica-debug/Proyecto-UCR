@@ -98,7 +98,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-30 bg-cover bg-bottom mix-blend-multiply pointer-events-none"></div>
         <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative z-10">
           <div className="text-center mb-10">
-            <img src="/escudo-ucr.png" alt="Escudo UCR" className="w-20 h-20 mx-auto mb-6" />
+            <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
               Bienvenido de vuelta
             </h2>

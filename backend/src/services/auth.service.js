@@ -1,5 +1,5 @@
 const { supabase } = require('../config/db');
-const { sendMagicLink, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail } = require('../config/email');
+const { sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail } = require('../config/email');
 const db = require('../models');
 const crypto = require('crypto');
 
@@ -42,11 +42,12 @@ class AuthService {
    * RF-01: Registro de Estudiante
    * Solo permite correos @ucr.ac.cr. Envía magic link de verificación.
    */
-  async registerStudent({ email, nombre, password }) {
+  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero }) {
     // Validaciones
-    if (!isUCREmail(email)) {
+    // Nota: Se quitó la restricción de @ucr.ac.cr temporalmente por solicitud
+    /*if (!isUCREmail(email)) {
       throw { status: 400, message: 'Solo se permiten correos institucionales @ucr.ac.cr para estudiantes.' };
-    }
+    }*/
     if (!nombre || nombre.trim().length < 3) {
       throw { status: 400, message: 'El nombre debe tener al menos 3 caracteres.' };
     }
@@ -80,20 +81,29 @@ class AuthService {
       tipo: 'ESTUDIANTE',
       email_verified: false,
       activo: true,
+      cedula,
+      fecha_nacimiento,
+      genero
     });
 
     // Crear perfil de estudiante vacío (se completa después)
     await db.Estudiante.create({ user_id: authData.user.id });
 
     // Generar token de verificación y enviarlo
-    const verificationToken = crypto.randomBytes(32).toString('hex');
     // Guardar token en metadata de Supabase (o usar Supabase's own magic link)
-    await supabase.auth.admin.generateLink({
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+      }
     });
 
-    await sendMagicLink(email, verificationToken);
+    if (linkError) {
+      throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
+    }
+
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link);
 
     return {
       message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. El enlace expira en 24 horas.',
@@ -105,7 +115,7 @@ class AuthService {
    * RF-01: Registro de Exalumno
    * Permite cualquier correo. El perfil queda pendiente de verificación admin.
    */
-  async registerAlumni({ email, nombre, password, carrera, escuela_facultad, anio_graduacion }) {
+  async registerAlumni({ email, nombre, password, carrera, escuela_facultad, anio_graduacion, cedula, fecha_nacimiento, genero }) {
     // Validaciones
     if (!nombre || nombre.trim().length < 3) {
       throw { status: 400, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -147,6 +157,9 @@ class AuthService {
       tipo: 'EXALUMNO',
       email_verified: true,
       activo: false, // Pendiente de aprobación por admin
+      cedula,
+      fecha_nacimiento,
+      genero
     });
 
     // Crear perfil de exalumno
@@ -220,8 +233,16 @@ class AuthService {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
       // Intentar con magic link directo de Supabase
-      const token = crypto.randomBytes(32).toString('hex');
-      await sendMagicLink(email, token);
+      const { data: linkData } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+        options: {
+          redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+        }
+      });
+      if (linkData) {
+        await sendMagicLinkEmailJS(email, linkData.properties.action_link);
+      }
     }
 
     return { message: 'Magic link reenviado. Revisa tu bandeja de entrada.' };
