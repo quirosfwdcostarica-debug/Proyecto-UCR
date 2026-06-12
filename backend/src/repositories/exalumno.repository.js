@@ -15,11 +15,11 @@ class ExalumnoRepository {
   }
 
   async update(id, data) {
-    return await Exalumno.update(data, { where: { id } });
+    return await Exalumno.update(data, { where: { user_id: id } });
   }
 
   async delete(id) {
-    return await Exalumno.destroy({ where: { id } });
+    return await Exalumno.destroy({ where: { user_id: id } });
   }
 }
 

@@ -30,7 +30,7 @@ export function DashAlumni({ nav }: any) {
               </div>
             ))}</div>
           </Card>
-          <Card><h3 className="font-bold text-[16px] mb-4" style={{ color: C.ink }}>Historial de donaciones</h3><DonationTable rows={DONATIONS_HIST.slice(0, 3)} /></Card>
+          <Card><h3 className="font-bold text-[16px] mb-4" style={{ color: C.ink }}>Historial de donaciones</h3><DonationTable rows={_HIST.slice(0, 3)} /></Card>
         </div>
         <div className="space-y-6">
           <Card>
