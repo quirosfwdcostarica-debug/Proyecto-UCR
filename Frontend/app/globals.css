@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Work+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Taviraj:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +6,65 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* #f8fafc bg-slate-50 */
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 98%; /* Gris claro institucional */
+    --foreground: 0 0% 8%; /* Negro oficial #141414 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 8%;
 
-    --primary: 210 90% 30%; /* Deep Blue #0747a6 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 194 100% 19%; /* Esmeralda oficial #004C63 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 198 81% 63%; /* Celeste oficial #54BCEB */
+    --secondary-foreground: 0 0% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 194 20% 95%; /* Tint claro de esmeralda */
+    --muted-foreground: 194 15% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 33 100% 55%; /* Amarillo oficial #FF9B18 */
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 10 90% 55%; /* Naranja oficial #F34B26 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 194 15% 90%;
+    --input: 194 15% 90%;
+    --ring: 194 100% 19%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%; /* Deep Slate-950 background */
-    --foreground: 210 40% 98%;
+    --background: 0 0% 8%; /* Negro oficial #141414 */
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 8%; /* Slightly lighter slate for cards */
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 12%; /* Negro un poco más claro para tarjetas */
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 6%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 199 89% 48%; /* Celeste UCR in dark mode */
-    --primary-foreground: 222.2 84% 4.9%;
+    --primary: 198 81% 63%; /* Celeste como primario en modo oscuro */
+    --primary-foreground: 0 0% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 194 100% 19%; /* Esmeralda como secundario en modo oscuro */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 33 100% 55%; /* Amarillo oficial #FF9B18 */
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 10 90% 55%; /* Naranja oficial #F34B26 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 198 81% 63%;
   }
 }
 
