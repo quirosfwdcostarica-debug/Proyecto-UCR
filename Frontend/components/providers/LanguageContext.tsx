@@ -7,9 +7,18 @@ export type Language = "es" | "en" | "pt" | "fr";
 export type TranslationKeys = 
   | "sidebar.dashboard"
   | "sidebar.directory"
+  | "sidebar.directory.student"
+  | "sidebar.directory.exalumno"
   | "sidebar.positions"
+  | "sidebar.positions.student"
+  | "sidebar.positions.exalumno"
   | "sidebar.donations"
+  | "sidebar.donations.student"
+  | "sidebar.donations.exalumno"
   | "sidebar.profile"
+  | "sidebar.profile.student"
+  | "sidebar.profile.exalumno"
+  | "sidebar.cv"
   | "sidebar.editProfile"
   | "sidebar.settings"
   | "sidebar.help"
@@ -43,9 +52,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   es: {
     "sidebar.dashboard": "Tablero",
     "sidebar.directory": "Directorio",
+    "sidebar.directory.student": "Directorio Estudiantes",
+    "sidebar.directory.exalumno": "Buscar Mentores",
     "sidebar.positions": "Posiciones",
+    "sidebar.positions.student": "Bolsa de Empleo",
+    "sidebar.positions.exalumno": "Publicar Empleo",
     "sidebar.donations": "Donaciones",
+    "sidebar.donations.student": "Solicitar Apoyo",
+    "sidebar.donations.exalumno": "Donar a Proyectos",
     "sidebar.profile": "Perfil",
+    "sidebar.profile.student": "Mi Perfil",
+    "sidebar.profile.exalumno": "Mi Perfil",
+    "sidebar.cv": "Optimizar CV",
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
@@ -78,9 +96,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   en: {
     "sidebar.dashboard": "Dashboard",
     "sidebar.directory": "Directory",
+    "sidebar.directory.student": "Student Directory",
+    "sidebar.directory.exalumno": "Find Mentors",
     "sidebar.positions": "Positions",
+    "sidebar.positions.student": "Job Board",
+    "sidebar.positions.exalumno": "Post a Job",
     "sidebar.donations": "Donations",
+    "sidebar.donations.student": "Request Funding",
+    "sidebar.donations.exalumno": "Donate to Projects",
     "sidebar.profile": "Profile",
+    "sidebar.profile.student": "My Profile",
+    "sidebar.profile.exalumno": "My Profile",
+    "sidebar.cv": "Optimize CV",
     "sidebar.editProfile": "Edit Profile",
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
@@ -113,9 +140,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   pt: {
     "sidebar.dashboard": "Painel",
     "sidebar.directory": "Diretório",
+    "sidebar.directory.student": "Diretório de Estudantes",
+    "sidebar.directory.exalumno": "Buscar Mentores",
     "sidebar.positions": "Vagas",
+    "sidebar.positions.student": "Vagas de Emprego",
+    "sidebar.positions.exalumno": "Publicar Vaga",
     "sidebar.donations": "Doações",
+    "sidebar.donations.student": "Solicitar Apoio",
+    "sidebar.donations.exalumno": "Doar para Projetos",
     "sidebar.profile": "Perfil",
+    "sidebar.profile.student": "Meu Perfil",
+    "sidebar.profile.exalumno": "Meu Perfil",
+    "sidebar.cv": "Otimizar Currículo",
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
@@ -148,9 +184,18 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
   fr: {
     "sidebar.dashboard": "Tableau de Bord",
     "sidebar.directory": "Annuaire",
+    "sidebar.directory.student": "Annuaire des Étudiants",
+    "sidebar.directory.exalumno": "Trouver des Mentors",
     "sidebar.positions": "Postes",
+    "sidebar.positions.student": "Offres d'Emploi",
+    "sidebar.positions.exalumno": "Publier un Emploi",
     "sidebar.donations": "Dons",
+    "sidebar.donations.student": "Demander un Financement",
+    "sidebar.donations.exalumno": "Faire un Don",
     "sidebar.profile": "Profil",
+    "sidebar.profile.student": "Mon Profil",
+    "sidebar.profile.exalumno": "Mon Profil",
+    "sidebar.cv": "Optimiser le CV",
     "sidebar.editProfile": "Modifier le Profil",
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",
