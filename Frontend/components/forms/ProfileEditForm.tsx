@@ -2,15 +2,16 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Mail, Phone, ImageIcon, LinkIcon, Save, Briefcase } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,6 +30,8 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const [isPending, startTransition] = useTransition();
   const { update } = useSession();
 
+  const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
+
   const form = useForm<UserProfileUpdateValues>({
     resolver: zodResolver(userProfileUpdateSchema),
     defaultValues: {
@@ -43,6 +46,34 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         twitter: initialData?.socialLinks?.twitter || "",
         website: initialData?.socialLinks?.website || "",
       },
+      
+      // Estudiante fields
+      carnet_ucr: initialData?.carnet_ucr || "",
+      carrera: initialData?.carrera || "",
+      escuela_facultad: initialData?.escuela_facultad || "",
+      sede: initialData?.sede || "",
+      anio_ingreso: initialData?.anio_ingreso || "",
+      nivel_academico: initialData?.nivel_academico || "",
+      promedio_ponderado: initialData?.promedio_ponderado || "",
+      proyecto_titulo: initialData?.proyecto_titulo || "",
+      proyecto_tipo: initialData?.proyecto_tipo || "",
+      busca_financiamiento: !!initialData?.busca_financiamiento,
+      busca_mentoria: !!initialData?.busca_mentoria,
+      busca_empleo: !!initialData?.busca_empleo,
+      busca_pasantia: !!initialData?.busca_pasantia,
+
+      // Exalumno fields
+      anio_graduacion: initialData?.anio_graduacion || "",
+      empresa_actual: initialData?.empresa_actual || "",
+      cargo_actual: initialData?.cargo_actual || "",
+      pais_ciudad: initialData?.pais_ciudad || "",
+      anios_experiencia: initialData?.anios_experiencia || "",
+      linkedin_url: initialData?.linkedin_url || "",
+      ofrece_mentoria: !!initialData?.ofrece_mentoria,
+      ofrece_empleo: !!initialData?.ofrece_empleo,
+      ofrece_pasantia: !!initialData?.ofrece_pasantia,
+      ofrece_proyecto: !!initialData?.ofrece_proyecto,
+      ofrece_donacion_dinero: !!initialData?.ofrece_donacion_dinero,
     },
   });
 
@@ -187,6 +218,379 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             )}
           />
         </div>
+
+        {/* Tarjeta de Datos según Rol */}
+        {isEstudiante ? (
+          <>
+            {/* DATOS DE ESTUDIANTE */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Información Académica</h2>
+                  <p className="text-sm text-slate-500">Tus datos como estudiante activo de la UCR.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="carnet_ucr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Carné UCR</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. B98765" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="carrera"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Carrera</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="escuela_facultad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Escuela / Facultad</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Facultad de Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sede"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Sede</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Sede Rodrigo Facio" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="anio_ingreso"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Año de Ingreso</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="Ej. 2021" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="nivel_academico"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Nivel Académico</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Bachillerato" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="promedio_ponderado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Promedio Ponderado</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="Ej. 8.50" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* PROYECTO DE GRADUACIÓN */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Proyecto de Graduación</h2>
+                  <p className="text-sm text-slate-500">Detalles sobre tu trabajo final o tesis actual.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="proyecto_titulo"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700">Título del Proyecto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Investigación de Energía Renovable" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="proyecto_tipo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Tipo de Proyecto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Tesis, Proyecto Eléctrico" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* APOYO BUSCADO */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
+                  <Heart className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Intereses y Apoyo Buscado</h2>
+                  <p className="text-sm text-slate-500">¿En qué áreas te gustaría recibir apoyo de la red de exalumnos?</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { name: "busca_financiamiento", label: "Busco Financiamiento / Apoyo Económico" },
+                  { name: "busca_mentoria", label: "Busco Mentoría Profesional / Guía" },
+                  { name: "busca_empleo", label: "Busco Oportunidades de Empleo" },
+                  { name: "busca_pasantia", label: "Busco Pasantías / Prácticas" }
+                ].map((item) => (
+                  <FormField
+                    key={item.name}
+                    control={form.control}
+                    name={item.name as any}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-2xl border border-slate-100 p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-semibold text-slate-700 cursor-pointer">
+                          {item.label}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* DATOS DE EXALUMNO */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Información de Graduado</h2>
+                  <p className="text-sm text-slate-500">Tus credenciales académicas e información laboral.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="carnet_ucr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Carné UCR (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. A81234" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="escuela_facultad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Facultad / Escuela de Graduación</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="anio_graduacion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Año de Graduación</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="Ej. 2018" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="empresa_actual"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Empresa Actual</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Intel Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cargo_actual"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Cargo Actual</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Arquitecto de Software" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pais_ciudad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Ciudad / País de Residencia</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. San José, Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="anios_experiencia"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Años de Experiencia Profesional</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="Ej. 5" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="linkedin_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">URL de LinkedIn</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://linkedin.com/in/..." {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* APOYO OFRECIDO */}
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
+                  <Heart className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Contribución y Apoyo Ofrecido</h2>
+                  <p className="text-sm text-slate-500">¿Cómo deseas contribuir y apoyar a la comunidad estudiantil de la UCR?</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { name: "ofrece_mentoria", label: "Ofrezco Mentoría / Guía Profesional" },
+                  { name: "ofrece_empleo", label: "Ofrezco Oportunidades Laborales / Empleo" },
+                  { name: "ofrece_pasantia", label: "Ofrezco Oportunidades de Pasantía" },
+                  { name: "ofrece_proyecto", label: "Ofrezco Apoyo / Financiamiento a Proyectos" },
+                  { name: "ofrece_donacion_dinero", label: "Ofrezco Donaciones al Fondo de Becas" }
+                ].map((item) => (
+                  <FormField
+                    key={item.name}
+                    control={form.control}
+                    name={item.name as any}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-2xl border border-slate-100 p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-semibold text-slate-700 cursor-pointer">
+                          {item.label}
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Tarjeta 3: Redes Sociales */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl">
