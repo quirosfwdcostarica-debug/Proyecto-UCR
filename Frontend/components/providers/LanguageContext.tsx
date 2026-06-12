@@ -24,6 +24,7 @@ export type TranslationKeys =
   | "sidebar.settings"
   | "sidebar.help"
   | "sidebar.startProject"
+  | "sidebar.admin"
   | "settings.title"
   | "settings.subtitle"
   | "settings.tab.general"
@@ -68,6 +69,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
     "sidebar.startProject": "Iniciar un Proyecto",
+    "sidebar.admin": "Administración",
     "settings.title": "Ajustes de la Plataforma",
     "settings.subtitle": "Configura tus preferencias de idioma, tema y accede al soporte legal y técnico.",
     "settings.tab.general": "General",
@@ -111,6 +113,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
     "sidebar.startProject": "Start a Project",
+    "sidebar.admin": "Administration",
     "settings.title": "Platform Settings",
     "settings.subtitle": "Configure your language and theme preferences, and access legal and technical support.",
     "settings.tab.general": "General",
@@ -154,6 +157,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
     "sidebar.startProject": "Iniciar um Projeto",
+    "sidebar.admin": "Administração",
     "settings.title": "Configurações da Plataforma",
     "settings.subtitle": "Configure suas preferências de idioma, tema e acesse o suporte legal e técnico.",
     "settings.tab.general": "Geral",
@@ -197,6 +201,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",
     "sidebar.startProject": "Démarrer un Projet",
+    "sidebar.admin": "Administration",
     "settings.title": "Paramètres de la Plateforme",
     "settings.subtitle": "Configurez vos préférences de langue, de thème et accédez à l'assistance juridique et technique.",
     "settings.tab.general": "Général",
