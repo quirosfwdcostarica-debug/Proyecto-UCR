@@ -1,12 +1,32 @@
 const ExalumnoRepository = require('../repositories/exalumno.repository');
+const ConnectionRepository = require('../repositories/connection.repository');
 
 class ExalumnoService {
-  async findAll() {
-    return await ExalumnoRepository.findAll();
+  async findAll(filters = {}) {
+    return await ExalumnoRepository.findAll(filters);
   }
 
-  async findById(id) {
-    return await ExalumnoRepository.findById(id);
+  async findById(id, requestingUserId = null) {
+    const exalumno = await ExalumnoRepository.findById(id);
+    if (!exalumno) return null;
+
+    // Convert to JSON plain object to modify properties
+    const result = exalumno.get({ plain: true });
+
+    if (requestingUserId) {
+      const connection = await ConnectionRepository.findBySenderAndReceiver(requestingUserId, id);
+      if (connection) {
+        result.connectionStatus = connection.status;
+        result.connectionId = connection.id;
+        result.connectionSenderId = connection.sender_id;
+      } else {
+        result.connectionStatus = 'none';
+      }
+    } else {
+      result.connectionStatus = 'none';
+    }
+
+    return result;
   }
 
   async create(data) {
