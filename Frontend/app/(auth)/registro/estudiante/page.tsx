@@ -11,8 +11,8 @@ export default function RegistroEstudiantePage() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/pretilUCR.png')" }}
         />
-        <div className="absolute inset-0 bg-[#02477B]/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#02477B]/90 via-[#02477B]/30 to-transparent" />
+        <div className="absolute inset-0 bg-ucr-esmeralda/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ucr-esmeralda/90 via-ucr-esmeralda/30 to-transparent" />
         
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-12 py-16">
           <div className="absolute top-16 left-0 right-0 flex justify-center">
@@ -28,7 +28,7 @@ export default function RegistroEstudiantePage() {
 
       {/* Panel Derecho (Formulario) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto">
-        <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-50 flex items-center gap-2 text-slate-500 hover:text-[#0f4c81] transition-colors font-bold">
+        <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-esmeralda transition-colors font-bold">
           <ArrowLeft className="w-5 h-5" />
           <span className="hidden sm:inline">Volver al Dashboard</span>
         </Link>
@@ -49,7 +49,7 @@ export default function RegistroEstudiantePage() {
 
           <div className="mt-8 text-center text-slate-500 font-medium">
             ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="font-bold text-[#00c0f3] hover:text-[#00a0cc] hover:underline transition-colors">
+            <Link href="/login" className="font-bold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors">
               Inicia sesión aquí
             </Link>
           </div>

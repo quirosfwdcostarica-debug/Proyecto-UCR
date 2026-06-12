@@ -25,8 +25,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import LandingPage from "@/components/landing/LandingPage";
 
-export default function Dashboard() {
+export default function RootPage() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-4 border-t-[#00C0F3] border-r-transparent border-b-transparent border-l-transparent animate-spin border-[#00C0F3]/20" />
+          <p className="text-white dark:text-slate-300 text-sm font-semibold tracking-wide animate-pulse">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LandingPage />;
+  }
+
+  return <Dashboard />;
+}
+
+function Dashboard() {
   const { toast } = useToast();
   const { data: session } = useSession();
 
