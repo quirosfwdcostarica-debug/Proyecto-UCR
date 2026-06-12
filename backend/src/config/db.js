@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { Sequelize } = require('sequelize');
 const dns = require('dns');
 const { URL } = require('url');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 // Forzar IPv4
 dns.setDefaultResultOrder('ipv4first');

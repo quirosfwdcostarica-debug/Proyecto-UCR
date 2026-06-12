@@ -38,7 +38,7 @@ export default function SelectorRegistroPage() {
         
         <div className="w-full max-w-xl relative z-10">
           <div className="text-center mb-10">
-            <img src="/escudo-ucr.png" alt="Escudo UCR" className="w-20 h-20 mx-auto mb-6" />
+            <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
               Únete a la Comunidad
             </h2>

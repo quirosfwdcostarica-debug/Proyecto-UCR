@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useSession } from "next-auth/react";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
 
 interface NavItem {
@@ -13,7 +14,12 @@ interface NavItem {
 
 export function AppSidebar() {
   const { t } = useLanguage();
+  const { data: session } = useSession();
+  
+  const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
+  const isEstudiante = role === "ESTUDIANTE";
 
+<<<<<<< HEAD
   const navItems: NavItem[] = [
     { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
     { labelKey: "sidebar.directory", href: "/directorio/estudiantes", icon: Users },
@@ -23,6 +29,24 @@ export function AppSidebar() {
     { labelKey: "sidebar.editProfile", href: "/perfil/editar", icon: Settings },
     { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
   ];
+=======
+  const navItems: NavItem[] = isEstudiante 
+    ? [
+        { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
+        { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
+        { labelKey: "sidebar.positions.student", href: "/posiciones", icon: Briefcase },
+        { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
+        { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
+        { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
+      ]
+    : [
+        { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
+        { labelKey: "sidebar.directory.student", href: "/directorio/estudiantes", icon: Users },
+        { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
+        { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
+        { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
+      ];
+>>>>>>> 356aae223bb52f80e95b504796dcc3c311c739cc
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-20 transition-colors duration-300">
