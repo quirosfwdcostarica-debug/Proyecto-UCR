@@ -350,9 +350,7 @@ export default function LandingPage() {
                 Conéctate directamente para conversar informalmente. Recibe guía sobre tu proyecto final, revisiones de currículum y recomendaciones clave para dar tus primeros pasos profesionales.
               </p>
             </div>
-            <div className="pt-8 flex items-center text-xs font-bold text-ucr-celeste gap-1.5 group-hover:gap-2.5 transition-all">
-              SABER MÁS <ArrowRight className="h-4 w-4" />
-            </div>
+
           </Card>
 
           {/* Pillar 2 */}
@@ -369,9 +367,7 @@ export default function LandingPage() {
                 Accede a una bolsa de empleo diseñada específicamente para estudiantes and graduados recientes de la UCR. Encuentra vacantes publicadas y recomendadas de primera mano por los mismos exalumnos.
               </p>
             </div>
-            <div className="pt-8 flex items-center text-xs font-bold text-ucr-esmeralda gap-1.5 group-hover:gap-2.5 transition-all">
-              EXPLORAR VACANTES <ArrowRight className="h-4 w-4" />
-            </div>
+
           </Card>
 
           {/* Pillar 3 */}
@@ -388,9 +384,7 @@ export default function LandingPage() {
                 Apoya o postula a fondos especiales para financiar proyectos de graduación. El fondo solidario de exalumnos busca que ningún estudiante talentoso detenga su carrera por limitaciones económicas.
               </p>
             </div>
-            <div className="pt-8 flex items-center text-xs font-bold text-ucr-naranja gap-1.5 group-hover:gap-2.5 transition-all">
-              VER PROYECTOS <ArrowRight className="h-4 w-4" />
-            </div>
+
           </Card>
         </div>
         </div>
