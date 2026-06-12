@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
 
@@ -21,6 +21,7 @@ export function AppSidebar() {
     { labelKey: "sidebar.donations", href: "/donaciones", icon: Heart },
     { labelKey: "sidebar.profile", href: "/cv", icon: UserCircle },
     { labelKey: "sidebar.editProfile", href: "/perfil/editar", icon: Settings },
+    { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
   ];
 
   return (
