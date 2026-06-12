@@ -27,6 +27,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ]
     : [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ];
 
   return (
