@@ -131,7 +131,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
   // Help generate support tags to render on cards
   const getAlumniSupportTags = (al: any) => {
-    const tags = [];
+    const tags: string[] = [];
     if (al.ofrece_mentoria) tags.push("MENTORSHIP");
     if (al.ofrece_empleo) tags.push("HIRING");
     if (al.ofrece_guest_speaking) tags.push("GUEST SPEAKING");

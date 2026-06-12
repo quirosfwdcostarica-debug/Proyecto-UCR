@@ -19,8 +19,9 @@ export function AppSidebar() {
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
 
-  const navItems: NavItem[] = isEstudiante 
-    ? [
+  const isAdmin = role === "ADMIN";
+
+  const studentItems: NavItem[] = [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
         { labelKey: "sidebar.positions.student", href: "/posiciones", icon: Briefcase },
@@ -28,15 +29,18 @@ export function AppSidebar() {
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
         { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
-      ]
-    : [
+  ];
+
+  const exalumnoItems: NavItem[] = [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.student", href: "/directorio/estudiantes", icon: Users },
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
         { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
-      ];
+  ];
+
+  const navItems = (isEstudiante ? studentItems : exalumnoItems).filter(item => item.labelKey !== "sidebar.admin" || isAdmin);
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-20 transition-colors duration-300">

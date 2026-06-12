@@ -93,7 +93,7 @@ export default function DirectorioEstudiantes() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#0f4c81] mb-2">
-            Directorio de Proyectos Estudiantiles
+            Directorio de estudiantes
           </h1>
           <p className="text-slate-600 max-w-2xl text-base">
             Conectando el talento emergente de la UCR con nuestra red global de exalumnos.
@@ -137,7 +137,11 @@ export default function DirectorioEstudiantes() {
 
         {/* Filtros expandibles */}
         {showFilters && (
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+            <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider">
+              Filtros combinados con AND lógico
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">
                 Carrera
@@ -188,6 +192,7 @@ export default function DirectorioEstudiantes() {
                   </option>
                 ))}
               </select>
+            </div>
             </div>
           </div>
         )}
