@@ -37,10 +37,34 @@ async function sendMagicLink(to, token) {
         <p style="color:#94a3b8;font-size:12px">
           Si no solicitaste este correo, puedes ignorarlo con seguridad.<br>
           <a href="${link}" style="color:#0f4c81;word-break:break-all">${link}</a>
-        </p>
       </div>
     `,
   });
+}
+
+/**
+ * Envía un magic link de verificación usando EmailJS.
+ * @param {string} to - Correo destino
+ * @param {string} link - URL mágica completa
+ */
+async function sendMagicLinkEmailJS(to, link) {
+  try {
+    return await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      'template_h4avnom', // Template ID specifically requested by user
+      {
+        email: to,
+        magic_link: link,
+      },
+      {
+        publicKey: process.env.EMAILJS_PUBLIC_KEY,
+        privateKey: process.env.EMAILJS_PRIVATE_KEY,
+      }
+    );
+  } catch (error) {
+    console.error('Error sending magic link via EmailJS:', error);
+    throw error;
+  }
 }
 
 /**
@@ -121,4 +145,4 @@ async function sendAlumniApprovedEmail(to, nombre) {
   }
 }
 
-module.exports = { sendMagicLink, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail };
+module.exports = { sendMagicLink, sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail };

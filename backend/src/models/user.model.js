@@ -9,7 +9,10 @@ module.exports = (sequelize) => {
     email_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
     foto_url: { type: DataTypes.TEXT },
     activo: { type: DataTypes.BOOLEAN, defaultValue: true },
-    reportes_recibidos: { type: DataTypes.INTEGER, defaultValue: 0 }
+    reportes_recibidos: { type: DataTypes.INTEGER, defaultValue: 0 },
+    cedula: { type: DataTypes.TEXT },
+    fecha_nacimiento: { type: DataTypes.DATEONLY },
+    genero: { type: DataTypes.TEXT }
   }, {
     tableName: 'USERS',
     timestamps: true,
