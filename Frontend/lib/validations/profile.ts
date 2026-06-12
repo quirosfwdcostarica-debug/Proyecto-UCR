@@ -32,7 +32,35 @@ export const userProfileUpdateSchema = z.object({
     twitter: z.string().url("URL inválida").optional().or(z.literal("")),
     github: z.string().url("URL inválida").optional().or(z.literal("")),
     website: z.string().url("URL inválida").optional().or(z.literal(""))
-  }).optional()
+  }).optional(),
+  
+  // Student fields
+  carnet_ucr: z.string().optional().nullable(),
+  carrera: z.string().optional().nullable(),
+  escuela_facultad: z.string().optional().nullable(),
+  sede: z.string().optional().nullable(),
+  anio_ingreso: z.coerce.number().optional().nullable(),
+  nivel_academico: z.string().optional().nullable(),
+  promedio_ponderado: z.coerce.number().optional().nullable(),
+  proyecto_titulo: z.string().optional().nullable(),
+  proyecto_tipo: z.string().optional().nullable(),
+  busca_financiamiento: z.boolean().optional(),
+  busca_mentoria: z.boolean().optional(),
+  busca_empleo: z.boolean().optional(),
+  busca_pasantia: z.boolean().optional(),
+
+  // Exalumni fields
+  anio_graduacion: z.coerce.number().optional().nullable(),
+  empresa_actual: z.string().optional().nullable(),
+  cargo_actual: z.string().optional().nullable(),
+  pais_ciudad: z.string().optional().nullable(),
+  anios_experiencia: z.coerce.number().optional().nullable(),
+  linkedin_url: z.string().optional().nullable(),
+  ofrece_mentoria: z.boolean().optional(),
+  ofrece_empleo: z.boolean().optional(),
+  ofrece_pasantia: z.boolean().optional(),
+  ofrece_proyecto: z.boolean().optional(),
+  ofrece_donacion_dinero: z.boolean().optional()
 });
 
 export type UserProfileUpdateValues = z.infer<typeof userProfileUpdateSchema>;

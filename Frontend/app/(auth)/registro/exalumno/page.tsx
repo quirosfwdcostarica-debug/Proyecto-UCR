@@ -36,7 +36,7 @@ export default function RegistroExalumnoPage() {
         
         <div className="w-full max-w-xl bg-white p-6 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative z-10 my-8">
           <div className="text-center mb-8">
-            <img src="/escudo-ucr.png" alt="Escudo UCR" className="w-20 h-20 mx-auto mb-6" />
+            <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
               Registro de Exalumno
             </h2>

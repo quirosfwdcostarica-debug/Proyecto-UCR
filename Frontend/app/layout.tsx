@@ -21,6 +21,41 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var path = window.location.pathname;
+                var isAuth = path.indexOf('/login') === 0 || path.indexOf('/registro') === 0 || path.indexOf('/verificar-correo') === 0 || path.indexOf('/forgot-password') === 0;
+                if (!isAuth && !sessionStorage.getItem('hasPlayedIntro')) {
+                  document.documentElement.classList.add('intro-playing');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              html.intro-playing body,
+              html.intro-playing main,
+              html.intro-playing .min-h-screen {
+                background-color: #030712 !important;
+              }
+              html.intro-playing aside,
+              html.intro-playing #dashboard-main-content {
+                opacity: 0 !important;
+                pointer-events: none !important;
+              }
+              aside,
+              #dashboard-main-content {
+                transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/30 transition-colors duration-300`}>
         <ThemeProvider>
           <LanguageProvider>
