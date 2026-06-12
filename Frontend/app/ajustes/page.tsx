@@ -2,9 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
+import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { useTheme } from "@/components/providers/ThemeContext";
-import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, Bell, BellRing, BellOff } from "lucide-react";
+import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, PauseCircle, CheckCircle2, Loader2, Bell, BellRing, BellOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 
@@ -14,11 +15,22 @@ function AjustesContent() {
   const searchParams = useSearchParams();
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
+
+  const userId = (session?.user as any)?.id as string | undefined;
+  const userRole = (session?.user as any)?.tipo || (session?.user as any)?.role;
 
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [notifications, setNotifications] = useState(true);
-  
+
+  // Estado de la cuenta
+  const [cuentaPausada, setCuentaPausada] = useState(false);
+  const [proyectoFinalizado, setProyectoFinalizado] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusSaved, setStatusSaved] = useState(false);
+
+
   // Contact form state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,6 +44,42 @@ function AjustesContent() {
       setActiveTab(tabParam as Tab);
     }
   }, [searchParams]);
+
+  // Cargar estado actual de la cuenta
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/users/${userId}/status`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setCuentaPausada(data.cuentaPausada ?? false);
+          setProyectoFinalizado(data.proyectoFinalizado ?? false);
+        }
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  const handleSaveStatus = async () => {
+    if (!userId) return;
+    setSavingStatus(true);
+    setStatusSaved(false);
+    try {
+      const body: Record<string, boolean> = { cuentaPausada };
+      if (userRole === "ESTUDIANTE" || userRole === "ADMIN") {
+        body.proyectoFinalizado = proyectoFinalizado;
+      }
+      const res = await fetch(`/api/users/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setStatusSaved(true);
+        setTimeout(() => setStatusSaved(false), 3000);
+      }
+    } catch {}
+    finally { setSavingStatus(false); }
+  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -349,7 +397,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                     </div>
                   </div>
 
-                  {/* Notifications Card */}
+                  {/* Notifications Card — Andy */}
                   <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
@@ -364,7 +412,6 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                         </p>
                       </div>
                     </div>
-
                     <div className="flex flex-col gap-3">
                       <button
                         onClick={() => setNotifications(true)}
@@ -390,6 +437,66 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                       </button>
                     </div>
                   </div>
+
+                  {/* Account Status Card */}
+                  {userId && (
+                    <div className="md:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
+                      <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
+                        <PauseCircle className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400 font-display">
+                          Estado de mi cuenta
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-body">
+                          Controla la visibilidad de tu perfil en la plataforma.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-5">
+                      {/* Toggle: Pausar perfil */}
+                      <div className="flex items-start justify-between gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-800 dark:text-slate-100 font-body">Pausar mi perfil temporalmente</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-body">Tu perfil quedará oculto en los directorios y no aparecerás en nuevas búsquedas.</p>
+                        </div>
+                        <button type="button" onClick={() => setCuentaPausada(!cuentaPausada)}
+                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0f4c81] focus:ring-offset-2 ${cuentaPausada ? "bg-yellow-400" : "bg-slate-200 dark:bg-slate-600"}`}
+                          role="switch" aria-checked={cuentaPausada}>
+                          <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${cuentaPausada ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+                      {/* Toggle: Proyecto finalizado (solo ESTUDIANTE) */}
+                      {(userRole === "ESTUDIANTE" || userRole === "ADMIN") && (
+                        <div className="flex items-start justify-between gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-800 dark:text-slate-100 font-body">Marcar proyecto como finalizado</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-body">Muestra un badge "Proyecto Finalizado" en tu tarjeta del directorio estudiantil.</p>
+                          </div>
+                          <button type="button" onClick={() => setProyectoFinalizado(!proyectoFinalizado)}
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0f4c81] focus:ring-offset-2 ${proyectoFinalizado ? "bg-green-500" : "bg-slate-200 dark:bg-slate-600"}`}
+                            role="switch" aria-checked={proyectoFinalizado}>
+                            <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${proyectoFinalizado ? "translate-x-6" : "translate-x-1"}`} />
+                          </button>
+                        </div>
+                      )}
+                      {/* Botón guardar */}
+                      <div className="flex items-center gap-3 pt-2">
+                        <Button onClick={handleSaveStatus} disabled={savingStatus}
+                          className="bg-gradient-to-r from-[#02477B] to-[#005eb8] text-white font-bold rounded-xl px-6 h-11 hover:brightness-110 transition-all">
+                          {savingStatus ? (<span className="flex items-center gap-1 text-sm"><Loader2 className="w-4 h-4 animate-spin" />Guardando...</span>) : "Guardar cambios"}
+                        </Button>
+                        {statusSaved && (
+                          <span className="flex items-center gap-1.5 text-green-600 text-sm font-semibold font-body">
+                            <CheckCircle2 className="w-4 h-4" />¡Guardado!
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  )}
+
                 </div>
               )}
 

@@ -20,6 +20,7 @@ export type TranslationKeys =
   | "sidebar.profile.exalumno"
   | "sidebar.cv"
   | "sidebar.editProfile"
+  | "sidebar.connections"
   | "sidebar.settings"
   | "sidebar.help"
   | "sidebar.startProject"
