@@ -2,9 +2,13 @@ const { Client } = require('pg');
 require('dotenv').config();
 
 async function test() {
-  console.log('Connecting to database...');
+  console.log('Connecting explicitly...');
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    user: 'postgres.cpbskmydhtdtutplxozq',
+    password: 'SistemasFWD24',
+    host: 'aws-1-us-west-1.pooler.supabase.com',
+    port: 5432,
+    database: 'postgres',
     ssl: {
       rejectUnauthorized: false
     }
@@ -12,12 +16,12 @@ async function test() {
 
   try {
     await client.connect();
-    console.log('Successfully connected!');
+    console.log('Successfully connected explicitly!');
     const res = await client.query('SELECT NOW()');
     console.log('Query result:', res.rows[0]);
     await client.end();
   } catch (err) {
-    console.error('Connection failed:', err);
+    console.error('Explicit connection failed:', err);
   }
 }
 
