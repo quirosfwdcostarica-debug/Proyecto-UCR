@@ -39,6 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const data = await res.json();
 
           if (res.ok && data.user) {
+            // Verificar que el usuario no esté suspendido
+            if (data.user.status === "SUSPENDIDO") {
+              throw new Error("Tu cuenta ha sido suspendida. Contacta al administrador.");
+            }
+            // Devolver el usuario junto con el token
             return {
               id: data.user.id,
               name: data.user.nombre,
