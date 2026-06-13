@@ -230,20 +230,19 @@ class AuthService {
       throw { status: 400, message: 'Este correo ya fue verificado.' };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) {
-      // Intentar con magic link directo de Supabase
-      const { data: linkData } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email,
-        options: {
-          redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
-        }
-      });
-      if (linkData) {
-        await sendMagicLinkEmailJS(email, linkData.properties.action_link);
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
       }
+    });
+
+    if (linkError) {
+      throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
+
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link);
 
     return { message: 'Magic link reenviado. Revisa tu bandeja de entrada.' };
   }
