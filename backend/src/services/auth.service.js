@@ -92,7 +92,7 @@ class AuthService {
     // Generar token de verificación y enviarlo
     // Guardar token en metadata de Supabase (o usar Supabase's own magic link)
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'signup',
       email,
       options: {
         redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
@@ -103,7 +103,7 @@ class AuthService {
       throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
 
-    await sendMagicLinkEmailJS(email, linkData.properties.action_link);
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link, nombre.trim());
 
     return {
       message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. El enlace expira en 24 horas.',
@@ -181,42 +181,87 @@ class AuthService {
    * RF-01: Login con correo y contraseña
    */
   async login({ email, password }) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error || !data?.session) {
-      const message = error?.message || 'Correo o contraseña incorrectos.';
-      throw { status: 401, message };
-    }
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    // Verificar el usuario en nuestra BD
-    const user = await db.User.findOne({ where: { email } });
-    if (!user) {
-      throw { status: 404, message: 'Usuario no encontrado en el sistema.' };
-    }
-    if (!user.email_verified) {
-      throw { status: 403, message: 'Debes verificar tu correo antes de iniciar sesión.' };
-    }
-    if (!user.activo) {
-      throw { status: 403, message: 'Tu cuenta está pendiente de verificación o ha sido suspendida.' };
-    }
-
-    const session = data.session;
-    if (!session?.access_token || !session?.refresh_token) {
-      throw { status: 500, message: 'No se pudo iniciar sesión. Intenta de nuevo más tarde.' };
-    }
-
-    return {
-      accessToken: session.access_token,
-      refreshToken: session.refresh_token,
-      user: {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        tipo: user.tipo,
-        foto_url: user.foto_url,
-      }
+  if (error || !data?.session) {
+    throw {
+      status: 401,
+      message: error?.message || 'Correo o contraseña incorrectos.'
     };
   }
+
+  // Buscar usuario en tu BD
+  const user = await db.User.findOne({
+    where: { email }
+  });
+
+  if (!user) {
+    throw {
+      status: 404,
+      message: 'Usuario no encontrado en el sistema.'
+    };
+  }
+
+  // Sincronizar verificación con Supabase
+  if (!user.email_verified) {
+
+    const { data: authUser, error: authError } =
+      await supabase.auth.admin.getUserById(user.id);
+
+    if (
+      !authError &&
+      authUser?.user?.email_confirmed_at
+    ) {
+
+      await db.User.update(
+        {
+          email_verified: true
+        },
+        {
+          where: {
+            id: user.id
+          }
+        }
+      );
+
+      user.email_verified = true;
+
+    } else {
+
+      throw {
+        status: 403,
+        message: 'Debes verificar tu correo antes de iniciar sesión.'
+      };
+
+    }
+  }
+
+  if (!user.activo) {
+    throw {
+      status: 403,
+      message: 'Tu cuenta está pendiente de verificación o ha sido suspendida.'
+    };
+  }
+
+  const session = data.session;
+
+  return {
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+    user: {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      tipo: user.tipo,
+      foto_url: user.foto_url
+    }
+  };
+}
 
   /**
    * RF-01: Reenviar magic link (expira en 24 horas)
@@ -231,7 +276,7 @@ class AuthService {
     }
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'signup',
       email,
       options: {
         redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
@@ -242,7 +287,7 @@ class AuthService {
       throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
 
-    await sendMagicLinkEmailJS(email, linkData.properties.action_link);
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link, user.nombre);
 
     return { message: 'Magic link reenviado. Revisa tu bandeja de entrada.' };
   }

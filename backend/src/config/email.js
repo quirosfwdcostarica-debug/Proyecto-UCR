@@ -47,21 +47,33 @@ async function sendMagicLink(to, token) {
  * @param {string} to - Correo destino
  * @param {string} link - URL mágica completa
  */
-async function sendMagicLinkEmailJS(to, link) {
+async function sendMagicLinkEmailJS(to, link, nombre = 'Estudiante') {
   try {
-    return await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      'template_h4avnom', // Template ID specifically requested by user
-      {
-        email: to,
-        to_email: to, // Ensure template variable compatibility (EmailJS default is to_email)
-        magic_link: link,
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
       },
-      {
-        publicKey: process.env.EMAILJS_PUBLIC_KEY,
-        privateKey: process.env.EMAILJS_PRIVATE_KEY,
-      }
-    );
+      body: JSON.stringify({
+        service_id: 'service_p81mum2',
+        template_id: 'template_h4avnom',
+        user_id: 'gYn0FdHihGBZzj5vp',
+        accessToken: process.env.EMAILJS_PRIVATE_KEY || 'I_DxSys6aUOuLqulPWxap',
+        template_params: {
+          email: to,
+          to_email: to,
+          magic_link: link,
+          nombre
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error EmailJS API:', errorText);
+      throw new Error('Error enviando magic link via EmailJS');
+    }
+    return true;
   } catch (error) {
     console.error('Error sending magic link via EmailJS:', error);
     throw error;
