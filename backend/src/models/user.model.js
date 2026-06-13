@@ -22,6 +22,9 @@ module.exports = (sequelize) => {
   User.associate = (models) => {
     User.hasOne(models.Exalumno, { foreignKey: 'user_id' });
     User.hasOne(models.Estudiante, { foreignKey: 'user_id' });
+    User.hasMany(models.Connection, { foreignKey: 'sender_id', as: 'SentConnections' });
+    User.hasMany(models.Connection, { foreignKey: 'receiver_id', as: 'ReceivedConnections' });
+    User.hasMany(models.Notification, { foreignKey: 'user_id' });
   };
 
   return User;

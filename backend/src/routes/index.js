@@ -20,5 +20,7 @@ router.use('/curriculum-certificacion', require('./curriculumcertificacion.route
 router.use('/posiciones', require('./posicion.routes'));
 router.use('/curriculum-versiones', require('./curriculumversion.routes'));
 router.use('/aplicaciones', require('./aplicacion.routes'));
+router.use('/connections', require('./connection.routes'));
+router.use('/notifications', require('./notification.routes'));
 
 module.exports = router;

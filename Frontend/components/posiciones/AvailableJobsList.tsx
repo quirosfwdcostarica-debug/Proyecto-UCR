@@ -145,6 +145,20 @@ export function AvailableJobsList() {
                       />
                       <p className="text-xs text-muted-foreground mt-1">Máximo 5MB.</p>
                     </div>
+
+                    {file && (
+                      <div className="bg-white p-4 rounded-lg border border-slate-200 mt-4">
+                        <h5 className="font-bold text-sm text-slate-800 mb-2">Resumen de Aplicación</h5>
+                        <ul className="text-sm text-slate-600 space-y-1 mb-3">
+                          <li><span className="font-semibold text-slate-700">Posición seleccionada:</span> {job.title}</li>
+                          <li><span className="font-semibold text-slate-700">CV que será enviado:</span> {file.name}</li>
+                        </ul>
+                        <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded">
+                          Una vez enviada tu aplicación, el exalumno podrá revisar tu perfil profesional y CV.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex gap-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setSelectedJobId(null)}>Cancelar</Button>
                       <Button type="submit" disabled={isApplying || !file} className="bg-primary text-white">

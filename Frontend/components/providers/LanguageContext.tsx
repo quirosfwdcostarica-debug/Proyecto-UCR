@@ -20,9 +20,11 @@ export type TranslationKeys =
   | "sidebar.profile.exalumno"
   | "sidebar.cv"
   | "sidebar.editProfile"
+  | "sidebar.connections"
   | "sidebar.settings"
   | "sidebar.help"
   | "sidebar.startProject"
+  | "sidebar.admin"
   | "settings.title"
   | "settings.subtitle"
   | "settings.tab.general"
@@ -64,9 +66,11 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "Mi Perfil",
     "sidebar.cv": "Optimizar CV",
     "sidebar.editProfile": "Editar Perfil",
+    "sidebar.connections": "Conexiones",
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
     "sidebar.startProject": "Iniciar un Proyecto",
+    "sidebar.admin": "Administración",
     "settings.title": "Ajustes de la Plataforma",
     "settings.subtitle": "Configura tus preferencias de idioma, tema y accede al soporte legal y técnico.",
     "settings.tab.general": "General",
@@ -107,9 +111,11 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "My Profile",
     "sidebar.cv": "Optimize CV",
     "sidebar.editProfile": "Edit Profile",
+    "sidebar.connections": "Connections",
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
     "sidebar.startProject": "Start a Project",
+    "sidebar.admin": "Administration",
     "settings.title": "Platform Settings",
     "settings.subtitle": "Configure your language and theme preferences, and access legal and technical support.",
     "settings.tab.general": "General",
@@ -150,9 +156,11 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "Meu Perfil",
     "sidebar.cv": "Otimizar Currículo",
     "sidebar.editProfile": "Editar Perfil",
+    "sidebar.connections": "Conexões",
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
     "sidebar.startProject": "Iniciar um Projeto",
+    "sidebar.admin": "Administração",
     "settings.title": "Configurações da Plataforma",
     "settings.subtitle": "Configure suas preferências de idioma, tema e acesse o suporte legal e técnico.",
     "settings.tab.general": "Geral",
@@ -193,9 +201,11 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "Mon Profil",
     "sidebar.cv": "Optimiser le CV",
     "sidebar.editProfile": "Modifier le Profil",
+    "sidebar.connections": "Connexions",
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",
     "sidebar.startProject": "Démarrer un Projet",
+    "sidebar.admin": "Administration",
     "settings.title": "Paramètres de la Plateforme",
     "settings.subtitle": "Configurez vos préférences de langue, de thème et accédez à l'assistance juridique et technique.",
     "settings.tab.general": "Général",

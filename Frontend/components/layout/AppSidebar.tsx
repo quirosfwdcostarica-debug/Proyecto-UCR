@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
@@ -27,6 +27,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ]
     : [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ];
 
   return (
@@ -76,9 +78,11 @@ export function AppSidebar() {
             {t("sidebar.help")}
           </Button>
         </Link>
-        <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
-          {t("sidebar.startProject")}
-        </Button>
+        <Link href="/proyectos/nuevo" className="block w-full">
+          <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
+            {t("sidebar.startProject")}
+          </Button>
+        </Link>
       </div>
     </aside>
   );

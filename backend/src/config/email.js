@@ -54,6 +54,7 @@ async function sendMagicLinkEmailJS(to, link) {
       'template_h4avnom', // Template ID specifically requested by user
       {
         email: to,
+        to_email: to, // Ensure template variable compatibility (EmailJS default is to_email)
         magic_link: link,
       },
       {
@@ -100,6 +101,7 @@ async function sendPasswordReset(to, nombre, tempPassword) {
   try {
     console.log({
       email: to,
+      to_email: to,
       nombre,
       password: tempPassword
     });
@@ -109,6 +111,7 @@ async function sendPasswordReset(to, nombre, tempPassword) {
       EMAILJS_TEMPLATE_ID,
       {
         email: to,
+        to_email: to, // Ensure template variable compatibility (EmailJS default is to_email)
         nombre,
         password: tempPassword,
       },
