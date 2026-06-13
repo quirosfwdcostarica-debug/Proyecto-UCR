@@ -123,22 +123,23 @@ function DonacionModal({
 
     setUploading(true);
     try {
-      // 1. Subir comprobante a Supabase Storage
-      const ext = archivo.name.split(".").pop();
-      const fileName = `${exalumnoId}-${Date.now()}.${ext}`;
+      // 1. Subir comprobante a Cloudinary
+      const formData = new FormData();
+      formData.append("file", archivo);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("comprobantes")
-        .upload(fileName, archivo, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
-      if (uploadError) throw new Error(`Error al subir el comprobante: ${uploadError.message}`);
+      if (!cloudinaryRes.ok) {
+        throw new Error("Error al subir el comprobante a Cloudinary");
+      }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("comprobantes").getPublicUrl(fileName);
+      const uploadData = await cloudinaryRes.json();
+      const publicUrl = uploadData.secure_url;
 
       // 2. Registrar la donación en la API
       const res = await fetch("/api/donaciones", {
