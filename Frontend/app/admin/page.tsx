@@ -172,6 +172,9 @@ export default function AdminDashboardPage() {
     }
   }, [status, role, router]);
 
+  if (status === "loading") return null;
+  if (status === "authenticated" && role !== "ADMIN") return null;
+
   // ---- Estado general ----
   const [stats, setStats] = useState<Stats | null>(null);
   const [matches, setMatches] = useState<MatchAdmin[]>([]);
@@ -331,7 +334,7 @@ export default function AdminDashboardPage() {
     ACTIVO: "bg-green-100 text-green-700",
   };
 
-  if (status === "loading") {
+  if ((status as string) === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
         <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />

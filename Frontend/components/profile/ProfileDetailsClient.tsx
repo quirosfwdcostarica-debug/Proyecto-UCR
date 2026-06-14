@@ -39,7 +39,7 @@ export function ProfileDetailsClient({ exalumno, currentUser, accessToken, apiUr
   const isOwnProfile = currentUser?.id === user.id;
 
   // Map offers of support to tags
-  const supportTypes = [];
+  const supportTypes: { label: string; color: string }[] = [];
   if (exalumno.ofrece_mentoria) supportTypes.push({ label: "Mentorship", color: "bg-blue-50 text-blue-700 border-blue-200" });
   if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
   if (exalumno.ofrece_guest_speaking) supportTypes.push({ label: "Guest Speaking", color: "bg-purple-50 text-purple-700 border-purple-200" });

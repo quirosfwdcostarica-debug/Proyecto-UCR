@@ -20,7 +20,8 @@ const mockProjects = [
     scholarshipType: "Beca 5",
     github: "https://github.com/marial/edu-inclusiva",
     sinpe: "8888-1111",
-    iban: "CR12015201001011111111"
+    iban: "CR12015201001011111111",
+    estado: "En proceso"
   },
   {
     id: "p2",
@@ -32,7 +33,8 @@ const mockProjects = [
     scholarshipType: "Beca 4",
     github: "https://github.com/carlosa/robot-clean",
     sinpe: "8888-2222",
-    iban: ""
+    iban: "",
+    estado: "Iniciando"
   },
   {
     id: "p3",
@@ -44,7 +46,8 @@ const mockProjects = [
     scholarshipType: "Beca 5",
     github: "https://github.com/andreag/alertas",
     sinpe: "8888-3333",
-    iban: "CR12015201001033333333"
+    iban: "CR12015201001033333333",
+    estado: "Finalizado"
   }
 ];
 
@@ -53,6 +56,17 @@ export function StudentProjectsList() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [filtroEstado, setFiltroEstado] = useState("Todos");
+  const [filtroCarrera, setFiltroCarrera] = useState("Todas");
+
+  const carrerasUnicas = Array.from(new Set(mockProjects.map(p => p.major)));
+
+  const filteredProjects = mockProjects.filter((project) => {
+    const matchEstado = filtroEstado === "Todos" || project.estado === filtroEstado;
+    const matchCarrera = filtroCarrera === "Todas" || project.major === filtroCarrera;
+    return matchEstado && matchCarrera; // Filtros combinados con AND lógico
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -94,9 +108,50 @@ export function StudentProjectsList() {
         <p className="text-lg text-muted-foreground">Apoya el talento UCR financiando los proyectos de nuestros estudiantes becados.</p>
       </div>
 
+      <div className="bg-white p-6 rounded-xl border border-slate-200 mb-8 shadow-sm">
+        <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Filtros combinados con AND lógico</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="filtro-estado">Estado del Proyecto</Label>
+            <select
+              id="filtro-estado"
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2"
+            >
+              <option value="Todos">Todos los estados</option>
+              <option value="Iniciando">Iniciando</option>
+              <option value="En proceso">En proceso</option>
+              <option value="Pausado">Pausado</option>
+              <option value="Finalizado">Finalizado</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="filtro-carrera">Carrera</Label>
+            <select
+              id="filtro-carrera"
+              value={filtroCarrera}
+              onChange={(e) => setFiltroCarrera(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2"
+            >
+              <option value="Todas">Todas las carreras</option>
+              {carrerasUnicas.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-6">
-        {mockProjects.map((project) => (
-          <Card key={project.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg">
+        {filteredProjects.length === 0 ? (
+          <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <p className="text-slate-500 font-medium">No se encontraron proyectos que coincidan con estos filtros.</p>
+            <Button variant="link" onClick={() => { setFiltroEstado("Todos"); setFiltroCarrera("Todas"); }}>Limpiar filtros</Button>
+          </div>
+        ) : (
+          filteredProjects.map((project) => (
+            <Card key={project.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg">
             <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
               <div className="flex justify-between items-start">
                 <div>
@@ -107,7 +162,11 @@ export function StudentProjectsList() {
               </div>
             </CardHeader>
             <CardContent className="py-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-slate-600 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-slate-600 mb-4">
+                <div>
+                  <span className="block font-semibold text-slate-900">Estado</span>
+                  <Badge variant="outline" className="mt-1">{project.estado}</Badge>
+                </div>
                 <div>
                   <span className="block font-semibold text-slate-900">Carrera</span>
                   {project.major}
@@ -178,7 +237,7 @@ export function StudentProjectsList() {
               )}
             </CardFooter>
           </Card>
-        ))}
+        )))}
       </div>
     </div>
   );

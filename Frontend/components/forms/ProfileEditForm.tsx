@@ -33,7 +33,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
 
   const form = useForm<UserProfileUpdateValues>({
-    resolver: zodResolver(userProfileUpdateSchema),
+    resolver: zodResolver(userProfileUpdateSchema) as any,
     defaultValues: {
       name: initialData?.name || "",
       email: initialData?.email || "",
@@ -157,25 +157,18 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             <FormField
               control={form.control}
               name="image"
-              render={({ field: { value, onChange, ...fieldProps } }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-semibold text-ucr-azul-1">Foto de Perfil</FormLabel>
                   <FormControl>
                     <div className="relative group">
                       <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
                       <Input 
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            // Simulamos la subida convirtiendo el archivo en un Blob URL
-                            const url = URL.createObjectURL(file);
-                            onChange(url);
-                          }
-                        }}
-                        {...fieldProps}
-                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer" 
+                        type="url"
+                        placeholder="https://ejemplo.com/mifoto.jpg"
+                        {...field}
+                        value={field.value || ""}
+                        className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" 
                       />
                     </div>
                   </FormControl>

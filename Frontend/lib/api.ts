@@ -1,6 +1,6 @@
 import { getSession, signOut } from "next-auth/react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   // Obtener la sesión activa para inyectar el token si existe
