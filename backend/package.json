@@ -20,6 +20,7 @@
     "express": "^5.2.1",
     "morgan": "^1.11.0",
     "next-auth": "^4.24.14",
+    "nodemailer": "^7.0.13",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",
     "postcss": "^8.5.15",
