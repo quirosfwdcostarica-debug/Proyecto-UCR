@@ -23,4 +23,6 @@ router.use('/aplicaciones', require('./aplicacion.routes'));
 router.use('/connections', require('./connection.routes'));
 router.use('/notifications', require('./notification.routes'));
 
+router.use('/solicitudes', require('./solicitudes.routes'));
+
 module.exports = router;
