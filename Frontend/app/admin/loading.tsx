@@ -10,7 +10,7 @@ export default function LoadingAdmin() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <UCRLoader message="Cargando panel de administración..." shieldSize={84} />
+          <UCRLoader message="Cargando panel de administración..." />
         </div>
       </div>
     </div>

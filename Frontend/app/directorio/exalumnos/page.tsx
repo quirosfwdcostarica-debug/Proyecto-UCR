@@ -1,7 +1,7 @@
 import { TopBar } from "@/components/layout/TopBar";
 import { AlumniDirectoryClient } from "@/components/directory/AlumniDirectoryClient";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 export const metadata = {
   title: "Directorio de Exalumnos | Alumni UCR",

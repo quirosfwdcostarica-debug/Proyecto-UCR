@@ -516,7 +516,7 @@ export default function DonacionesPage() {
             <div>
               <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#0f4c81]" />
-                Mis Donaciones
+                Historial de donaciones del exalumno
               </h2>
 
               {loadingDonaciones ? (
