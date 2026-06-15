@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -15,6 +15,19 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Limpiar cookies de sesión previas al cargar la página de login
+  // para evitar el error 431 causado por cookies infladas con tokens grandes
+  useEffect(() => {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const name = cookie.split("=")[0].trim();
+      if (name.startsWith("authjs.") || name.startsWith("__Secure-authjs.") || name.startsWith("next-auth.")) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure`;
+      }
+    }
+  }, []);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -48,10 +61,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        const msg = getErrorMessage(result.error);
+        console.log("el error es", result?.error);
+        const errorMessage = getErrorMessage(result.error);
+        const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
+
         toast({
-          title: "Error de autenticación",
-          description: msg,
+          title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -71,7 +87,8 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };  return (
+  };
+  return (
     <div className="flex min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body relative overflow-hidden">
       {/* Background (Left panel with image and right-edge gradient fade) */}
       <div className="absolute inset-y-0 left-0 w-full lg:w-[50%] z-0 overflow-hidden">

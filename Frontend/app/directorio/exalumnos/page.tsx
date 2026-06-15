@@ -7,6 +7,7 @@ export const metadata = {
   title: "Directorio de Exalumnos | Alumni UCR",
   description: "Conecta con la comunidad global de exalumnos graduados de la Universidad de Costa Rica.",
 };
+export const dynamic = 'force-dynamic';
 
 export default async function DirectorioExalumnosPage() {
   let initialAlumni: any[] = [];

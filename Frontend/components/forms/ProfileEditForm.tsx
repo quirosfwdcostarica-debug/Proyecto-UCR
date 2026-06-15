@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +29,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { update } = useSession();
+  const [isUploading, setIsUploading] = useState(false);
 
   const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
 
@@ -40,6 +41,8 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       image: initialData?.image || "",
       phone: initialData?.phone || "",
       bio: initialData?.bio || "",
+      fecha_nacimiento: initialData?.fecha_nacimiento || "",
+      genero: initialData?.genero || "",
       socialLinks: {
         linkedin: initialData?.socialLinks?.linkedin || "",
         github: initialData?.socialLinks?.github || "",
@@ -162,15 +165,79 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   <FormLabel className="font-semibold text-ucr-azul-1">Foto de Perfil</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <ImageIcon className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
+                      <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
                       <Input 
-                        type="url"
-                        placeholder="https://ejemplo.com/mifoto.jpg"
-                        {...field}
-                        value={field.value || ""}
-                        className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" 
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploading}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              setIsUploading(true);
+                              const formData = new FormData();
+                              formData.append("file", file);
+                              formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+                              const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
+                              
+                              const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                method: "POST",
+                                body: formData,
+                              });
+                              if (!res.ok) throw new Error("Error subiendo imagen");
+                              const data = await res.json();
+                              field.onChange(data.secure_url);
+                              toast({ title: "Imagen subida", description: "Tu foto de perfil ha sido actualizada." });
+                            } catch (error) {
+                              toast({ title: "Error", description: "No se pudo subir la imagen", variant: "destructive" });
+                            } finally {
+                              setIsUploading(false);
+                            }
+                          }
+                        }}
+                        ref={field.ref}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer" 
                       />
                     </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="fecha_nacimiento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-ucr-azul-1">Fecha de Nacimiento</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} value={field.value || ""} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="genero"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-ucr-azul-1">Género</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      value={field.value || ""}
+                      className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-ucr-gris-1/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste focus:bg-white focus:outline-none focus:ring-2 focus:ring-ucr-celeste/20 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Seleccione</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                      <option value="O">Otro</option>
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
