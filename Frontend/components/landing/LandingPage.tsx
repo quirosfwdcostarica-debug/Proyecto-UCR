@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { WelcomeCarousel } from "@/components/layout/WelcomeCarousel";
+import { IntroVideo } from "@/components/layout/IntroVideo";
 
 // Componentes de las Figuras Oficiales de la Marca
 const UCRUElement = ({ className = "" }: { className?: string }) => (
@@ -114,6 +115,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body transition-colors duration-300 relative overflow-hidden flex flex-col">
+      {/* Intro Video (plays once per session) */}
+      <IntroVideo />
       {/* Background Decorative Glows */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-ucr-celeste/10 dark:bg-ucr-celeste/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-ucr-esmeralda/10 dark:bg-ucr-esmeralda/5 rounded-full blur-[140px] pointer-events-none" />

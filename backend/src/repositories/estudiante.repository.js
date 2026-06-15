@@ -3,7 +3,12 @@ const Estudiante = db.Estudiante;
 
 class EstudianteRepository {
   async findAll() {
-    return await Estudiante.findAll();
+    return await Estudiante.findAll({
+      include: [{
+        model: db.User,
+        required: true
+      }]
+    });
   }
 
   async findById(id) {
