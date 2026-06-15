@@ -2,9 +2,10 @@
 
 interface UCRLoaderProps {
   message?: string;
+  shieldSize?: number;
 }
 
-export function UCRLoader({ message = "Cargando..." }: UCRLoaderProps) {
+export function UCRLoader({ message = "Cargando...", shieldSize }: UCRLoaderProps) {
   return (
     <>
       <style>{`
@@ -76,6 +77,7 @@ export function UCRLoader({ message = "Cargando..." }: UCRLoaderProps) {
             src="/escudo-ucr.png"
             alt="Escudo UCR"
             className="ucr-loader-shield"
+            style={shieldSize ? { width: shieldSize, height: shieldSize } : undefined}
           />
         </div>
         <p className="ucr-loader-label">{message}</p>

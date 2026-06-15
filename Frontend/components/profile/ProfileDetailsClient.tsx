@@ -38,10 +38,16 @@ export function ProfileDetailsClient({ exalumno, currentUser, accessToken, apiUr
   const user = exalumno.User || {};
   const isOwnProfile = currentUser?.id === user.id;
 
-  // Map offers of support to tags
-  const supportTypes: { label: string; color: string }[] = [];
-  if (exalumno.ofrece_mentoria) supportTypes.push({ label: "Mentorship", color: "bg-blue-50 text-blue-700 border-blue-200" });
-  if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
+// Define the type for support tags
+interface SupportType {
+  label: string;
+  color: string;
+}
+
+// Map offers of support to tags
+const supportTypes: SupportType[] = [];
+if (exalumno.ofrece_mentoria) supportTypes.push({ label: "Mentorship", color: "bg-blue-50 text-blue-700 border-blue-200" });
+if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
   if (exalumno.ofrece_guest_speaking) supportTypes.push({ label: "Guest Speaking", color: "bg-purple-50 text-purple-700 border-purple-200" });
   if (exalumno.ofrece_volunteering) supportTypes.push({ label: "Volunteering", color: "bg-amber-50 text-amber-700 border-amber-200" });
   if (exalumno.ofrece_career_advice) supportTypes.push({ label: "Career Advice", color: "bg-indigo-50 text-indigo-700 border-indigo-200" });
