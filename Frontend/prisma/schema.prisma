@@ -23,18 +23,20 @@ enum UserStatus {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(ESTUDIANTE)
-  status        UserStatus @default(PENDIENTE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  phone         String?
-  bio           String?
-  socialLinks   Json?
+  id                  String     @id @default(uuid())
+  name                String?
+  email               String?    @unique
+  emailVerified       DateTime?
+  image               String?
+  role                Role       @default(ESTUDIANTE)
+  status              UserStatus @default(PENDIENTE)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  phone               String?
+  bio                 String?
+  socialLinks         Json?
+  proyectoFinalizado  Boolean    @default(false)
+  cuentaPausada       Boolean    @default(false)
 
   // Perfiles extendidos
   estudiante    Estudiante?

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -15,6 +15,19 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Limpiar cookies de sesión previas al cargar la página de login
+  // para evitar el error 431 causado por cookies infladas con tokens grandes
+  useEffect(() => {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const name = cookie.split("=")[0].trim();
+      if (name.startsWith("authjs.") || name.startsWith("__Secure-authjs.") || name.startsWith("next-auth.")) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure`;
+      }
+    }
+  }, []);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,6 +35,18 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Mapeo de códigos de error de NextAuth v5 a mensajes en español
+  const getErrorMessage = (errorCode: string): string => {
+    const messages: Record<string, string> = {
+      "CredentialsSignin": "Correo o contraseña incorrectos.",
+      "Credenciales inválidas": "Correo o contraseña incorrectos.",
+      "Configuration": "Error de configuración del servidor. Intenta de nuevo.",
+      "AccessDenied": "Acceso denegado. Tu cuenta puede estar pendiente de verificación.",
+      "Email no verificado": "Debes verificar tu correo antes de iniciar sesión.",
+    };
+    return messages[errorCode] || errorCode || "Error al iniciar sesión.";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,10 +61,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        console.log("el error es", result?.error);  
+        console.log("el error es", result?.error);
+        const errorMessage = getErrorMessage(result.error);
+        const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
+
         toast({
-          title: "Error de autenticación " + (result.error === "Email no verificado" ? "(Correo no verificado)" : ""),
-          description: result.error,
+          title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -59,7 +87,8 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };  return (
+  };
+  return (
     <div className="flex min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body relative overflow-hidden">
       {/* Background (Left panel with image and right-edge gradient fade) */}
       <div className="absolute inset-y-0 left-0 w-full lg:w-[50%] z-0 overflow-hidden">
@@ -79,7 +108,7 @@ export default function LoginPage() {
         <div className="hidden lg:flex lg:w-[50%] flex-col justify-between px-16 py-20 text-white min-h-screen">
           <div className="pt-8">
             <h1 className="text-4xl md:text-5xl font-medium text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] font-display leading-[1.1] uppercase">
-              Fundación Exalumnos<br/>UCR
+              Fundación Exalumnos<br/>U
             </h1>
           </div>
           <div className="pb-8">
@@ -101,12 +130,12 @@ export default function LoginPage() {
           
           <div className="w-full max-w-md relative z-10 py-12">
             <div className="text-center mb-10">
-              <img src="/logo.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
+              <img src="/logo.png" alt="Logo Alumni U" className="w-24 h-24 mx-auto mb-6 object-contain" />
               <h2 className="text-3xl font-medium tracking-tight text-[#333333] dark:text-white font-display mb-3 uppercase">
                 Bienvenido de vuelta
               </h2>
               <p className="text-slate-500 dark:text-slate-400 font-medium font-body">
-                Ingresa a la plataforma de Exalumnos UCR
+                Ingresa a la plataforma de Exalumnos U
               </p>
             </div>
 

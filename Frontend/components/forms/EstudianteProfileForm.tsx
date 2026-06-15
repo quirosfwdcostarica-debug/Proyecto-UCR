@@ -58,7 +58,7 @@ export function EstudianteProfileForm() {
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 h-1.5 bg-transparent w-full z-10">
           <motion.div 
-            className="h-full bg-[#0f4c81] rounded-tl-3xl"
+            className="h-full bg-ucr-celeste-medium rounded-tl-3xl"
             initial={{ width: "50%" }}
             animate={{ width: step === 1 ? "50%" : "100%" }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -66,7 +66,7 @@ export function EstudianteProfileForm() {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-extrabold tracking-tight text-[#0f4c81] font-display">
+          <h2 className="text-2xl font-extrabold tracking-tight text-ucr-celeste-medium font-display">
             Completá tu Perfil de Estudiante
           </h2>
           <p className="text-slate-400 mt-1 font-body text-sm font-medium">Paso {step} de 2</p>
@@ -145,7 +145,7 @@ export function EstudianteProfileForm() {
                 <Button 
                   type="button" 
                   onClick={nextStep} 
-                  className="w-full md:w-auto md:min-w-[140px] h-12 bg-gradient-to-r from-[#0b3a63] via-[#02477B] to-[#0f4c81] hover:brightness-110 text-white text-base font-bold shadow-lg hover:shadow-[#0f4c81]/30 transition-all rounded-xl font-body tracking-wide flex items-center justify-center"
+                  className="w-full md:w-auto md:min-w-[140px] h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide flex items-center justify-center"
                 >
                   Siguiente
                 </Button>
@@ -186,7 +186,7 @@ export function EstudianteProfileForm() {
                                 key={apoyo}
                                 className={`flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 transition-all cursor-pointer ${
                                   isChecked 
-                                    ? "border-[#0f4c81] bg-[#0f4c81]/5 shadow-sm" 
+                                    ? "border-ucr-celeste-medium bg-ucr-celeste-medium/5 shadow-sm" 
                                     : "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
                                 }`}
                               >
@@ -202,7 +202,7 @@ export function EstudianteProfileForm() {
                                             )
                                           )
                                     }}
-                                    className="border-slate-300 data-[state=checked]:bg-[#0f4c81] data-[state=checked]:border-[#0f4c81]"
+                                    className="border-slate-300 data-[state=checked]:bg-ucr-celeste-medium data-[state=checked]:border-ucr-celeste-medium"
                                   />
                                 </FormControl>
                                 <FormLabel className="font-semibold cursor-pointer text-sm flex-1 leading-snug text-slate-700 font-body select-none">
@@ -230,7 +230,7 @@ export function EstudianteProfileForm() {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="h-12 bg-gradient-to-r from-[#0b3a63] via-[#02477B] to-[#0f4c81] hover:brightness-110 text-white text-base font-bold shadow-lg hover:shadow-[#0f4c81]/30 transition-all rounded-xl font-body tracking-wide px-8 flex items-center justify-center"
+                  className="h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide px-8 flex items-center justify-center"
                 >
                   Completar Perfil
                 </Button>

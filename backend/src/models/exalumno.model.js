@@ -11,11 +11,21 @@ module.exports = (sequelize) => {
     pais_ciudad: { type: DataTypes.TEXT },
     anios_experiencia: { type: DataTypes.INTEGER },
     linkedin_url: { type: DataTypes.TEXT },
+    biografia: { type: DataTypes.TEXT },
+    github_url: { type: DataTypes.TEXT },
+    website_url: { type: DataTypes.TEXT },
+    habilidades: { type: DataTypes.JSONB },
+    certificaciones: { type: DataTypes.JSONB },
+    experiencia_laboral: { type: DataTypes.JSONB },
     ofrece_mentoria: { type: DataTypes.BOOLEAN, defaultValue: false },
     ofrece_empleo: { type: DataTypes.BOOLEAN, defaultValue: false },
     ofrece_pasantia: { type: DataTypes.BOOLEAN, defaultValue: false },
     ofrece_proyecto: { type: DataTypes.BOOLEAN, defaultValue: false },
-    ofrece_donacion_dinero: { type: DataTypes.BOOLEAN, defaultValue: false }
+    ofrece_donacion_dinero: { type: DataTypes.BOOLEAN, defaultValue: false },
+    ofrece_guest_speaking: { type: DataTypes.BOOLEAN, defaultValue: false },
+    ofrece_volunteering: { type: DataTypes.BOOLEAN, defaultValue: false },
+    ofrece_career_advice: { type: DataTypes.BOOLEAN, defaultValue: false },
+    ofrece_networking: { type: DataTypes.BOOLEAN, defaultValue: false }
   }, {
     tableName: 'EXALUMNOS',
     timestamps: false,

@@ -27,7 +27,7 @@ export function TopBar({ title }: TopBarProps) {
     }`}>
       <div className="flex items-center gap-4">
         {!isHome && (
-          <h2 className="text-xl font-bold text-[#0f4c81] dark:text-sky-400">{title}</h2>
+          <h2 className="text-xl font-bold text-ucr-celeste-medium dark:text-sky-400">{title}</h2>
         )}
       </div>
       
@@ -52,7 +52,7 @@ export function TopBar({ title }: TopBarProps) {
           </Button>
         ) : (
           <Link href="/login">
-            <Button variant="outline" size="sm" className="border-ucr-celeste text-[#0f4c81] dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
+            <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
               Iniciar Sesión
             </Button>
           </Link>
