@@ -95,7 +95,7 @@ class AuthService {
       type: 'signup',
       email,
       options: {
-        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+        redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/completar-perfil`
       }
     });
 
@@ -103,7 +103,13 @@ class AuthService {
       throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
 
-    await sendMagicLinkEmailJS(email, linkData.properties.action_link, nombre.trim());
+    // Enviar magic link — si falla el email, el registro ya fue exitoso.
+    // El usuario podrá reenviar el link desde /verificar-correo.
+    try {
+      await sendMagicLinkEmailJS(email, linkData.properties.action_link, nombre.trim());
+    } catch (emailError) {
+      console.error('[registerStudent] Error enviando magic link (no crítico):', emailError?.message || emailError);
+    }
 
     return {
       message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. El enlace expira en 24 horas.',
@@ -169,7 +175,13 @@ class AuthService {
       anio_graduacion: parseInt(anio_graduacion),
     });
 
-    await sendAlumniPendingEmail(email, nombre.trim());
+    // Enviar correo de confirmación — si falla, el registro ya fue exitoso.
+    // El admin podrá aprobar el perfil igualmente desde el panel.
+    try {
+      await sendAlumniPendingEmail(email, nombre.trim());
+    } catch (emailError) {
+      console.error('[registerAlumni] Error enviando correo de confirmación (no crítico):', emailError?.message || emailError);
+    }
 
     return {
       message: 'Registro exitoso. Tu perfil está siendo verificado por la Fundación. Te notificaremos en máximo 48 horas.',
@@ -279,7 +291,7 @@ class AuthService {
       type: 'signup',
       email,
       options: {
-        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+        redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/completar-perfil`
       }
     });
 
@@ -287,7 +299,11 @@ class AuthService {
       throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
 
-    await sendMagicLinkEmailJS(email, linkData.properties.action_link, user.nombre);
+    try {
+      await sendMagicLinkEmailJS(email, linkData.properties.action_link, user.nombre);
+    } catch (emailError) {
+      throw { status: 500, message: 'No se pudo enviar el correo de verificación. Intenta de nuevo en unos minutos.' };
+    }
 
     return { message: 'Magic link reenviado. Revisa tu bandeja de entrada.' };
   }

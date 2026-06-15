@@ -8,15 +8,45 @@ async function forceCreate() {
   
   const usersToCreate = [
     {
-      email: 'estudiante@ucr.ac.cr',
-      password: 'Estudiante12345',
-      nombre: 'Estudiante',
+      email: 'Yosimarvv@gmail.com',
+      password: 'Estudiante12345!',
+      nombre: 'Yosimar VV',
       tipo: 'ESTUDIANTE'
     },
     {
-      email: 'exalumno@ucr.ac.cr',
-      password: 'Exalumno12345',
-      nombre: 'exalumno',
+      email: 'davidchapps08@gmail.com',
+      password: 'Estudiante12345!',
+      nombre: 'David Chaves',
+      tipo: 'ESTUDIANTE'
+    },
+    {
+      email: 'jbrionesfwdcostarica@gmail.com',
+      password: 'Estudiante12345!',
+      nombre: 'J. Briones',
+      tipo: 'ESTUDIANTE'
+    },
+    {
+      email: 'a14knight031031@gmail.com',
+      password: 'Estudiante12345!',
+      nombre: 'A14 Knight',
+      tipo: 'ESTUDIANTE'
+    },
+    {
+      email: 'destroyer007golosoinsano@gmail.com',
+      password: 'Exalumno12345!',
+      nombre: 'Destroyer Goloso',
+      tipo: 'EXALUMNO'
+    },
+    {
+      email: 'alealvarela@gmail.com',
+      password: 'Exalumno12345!',
+      nombre: 'Ale Alvarela',
+      tipo: 'EXALUMNO'
+    },
+    {
+      email: 'stephsgfwd@gmail.com',
+      password: 'Exalumno12345!',
+      nombre: 'Steph SG',
       tipo: 'EXALUMNO'
     }
   ];

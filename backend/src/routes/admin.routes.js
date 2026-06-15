@@ -1,17 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const asyncHandler = require('../utils/asyncHandler');
+const { verifyToken } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/role.middleware');
-const { createClient } = require('@supabase/supabase-js');
-
-// Cliente de Supabase admin usando la service key
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY  // Match the actual .env variable name
-);
+const { supabase } = require('../config/db');
 
 // GET /api/admin/kpis — Solo ADMINISTRADOR
-router.get('/kpis', requireRole('ADMINISTRADOR', 'ADMIN'), asyncHandler(async (req, res) => {
+router.get('/kpis', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), asyncHandler(async (req, res) => {
   // Conteos en paralelo vía Supabase REST API
   const [
     estudiantesRes,
@@ -43,7 +38,7 @@ router.get('/kpis', requireRole('ADMINISTRADOR', 'ADMIN'), asyncHandler(async (r
 }));
 
 // GET /api/admin/alumni-pending — Exalumnos pendientes de aprobación
-router.get('/alumni-pending', requireRole('ADMINISTRADOR', 'ADMIN'), asyncHandler(async (req, res) => {
+router.get('/alumni-pending', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), asyncHandler(async (req, res) => {
   const db = require('../models');
   
   const pendingAlumni = await db.User.findAll({

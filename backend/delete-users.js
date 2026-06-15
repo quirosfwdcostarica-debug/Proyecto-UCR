@@ -9,7 +9,15 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const emailsToDelete = ['jbrionesfwdcostarica@gmail.com', 'chepitaelclav@gmail.com'];
+  const emailsToDelete = [
+    'Yosimarvv@gmail.com',
+    'davidchapps08@gmail.com',
+    'jbrionesfwdcostarica@gmail.com',
+    'a14knight031031@gmail.com',
+    'destroyer007golosoinsano@gmail.com',
+    'alealvarela@gmail.com',
+    'stephsgfwd@gmail.com'
+  ];
 
   for (const email of emailsToDelete) {
     console.log(`Borrando ${email}...`);

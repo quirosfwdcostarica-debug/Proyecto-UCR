@@ -75,7 +75,7 @@ export async function getUserProfile() {
     return {
       id: userId,
       name: session?.user?.name || "Usuario de Prueba",
-      email: session?.user?.email || "prueba@ucr.ac.cr",
+      email: session?.user?.email || "",
       image: session?.user?.image || "",
       tipo: userRole,
       phone: "+506 8888-8888",

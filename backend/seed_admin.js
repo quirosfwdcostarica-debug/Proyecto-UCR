@@ -6,10 +6,15 @@ async function seedAdmin() {
   console.log('Authenticating with database...');
   await db.sequelize.authenticate();
   
-  const adminEmail = 'admin@ucr.edu';
-  const adminPassword = 'AdminPassword123!';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   const adminName = 'Administrador';
   const adminType = 'ADMINISTRADOR';
+
+  if (!adminEmail || !adminPassword) {
+    console.error('❌ Error: ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required in .env file.');
+    process.exit(1);
+  }
 
   try {
     console.log(`\nProcessing admin ${adminEmail}...`);

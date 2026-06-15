@@ -23,7 +23,7 @@ export const initialCV: CVData = {
   name: "Mariana Rodríguez",
   title: "Ingeniera de Software",
   location: "San José, Costa Rica",
-  email: "mariana@ucr.ac.cr",
+  email: "Yosimarvv@gmail.com",
   phone: "+506 8888-8888",
   summary:
     "Ingeniera graduada de la UCR con 4 años de experiencia en desarrollo web. Me gusta trabajar en equipo para resolver problemas complejos. Busco seguir creciendo profesionalmente.",

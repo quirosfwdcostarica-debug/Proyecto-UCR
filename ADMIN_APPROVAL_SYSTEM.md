@@ -36,7 +36,7 @@
       "alumni": [
         {
           "id": "uuid",
-          "email": "exalumno@ejemplo.com",
+          "email": "destroyer007golosoinsano@gmail.com",
           "nombre": "Juan Pérez",
           "email_verified": true,
           "createdAt": "2026-06-08T10:30:00Z",
