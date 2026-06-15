@@ -1,5 +1,6 @@
 const ConnectionRepository = require('../repositories/connection.repository');
 const NotificationService = require('./notification.service');
+const EmailService = require('./email.service');
 const db = require('../models');
 
 class ConnectionService {
@@ -92,6 +93,7 @@ class ConnectionService {
     await connection.save();
 
     const receiver = await db.User.findByPk(userId);
+    const sender = await db.User.findByPk(connection.sender_id);
 
     // Trigger notification to the sender
     await NotificationService.createNotification(
@@ -100,6 +102,13 @@ class ConnectionService {
       `${receiver.nombre} ha aceptado tu solicitud de conexión.`,
       'connection_accepted'
     );
+
+    // Enviar correo
+    try {
+      if (sender) await EmailService.sendAcceptanceEmail(sender.email, sender.nombre);
+    } catch(err) {
+      console.error("Error al enviar email de aceptación", err);
+    }
 
     return connection;
   }
@@ -123,6 +132,7 @@ class ConnectionService {
     await connection.save();
 
     const receiver = await db.User.findByPk(userId);
+    const sender = await db.User.findByPk(connection.sender_id);
 
     // Trigger notification to the sender
     await NotificationService.createNotification(
@@ -131,6 +141,13 @@ class ConnectionService {
       `${receiver.nombre} ha rechazado tu solicitud de conexión.`,
       'connection_rejected'
     );
+
+    // Enviar correo
+    try {
+      if (sender) await EmailService.sendRejectionEmail(sender.email, sender.nombre);
+    } catch(err) {
+      console.error("Error al enviar email de rechazo", err);
+    }
 
     return connection;
   }
