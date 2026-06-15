@@ -444,7 +444,7 @@ export default function DonacionesPage() {
   }, [userId, role]);
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <TopBar title="Donaciones y Apoyo" />
 
       <div className="p-8 max-w-7xl mx-auto space-y-8">
