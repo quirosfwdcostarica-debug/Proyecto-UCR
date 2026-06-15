@@ -37,10 +37,47 @@ async function sendMagicLink(to, token) {
         <p style="color:#94a3b8;font-size:12px">
           Si no solicitaste este correo, puedes ignorarlo con seguridad.<br>
           <a href="${link}" style="color:#0f4c81;word-break:break-all">${link}</a>
-        </p>
       </div>
     `,
   });
+}
+
+/**
+ * Envía un magic link de verificación usando EmailJS.
+ * @param {string} to - Correo destino
+ * @param {string} link - URL mágica completa
+ */
+async function sendMagicLinkEmailJS(to, link, nombre = 'Estudiante') {
+  try {
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        service_id: 'service_p81mum2',
+        template_id: 'template_h4avnom',
+        user_id: 'gYn0FdHihGBZzj5vp',
+        accessToken: process.env.EMAILJS_PRIVATE_KEY || 'I_DxSys6aUOuLqulPWxap',
+        template_params: {
+          email: to,
+          to_email: to,
+          magic_link: link,
+          nombre
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error EmailJS API:', errorText);
+      throw new Error('Error enviando magic link via EmailJS');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error sending magic link via EmailJS:', error);
+    throw error;
+  }
 }
 
 /**
@@ -76,6 +113,7 @@ async function sendPasswordReset(to, nombre, tempPassword) {
   try {
     console.log({
       email: to,
+      to_email: to,
       nombre,
       password: tempPassword
     });
@@ -85,6 +123,7 @@ async function sendPasswordReset(to, nombre, tempPassword) {
       EMAILJS_TEMPLATE_ID,
       {
         email: to,
+        to_email: to, // Ensure template variable compatibility (EmailJS default is to_email)
         nombre,
         password: tempPassword,
       },
@@ -121,4 +160,4 @@ async function sendAlumniApprovedEmail(to, nombre) {
   }
 }
 
-module.exports = { sendMagicLink, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail };
+module.exports = { sendMagicLink, sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail };

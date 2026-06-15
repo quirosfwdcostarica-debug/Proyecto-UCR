@@ -34,6 +34,9 @@ export const userProfileUpdateSchema = z.object({
     website: z.string().url("URL inválida").optional().or(z.literal(""))
   }).optional(),
   
+  fecha_nacimiento: z.string().optional().nullable(),
+  genero: z.string().optional().nullable(),
+  
   // Student fields
   carnet_ucr: z.string().optional().nullable(),
   carrera: z.string().optional().nullable(),

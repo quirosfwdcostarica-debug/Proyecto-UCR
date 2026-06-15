@@ -1,4 +1,4 @@
-import { UCRLoader } from "@/components/ui/UCRLoader";
+import { BookLoader } from "@/components/ui/BookLoader";
 
 export default function LoadingEstudiantes() {
   return (
@@ -9,7 +9,7 @@ export default function LoadingEstudiantes() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <UCRLoader message="Cargando directorio de estudiantes..." />
+          <BookLoader message="Cargando directorio de estudiantes..." />
         </div>
       </div>
     </div>

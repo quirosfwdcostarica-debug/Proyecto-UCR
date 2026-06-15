@@ -1,4 +1,4 @@
-import { UCRLoader } from "@/components/ui/UCRLoader";
+import { BookLoader } from "@/components/ui/BookLoader";
 
 export default function LoadingAdmin() {
   return (
@@ -10,7 +10,7 @@ export default function LoadingAdmin() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <UCRLoader message="Cargando panel de administración..." />
+          <BookLoader message="Cargando panel de administración..." />
         </div>
       </div>
     </div>

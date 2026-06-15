@@ -21,8 +21,11 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
-      <TopBar title="Bolsa de Empleo" />
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+      <TopBar 
+        title={role === "EXALUMNO" ? "Publicar Empleo" : "Bolsa de Empleo"} 
+        titleKey={role === "EXALUMNO" ? "sidebar.positions.exalumno" : "sidebar.positions.student"} 
+      />
       
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         
