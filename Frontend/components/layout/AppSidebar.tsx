@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
@@ -27,6 +27,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ]
     : [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
+        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ];
 
   return (
@@ -41,11 +43,11 @@ export function AppSidebar() {
       <div className="px-6 pt-4 pb-4 flex flex-col items-start gap-0">
         <img 
           src="/logo.png" 
-          alt="Logo UCR" 
+          alt="Logo U" 
           className="h-16 w-auto object-contain -ml-1 dark:brightness-110"
         />
         <div className="-mt-1">
-          <h1 className="text-lg font-bold tracking-tight text-[#1a75d2] dark:text-sky-400">EXALUMNOS UCR</h1>
+          <h1 className="text-lg font-bold tracking-tight text-[#1a75d2] dark:text-sky-400">EXALUMNOS U</h1>
           <p className="text-xs font-medium text-[#1a75d2]/80 dark:text-sky-400/80">Impacto y Legado</p>
         </div>
       </div>
@@ -76,9 +78,11 @@ export function AppSidebar() {
             {t("sidebar.help")}
           </Button>
         </Link>
-        <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
-          {t("sidebar.startProject")}
-        </Button>
+        <Link href="/proyectos/nuevo" className="block w-full">
+          <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-colors">
+            {t("sidebar.startProject")}
+          </Button>
+        </Link>
       </div>
     </aside>
   );

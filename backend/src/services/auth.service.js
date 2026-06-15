@@ -1,5 +1,5 @@
 const { supabase } = require('../config/db');
-const { sendMagicLink, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail } = require('../config/email');
+const { sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail } = require('../config/email');
 const db = require('../models');
 const crypto = require('crypto');
 
@@ -14,17 +14,40 @@ const isValidPassword = (password) => {
   return true;
 };
 
+// Generar contraseña temporal segura (8+ caracteres, una mayúscula, un número)
+const generateTemporaryPassword = () => {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*';
+  
+  let password = '';
+  // Garantizar al menos una mayúscula
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  // Garantizar al menos un número
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  // Agregar 6 caracteres más aleatorios
+  const all = uppercase + lowercase + numbers + special;
+  for (let i = 0; i < 6; i++) {
+    password += all[Math.floor(Math.random() * all.length)];
+  }
+  
+  // Mezclar la contraseña
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};
+
 class AuthService {
 
   /**
    * RF-01: Registro de Estudiante
    * Solo permite correos @ucr.ac.cr. Envía magic link de verificación.
    */
-  async registerStudent({ email, nombre, password }) {
+  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero }) {
     // Validaciones
-    if (!isUCREmail(email)) {
+    // Nota: Se quitó la restricción de @ucr.ac.cr temporalmente por solicitud
+    /*if (!isUCREmail(email)) {
       throw { status: 400, message: 'Solo se permiten correos institucionales @ucr.ac.cr para estudiantes.' };
-    }
+    }*/
     if (!nombre || nombre.trim().length < 3) {
       throw { status: 400, message: 'El nombre debe tener al menos 3 caracteres.' };
     }
@@ -58,20 +81,29 @@ class AuthService {
       tipo: 'ESTUDIANTE',
       email_verified: false,
       activo: true,
+      cedula,
+      fecha_nacimiento,
+      genero
     });
 
     // Crear perfil de estudiante vacío (se completa después)
     await db.Estudiante.create({ user_id: authData.user.id });
 
     // Generar token de verificación y enviarlo
-    const verificationToken = crypto.randomBytes(32).toString('hex');
     // Guardar token en metadata de Supabase (o usar Supabase's own magic link)
-    await supabase.auth.admin.generateLink({
-      type: 'magiclink',
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'signup',
       email,
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+      }
     });
 
-    await sendMagicLink(email, verificationToken);
+    if (linkError) {
+      throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
+    }
+
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link, nombre.trim());
 
     return {
       message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. El enlace expira en 24 horas.',
@@ -83,7 +115,7 @@ class AuthService {
    * RF-01: Registro de Exalumno
    * Permite cualquier correo. El perfil queda pendiente de verificación admin.
    */
-  async registerAlumni({ email, nombre, password, carrera, escuela_facultad, anio_graduacion }) {
+  async registerAlumni({ email, nombre, password, carrera, escuela_facultad, anio_graduacion, cedula, fecha_nacimiento, genero }) {
     // Validaciones
     if (!nombre || nombre.trim().length < 3) {
       throw { status: 400, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -125,6 +157,9 @@ class AuthService {
       tipo: 'EXALUMNO',
       email_verified: true,
       activo: false, // Pendiente de aprobación por admin
+      cedula,
+      fecha_nacimiento,
+      genero
     });
 
     // Crear perfil de exalumno
@@ -146,36 +181,87 @@ class AuthService {
    * RF-01: Login con correo y contraseña
    */
   async login({ email, password }) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      throw { status: 401, message: 'Correo o contraseña incorrectos.' };
-    }
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    // Verificar el usuario en nuestra BD
-    const user = await db.User.findOne({ where: { email } });
-    if (!user) {
-      throw { status: 404, message: 'Usuario no encontrado en el sistema.' };
-    }
-    if (!user.email_verified) {
-      throw { status: 403, message: 'Debes verificar tu correo antes de iniciar sesión.' };
-    }
-    if (!user.activo) {
-      throw { status: 403, message: 'Tu cuenta está pendiente de verificación o ha sido suspendida.' };
-    }
-
-    return {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-      user: {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        tipo: user.tipo,
-        foto_url: user.foto_url,
-      }
+  if (error || !data?.session) {
+    throw {
+      status: 401,
+      message: error?.message || 'Correo o contraseña incorrectos.'
     };
   }
+
+  // Buscar usuario en tu BD
+  const user = await db.User.findOne({
+    where: { email }
+  });
+
+  if (!user) {
+    throw {
+      status: 404,
+      message: 'Usuario no encontrado en el sistema.'
+    };
+  }
+
+  // Sincronizar verificación con Supabase
+  if (!user.email_verified) {
+
+    const { data: authUser, error: authError } =
+      await supabase.auth.admin.getUserById(user.id);
+
+    if (
+      !authError &&
+      authUser?.user?.email_confirmed_at
+    ) {
+
+      await db.User.update(
+        {
+          email_verified: true
+        },
+        {
+          where: {
+            id: user.id
+          }
+        }
+      );
+
+      user.email_verified = true;
+
+    } else {
+
+      throw {
+        status: 403,
+        message: 'Debes verificar tu correo antes de iniciar sesión.'
+      };
+
+    }
+  }
+
+  if (!user.activo) {
+    throw {
+      status: 403,
+      message: 'Tu cuenta está pendiente de verificación o ha sido suspendida.'
+    };
+  }
+
+  const session = data.session;
+
+  return {
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+    user: {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      tipo: user.tipo,
+      foto_url: user.foto_url
+    }
+  };
+}
 
   /**
    * RF-01: Reenviar magic link (expira en 24 horas)
@@ -189,27 +275,54 @@ class AuthService {
       throw { status: 400, message: 'Este correo ya fue verificado.' };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) {
-      // Intentar con magic link directo de Supabase
-      const token = crypto.randomBytes(32).toString('hex');
-      await sendMagicLink(email, token);
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL}/completar-perfil`
+      }
+    });
+
+    if (linkError) {
+      throw { status: 500, message: 'Error generando enlace de verificación: ' + linkError.message };
     }
+
+    await sendMagicLinkEmailJS(email, linkData.properties.action_link, user.nombre);
 
     return { message: 'Magic link reenviado. Revisa tu bandeja de entrada.' };
   }
 
   /**
    * RF-01: Recuperación de contraseña
+   * Genera contraseña temporal, la actualiza en Supabase y envía por email
    */
   async forgotPassword({ email }) {
     // No revelar si el correo existe por seguridad
     const user = await db.User.findOne({ where: { email } });
     if (user) {
-      const token = crypto.randomBytes(32).toString('hex');
-      await sendPasswordReset(email, token);
+      try {
+        // Generar contraseña temporal
+        const tempPassword = generateTemporaryPassword();
+        
+        // Actualizar contraseña en Supabase
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { password: tempPassword }
+        );
+        
+        if (updateError) {
+          console.error('Error actualizando contraseña en Supabase:', updateError);
+          throw { status: 500, message: 'Error al procesar la recuperación de contraseña.' };
+        }
+        
+        // Enviar email con contraseña temporal usando EmailJS
+        await sendPasswordReset(email, user.nombre, tempPassword);
+      } catch (error) {
+        console.error('Error en forgotPassword:', error);
+        // No revelar el error al usuario por seguridad, pero loguearlo
+      }
     }
-    return { message: 'Si existe una cuenta con ese correo, recibirás un enlace de recuperación.' };
+    return { message: 'Si existe una cuenta con ese correo, recibirás tu contraseña temporal por email.' };
   }
 
   /**

@@ -9,7 +9,10 @@ module.exports = (sequelize) => {
     email_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
     foto_url: { type: DataTypes.TEXT },
     activo: { type: DataTypes.BOOLEAN, defaultValue: true },
-    reportes_recibidos: { type: DataTypes.INTEGER, defaultValue: 0 }
+    reportes_recibidos: { type: DataTypes.INTEGER, defaultValue: 0 },
+    cedula: { type: DataTypes.TEXT },
+    fecha_nacimiento: { type: DataTypes.DATEONLY },
+    genero: { type: DataTypes.TEXT }
   }, {
     tableName: 'USERS',
     timestamps: true,
@@ -19,6 +22,9 @@ module.exports = (sequelize) => {
   User.associate = (models) => {
     User.hasOne(models.Exalumno, { foreignKey: 'user_id' });
     User.hasOne(models.Estudiante, { foreignKey: 'user_id' });
+    User.hasMany(models.Connection, { foreignKey: 'sender_id', as: 'SentConnections' });
+    User.hasMany(models.Connection, { foreignKey: 'receiver_id', as: 'ReceivedConnections' });
+    User.hasMany(models.Notification, { foreignKey: 'user_id' });
   };
 
   return User;

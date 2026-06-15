@@ -25,7 +25,7 @@ export default function SelectorRegistroPage() {
         <div className="hidden lg:flex lg:w-[50%] flex-col justify-between px-16 py-20 text-white min-h-screen">
           <div className="pt-8">
             <h1 className="text-4xl md:text-5xl font-medium text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] font-display leading-[1.1] uppercase">
-              Fundación Exalumnos<br/>UCR
+              Fundación Exalumnos<br/>U
             </h1>
           </div>
           <div className="pb-8">
@@ -47,7 +47,7 @@ export default function SelectorRegistroPage() {
           
           <div className="w-full max-w-xl relative z-10 py-12">
             <div className="text-center mb-10">
-              <img src="/logo.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
+              <img src="/logo.png" alt="Logo Alumni U" className="w-24 h-24 mx-auto mb-6 object-contain" />
               <h2 className="text-3xl font-medium tracking-tight text-[#333333] dark:text-white font-display mb-3 uppercase">
                 Únete a la Comunidad
               </h2>
