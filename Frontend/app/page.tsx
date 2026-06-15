@@ -192,34 +192,34 @@ function Dashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      <tr className="hover:bg-slate-50/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 bg-blue-50 flex items-center justify-center text-[10px] font-bold text-[#0f4c81]">TCH</div>
+                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-[10px] font-bold text-[#0f4c81] dark:text-sky-300">TCH</div>
                           <span className="font-semibold text-foreground">TechCorp Global</span>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Pasante de Software</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">Entrevistando</Badge>
+                          <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/60 border-0">Entrevistando</Badge>
                         </td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-700">SST</div>
+                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold text-indigo-700 dark:text-indigo-300">SST</div>
                           <span className="font-semibold text-foreground">SustainSystems</span>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Analista de Datos</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-0">En Revisión</Badge>
+                          <Badge className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/60 border-0">En Revisión</Badge>
                         </td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-600">LBC</div>
+                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400">LBC</div>
                           <span className="font-semibold text-foreground">LibreConsult</span>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Asistente de Proyecto</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-0">Cerrado</Badge>
+                          <Badge className="bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/60 border-0">Cerrado</Badge>
                         </td>
                       </tr>
                     </tbody>
@@ -303,7 +303,7 @@ function Dashboard() {
                           setSelectedMentor(mentor);
                           setIsCoffeeOpen(true);
                         }}
-                        className="w-full mt-auto bg-blue-50 text-[#0f4c81] hover:bg-blue-100 font-semibold border-0"
+                        className="w-full mt-auto bg-blue-50 dark:bg-blue-900/40 text-[#0f4c81] dark:text-sky-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 font-semibold border-0"
                       >
                         Solicitar Café Virtual
                       </Button>
@@ -412,24 +412,24 @@ function Dashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      <tr className="hover:bg-slate-50/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold">GS</div>
+                          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-sky-300 flex items-center justify-center text-[10px] font-bold">GS</div>
                           <span className="font-semibold text-foreground">Gabriel Solano</span>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Ingeniería Eléctrica</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">Entrevistando</Badge>
+                          <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/60 border-0">Entrevistando</Badge>
                         </td>
                       </tr>
-                      <tr className="hover:bg-slate-50/50">
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                         <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center text-[10px] font-bold">MR</div>
+                          <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 flex items-center justify-center text-[10px] font-bold">MR</div>
                           <span className="font-semibold text-foreground">Mariana Rodríguez</span>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Computación</td>
                         <td className="px-6 py-4 text-right">
-                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-0">En Revisión</Badge>
+                          <Badge className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/60 border-0">En Revisión</Badge>
                         </td>
                       </tr>
                     </tbody>
@@ -445,7 +445,7 @@ function Dashboard() {
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold text-foreground">Robot Recolector de Plástico</h4>
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0">Beca 4</Badge>
+                        <Badge className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border-0">Beca 4</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mb-4">
                         Estudiante: Carlos Arguedas. Construcción de un robot automatizado para limpiar residuos plásticos en el campus de la UCR.

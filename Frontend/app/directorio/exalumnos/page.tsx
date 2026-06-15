@@ -25,7 +25,7 @@ export default async function DirectorioExalumnosPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <TopBar title="Directory" />
       <AlumniDirectoryClient initialAlumni={initialAlumni} />
     </div>
