@@ -3,7 +3,12 @@ const Exalumno = db.Exalumno;
 
 class ExalumnoRepository {
   async findAll() {
-    return await Exalumno.findAll();
+    return await Exalumno.findAll({
+      include: [{
+        model: db.User,
+        required: true
+      }]
+    });
   }
 
   async findById(id) {
