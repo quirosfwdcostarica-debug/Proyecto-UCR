@@ -66,7 +66,7 @@ export default function NuevoProyecto() {
   };
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <TopBar title="Crear Nuevo Proyecto" />
 
       <div className="p-8 max-w-3xl mx-auto space-y-6">
@@ -92,14 +92,14 @@ export default function NuevoProyecto() {
             <h1 className="text-2xl font-bold text-foreground">
               Crear Nuevo Proyecto
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Completa los datos para registrar tu proyecto de graduación.
             </p>
           </div>
         </div>
 
         {/* Formulario */}
-        <Card className="p-8 border-border shadow-sm bg-white">
+        <Card className="p-8 border-border dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
           {guardado ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <CheckCircle2 className="h-16 w-16 text-green-500" />
@@ -116,7 +116,7 @@ export default function NuevoProyecto() {
               <div className="space-y-2">
                 <label
                   htmlFor="nombre"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Nombre del Proyecto{" "}
                   <span className="text-red-500">*</span>
@@ -129,7 +129,7 @@ export default function NuevoProyecto() {
                   placeholder="Ej. Sistema de Gestión de Energía Solar"
                   value={form.nombre}
                   onChange={handleChange}
-                  className="border-slate-200 focus-visible:ring-[#0f4c81]"
+                  className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus-visible:ring-[#0f4c81]"
                 />
               </div>
 
@@ -137,7 +137,7 @@ export default function NuevoProyecto() {
               <div className="space-y-2">
                 <label
                   htmlFor="descripcion"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Descripción <span className="text-red-500">*</span>
                 </label>
@@ -148,7 +148,7 @@ export default function NuevoProyecto() {
                   placeholder="Describe brevemente de qué trata tu proyecto..."
                   value={form.descripcion}
                   onChange={handleChange}
-                  className="border-slate-200 focus-visible:ring-[#0f4c81] min-h-[100px]"
+                  className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus-visible:ring-[#0f4c81] min-h-[100px]"
                 />
               </div>
 
@@ -156,7 +156,7 @@ export default function NuevoProyecto() {
               <div className="space-y-2">
                 <label
                   htmlFor="categoria"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Categoría <span className="text-red-500">*</span>
                 </label>
@@ -166,7 +166,7 @@ export default function NuevoProyecto() {
                   required
                   value={form.categoria}
                   onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2 text-foreground"
+                  className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2 text-foreground"
                 >
                   <option value="" disabled>
                     Selecciona una categoría...
@@ -219,7 +219,7 @@ export default function NuevoProyecto() {
               <div className="space-y-2">
                 <label
                   htmlFor="estado"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Estado del Proyecto <span className="text-red-500">*</span>
                 </label>
@@ -229,7 +229,7 @@ export default function NuevoProyecto() {
                   required
                   value={form.estado}
                   onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2 text-foreground"
+                  className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c81] focus-visible:ring-offset-2 text-foreground"
                 >
                   <option value="Iniciando">Iniciando</option>
                   <option value="En proceso">En proceso</option>
@@ -242,7 +242,7 @@ export default function NuevoProyecto() {
               <div className="space-y-2">
                 <label
                   htmlFor="objetivos"
-                  className="block text-sm font-semibold text-slate-700"
+                  className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                 >
                   Objetivos <span className="text-red-500">*</span>
                 </label>
@@ -253,7 +253,7 @@ export default function NuevoProyecto() {
                   placeholder="Lista los objetivos principales del proyecto (uno por línea)..."
                   value={form.objetivos}
                   onChange={handleChange}
-                  className="border-slate-200 focus-visible:ring-[#0f4c81] min-h-[120px]"
+                  className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus-visible:ring-[#0f4c81] min-h-[120px]"
                 />
               </div>
 

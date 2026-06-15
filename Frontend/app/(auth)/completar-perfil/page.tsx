@@ -1,14 +1,14 @@
 import { ProfileEditForm } from "@/components/forms/ProfileEditForm";
 import { getUserProfile } from "@/actions/profile.actions";
 import { Suspense } from "react";
-import { Loader2, Settings2 } from "lucide-react";
+import { Loader2, UserCheck } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
 
 export const metadata = {
-  title: "Editar Perfil | Exalumnos UCR",
+  title: "Completar Perfil | Exalumnos UCR",
 };
 
-export default async function EditarPerfilPage() {
+export default async function CompletarPerfilPage() {
   let userData = null;
   let errorMsg = null;
   
@@ -19,8 +19,8 @@ export default async function EditarPerfilPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 dark:bg-slate-950 transition-colors duration-300 min-h-screen">
-      <TopBar title="Editor de Perfil" />
+    <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 min-h-screen">
+      <TopBar title="Activación de Cuenta" />
       {/* Fondo Dinámico con Blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-ucr-celeste/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
@@ -29,34 +29,34 @@ export default async function EditarPerfilPage() {
       </div>
       
       {/* Hero Header Estilizado */}
-      <div className="w-full bg-[#e0f2fe] dark:bg-slate-900 pt-16 pb-24 px-8 relative shadow-sm overflow-hidden border-b dark:border-slate-800">
-        {/* Imagen de fondo patrón (login-pattern.png) */}
+      <div className="w-full bg-[#e0f2fe] pt-16 pb-24 px-8 relative shadow-sm overflow-hidden">
+        {/* Imagen de fondo patrón */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-multiply dark:opacity-20 pointer-events-none select-none" 
+          className="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-multiply pointer-events-none select-none" 
           style={{ backgroundImage: "url('/login-pattern.png')" }}
         ></div>
         
         {/* Degradado celeste elegante para integrarlo suavemente y asegurar contraste */}
-        <div className="absolute inset-0 bg-gradient-to-r from-sky-200/80 dark:from-slate-900/90 via-sky-100/40 dark:via-slate-900/60 to-transparent z-0"></div>
-        <div className="absolute inset-0 bg-white/10 dark:bg-slate-900/10 backdrop-blur-[0.5px] z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-sky-200/80 via-sky-100/40 to-transparent z-0"></div>
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-[0.5px] z-0"></div>
         
         <div className="max-w-5xl mx-auto relative z-10 flex items-center gap-6">
-          <div className="p-4 bg-white/70 dark:bg-slate-800/80 rounded-2xl backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-sm">
-            <Settings2 className="w-10 h-10 text-[#005eb8] dark:text-sky-400" />
+          <div className="p-4 bg-white/70 rounded-2xl backdrop-blur-md border border-white/60 shadow-sm">
+            <UserCheck className="w-10 h-10 text-[#005eb8]" />
           </div>
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] dark:text-sky-400 drop-shadow-sm">
-              Ajustes de Cuenta
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] drop-shadow-sm">
+              ¡Cuenta Activada!
             </h1>
-            <p className="text-[#005eb8] dark:text-sky-300 font-semibold text-lg mt-2 flex items-center gap-2">
-              <span className="w-8 h-[2px] bg-[#005eb8] dark:bg-sky-400 rounded-full"></span>
-              Configura tu identidad en la red de Exalumnos UCR
+            <p className="text-[#005eb8] font-semibold text-lg mt-2 flex items-center gap-2">
+              <span className="w-8 h-[2px] bg-[#005eb8] rounded-full"></span>
+              Completa tu perfil para formar parte de la red
             </p>
           </div>
         </div>
       </div>
 
-      {/* Contenedor Principal Flotante (Se superpone al header) */}
+      {/* Contenedor Principal Flotante */}
       <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-12 relative z-20 pb-20">
         {errorMsg ? (
           <div className="p-6 bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
@@ -68,11 +68,15 @@ export default async function EditarPerfilPage() {
           </div>
         ) : (
           <Suspense fallback={
-            <div className="flex flex-col justify-center items-center py-32 bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/40 dark:border-slate-800 shadow-xl">
+            <div className="flex flex-col justify-center items-center py-32 bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-xl">
               <Loader2 className="w-12 h-12 animate-spin text-ucr-celeste mb-4" />
-              <p className="text-ucr-azul-2 dark:text-sky-400 font-medium">Cargando tu información...</p>
+              <p className="text-ucr-azul-2 font-medium">Cargando tu información...</p>
             </div>
           }>
+            <div className="mb-8 p-6 bg-white rounded-2xl shadow-md border border-ucr-celeste/20">
+              <h2 className="text-xl font-bold text-ucr-azul-1 mb-2">Completa tu información</h2>
+              <p className="text-ucr-gris-2">Por favor, asegúrate de llenar todos los campos requeridos, como tu fecha de nacimiento y género, antes de continuar.</p>
+            </div>
             <ProfileEditForm initialData={userData || {}} />
           </Suspense>
         )}

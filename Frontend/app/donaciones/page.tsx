@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { StudentApplicationModal } from "@/components/donaciones/StudentApplicationModal";
+import { MyApplicationsList } from "@/components/donaciones/MyApplicationsList";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/input";
@@ -123,22 +125,23 @@ function DonacionModal({
 
     setUploading(true);
     try {
-      // 1. Subir comprobante a Supabase Storage
-      const ext = archivo.name.split(".").pop();
-      const fileName = `${exalumnoId}-${Date.now()}.${ext}`;
+      // 1. Subir comprobante a Cloudinary
+      const formData = new FormData();
+      formData.append("file", archivo);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("comprobantes")
-        .upload(fileName, archivo, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
-      if (uploadError) throw new Error(`Error al subir el comprobante: ${uploadError.message}`);
+      if (!cloudinaryRes.ok) {
+        throw new Error("Error al subir el comprobante a Cloudinary");
+      }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("comprobantes").getPublicUrl(fileName);
+      const uploadData = await cloudinaryRes.json();
+      const publicUrl = uploadData.secure_url;
 
       // 2. Registrar la donación en la API
       const res = await fetch("/api/donaciones", {
@@ -441,7 +444,7 @@ export default function DonacionesPage() {
   }, [userId, role]);
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <TopBar title="Donaciones y Apoyo" />
 
       <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -458,6 +461,10 @@ export default function DonacionesPage() {
               Hola {userName}, los exalumnos están dispuestos a apoyar el talento de la UCR.
               Postula tu proyecto para recibir apoyo financiero.
             </p>
+            <div className="pt-4">
+              <StudentApplicationModal />
+            </div>
+            <MyApplicationsList />
           </div>
         )}
 
@@ -466,8 +473,8 @@ export default function DonacionesPage() {
           <>
             {/* Header */}
             <div>
-              <h1 className="text-3xl font-bold text-[#0f4c81]">Apoya Proyectos Estudiantiles</h1>
-              <p className="text-slate-500 mt-1">
+              <h1 className="text-3xl font-bold text-[#0f4c81] dark:text-sky-400">Apoya Proyectos Estudiantiles</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
                 Tu donación impulsa el talento y la investigación de la UCR.
               </p>
             </div>
@@ -475,27 +482,27 @@ export default function DonacionesPage() {
             {/* Grid de proyectos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {PROYECTOS_EJEMPLO.map((proyecto) => (
-                <Card key={proyecto.id} className="bg-white border-border shadow-sm hover:shadow-md transition-shadow">
+                <Card key={proyecto.id} className="bg-white dark:bg-slate-900 border-border dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <CardTitle className="text-base font-bold text-slate-800 leading-snug">
+                        <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">
                           {proyecto.nombre}
                         </CardTitle>
-                        <p className="text-xs text-[#0f4c81] font-semibold mt-1">{proyecto.carrera}</p>
+                        <p className="text-xs text-[#0f4c81] dark:text-sky-400 font-semibold mt-1">{proyecto.carrera}</p>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-slate-500 line-clamp-2">{proyecto.descripcion}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{proyecto.descripcion}</p>
                     <div>
                       <div className="flex justify-between text-xs mb-1.5">
-                        <span className="text-slate-400">Avance del proyecto</span>
-                        <span className="font-bold text-[#0f4c81]">{proyecto.avance}%</span>
+                        <span className="text-slate-400 dark:text-slate-500">Avance del proyecto</span>
+                        <span className="font-bold text-[#0f4c81] dark:text-sky-400">{proyecto.avance}%</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-1.5">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
                         <div
-                          className="bg-[#0f4c81] h-1.5 rounded-full transition-all"
+                          className="bg-[#0f4c81] dark:bg-sky-500 h-1.5 rounded-full transition-all"
                           style={{ width: `${proyecto.avance}%` }}
                         />
                       </div>
@@ -514,50 +521,50 @@ export default function DonacionesPage() {
 
             {/* Historial de donaciones */}
             <div>
-              <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#0f4c81]" />
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#0f4c81] dark:text-sky-400" />
                 Historial de donaciones del exalumno
               </h2>
 
               {loadingDonaciones ? (
-                <div className="flex items-center gap-2 text-slate-500 py-6">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 py-6">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Cargando historial...
                 </div>
               ) : donaciones.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center">
+                  <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                     📋
                   </div>
-                  <p className="text-slate-500 text-sm">
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">
                     Aún no has realizado donaciones. ¡Apoya un proyecto estudiantil!
                   </p>
                 </div>
               ) : (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-slate-50 border-b border-slate-200">
+                      <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600">Monto</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600">Destino</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600">Fecha</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600">Estado</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600">Comprobante</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Monto</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Destino</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Fecha</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estado</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Comprobante</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {donaciones.map((d) => {
                           const statusInfo = BADGE_STATUS[d.status];
                           return (
-                            <tr key={d.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-4 py-3 font-bold text-slate-800">
+                            <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                              <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">
                                 ₡{d.monto.toLocaleString("es-CR")}
                               </td>
-                              <td className="px-4 py-3 text-slate-600 max-w-[180px] truncate">
+                              <td className="px-4 py-3 text-slate-600 dark:text-slate-400 max-w-[180px] truncate">
                                 {d.destino}
                               </td>
-                              <td className="px-4 py-3 text-slate-500">
+                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                                 {new Date(d.createdAt).toLocaleDateString("es-CR", {
                                   day: "2-digit",
                                   month: "short",

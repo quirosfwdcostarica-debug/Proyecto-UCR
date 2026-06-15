@@ -88,13 +88,13 @@ export function AvailableJobsList() {
 
       <div className="flex flex-col gap-6">
         {mockAvailableJobs.map((job) => (
-          <Card key={job.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg">
-            <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
+          <Card key={job.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg dark:bg-slate-900/40 dark:border-slate-800">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-xl text-primary font-bold">{job.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 font-medium">
-                    <Building2 className="w-4 h-4 text-slate-400" />
+                  <CardTitle className="text-xl text-primary dark:text-sky-400 font-bold">{job.title}</CardTitle>
+                  <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                    <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     {job.company}
                   </CardDescription>
                 </div>
@@ -104,21 +104,21 @@ export function AvailableJobsList() {
               </div>
             </CardHeader>
             <CardContent className="py-5">
-              <p className="text-slate-700 mb-6 text-sm leading-relaxed">{job.description}</p>
+              <p className="text-slate-700 dark:text-slate-300 mb-6 text-sm leading-relaxed">{job.description}</p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400 mb-2">
                 <div>
-                  <span className="block font-semibold text-slate-900 mb-1">Habilidades Requeridas</span>
+                  <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1">Habilidades Requeridas</span>
                   <div className="flex flex-wrap gap-2">
                     {job.skills.map((skill) => (
-                      <span key={skill} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">
+                      <span key={skill} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
                         {skill}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-end justify-end">
-                  <div className="flex items-center gap-1.5 text-orange-600 font-medium">
+                  <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium">
                     <CalendarDays className="w-4 h-4" />
                     <span>Cierra: {job.deadline}</span>
                   </div>
@@ -127,9 +127,9 @@ export function AvailableJobsList() {
 
               {/* Formulario de Aplicación Expandible */}
               {selectedJobId === job.id ? (
-                <div className="mt-6 p-6 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in zoom-in-95">
-                  <h4 className="font-bold text-slate-800 mb-2">Aplicar a esta posición</h4>
-                  <p className="text-sm text-slate-600 mb-4">
+                <div className="mt-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2">Aplicar a esta posición</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     Sube tu Curriculum Vitae en formato PDF. Asegúrate de resaltar las habilidades requeridas.
                   </p>
                   
@@ -147,13 +147,13 @@ export function AvailableJobsList() {
                     </div>
 
                     {file && (
-                      <div className="bg-white p-4 rounded-lg border border-slate-200 mt-4">
-                        <h5 className="font-bold text-sm text-slate-800 mb-2">Resumen de Aplicación</h5>
-                        <ul className="text-sm text-slate-600 space-y-1 mb-3">
-                          <li><span className="font-semibold text-slate-700">Posición seleccionada:</span> {job.title}</li>
-                          <li><span className="font-semibold text-slate-700">CV que será enviado:</span> {file.name}</li>
+                      <div className="bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 mt-4">
+                        <h5 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-2">Resumen de Aplicación</h5>
+                        <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-3">
+                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">Posición seleccionada:</span> {job.title}</li>
+                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">CV que será enviado:</span> {file.name}</li>
                         </ul>
-                        <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
                           Una vez enviada tu aplicación, el exalumno podrá revisar tu perfil profesional y CV.
                         </p>
                       </div>
@@ -169,7 +169,7 @@ export function AvailableJobsList() {
                 </div>
               ) : null}
             </CardContent>
-            <CardFooter className="bg-white pt-0 pb-4 justify-end">
+            <CardFooter className="bg-white dark:bg-slate-900/40 pt-0 pb-4 justify-end">
               {selectedJobId !== job.id && (
                 <Button onClick={() => setSelectedJobId(job.id)} variant="default" className="bg-[#0f4c81] hover:bg-[#0b3a63]">
                   Aplicar Ahora
