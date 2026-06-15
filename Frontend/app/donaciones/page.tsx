@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { StudentApplicationModal } from "@/components/donaciones/StudentApplicationModal";
+import { MyApplicationsList } from "@/components/donaciones/MyApplicationsList";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/input";
@@ -459,6 +461,10 @@ export default function DonacionesPage() {
               Hola {userName}, los exalumnos están dispuestos a apoyar el talento de la UCR.
               Postula tu proyecto para recibir apoyo financiero.
             </p>
+            <div className="pt-4">
+              <StudentApplicationModal />
+            </div>
+            <MyApplicationsList />
           </div>
         )}
 

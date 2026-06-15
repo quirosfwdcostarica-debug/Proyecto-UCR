@@ -111,11 +111,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "My Profile",
     "sidebar.cv": "Optimize CV",
     "sidebar.editProfile": "Edit Profile",
-<<<<<<< HEAD
     "sidebar.connections": "My Connections",
-=======
-    "sidebar.connections": "Connections",
->>>>>>> b6c222a2fee702299b3d9d12ea2f9b189dff658c
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
     "sidebar.startProject": "Start a Project",
@@ -160,11 +156,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "Meu Perfil",
     "sidebar.cv": "Otimizar Currículo",
     "sidebar.editProfile": "Editar Perfil",
-<<<<<<< HEAD
     "sidebar.connections": "Minhas Conexões",
-=======
-    "sidebar.connections": "Conexões",
->>>>>>> b6c222a2fee702299b3d9d12ea2f9b189dff658c
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
     "sidebar.startProject": "Iniciar um Projeto",
@@ -209,11 +201,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.profile.exalumno": "Mon Profil",
     "sidebar.cv": "Optimiser le CV",
     "sidebar.editProfile": "Modifier le Profil",
-<<<<<<< HEAD
     "sidebar.connections": "Mes Connexions",
-=======
-    "sidebar.connections": "Connexions",
->>>>>>> b6c222a2fee702299b3d9d12ea2f9b189dff658c
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",
     "sidebar.startProject": "Démarrer un Projet",
