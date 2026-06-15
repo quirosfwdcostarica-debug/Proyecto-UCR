@@ -7,36 +7,35 @@ interface ImageItem {
   alt: string;
 }
 
-const CAROUSEL_IMAGES: ImageItem[] = [
+export const CAROUSEL_IMAGES: ImageItem[] = [
   {
-    src: "/rs272026__dsc6280-690284132d76e.jpg",
-    alt: "Campus UCR - Edificio Histórico y Jardines"
+    src: "/carousel-1.jpg",
+    alt: "Graduados universitarios de la UCR celebrando"
   },
   {
-    src: "/Facultad_Derecho_UCR.jpg",
+    src: "/carousel-2.jpg",
     alt: "Facultad de Derecho - Universidad de Costa Rica"
   },
   {
-    src: "/universidad-de-costa-rica-ucr_328332518_760x520.webp",
-    alt: "Universidad de Costa Rica - Vista Estudiantil"
+    src: "/carousel-3.jpg",
+    alt: "Estudiantes y campus de la Universidad de Costa Rica"
   }
 ];
 
-export function WelcomeCarousel({ className }: { className?: string }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function WelcomeCarousel({ className, currentIndex: propCurrentIndex }: { className?: string; currentIndex?: number }) {
+  const [internalIndex, setInternalIndex] = useState(0);
 
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % CAROUSEL_IMAGES.length);
-  }, []);
+  const isControlled = typeof propCurrentIndex === "number";
+  const currentIndex = isControlled ? propCurrentIndex! : internalIndex;
 
-  // Auto-slide effect (slides every 6 seconds for a slower, calmer background transition)
   useEffect(() => {
+    if (isControlled) return;
     const timer = setInterval(() => {
-      handleNext();
+      setInternalIndex((prevIndex) => (prevIndex + 1) % CAROUSEL_IMAGES.length);
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [handleNext]);
+  }, [isControlled]);
 
   return (
     <div className={className || "fixed inset-0 w-screen h-screen -z-10 bg-slate-950 overflow-hidden select-none pointer-events-none"}>
@@ -54,12 +53,12 @@ export function WelcomeCarousel({ className }: { className?: string }) {
               <img
                 src={img.src}
                 alt={img.alt}
-                className={`w-full h-full object-cover transition-transform duration-[6000ms] ease-out ${
+                className={`w-full h-full object-cover transition-transform [transition-duration:6000ms] ease-out ${
                   isActive ? "scale-105" : "scale-100"
                 }`}
               />
               {/* Overlay: semi-transparent dark mask + slight blur on background to make the cards on top pop */}
-              <div className="absolute inset-0 bg-slate-950/45 pointer-events-none" />
+              <div className="absolute inset-0 bg-slate-950/20 pointer-events-none" />
             </div>
           );
         })}
