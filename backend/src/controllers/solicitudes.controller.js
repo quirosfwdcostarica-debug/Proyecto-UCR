@@ -1,5 +1,6 @@
 const EmailService = require('../services/email.service');
 const asyncHandler = require('../utils/asyncHandler');
+const NotificationService = require('../services/notification.service');
 // Si hubiera un modelo de Solicitud se importaría aquí: const db = require('../models');
 
 /**
@@ -24,6 +25,14 @@ exports.acceptRequest = asyncHandler(async (req, res) => {
   // pero podemos usarlo para garantizar el envío o esperar a ver si falla silenciosamente.
   await EmailService.sendAcceptanceEmail(emailMock, nombreMock);
 
+  // Crear notificación en la base de datos
+  await NotificationService.createNotification(
+    /* userId */ null,
+    'Solicitud aceptada',
+    `${nombreMock} ha aceptado tu solicitud`,
+    'solicitud_aceptada'
+  );
+
   res.status(200).json({ 
     message: `Solicitud ${id} aceptada. Se ha enviado la notificación por correo.` 
   });
@@ -45,6 +54,14 @@ exports.rejectRequest = asyncHandler(async (req, res) => {
 
   // 2. Enviar notificación por correo
   await EmailService.sendRejectionEmail(emailMock, nombreMock);
+
+  // Crear notificación en la base de datos
+  await NotificationService.createNotification(
+    null,
+    'Solicitud rechazada',
+    `${nombreMock} ha rechazado tu solicitud`,
+    'solicitud_rechazada'
+  );
 
   res.status(200).json({ 
     message: `Solicitud ${id} rechazada. Se ha enviado la notificación por correo.` 
