@@ -109,14 +109,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
         
         {/* Tarjeta 1: Información Personal */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <User className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-ucr-azul-2">Información Personal</h2>
-              <p className="text-sm text-ucr-gris-2">Los datos básicos para identificarte en la plataforma.</p>
+              <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400">Información Personal</h2>
+              <p className="text-sm text-ucr-gris-2 dark:text-slate-400">Los datos básicos para identificarte en la plataforma.</p>
             </div>
           </div>
 
@@ -126,11 +126,11 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Nombre Completo</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Nombre Completo</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <User className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
-                      <Input placeholder="Juan Pérez" {...field} className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                      <User className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors" />
+                      <Input placeholder="Juan Pérez" {...field} className="pl-10 h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -145,11 +145,11 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Teléfono</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Teléfono</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <Phone className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors" />
-                      <Input placeholder="+506 8888-8888" {...field} className="pl-10 h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                      <Phone className="absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors" />
+                      <Input placeholder="+506 8888-8888" {...field} className="pl-10 h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -162,10 +162,10 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Foto de Perfil</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Foto de Perfil</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
+                      <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
                       <Input 
                         type="file"
                         accept="image/*"
@@ -198,7 +198,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                         ref={field.ref}
                         name={field.name}
                         onBlur={field.onBlur}
-                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer" 
+                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer" 
                       />
                     </div>
                   </FormControl>
@@ -212,9 +212,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="fecha_nacimiento"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Fecha de Nacimiento</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Fecha de Nacimiento</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} value={field.value || ""} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                    <Input type="date" {...field} value={field.value || ""} className="h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,12 +226,12 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="genero"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Género</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Género</FormLabel>
                   <FormControl>
                     <select
                       {...field}
                       value={field.value || ""}
-                      className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-ucr-gris-1/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste focus:bg-white focus:outline-none focus:ring-2 focus:ring-ucr-celeste/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-ucr-gris-1/50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="">Seleccione</option>
                       <option value="M">Masculino</option>
@@ -247,14 +247,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         </div>
 
         {/* Tarjeta 2: Biografía */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <Briefcase className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-ucr-azul-2">Perfil Profesional</h2>
-              <p className="text-sm text-ucr-gris-2">Cuéntale a la comunidad sobre tu trayectoria.</p>
+              <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400">Perfil Profesional</h2>
+              <p className="text-sm text-ucr-gris-2 dark:text-slate-400">Cuéntale a la comunidad sobre tu trayectoria.</p>
             </div>
           </div>
 
@@ -266,12 +266,12 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                 <FormControl>
                   <Textarea 
                     placeholder="Escribe una breve descripción profesional..." 
-                    className="min-h-[150px] resize-none bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl text-base p-4"
+                    className="min-h-[150px] resize-none bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl text-base p-4"
                     {...field} 
                   />
                 </FormControl>
                 <FormMessage />
-                <p className="text-xs text-right text-ucr-gris-2 font-medium mt-2">
+                <p className="text-xs text-right text-ucr-gris-2 dark:text-slate-400 font-medium mt-2">
                   {field.value?.length || 0} / 500 caracteres
                 </p>
               </FormItem>
@@ -283,7 +283,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         {isEstudiante ? (
           <>
             {/* DATOS DE ESTUDIANTE */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
                   <GraduationCap className="w-6 h-6" />
@@ -302,7 +302,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carné UCR</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. B98765" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. B98765" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -316,7 +316,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carrera</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -330,7 +330,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Escuela / Facultad</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Facultad de Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Facultad de Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -344,7 +344,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Sede</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Sede Rodrigo Facio" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Sede Rodrigo Facio" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -358,7 +358,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Año de Ingreso</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ej. 2021" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input type="number" placeholder="Ej. 2021" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -372,7 +372,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Nivel Académico</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Bachillerato" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Bachillerato" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -386,7 +386,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Promedio Ponderado</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" placeholder="Ej. 8.50" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input type="number" step="0.01" placeholder="Ej. 8.50" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -396,7 +396,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* PROYECTO DE GRADUACIÓN */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
                   <BookOpen className="w-6 h-6" />
@@ -415,7 +415,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-semibold text-slate-700">Título del Proyecto</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Investigación de Energía Renovable" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Investigación de Energía Renovable" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -429,7 +429,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Tipo de Proyecto</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Tesis, Proyecto Eléctrico" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Tesis, Proyecto Eléctrico" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -439,7 +439,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* APOYO BUSCADO */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
                   <Heart className="w-6 h-6" />
@@ -482,7 +482,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         ) : (
           <>
             {/* DATOS DE EXALUMNO */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
                   <GraduationCap className="w-6 h-6" />
@@ -501,7 +501,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carné UCR (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. A81234" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. A81234" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -515,7 +515,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Facultad / Escuela de Graduación</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Ingeniería" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -529,7 +529,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Año de Graduación</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ej. 2018" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input type="number" placeholder="Ej. 2018" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -543,7 +543,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Empresa Actual</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Intel Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Intel Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -557,7 +557,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Cargo Actual</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Arquitecto de Software" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. Arquitecto de Software" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -571,7 +571,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Ciudad / País de Residencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. San José, Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="Ej. San José, Costa Rica" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -585,7 +585,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Años de Experiencia Profesional</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ej. 5" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input type="number" placeholder="Ej. 5" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -599,7 +599,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">URL de LinkedIn</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://linkedin.com/in/..." {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                        <Input placeholder="https://linkedin.com/in/..." {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -609,7 +609,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* APOYO OFRECIDO */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-[#0f4c81]">
                   <Heart className="w-6 h-6" />
@@ -653,14 +653,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         )}
 
         {/* Tarjeta 3: Redes Sociales */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <LinkIcon className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-ucr-azul-2">Conexiones y Redes</h2>
-              <p className="text-sm text-ucr-gris-2">Enlaces a tus perfiles profesionales para facilitar el contacto.</p>
+              <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400">Conexiones y Redes</h2>
+              <p className="text-sm text-ucr-gris-2 dark:text-slate-400">Enlaces a tus perfiles profesionales para facilitar el contacto.</p>
             </div>
           </div>
 
@@ -670,9 +670,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="socialLinks.linkedin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">LinkedIn</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">LinkedIn</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://linkedin.com/in/..." {...field} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-[#0A66C2] focus:bg-white focus:ring-2 focus:ring-[#0A66C2]/20 transition-all shadow-sm rounded-xl" />
+                    <Input placeholder="https://linkedin.com/in/..." {...field} className="h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-[#0A66C2] focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#0A66C2]/20 transition-all shadow-sm rounded-xl" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -683,9 +683,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="socialLinks.github"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">GitHub</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">GitHub</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://github.com/..." {...field} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-gray-800 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all shadow-sm rounded-xl" />
+                    <Input placeholder="https://github.com/..." {...field} className="h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-gray-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-gray-800/20 transition-all shadow-sm rounded-xl" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -696,9 +696,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="socialLinks.twitter"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Twitter / X</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Twitter / X</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://twitter.com/..." {...field} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-black focus:bg-white focus:ring-2 focus:ring-black/20 transition-all shadow-sm rounded-xl" />
+                    <Input placeholder="https://twitter.com/..." {...field} className="h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-black focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-black/20 transition-all shadow-sm rounded-xl" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -709,9 +709,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               name="socialLinks.website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-semibold text-ucr-azul-1">Sitio Web Personal</FormLabel>
+                  <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Sitio Web Personal</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://..." {...field} className="h-12 bg-ucr-gris-1/50 border-transparent focus:border-ucr-celeste focus:bg-white focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
+                    <Input placeholder="https://..." {...field} className="h-12 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -723,7 +723,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         {/* Botón de Guardado (Barra Inferior Flotante) */}
         <div className="sticky bottom-8 z-50 flex justify-end mt-8">
           <div className="bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-gray-200 flex items-center justify-between w-full md:w-auto md:min-w-[400px]">
-            <p className="text-sm text-ucr-gris-2 font-medium px-4 hidden md:block">
+            <p className="text-sm text-ucr-gris-2 dark:text-slate-400 font-medium px-4 hidden md:block">
               Revisa tus cambios antes de guardar.
             </p>
             <Button 

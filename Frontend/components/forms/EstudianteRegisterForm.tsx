@@ -119,7 +119,7 @@ export function EstudianteRegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
           <FormField
             control={form.control}
@@ -265,8 +265,8 @@ export function EstudianteRegisterForm() {
             "Crear cuenta"
           )}
         </Button>
-        <div className="text-center mt-4 text-sm text-slate-600">
-          ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] hover:underline font-medium">Volver al login</Link>
+        <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
+          ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] dark:text-sky-400 hover:underline font-medium">Volver al login</Link>
         </div>
       </form>
     </Form>
