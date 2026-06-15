@@ -61,6 +61,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       busca_mentoria: !!initialData?.busca_mentoria,
       busca_empleo: !!initialData?.busca_empleo,
       busca_pasantia: !!initialData?.busca_pasantia,
+      nivel_beca: initialData?.nivel_beca || "",
 
       // Exalumno fields
       anio_graduacion: initialData?.anio_graduacion || "",
@@ -327,6 +328,20 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                       <FormLabel className="font-semibold text-slate-700">Promedio Ponderado</FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" placeholder="Ej. 8.50" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : "")} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="nivel_beca"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Nivel de Beca UCR</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Beca 5" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

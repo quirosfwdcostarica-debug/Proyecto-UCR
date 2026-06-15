@@ -272,13 +272,22 @@ export default function DirectorioEstudiantes() {
                   {student.areaProyecto && (
                     <div className="bg-blue-50/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81]">
                       <p className="text-xs font-semibold text-slate-500 mb-1">
-                        Área del Proyecto
+                        Área / Escuela
                       </p>
                       <p className="text-sm font-medium text-slate-800 leading-snug">
                         {student.areaProyecto}
                       </p>
                     </div>
                   )}
+
+                  <div className="bg-slate-50 p-3 rounded-md mb-5 border-l-2 border-slate-300">
+                    <p className="text-xs font-semibold text-slate-500 mb-1">
+                      Detalles del Proyecto
+                    </p>
+                    <p className="text-sm font-medium text-slate-800 leading-snug">
+                      {student.user.bio || "No especificado"}
+                    </p>
+                  </div>
 
                   <div className="mb-4 mt-auto">
                     <div className="flex justify-between text-xs font-medium mb-1.5">

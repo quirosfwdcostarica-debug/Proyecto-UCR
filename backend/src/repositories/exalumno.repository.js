@@ -4,6 +4,7 @@ const User = db.User;
 const { Op } = require('sequelize');
 
 class ExalumnoRepository {
+<<<<<<< HEAD
   async findAll(filters = {}) {
     const where = {};
     const userWhere = { activo: true };
@@ -51,6 +52,14 @@ class ExalumnoRepository {
           attributes: ['id', 'email', 'nombre', 'foto_url']
         }
       ]
+=======
+  async findAll() {
+    return await Exalumno.findAll({
+      include: [{
+        model: db.User,
+        required: true
+      }]
+>>>>>>> 514f28a76f1080c2d17b05e0e813c228388c47e9
     });
   }
 
