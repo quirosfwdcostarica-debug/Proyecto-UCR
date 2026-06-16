@@ -176,56 +176,6 @@ function Dashboard() {
             {/* Middle Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* Recent Applications */}
-              <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                <div className="p-6 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="text-lg font-bold text-foreground">Postulaciones Recientes</h3>
-                  <button className="text-sm font-semibold text-[#0f4c81] dark:text-sky-400">Ver Todas</button>
-                </div>
-                <div className="p-0">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                      <tr>
-                        <th className="px-6 py-3">Empresa</th>
-                        <th className="px-6 py-3">Posición</th>
-                        <th className="px-6 py-3 text-right">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center text-[10px] font-bold text-[#0f4c81] dark:text-sky-300">TCH</div>
-                          <span className="font-semibold text-foreground">TechCorp Global</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Pasante de Software</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/60 border-0">Entrevistando</Badge>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold text-indigo-700 dark:text-indigo-300">SST</div>
-                          <span className="font-semibold text-foreground">SustainSystems</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Analista de Datos</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/60 border-0">En Revisión</Badge>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400">LBC</div>
-                          <span className="font-semibold text-foreground">LibreConsult</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Asistente de Proyecto</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge className="bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/60 border-0">Cerrado</Badge>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
 
               {/* Support & Resources */}
               <div className="space-y-6">
@@ -269,61 +219,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Recommended Mentors */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-lg font-bold text-foreground">Mentores Recomendados</h3>
-                <Badge className="bg-[#0f4c81] text-white hover:bg-[#0f4c81] border-0 text-xs px-2 py-0.5">⚡ EMPAREJAMIENTO IA</Badge>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                
-                {[
-                  { name: "Ing. Maria Valverde", role: "Ing. Principal @ Intel CR", tags: ["Semicond.", "Liderazgo"], match: "98% Coincidencia" },
-                  { name: "Dr. Roberto Solís", role: "Científico Principal", tags: ["BioTech", "I+D"], match: "92% Coincidencia" },
-                  { name: "Lic. Elena Mora", role: "Estratega de Producto", tags: ["Startups", "UX"], match: "85% Coincidencia" }
-                ].map((mentor, i) => (
-                  <Card key={i} className="overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
-                    <div className="h-48 bg-slate-200 dark:bg-slate-900 relative">
-                      {/* Grayscale image placeholder */}
-                      <div className="absolute inset-0 bg-slate-300 dark:bg-slate-800 grayscale flex justify-center items-end">
-                         <UserCircle className="h-32 w-32 text-slate-400 dark:text-slate-600 mb-[-1rem]"/>
-                      </div>
-                      <Badge className="absolute bottom-3 right-3 bg-green-600 text-white hover:bg-green-600 border-0">{mentor.match}</Badge>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col">
-                      <h4 className="font-bold text-base text-foreground mb-1">{mentor.name}</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{mentor.role}</p>
-                      <div className="flex gap-2 mb-6">
-                        {mentor.tags.map(tag => (
-                          <span key={tag} className="px-2 py-1 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded text-xs font-medium">{tag}</span>
-                        ))}
-                      </div>
-                      <Button 
-                        onClick={() => {
-                          setSelectedMentor(mentor);
-                          setIsCoffeeOpen(true);
-                        }}
-                        className="w-full mt-auto bg-blue-50 dark:bg-blue-900/40 text-[#0f4c81] dark:text-sky-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 font-semibold border-0"
-                      >
-                        Solicitar Café Virtual
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
 
-                {/* Find More Mentors Card */}
-                <Card className="overflow-hidden border-dashed border-2 border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-950/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center shadow-md">
-                  <div className="h-12 w-12 rounded-lg bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center mb-4">
-                    <Users className="h-6 w-6 text-[#0f4c81] dark:text-sky-400" />
-                  </div>
-                  <h4 className="font-bold text-base text-[#0f4c81] dark:text-sky-400 mb-2">Encontrar Más Mentores</h4>
-                  <p className="text-sm text-slate-500 mb-6">Explora nuestra base de datos con más de 5,000 exalumnos verificados.</p>
-                  <Link href="/directorio/exalumnos" className="w-full">
-                    <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">Explorar Directorio</Button>
-                  </Link>
-                </Card>
-              </div>
-            </div>
           </>
         ) : (
           <>
@@ -394,119 +290,12 @@ function Dashboard() {
             {/* Middle Section - Exalumno */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* Job Applicants Card */}
-              <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                <div className="p-6 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="text-lg font-bold text-foreground">Postulantes a tus Vacantes</h3>
-                  <Link href="/posiciones">
-                    <button className="text-sm font-semibold text-[#0f4c81] dark:text-sky-400">Ver Todas</button>
-                  </Link>
-                </div>
-                <div className="p-0">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-semibold text-xs uppercase tracking-wider">
-                      <tr>
-                        <th className="px-6 py-3">Estudiante</th>
-                        <th className="px-6 py-3">Carrera</th>
-                        <th className="px-6 py-3 text-right">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-sky-300 flex items-center justify-center text-[10px] font-bold">GS</div>
-                          <span className="font-semibold text-foreground">Gabriel Solano</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Ingeniería Eléctrica</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/60 border-0">Entrevistando</Badge>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 flex items-center justify-center text-[10px] font-bold">MR</div>
-                          <span className="font-semibold text-foreground">Mariana Rodríguez</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">Computación</td>
-                        <td className="px-6 py-4 text-right">
-                          <Badge className="bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/60 border-0">En Revisión</Badge>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
 
-              {/* Student Projects Seeking Funding */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold text-foreground">Proyectos Estudiantiles buscando Apoyo</h3>
-                <div className="space-y-4">
-                  <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-foreground">Robot Recolector de Plástico</h4>
-                        <Badge className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 border-0">Beca 4</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Estudiante: Carlos Arguedas. Construcción de un robot automatizado para limpiar residuos plásticos en el campus de la UCR.
-                      </p>
-                      <div className="flex justify-between text-xs font-medium mb-1">
-                        <span>Financiamiento requerido: ¢200,000</span>
-                        <span className="text-[#0f4c81] dark:text-sky-400">55% completado</span>
-                      </div>
-                      <Progress value={55} className="h-2 bg-slate-100 dark:bg-slate-800 mb-4" />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Link href="/donaciones">
-                        <Button size="sm" className="bg-[#0f4c81] text-white hover:bg-[#0b3a63]">Ver Detalles y Donar</Button>
-                      </Link>
-                    </div>
-                  </Card>
-                </div>
-              </div>
+
+
             </div>
 
-            {/* Bottom Section - Recommended Students to Mentor */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-lg font-bold text-foreground">Estudiantes Sugeridos para Mentoría</h3>
-                <Badge className="bg-[#0f4c81] text-white hover:bg-[#0f4c81] border-0 text-xs px-2 py-0.5">⚡ EMPAREJAMIENTO IA</Badge>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
-                {[
-                  { name: "Gabriel Solano", career: "Bach. Ingeniería Eléctrica", match: "98% Coincidencia", tags: ["Semicond.", "Hardware", "Energía"] },
-                  { name: "Andrea Gómez", career: "Lic. Computación e Informática", match: "92% Coincidencia", tags: ["AI", "Software", "Web"] },
-                  { name: "Carlos Arguedas", career: "Bach. Ingeniería Mecánica", match: "88% Coincidencia", tags: ["Mecatrónica", "Robótica", "CAD"] }
-                ].map((student, i) => (
-                  <Card key={i} className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex flex-col hover:shadow-lg transition-all duration-300">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h4 className="font-bold text-base text-foreground">{student.name}</h4>
-                        <p className="text-xs text-slate-500">{student.career}</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">{student.match}</Badge>
-                    </div>
-                    <div className="flex gap-2 mb-6">
-                      {student.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded text-xs font-medium">{tag}</span>
-                      ))}
-                    </div>
-                    <Button 
-                      onClick={() => {
-                        toast({
-                          title: "Propuesta de Mentoría Enviada",
-                          description: `Se ha enviado tu invitación de mentoría a ${student.name}. Recibirás una notificación cuando acepte.`
-                        });
-                      }}
-                      className="w-full mt-auto bg-blue-50 text-[#0f4c81] hover:bg-blue-100 font-semibold border-0"
-                    >
-                      Ofrecer Mentoría
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            </div>
+
           </>
         )}
       </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award } from "lucide-react";
+import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
 import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes";
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
 
@@ -24,6 +24,28 @@ export default function CVPage() {
   const [certInput, setCertInput] = useState("");
   const [editingHeader, setEditingHeader] = useState(false);
   const [headerDraft, setHeaderDraft] = useState({ name: cv.name, title: cv.title, location: cv.location, email: cv.email, phone: cv.phone });
+  const [uploadingCV, setUploadingCV] = useState(false);
+
+  const handleUploadCV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCV(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/cv/extract", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error extrayendo texto");
+      const data = await res.json();
+      setCV(c => ({ ...c, summary: data.text }));
+      alert("CV cargado y texto extraído al perfil.");
+    } catch (error) {
+      console.error(error);
+      alert("Error procesando el archivo");
+    } finally {
+      setUploadingCV(false);
+      e.target.value = ''; // reset input
+    }
+  };
 
   // AI states
   const [acceptedAI, setAcceptedAI] = useState<Set<AISection>>(new Set());
@@ -70,6 +92,11 @@ export default function CVPage() {
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
+            <label className="relative cursor-pointer bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+              {uploadingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploadingCV ? "Extrayendo..." : "Cargar CV (.pdf, .docx, .txt)"}
+              <input type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleUploadCV} disabled={uploadingCV} />
+            </label>
             <Badge className="bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400 hover:bg-[#dcfce7] dark:hover:bg-green-900/60 border-0 px-3 py-1 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-1.5" /> Análisis AI Activo
             </Badge>

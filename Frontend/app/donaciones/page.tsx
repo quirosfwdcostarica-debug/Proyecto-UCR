@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { getStudentProjects } from "@/actions/dashboard.actions";
 import { StudentApplicationModal } from "@/components/donaciones/StudentApplicationModal";
 import { MyApplicationsList } from "@/components/donaciones/MyApplicationsList";
 import { Button } from "@/components/ui/Button";
@@ -389,29 +390,7 @@ function DonacionModal({
 // ============================================================
 // Página principal
 // ============================================================
-const PROYECTOS_EJEMPLO: ProyectoEstudiantil[] = [
-  {
-    id: "p1",
-    nombre: "Sistema de Alerta Temprana para Inundaciones",
-    carrera: "Ingeniería en Computación",
-    descripcion: "Plataforma IoT que detecta y alerta sobre inundaciones en zonas de riesgo usando sensores de bajo costo.",
-    avance: 65,
-  },
-  {
-    id: "p2",
-    nombre: "Bioplásticos con Residuos Agrícolas",
-    carrera: "Biología",
-    descripcion: "Investigación para desarrollar materiales biodegradables a partir de desechos de caña y palma.",
-    avance: 40,
-  },
-  {
-    id: "p3",
-    nombre: "App de Telemedicina Rural",
-    carrera: "Ingeniería Industrial",
-    descripcion: "Solución móvil para conectar pacientes en zonas rurales con especialistas médicos.",
-    avance: 80,
-  },
-];
+
 
 export default function DonacionesPage() {
   const { data: session } = useSession();
@@ -422,6 +401,8 @@ export default function DonacionesPage() {
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState<ProyectoEstudiantil | null>(null);
   const [donaciones, setDonaciones] = useState<Donacion[]>([]);
   const [loadingDonaciones, setLoadingDonaciones] = useState(false);
+  const [proyectos, setProyectos] = useState<ProyectoEstudiantil[]>([]);
+  const [loadingProyectos, setLoadingProyectos] = useState(true);
 
   const fetchDonaciones = async () => {
     if (!userId || (role !== "EXALUMNO" && role !== "ADMIN")) return;
@@ -441,6 +422,17 @@ export default function DonacionesPage() {
 
   useEffect(() => {
     fetchDonaciones();
+    async function loadProyectos() {
+      try {
+        const data = await getStudentProjects();
+        setProyectos(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingProyectos(false);
+      }
+    }
+    loadProyectos();
   }, [userId, role]);
 
   return (
@@ -481,7 +473,11 @@ export default function DonacionesPage() {
 
             {/* Grid de proyectos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {PROYECTOS_EJEMPLO.map((proyecto) => (
+              {loadingProyectos ? (
+                <div className="col-span-full text-center py-10 text-slate-500">Cargando proyectos...</div>
+              ) : proyectos.length === 0 ? (
+                <div className="col-span-full text-center py-10 text-slate-500">No hay proyectos buscando financiamiento en este momento.</div>
+              ) : proyectos.map((proyecto) => (
                 <Card key={proyecto.id} className="bg-white dark:bg-slate-900 border-border dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
