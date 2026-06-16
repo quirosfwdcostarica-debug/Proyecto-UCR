@@ -25,4 +25,6 @@ router.use('/notifications', require('./notification.routes'));
 
 router.use('/solicitudes', require('./solicitudes.routes'));
 
+router.use('/dashboard', require('./dashboard.routes'));
+
 module.exports = router;
