@@ -42,6 +42,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { TopBar } from "@/components/layout/TopBar";
+import { DashboardImpact } from "@/components/admin/DashboardImpact";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 // ============================================================
 // Tipos
@@ -182,7 +185,7 @@ export default function AdminDashboardPage() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [loadingReportes, setLoadingReportes] = useState(true);
-  const [activeSection, setActiveSection] = useState<"dashboard" | "matches" | "donaciones" | "reportes">("dashboard");
+  const [activeSection, setActiveSection] = useState<"dashboard" | "impacto" | "matches" | "donaciones" | "reportes">("dashboard");
 
   // ---- Filtros matches ----
   const [matchStatus, setMatchStatus] = useState("");
@@ -321,9 +324,31 @@ export default function AdminDashboardPage() {
   };
 
   // ============================================================
-  // Export PDF (print)
+  // Export PDF
   // ============================================================
-  const exportPDF = () => window.print();
+  const adminRef = useRef<HTMLDivElement>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const exportPDF = async () => {
+    if (!adminRef.current) return;
+    try {
+      setDownloadingPDF(true);
+      const canvas = await html2canvas(adminRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      alert("Hubo un error al generar el PDF.");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
 
   // ============================================================
   // Colores de status
@@ -343,7 +368,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] print:bg-white">
+    <div ref={adminRef} className="min-h-full bg-[#f8fafc] print:bg-white">
       <TopBar title="Admin" />
 
       <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -366,9 +391,9 @@ export default function AdminDashboardPage() {
               {generatingMatches ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Generar Matches
             </Button>
-            <Button onClick={exportPDF} variant="outline" className="gap-2 print:hidden">
-              <Printer className="w-4 h-4" />
-              Exportar PDF
+            <Button onClick={exportPDF} disabled={downloadingPDF} variant="outline" className="gap-2 print:hidden">
+              {downloadingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+              {downloadingPDF ? "Generando..." : "Exportar PDF"}
             </Button>
           </div>
         </div>
@@ -381,7 +406,7 @@ export default function AdminDashboardPage() {
 
         {/* ---- Navegación de secciones ---- */}
         <div className="flex gap-1 p-1 bg-white border border-slate-200 rounded-xl shadow-sm w-fit">
-          {(["dashboard", "matches", "donaciones", "reportes"] as const).map((sec) => (
+          {(["dashboard", "impacto", "matches", "donaciones", "reportes"] as const).map((sec) => (
             <button
               key={sec}
               onClick={() => setActiveSection(sec)}
@@ -391,7 +416,7 @@ export default function AdminDashboardPage() {
                   : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              {sec === "donaciones" ? "Cola Donaciones" : sec === "reportes" ? "Perfiles Reportados" : sec === "matches" ? "Gestión Matches" : "Dashboard"}
+              {sec === "donaciones" ? "Cola Donaciones" : sec === "reportes" ? "Perfiles Reportados" : sec === "matches" ? "Gestión Matches" : sec === "impacto" ? "Impacto" : "Dashboard"}
             </button>
           ))}
         </div>
@@ -474,6 +499,13 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* =========================================== */}
+        {/* SECCIÓN: IMPACTO                          */}
+        {/* =========================================== */}
+        {activeSection === "impacto" && (
+          <DashboardImpact />
         )}
 
         {/* =========================================== */}

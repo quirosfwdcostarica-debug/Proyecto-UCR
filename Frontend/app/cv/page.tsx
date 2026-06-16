@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -12,6 +14,29 @@ type AISection = "profile" | "experience";
 
 export default function CVPage() {
   const [cv, setCV] = useState<CVData>(initialCV);
+  const cvRef = useRef<HTMLDivElement>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!cvRef.current) return;
+    try {
+      setDownloadingPDF(true);
+      const canvas = await html2canvas(cvRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Mi_CV_${cv.name.replace(/\s+/g, "_")}.pdf`);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      alert("Hubo un error al generar el PDF.");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
 
   // Edit states
   const [editingSummary, setEditingSummary] = useState(false);
@@ -103,8 +128,9 @@ export default function CVPage() {
             <span className="text-slate-600 dark:text-slate-400 font-medium">Puntaje: <span className="text-green-600 dark:text-green-500 font-bold text-lg">88%</span></span>
           </div>
           <div className="flex gap-3 border-l border-slate-200 dark:border-slate-700 pl-6">
-            <Button variant="outline" className="border-slate-300 dark:border-slate-700 dark:text-slate-300" onClick={() => alert("Generando PDF...")}>
-              <Download className="w-4 h-4 mr-2" /> Descargar PDF
+            <Button variant="outline" className="border-slate-300 dark:border-slate-700 dark:text-slate-300" onClick={handleDownloadPDF} disabled={downloadingPDF}>
+              {downloadingPDF ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} 
+              {downloadingPDF ? "Generando..." : "Descargar PDF"}
             </Button>
             <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
               Finalizar y Aplicar
@@ -124,7 +150,7 @@ export default function CVPage() {
             <Badge variant="outline" className="text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 uppercase tracking-widest text-[10px]">EDITABLE</Badge>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <div ref={cvRef} className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
             {/* Header limpio sin superposición */}
             <div className="relative bg-gradient-to-r from-[#0f4c81] via-[#1a6db5] to-[#2196f3] px-8 pt-8 pb-6">
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "25px 25px" }} />
