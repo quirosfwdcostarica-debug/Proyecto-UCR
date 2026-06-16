@@ -1,28 +1,53 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
-interface ImageItem {
+export interface ImageItem {
   src: string;
   alt: string;
 }
 
 export const CAROUSEL_IMAGES: ImageItem[] = [
   {
-    src: "/carousel-1.jpg",
-    alt: "Graduados universitarios de la UCR celebrando"
+    src: "/couple-holding-hands-green-meadow.jpg",
+    alt: "Pareja tomándose de la mano en pradera verde"
   },
   {
-    src: "/carousel-2.jpg",
-    alt: "Facultad de Derecho - Universidad de Costa Rica"
+    src: "/smiling-portrait-young-female-student-holding-books-takeaway-coffee-cup-standing-front-college-building.jpg",
+    alt: "Estudiante sonriente con libros y café frente a la universidad"
   },
   {
-    src: "/carousel-3.jpg",
-    alt: "Estudiantes y campus de la Universidad de Costa Rica"
+    src: "/collection-books-put-feather-bed.jpg",
+    alt: "Colección de libros sobre cama de plumas"
   }
 ];
 
-export function WelcomeCarousel({ className, currentIndex: propCurrentIndex }: { className?: string; currentIndex?: number }) {
+export const LANDING_CAROUSEL_IMAGES: ImageItem[] = [
+  {
+    src: "/portrait-group-students-celebrating-their-graduation.jpg",
+    alt: "Grupo de estudiantes celebrando su graduación"
+  },
+  {
+    src: "/college-graduate-student-diploma-piggy-bank.jpg",
+    alt: "Graduado universitario con diploma y alcancía"
+  },
+  {
+    src: "/business-man-working-office-desktop.jpg",
+    alt: "Hombre de negocios trabajando en su escritorio de oficina"
+  }
+];
+
+interface WelcomeCarouselProps {
+  className?: string;
+  currentIndex?: number;
+  images?: ImageItem[];
+}
+
+export function WelcomeCarousel({ 
+  className, 
+  currentIndex: propCurrentIndex,
+  images = CAROUSEL_IMAGES
+}: WelcomeCarouselProps) {
   const [internalIndex, setInternalIndex] = useState(0);
 
   const isControlled = typeof propCurrentIndex === "number";
@@ -31,17 +56,17 @@ export function WelcomeCarousel({ className, currentIndex: propCurrentIndex }: {
   useEffect(() => {
     if (isControlled) return;
     const timer = setInterval(() => {
-      setInternalIndex((prevIndex) => (prevIndex + 1) % CAROUSEL_IMAGES.length);
+      setInternalIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [isControlled]);
+  }, [isControlled, images.length]);
 
   return (
     <div className={className || "fixed inset-0 w-screen h-screen -z-10 bg-slate-950 overflow-hidden select-none pointer-events-none"}>
       {/* Slides Container */}
       <div className="relative w-full h-full">
-        {CAROUSEL_IMAGES.map((img, idx) => {
+        {images.map((img, idx) => {
           const isActive = idx === currentIndex;
           return (
             <div
@@ -66,3 +91,4 @@ export function WelcomeCarousel({ className, currentIndex: propCurrentIndex }: {
     </div>
   );
 }
+
