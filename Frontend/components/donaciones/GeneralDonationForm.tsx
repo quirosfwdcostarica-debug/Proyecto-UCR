@@ -58,23 +58,23 @@ export function GeneralDonationForm() {
     setIsUploading(true);
     
     try {
-      // 1. Subir a Supabase Storage (bucket 'comprobantes')
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `donaciones/${fileName}`;
+      // 1. Subir a Cloudinary
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('comprobantes')
-        .upload(filePath, file);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
-      if (uploadError) {
-        throw new Error(`Error subiendo comprobante: ${uploadError.message}`);
+      if (!res.ok) {
+        throw new Error("Error subiendo comprobante a Cloudinary");
       }
 
-      // Obtener URL pública (asumiendo bucket público o firmar URL)
-      const { data: { publicUrl } } = supabase.storage
-        .from('comprobantes')
-        .getPublicUrl(filePath);
+      const uploadData = await res.json();
+      const publicUrl = uploadData.secure_url;
 
       // 2. Crear registro en BD
       await fetchAPI('/donaciones', {

@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function RegistroEstudiantePage() {
   return (
-    <div className="flex min-h-screen bg-slate-50 font-body">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-body transition-colors">
       {/* Panel Izquierdo (Imagen y Texto) */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
         <div 
@@ -28,28 +28,28 @@ export default function RegistroEstudiantePage() {
 
       {/* Panel Derecho (Formulario) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto">
-        <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-esmeralda transition-colors font-bold">
+        <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-50 flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-ucr-esmeralda dark:hover:text-sky-400 transition-colors font-bold">
           <ArrowLeft className="w-5 h-5" />
           <span className="hidden sm:inline">Volver al Dashboard</span>
         </Link>
         <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-30 bg-cover bg-bottom mix-blend-multiply pointer-events-none"></div>
         
-        <div className="w-full max-w-xl bg-white p-6 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative z-10 my-8">
+        <div className="w-full max-w-xl bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 relative z-10 my-8">
           <div className="text-center mb-8">
             <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
+            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display mb-3">
               Únete como Estudiante
             </h2>
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
               Crea tu cuenta institucional para recibir mentoría, pasantías y apoyo en tu proyecto de graduación.
             </p>
           </div>
 
           <EstudianteRegisterForm />
 
-          <div className="mt-8 text-center text-slate-500 font-medium">
+          <div className="mt-8 text-center text-slate-500 dark:text-slate-400 font-medium">
             ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="font-bold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors">
+            <Link href="/login" className="font-bold text-ucr-celeste dark:text-sky-400 hover:text-sky-500 hover:underline transition-colors">
               Inicia sesión aquí
             </Link>
           </div>

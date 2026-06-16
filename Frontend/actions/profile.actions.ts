@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { UserProfileUpdateValues, userProfileUpdateSchema } from "@/lib/validations/profile";
 import { revalidatePath } from "next/cache";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 export async function getUserProfile() {
   const session = await auth();

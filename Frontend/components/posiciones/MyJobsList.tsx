@@ -5,24 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Users, Briefcase, Calendar } from "lucide-react";
 
 // Mock data para las posiciones publicadas por el exalumno
-const myJobs = [
-  {
-    id: "job-1",
-    title: "Desarrollador Frontend Junior",
-    type: "EMPLEO",
-    postedDate: "05 Jun 2026",
-    applicationsCount: 12,
-    status: "ACTIVA",
-  },
-  {
-    id: "job-2",
-    title: "Pasantía en Análisis de Datos",
-    type: "PASANTIA",
-    postedDate: "20 May 2026",
-    applicationsCount: 45,
-    status: "CERRADA",
-  }
-];
+const myJobs: any[] = [];
 
 export function MyJobsList() {
   if (myJobs.length === 0) {

@@ -8,7 +8,9 @@ export default function LoadingEstudiantes() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <BookLoader message="Cargando directorio estudiantil" />
+        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+          <BookLoader message="Cargando directorio de estudiantes..." />
+        </div>
       </div>
     </div>
   );

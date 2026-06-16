@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award } from "lucide-react";
+import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
 import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes";
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
 
@@ -24,6 +24,28 @@ export default function CVPage() {
   const [certInput, setCertInput] = useState("");
   const [editingHeader, setEditingHeader] = useState(false);
   const [headerDraft, setHeaderDraft] = useState({ name: cv.name, title: cv.title, location: cv.location, email: cv.email, phone: cv.phone });
+  const [uploadingCV, setUploadingCV] = useState(false);
+
+  const handleUploadCV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCV(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/cv/extract", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error extrayendo texto");
+      const data = await res.json();
+      setCV(c => ({ ...c, summary: data.text }));
+      alert("CV cargado y texto extraído al perfil.");
+    } catch (error) {
+      console.error(error);
+      alert("Error procesando el archivo");
+    } finally {
+      setUploadingCV(false);
+      e.target.value = ''; // reset input
+    }
+  };
 
   // AI states
   const [acceptedAI, setAcceptedAI] = useState<Set<AISection>>(new Set());
@@ -51,7 +73,7 @@ export default function CVPage() {
   const inp = "w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200";
 
   return (
-    <div className="min-h-full bg-[#f0f4f8] flex flex-col">
+    <div className="min-h-full bg-[#f0f4f8] dark:bg-slate-950 flex flex-col transition-colors duration-300">
       <TopBar title="My CV" />
 
       {deleteExpId && (
@@ -63,23 +85,28 @@ export default function CVPage() {
       )}
 
       {/* Sub-header */}
-      <div className="bg-white border-b border-border px-8 py-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border-b border-border dark:border-slate-800 px-8 py-4 flex items-center justify-between">
         <div>
           <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">AI Career Assistant</p>
           <h1 className="text-2xl font-bold text-foreground">Optimización de CV</h1>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
-            <Badge className="bg-[#dcfce7] text-[#166534] hover:bg-[#dcfce7] border-0 px-3 py-1 text-sm font-medium">
+            <label className="relative cursor-pointer bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+              {uploadingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploadingCV ? "Extrayendo..." : "Cargar CV (.pdf, .docx, .txt)"}
+              <input type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleUploadCV} disabled={uploadingCV} />
+            </label>
+            <Badge className="bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400 hover:bg-[#dcfce7] dark:hover:bg-green-900/60 border-0 px-3 py-1 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-1.5" /> Análisis AI Activo
             </Badge>
-            <span className="text-slate-600 font-medium">Puntaje: <span className="text-green-600 font-bold text-lg">88%</span></span>
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Puntaje: <span className="text-green-600 dark:text-green-500 font-bold text-lg">88%</span></span>
           </div>
-          <div className="flex gap-3 border-l border-slate-200 pl-6">
-            <Button variant="outline" className="border-slate-300" onClick={() => alert("Generando PDF...")}>
+          <div className="flex gap-3 border-l border-slate-200 dark:border-slate-700 pl-6">
+            <Button variant="outline" className="border-slate-300 dark:border-slate-700 dark:text-slate-300" onClick={() => alert("Generando PDF...")}>
               <Download className="w-4 h-4 mr-2" /> Descargar PDF
             </Button>
-            <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
+            <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
               Finalizar y Aplicar
             </Button>
           </div>
@@ -89,15 +116,15 @@ export default function CVPage() {
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── LEFT: CV editable ───────────────────────────────────────────── */}
-        <div className="w-1/2 p-8 overflow-y-auto border-r border-border bg-gradient-to-b from-slate-50 to-white">
+        <div className="w-1/2 p-8 overflow-y-auto border-r border-border dark:border-slate-800 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
           <div className="flex justify-between items-center mb-5">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" /> Tu versión actual
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 inline-block" /> Tu versión actual
             </span>
-            <Badge variant="outline" className="text-slate-400 bg-slate-50 border-slate-200 uppercase tracking-widest text-[10px]">EDITABLE</Badge>
+            <Badge variant="outline" className="text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 uppercase tracking-widest text-[10px]">EDITABLE</Badge>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
             {/* Header limpio sin superposición */}
             <div className="relative bg-gradient-to-r from-[#0f4c81] via-[#1a6db5] to-[#2196f3] px-8 pt-8 pb-6">
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "25px 25px" }} />
@@ -162,15 +189,15 @@ export default function CVPage() {
               )}
             </div>
 
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mx-8" />
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-8" />
 
             <div className="px-8 py-6 space-y-8">
 
               {/* Perfil */}
               <div>
-                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
-                  <div className="p-1.5 rounded-lg bg-blue-100 text-blue-600"><Briefcase className="w-4 h-4" /></div>
-                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Perfil Profesional</h3>
+                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-sky-400"><Briefcase className="w-4 h-4" /></div>
+                  <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Perfil Profesional</h3>
                   <button onClick={() => { setSummaryDraft(cv.summary); setEditingSummary(true); }} className="ml-auto p-1.5 hover:bg-blue-50 rounded-lg transition-colors">
                     <Edit2 className="w-3.5 h-3.5 text-slate-400 hover:text-blue-600" />
                   </button>
@@ -309,19 +336,19 @@ export default function CVPage() {
         </div>
 
         {/* ── RIGHT: AI Suggestions ───────────────────────────────────────── */}
-        <div className="w-1/2 p-8 overflow-y-auto bg-[#f8fafc] relative">
+        <div className="w-1/2 p-8 overflow-y-auto bg-[#f8fafc] dark:bg-slate-950 relative">
           <div className="flex justify-between items-center mb-6 max-w-xl mx-auto">
-            <h2 className="text-xl font-bold text-[#0f4c81] flex items-center gap-2"><Sparkles className="w-5 h-5" />Sugerencia de IA</h2>
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 uppercase tracking-widest text-[10px]">SUGERENCIA AI</Badge>
+            <h2 className="text-xl font-bold text-[#0f4c81] dark:text-sky-400 flex items-center gap-2"><Sparkles className="w-5 h-5" />Sugerencia de IA</h2>
+            <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/60 border-0 uppercase tracking-widest text-[10px]">SUGERENCIA AI</Badge>
           </div>
 
           <div className="max-w-xl mx-auto space-y-5 pb-24">
 
             {/* Info card */}
-            <div className="bg-[#0f4c81]/5 border border-[#0f4c81]/20 rounded-xl p-4">
-              <h3 className="font-bold text-[#0f4c81] text-sm mb-1">Personaliza tu CV para esta oportunidad</h3>
-              <p className="text-xs text-slate-600 mb-3">La IA analizará tu perfil y la posición para sugerir mejoras alineadas con lo que busca el reclutador.</p>
-              <ul className="space-y-1 text-xs text-slate-700">
+            <div className="bg-[#0f4c81]/5 dark:bg-sky-900/10 border border-[#0f4c81]/20 dark:border-sky-800/30 rounded-xl p-4">
+              <h3 className="font-bold text-[#0f4c81] dark:text-sky-400 text-sm mb-1">Personaliza tu CV para esta oportunidad</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">La IA analizará tu perfil y la posición para sugerir mejoras alineadas con lo que busca el reclutador.</p>
+              <ul className="space-y-1 text-xs text-slate-700 dark:text-slate-300">
                 {["No inventa experiencias","No modifica tu CV original","Tú decides qué cambios aceptar","Optimiza palabras clave para ATS"].map((t) => (
                   <li key={t} className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />{t}</li>
                 ))}
@@ -329,80 +356,80 @@ export default function CVPage() {
             </div>
 
             {/* ATS */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 items-start">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 flex gap-3 items-start">
               <Sparkles className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-700 leading-relaxed"><strong>Tu CV está optimizado para ATS.</strong> Completar más información mejora tus oportunidades de aparecer en búsquedas relevantes.</p>
+              <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed"><strong>Tu CV está optimizado para ATS.</strong> Completar más información mejora tus oportunidades de aparecer en búsquedas relevantes.</p>
             </div>
 
             {/* AI: Perfil */}
             {!discardedAI.has("profile") && (
-              <div className="bg-white border border-[#bfdbfe] rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-[#eff6ff] px-4 py-2 border-b border-[#bfdbfe] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#0f4c81]" />
-                  <span className="text-xs font-bold text-[#0f4c81] tracking-wider">PERFIL PROFESIONAL OPTIMIZADO</span>
-                  {acceptedAI.has("profile") && <Badge className="ml-auto bg-green-100 text-green-700 border-0 text-[10px]">✓ Aceptado</Badge>}
+              <div className="bg-white dark:bg-slate-900 border border-[#bfdbfe] dark:border-blue-900/40 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-[#eff6ff] dark:bg-blue-900/20 px-4 py-2 border-b border-[#bfdbfe] dark:border-blue-900/40 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#0f4c81] dark:text-sky-400" />
+                  <span className="text-xs font-bold text-[#0f4c81] dark:text-sky-400 tracking-wider">PERFIL PROFESIONAL OPTIMIZADO</span>
+                  {acceptedAI.has("profile") && <Badge className="ml-auto bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-0 text-[10px]">✓ Aceptado</Badge>}
                 </div>
                 <div className="p-5">
-                  <p className="text-slate-700 leading-relaxed text-sm mb-5">
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm mb-5">
                     Ingeniera de Software Full-Stack especializada en ecosistemas escalables con{" "}
-                    <span className="bg-green-100 text-green-800 px-1 rounded font-medium">4+ años de trayectoria</span>{" "}
+                    <span className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 px-1 rounded font-medium">4+ años de trayectoria</span>{" "}
                     transformando requisitos complejos en soluciones técnicas de alto rendimiento. Experta en el stack MERN y metodologías ágiles, con enfoque probado en optimización de latencia y liderazgo de equipos técnicos.
                   </p>
                   {!acceptedAI.has("profile") ? (
                     <div className="flex gap-3">
-                      <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white flex-1 text-sm" onClick={() => acceptAI("profile", "Ingeniera de Software Full-Stack especializada en ecosistemas escalables con 4+ años de trayectoria transformando requisitos complejos en soluciones técnicas de alto rendimiento.")}>
+                      <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white flex-1 text-sm" onClick={() => acceptAI("profile", "Ingeniera de Software Full-Stack especializada en ecosistemas escalables con 4+ años de trayectoria transformando requisitos complejos en soluciones técnicas de alto rendimiento.")}>
                         <Check className="w-4 h-4 mr-2" />Aceptar
                       </Button>
-                      <Button variant="outline" className="flex-1 text-sm" onClick={() => discardAI("profile")}><X className="w-4 h-4 mr-2" />Descartar</Button>
+                      <Button variant="outline" className="flex-1 text-sm dark:border-slate-700" onClick={() => discardAI("profile")}><X className="w-4 h-4 mr-2" />Descartar</Button>
                     </div>
                   ) : (
-                    <p className="text-xs text-green-600 font-medium">✓ Cambio aplicado a tu CV</p>
+                    <p className="text-xs text-green-600 dark:text-green-500 font-medium">✓ Cambio aplicado a tu CV</p>
                   )}
                 </div>
-                <div className="bg-slate-50 p-4 border-t border-slate-100 text-xs text-slate-600">
-                  <span className="font-semibold text-slate-700">Razonamiento AI:</span> Se incluyeron palabras clave de la vacante y se cuantificó el impacto profesional.
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Razonamiento AI:</span> Se incluyeron palabras clave de la vacante y se cuantificó el impacto profesional.
                 </div>
               </div>
             )}
 
             {/* AI: Experiencia */}
             {!discardedAI.has("experience") && (
-              <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center">
-                  <span className="text-xs font-bold text-[#0f4c81] tracking-wider">EXPERIENCIA REESTRUCTURADA</span>
-                  {acceptedAI.has("experience") && <Badge className="ml-auto bg-green-100 text-green-700 border-0 text-[10px]">✓ Aceptado</Badge>}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center">
+                  <span className="text-xs font-bold text-[#0f4c81] dark:text-sky-400 tracking-wider">EXPERIENCIA REESTRUCTURADA</span>
+                  {acceptedAI.has("experience") && <Badge className="ml-auto bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-0 text-[10px]">✓ Aceptado</Badge>}
                 </div>
                 <div className="p-5">
-                  <h4 className="font-bold text-slate-800 text-sm">TechSoluciones | Desarrollador Senior</h4>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">TechSoluciones | Desarrollador Senior</h4>
                   <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider">Logros Clave</p>
                   <div className="space-y-3 mb-5">
                     {[
-                      <span key="1">Liderazgo técnico de equipo de 5 ingenieros, <span className="text-[#0f4c81] font-semibold">+25% velocidad de entrega</span>.</span>,
-                      <span key="2">Optimización React Front-end: <span className="text-[#0f4c81] font-semibold">-40% tiempos de carga para 1M+ usuarios</span>.</span>,
+                      <span key="1">Liderazgo técnico de equipo de 5 ingenieros, <span className="text-[#0f4c81] dark:text-sky-400 font-semibold">+25% velocidad de entrega</span>.</span>,
+                      <span key="2">Optimización React Front-end: <span className="text-[#0f4c81] dark:text-sky-400 font-semibold">-40% tiempos de carga para 1M+ usuarios</span>.</span>,
                     ].map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
                         <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                        <p className="text-slate-700 text-sm">{item}</p>
+                        <p className="text-slate-700 dark:text-slate-300 text-sm">{item}</p>
                       </div>
                     ))}
                   </div>
                   {!acceptedAI.has("experience") ? (
                     <div className="flex gap-3">
-                      <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white px-6 text-sm" onClick={() => acceptAI("experience")}>Aceptar</Button>
-                      <Button variant="outline" className="px-6 text-sm" onClick={() => discardAI("experience")}>Descartar</Button>
+                      <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white px-6 text-sm" onClick={() => acceptAI("experience")}>Aceptar</Button>
+                      <Button variant="outline" className="px-6 text-sm dark:border-slate-700" onClick={() => discardAI("experience")}>Descartar</Button>
                     </div>
                   ) : (
-                    <p className="text-xs text-green-600 font-medium">✓ Cambio aplicado</p>
+                    <p className="text-xs text-green-600 dark:text-green-500 font-medium">✓ Cambio aplicado</p>
                   )}
                 </div>
               </div>
             )}
 
             {/* Habilidades sugeridas */}
-            <div className="bg-green-50 border border-green-200 rounded-lg shadow-sm p-5">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 rounded-lg shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb className="w-5 h-5 text-green-600" />
-                <h3 className="font-bold text-green-800 text-sm">Habilidades Sugeridas</h3>
+                <h3 className="font-bold text-green-800 dark:text-green-400 text-sm">Habilidades Sugeridas</h3>
               </div>
               <div className="flex gap-2 mb-3 flex-wrap">
                 {["GraphQL", "AWS S3", "Microservices"].map((s) => (
@@ -410,28 +437,18 @@ export default function CVPage() {
                     key={s}
                     disabled={cv.skills.includes(s)}
                     onClick={() => setCV((c) => ({ ...c, skills: [...c.skills, s] }))}
-                    className="px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded-full text-xs font-medium shadow-sm hover:bg-green-100 transition-colors disabled:opacity-40 disabled:cursor-default"
+                    className="px-3 py-1.5 bg-white dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-700 dark:text-green-300 rounded-full text-xs font-medium shadow-sm hover:bg-green-100 dark:hover:bg-green-900/60 transition-colors disabled:opacity-40 disabled:cursor-default"
                   >
                     {cv.skills.includes(s) ? `✓ ${s}` : `+ ${s}`}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-green-600 italic">Estas habilidades aparecen frecuentemente en el perfil del cargo solicitado.</p>
+              <p className="text-xs text-green-600 dark:text-green-500 italic">Estas habilidades aparecen frecuentemente en el perfil del cargo solicitado.</p>
             </div>
 
           </div>
 
-          {/* Floating progress */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-md bg-[#0a192f] text-white rounded-xl shadow-2xl p-4 flex items-center gap-4">
-            <div className="bg-blue-500/20 p-2 rounded-lg"><Loader2 className="w-6 h-6 text-blue-400 animate-spin" /></div>
-            <div className="flex-1">
-              <p className="font-bold text-sm mb-1">Generando sugerencias finales...</p>
-              <p className="text-xs text-blue-200 mb-2">Revisando sección de Educación</p>
-              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-400 w-2/3 rounded-full animate-pulse" />
-              </div>
-            </div>
-          </div>
+
         </div>
 
       </div>
