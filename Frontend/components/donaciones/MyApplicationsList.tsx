@@ -5,26 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Calendar, Github, Wallet } from "lucide-react";
 
 // Mock data para las postulaciones del estudiante actual
-const myApplications = [
-  {
-    id: "app-1",
-    projectName: "Sistema de Análisis de Datos Agrícolas",
-    date: "15 May 2026",
-    status: "ACTIVA", // Puede ser PENDIENTE, ACTIVA, FINANCIADA
-    scholarshipType: "Beca 5",
-    github: "https://github.com/estudiante/agro-data",
-    donationsReceived: 25000,
-  },
-  {
-    id: "app-2",
-    projectName: "App de Salud Mental Estudiantil",
-    date: "02 Feb 2026",
-    status: "FINANCIADA",
-    scholarshipType: "Beca 5",
-    github: "https://github.com/estudiante/mental-health",
-    donationsReceived: 150000,
-  }
-];
+const myApplications: any[] = [];
 
 export function MyApplicationsList() {
   if (myApplications.length === 0) {
