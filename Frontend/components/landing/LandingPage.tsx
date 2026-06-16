@@ -17,14 +17,12 @@ import {
   Shield,
   Lightbulb,
   Sparkle,
-  ChevronLeft,
-  ChevronRight,
   Phone,
   LayoutGrid
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { WelcomeCarousel } from "@/components/layout/WelcomeCarousel";
+import { WelcomeCarousel, LANDING_CAROUSEL_IMAGES } from "@/components/layout/WelcomeCarousel";
 import { IntroVideo } from "@/components/layout/IntroVideo";
 
 // Componentes de las Figuras Oficiales de la Marca
@@ -75,18 +73,12 @@ export default function LandingPage() {
   // Auto-slide effect for the carousel (6 seconds)
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentCarouselIndex((prev) => (prev + 1) % 3);
+      setCurrentCarouselIndex((prev) => (prev + 1) % LANDING_CAROUSEL_IMAGES.length);
     }, 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleNext = () => {
-    setCurrentCarouselIndex((prev) => (prev + 1) % 3);
-  };
 
-  const handlePrev = () => {
-    setCurrentCarouselIndex((prev) => (prev - 1 + 3) % 3);
-  };
 
   // Datos mockeados de testimonios
   const testimonios = [
@@ -155,7 +147,11 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative h-screen min-h-[680px] flex items-center pb-28 text-white overflow-hidden bg-ucr-negro w-full">
-        <WelcomeCarousel className="absolute inset-0 w-full h-full z-0 bg-ucr-negro" currentIndex={currentCarouselIndex} />
+        <WelcomeCarousel 
+          className="absolute inset-0 w-full h-full z-0 bg-ucr-negro" 
+          currentIndex={currentCarouselIndex} 
+          images={LANDING_CAROUSEL_IMAGES}
+        />
         
         {/* Overlays: gradient mask for readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-ucr-negro/85 via-ucr-negro/40 to-transparent z-10 pointer-events-none" />
@@ -235,43 +231,6 @@ export default function LandingPage() {
           <div className="hidden md:block md:col-span-4" />
         </div>
 
-        {/* Carousel Navigation and Dots at absolute bottom left */}
-        <div className="absolute bottom-8 left-0 right-0 z-30 pointer-events-none">
-          <div className="max-w-7xl mx-auto px-6 w-full">
-            <div className="flex items-center gap-6 pointer-events-auto">
-              <div className="flex items-center border border-white/20 rounded-[10px] overflow-hidden bg-black/20 backdrop-blur-md divide-x divide-white/20">
-                <button 
-                  onClick={handlePrev} 
-                  className="px-4 py-2.5 hover:bg-white/10 text-white transition-all"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button 
-                  onClick={handleNext} 
-                  className="px-4 py-2.5 hover:bg-white/10 text-white transition-all"
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Dots indicator */}
-              <div className="flex gap-2 items-center">
-                {[0, 1, 2].map((idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentCarouselIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      idx === currentCarouselIndex ? "w-6 bg-ucr-celeste" : "w-2 bg-white/30 hover:bg-white/50"
-                    }`}
-                    aria-label={`Ir a diapositiva ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
       </section>
 

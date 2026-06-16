@@ -24,9 +24,6 @@ export default function SelectorRegistroPage() {
         {/* Panel Izquierdo Content (Text floating over left side) */}
         <div className="hidden lg:flex lg:w-[50%] flex-col justify-between px-16 py-20 text-white min-h-screen">
           <div className="pt-8">
-            <h1 className="text-4xl md:text-5xl font-medium text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] font-display leading-[1.1] uppercase">
-              Fundación Exalumnos<br/>U
-            </h1>
           </div>
           <div className="pb-8">
             <p className="text-lg md:text-xl text-sky-100 max-w-lg font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
