@@ -17,19 +17,17 @@ import {
   Shield,
   Lightbulb,
   Sparkle,
-  ChevronLeft,
-  ChevronRight,
   Phone,
   LayoutGrid
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { WelcomeCarousel } from "@/components/layout/WelcomeCarousel";
+import { WelcomeCarousel, LANDING_CAROUSEL_IMAGES } from "@/components/layout/WelcomeCarousel";
 import { IntroVideo } from "@/components/layout/IntroVideo";
 
 // Componentes de las Figuras Oficiales de la Marca
 const UCRUElement = ({ className = "" }: { className?: string }) => (
-  <div className={`relative select-none pointer-events-none ${className}`}>
+  <div className={`select-none pointer-events-none ${className}`}>
     <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
       {/* Red-orange U-shape */}
       <path d="M 30 15 H 85 V 50 A 27.5 27.5 0 0 1 30 50 Z" fill="#F34B26" />
@@ -40,7 +38,7 @@ const UCRUElement = ({ className = "" }: { className?: string }) => (
 );
 
 const UCRFlowerElement = ({ className = "" }: { className?: string }) => (
-  <div className={`relative select-none pointer-events-none ${className}`}>
+  <div className={`select-none pointer-events-none ${className}`}>
     <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
       {/* 12 Petals rotated around center (50, 50) */}
       <circle cx="50" cy="50" r="12" fill="#FF9B18" />
@@ -61,7 +59,7 @@ const UCRFlowerElement = ({ className = "" }: { className?: string }) => (
 );
 
 const UCRSlantedBarElement = ({ className = "", color = "#006AD3" }: { className?: string; color?: string }) => (
-  <div className={`relative select-none pointer-events-none ${className}`}>
+  <div className={`select-none pointer-events-none ${className}`}>
     <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.1)]" preserveAspectRatio="none">
       {/* Parallelogram slanted to the left */}
       <polygon points="40,0 100,0 60,100 0,100" fill={color} />
@@ -75,18 +73,12 @@ export default function LandingPage() {
   // Auto-slide effect for the carousel (6 seconds)
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentCarouselIndex((prev) => (prev + 1) % 3);
+      setCurrentCarouselIndex((prev) => (prev + 1) % LANDING_CAROUSEL_IMAGES.length);
     }, 6000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleNext = () => {
-    setCurrentCarouselIndex((prev) => (prev + 1) % 3);
-  };
 
-  const handlePrev = () => {
-    setCurrentCarouselIndex((prev) => (prev - 1 + 3) % 3);
-  };
 
   // Datos mockeados de testimonios
   const testimonios = [
@@ -127,11 +119,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <img 
               src="/logo.png" 
-              alt="Logo UCR" 
+              alt="Logo U" 
               className="h-12 w-auto object-contain dark:brightness-110"
             />
             <div className="hidden sm:block border-l border-white/20 pl-3">
-              <span className="text-base font-medium tracking-tight text-white font-display block leading-none">EXALUMNOS UCR</span>
+              <span className="text-base font-medium tracking-tight text-white font-display block leading-none">EXALUMNOS U</span>
               <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider block mt-1">Impacto y Legado</span>
             </div>
           </div>
@@ -154,17 +146,31 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] flex items-center text-white overflow-hidden bg-ucr-negro w-full">
-        <WelcomeCarousel className="absolute inset-0 w-full h-full z-0 bg-ucr-negro" currentIndex={currentCarouselIndex} />
+      <section className="relative h-screen min-h-[680px] flex items-center pb-28 text-white overflow-hidden bg-ucr-negro w-full">
+        <WelcomeCarousel 
+          className="absolute inset-0 w-full h-full z-0 bg-ucr-negro" 
+          currentIndex={currentCarouselIndex} 
+          images={LANDING_CAROUSEL_IMAGES}
+        />
         
         {/* Overlays: gradient mask for readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-ucr-negro/85 via-ucr-negro/40 to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-ucr-negro/50 via-transparent to-transparent z-10 pointer-events-none" />
         
         {/* Diagonal Slash Cutout */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 z-20 pointer-events-none">
-          <svg className="w-full h-full text-ucr-gris-fondo dark:text-ucr-negro fill-current" viewBox="0 0 1000 100" preserveAspectRatio="none">
-            <path d="M0,80 L350,40 L1000,90 L1000,100 L0,100 Z" />
+        <div className="absolute bottom-0 left-0 right-0 h-[160px] z-20 pointer-events-none">
+          <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
+            {/* Subtle background wave accent (taller and scalloped) */}
+            <path 
+              d="M 0,32 C 100,32 120,12 200,12 C 280,12 300,42 400,42 C 500,42 520,5 620,5 C 720,5 750,32 850,32 C 900,32 950,22 1000,22 L 1000,100 L 0,100 Z" 
+              fill="#4BA5D9" 
+              opacity="0.3" 
+            />
+            {/* Main brand blue wavy shape (taller and scalloped, filled all the way to the bottom) */}
+            <path 
+              d="M 0,40 C 100,40 120,20 200,20 C 280,20 300,50 400,50 C 500,50 520,10 620,10 C 720,10 750,40 850,40 C 900,40 950,30 1000,30 L 1000,100 L 0,100 Z" 
+              fill="#006AD3" 
+            />
           </svg>
         </div>
 
@@ -188,21 +194,21 @@ export default function LandingPage() {
             {/* Overline */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ucr-celeste/15 border border-ucr-celeste/30 text-ucr-celeste text-xs font-bold uppercase tracking-widest font-body">
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              COMUNIDAD OFICIAL ALUMNI UCR
+              COMUNIDAD OFICIAL ALUMNI U
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight font-display leading-[1.15] text-white max-w-3xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
               Fundación <br/>
-              <span className="font-light">Exalumnos de la UCR</span>
+              <span className="font-light">Exalumnos de la U</span>
             </h1>
             
             {/* Sub-info details */}
             <div className="text-xs sm:text-sm font-semibold tracking-wider text-slate-200/90 font-body uppercase">
-              UNIVERSIDAD DE COSTA RICA • PORTAL DE VINCULACIÓN PROFESIONAL
+              LA UNIVERSIDAD • PORTAL DE VINCULACIÓN PROFESIONAL
             </div>
 
             <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed max-w-2xl font-medium font-body">
-              El punto de encuentro donde graduados consolidados de la Universidad de Costa Rica guían, patrocinan y abren oportunidades profesionales a estudiantes que construyen su futuro.
+              El punto de encuentro donde graduados consolidados de la Universidad guían, patrocinan y abren oportunidades profesionales a estudiantes que construyen su futuro.
             </p>
 
             {/* CTA and Arrows */}
@@ -219,60 +225,28 @@ export default function LandingPage() {
               </a>
             </div>
 
-            {/* Carousel Navigation and Dots */}
-            <div className="flex items-center gap-6 pt-4">
-              <div className="flex gap-2">
-                <button 
-                  onClick={handlePrev} 
-                  className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-all backdrop-blur-sm"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button 
-                  onClick={handleNext} 
-                  className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-all backdrop-blur-sm"
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Dots indicator */}
-              <div className="flex gap-2 items-center">
-                {[0, 1, 2].map((idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentCarouselIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      idx === currentCarouselIndex ? "w-6 bg-ucr-celeste" : "w-2 bg-white/30 hover:bg-white/50"
-                    }`}
-                    aria-label={`Ir a diapositiva ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Right Content - Empty grid column to keep layout alignment and campus background visible */}
           <div className="hidden md:block md:col-span-4" />
         </div>
 
+
       </section>
 
       {/* Roles Selection Section (Floating entry points moved below Hero to maintain design cleanliness) */}
       <section id="roles" className="py-20 bg-ucr-gris-fondo dark:bg-ucr-negro relative z-20 border-b border-slate-200/40 dark:border-slate-800/40 overflow-hidden">
-        {/* Solid brand shapes floating behind cards */}
-        <UCRUElement className="absolute -left-20 top-12 w-48 h-48 opacity-90 lg:opacity-100 lg:-left-6 transition-opacity duration-300 z-0 rotate-12" />
-        <UCRFlowerElement className="absolute -right-16 bottom-8 w-44 h-44 opacity-90 lg:opacity-100 lg:-right-6 transition-opacity duration-300 z-0 animate-[spin_100s_linear_infinite]" />
-
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-12 space-y-3">
-            <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO DESEAS PARTICIPAR?</h2>
-            <h3 className="text-3xl font-medium font-display text-ucr-texto-oscuro dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">
-              Únete a la plataforma oficial de vinculación de la Universidad de Costa Rica según tu perfil.
-            </p>
+          <div className="text-center mb-12 space-y-3 relative">
+            {/* Centered background watermark */}
+            <UCRUElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-50 pointer-events-none z-0 rotate-12" />
+            <div className="relative z-10 space-y-3">
+              <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO DESEAS PARTICIPAR?</h2>
+              <h3 className="text-3xl font-medium font-display text-ucr-texto-oscuro dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">
+                Únete a la plataforma oficial de vinculación de la Universidad según tu perfil.
+              </p>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -323,19 +297,19 @@ export default function LandingPage() {
 
       {/* Pillars Section */}
       <section id="pilares" className="py-20 lg:py-28 w-full bg-white dark:bg-ucr-negro border-b border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden">
-        {/* Solid brand shapes floating behind pillars */}
-        <UCRFlowerElement className="absolute -right-20 top-8 w-48 h-48 opacity-90 lg:opacity-100 lg:-right-6 transition-opacity duration-300 z-0 animate-[spin_150s_linear_infinite]" />
-        <UCRSlantedBarElement color="#006AD3" className="absolute -left-20 bottom-12 w-60 h-24 opacity-90 lg:opacity-100 lg:-left-6 transition-opacity duration-300 z-0" />
-
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO FUNCIONA LA RED?</h2>
-          <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
-            LOS TRES PILARES DE NUESTRO IMPACTO
-          </h3>
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
-            Conectamos el conocimiento académico de las aulas UCR con el liderazgo práctico de los sectores profesionales.
-          </p>
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 relative">
+          {/* Centered background watermark */}
+          <UCRFlowerElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-50 pointer-events-none z-0 animate-[spin_180s_linear_infinite]" />
+          <div className="relative z-10 space-y-4">
+            <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO FUNCIONA LA RED?</h2>
+            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+              LOS TRES PILARES DE NUESTRO IMPACTO
+            </h3>
+            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
+              Conectamos el conocimiento académico de las aulas de la U con el liderazgo práctico de los sectores profesionales.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -367,7 +341,7 @@ export default function LandingPage() {
                 OPORTUNIDADES LABORALES
               </h4>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                Accede a una bolsa de empleo diseñada específicamente para estudiantes and graduados recientes de la UCR. Encuentra vacantes publicadas y recomendadas de primera mano por los mismos exalumnos.
+                Accede a una bolsa de empleo diseñada específicamente para estudiantes y graduados recientes de la U. Encuentra vacantes publicadas y recomendadas de primera mano por los mismos exalumnos.
               </p>
             </div>
 
@@ -402,7 +376,7 @@ export default function LandingPage() {
             <div className="lg:col-span-5 space-y-6">
               <h2 className="text-xs font-bold text-white/90 uppercase tracking-widest font-body">CIFRAS QUE INSPIRAN</h2>
               <h3 className="text-3xl sm:text-4xl font-medium font-display leading-tight uppercase text-white">
-                EL IMPACTO DE NUESTRA RED DE EXALUMNOS UCR
+                EL IMPACTO DE NUESTRA RED DE EXALUMNOS DE LA U
               </h3>
               <p className="text-sm text-white/85 leading-relaxed font-medium font-body">
                 La Fundación trabaja incansablemente para promover la inserción laboral y el desarrollo académico. Cada aporte, cada hora de mentoría compartida y cada donación construye un camino más sólido para las próximas generaciones.
@@ -455,19 +429,19 @@ export default function LandingPage() {
 
       {/* Testimonials Section */}
       <section id="testimonios" className="py-20 lg:py-28 w-full bg-ucr-gris-fondo dark:bg-ucr-negro border-b border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden">
-        {/* Solid brand shapes floating behind testimonials */}
-        <UCRUElement className="absolute -right-24 top-12 w-52 h-52 opacity-90 lg:opacity-100 lg:-right-8 transition-opacity duration-300 z-0 -rotate-12" />
-        <UCRSlantedBarElement color="#006AD3" className="absolute -left-24 bottom-12 w-64 h-24 opacity-90 lg:opacity-100 lg:-left-8 transition-opacity duration-300 z-0" />
-
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">TESTIMONIOS</h2>
-          <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
-            NUESTRA RED EN LA VOZ DE SUS PROTAGONISTAS
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            Conoce cómo la plataforma está transformando el desarrollo profesional en la comunidad de la UCR.
-          </p>
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 relative">
+          {/* Centered background watermark */}
+          <UCRSlantedBarElement color="#006AD3" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-28 opacity-80 dark:opacity-50 pointer-events-none z-0" />
+          <div className="relative z-10 space-y-4">
+            <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">TESTIMONIOS</h2>
+            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+              NUESTRA RED EN LA VOZ DE SUS PROTAGONISTAS
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              Conoce cómo la plataforma está transformando el desarrollo profesional en la comunidad de la U.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -502,13 +476,12 @@ export default function LandingPage() {
       <section className="bg-gradient-to-br from-ucr-esmeralda to-ucr-celeste text-white py-16 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-10 bg-cover bg-bottom mix-blend-overlay pointer-events-none"></div>
         
-        {/* Solid brand shapes floating in bottom CTA */}
-        <UCRFlowerElement className="absolute -right-16 -top-16 w-48 h-48 opacity-90 lg:opacity-100 transition-opacity duration-300 z-0 animate-[spin_180s_linear_infinite]" />
-        <UCRUElement className="absolute -left-20 -bottom-20 w-48 h-48 opacity-90 lg:opacity-100 transition-opacity duration-300 z-0 rotate-45" />
+        {/* Centered background watermark */}
+        <UCRFlowerElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 opacity-80 pointer-events-none z-0 animate-[spin_240s_linear_infinite]" />
 
         <div className="max-w-4xl mx-auto px-6 relative z-10 space-y-6">
           <h2 className="text-3xl sm:text-4xl font-medium font-display leading-tight text-white uppercase">
-            ¿LISTO PARA FORMAR PARTE DE LA RED DE IMPACTO DE LA UCR?
+            ¿LISTO PARA FORMAR PARTE DE LA RED DE IMPACTO DE LA U?
           </h2>
           <p className="text-sm sm:text-base text-slate-200/80 max-w-xl mx-auto leading-relaxed font-medium font-body">
             Ya seas estudiante en busca de impulso o exalumno con el deseo de guiar a nuevos talentos, tu lugar está aquí.
@@ -528,21 +501,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-ucr-footer-bg text-slate-400 py-12 border-t border-slate-900 transition-colors relative overflow-hidden">
         {/* Solid brand slanted bar in Celeste on the right background */}
-        <UCRSlantedBarElement color="#4BA5D9" className="absolute -right-16 -bottom-16 w-80 h-44 opacity-25 lg:opacity-35 transition-opacity duration-300 z-0" />
+        <UCRSlantedBarElement color="#4BA5D9" className="absolute -right-16 -bottom-16 w-80 h-44 opacity-40 lg:opacity-50 transition-opacity duration-300 z-0" />
 
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-3">
             <img 
               src="/logo.png" 
-              alt="Logo UCR" 
+              alt="Logo U" 
               className="h-10 w-auto object-contain brightness-90 dark:brightness-110"
             />
             <div>
-              <span className="text-sm font-medium tracking-tight text-white font-display block">Universidad de Costa Rica</span>
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-0.5 font-body">Fundación Exalumnos UCR</span>
+              <span className="text-sm font-medium tracking-tight text-white font-display block">La Universidad</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-0.5 font-body">Fundación Exalumnos U</span>
             </div>
           </div>
           
@@ -553,7 +525,7 @@ export default function LandingPage() {
           </div>
 
           <div className="text-center md:text-right text-[10px] font-semibold text-slate-600 font-body">
-            © {new Date().getFullYear()} Fundación Exalumnos UCR. Todos los derechos reservados.
+            © {new Date().getFullYear()} Fundación Exalumnos U. Todos los derechos reservados.
           </div>
         </div>
       </footer>

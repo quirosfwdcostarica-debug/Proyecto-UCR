@@ -79,7 +79,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
         text: "Debes iniciar sesión para conectar con otros exalumnos.",
         icon: "warning",
         confirmButtonText: "Iniciar sesión",
-        confirmButtonColor: "#0f4c81",
+        confirmButtonColor: "#006AD3",
         showCancelButton: true,
         cancelButtonText: "Cancelar",
         cancelButtonColor: "#64748b"
@@ -118,7 +118,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
           title: "¡Solicitud Enviada!",
           text: `Se ha enviado tu solicitud de contacto a ${user.nombre}.`,
           icon: "success",
-          confirmButtonColor: "#0f4c81"
+          confirmButtonColor: "#006AD3"
         });
       } else if (connectionStatus === "pending") {
         // If pending, we can cancel it
@@ -145,7 +145,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
             title: "Solicitud Cancelada",
             text: "La solicitud de conexión ha sido cancelada.",
             icon: "info",
-            confirmButtonColor: "#0f4c81"
+            confirmButtonColor: "#006AD3"
           });
         } else {
           // We are the receiver: Accept it directly!
@@ -166,7 +166,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
             title: "¡Conexión Aceptada!",
             text: `Ahora estás conectado con ${user.nombre}.`,
             icon: "success",
-            confirmButtonColor: "#0f4c81"
+            confirmButtonColor: "#006AD3"
           });
         }
       } else if (connectionStatus === "accepted") {
@@ -204,14 +204,14 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
                 title: "Conexión Eliminada",
                 text: "Has eliminado esta conexión.",
                 icon: "success",
-                confirmButtonColor: "#0f4c81"
+                confirmButtonColor: "#006AD3"
               });
             } catch (err: any) {
               Swal.fire({
                 title: "Error",
                 text: err.message,
                 icon: "error",
-                confirmButtonColor: "#0f4c81"
+                confirmButtonColor: "#006AD3"
               });
             } finally {
               setIsActionLoading(false);
@@ -224,7 +224,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
         title: "Error",
         text: error.message || "Ocurrió un error al procesar tu solicitud.",
         icon: "error",
-        confirmButtonColor: "#0f4c81"
+        confirmButtonColor: "#006AD3"
       });
     } finally {
       setIsActionLoading(false);
@@ -244,7 +244,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
     if (isActionLoading) {
       return (
         <Button disabled className="w-full bg-slate-100 text-slate-500 border border-slate-200">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#0f4c81]" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin text-ucr-celeste-medium" />
           Procesando...
         </Button>
       );
@@ -276,14 +276,14 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
         );
       case "cancelled":
         return (
-          <Button onClick={handleConnectAction} className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-semibold transition-all">
+          <Button onClick={handleConnectAction} className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white font-semibold transition-all">
             <UserPlus className="mr-2 h-4 w-4" />
             Conectar
           </Button>
         );
       default:
         return (
-          <Button onClick={handleConnectAction} className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-semibold transition-all">
+          <Button onClick={handleConnectAction} className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white font-semibold transition-all">
             <UserPlus className="mr-2 h-4 w-4" />
             Connect
           </Button>
@@ -294,7 +294,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-12">
       {/* Top Banner and Back button */}
-      <div className="bg-[#0f4c81] text-white py-4 px-6 md:px-12 flex items-center justify-between shadow-md">
+      <div className="bg-ucr-celeste-medium text-white py-4 px-6 md:px-12 flex items-center justify-between shadow-md">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-200 hover:text-white transition-colors">
           <ArrowLeft className="h-4 w-4" />
           Volver al directorio
@@ -307,7 +307,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
         {/* Left Card: Main Details */}
         <div className="w-full lg:w-1/3 shrink-0">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-[#0b3a63] to-[#0f4c81]"></div>
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80"></div>
             
             <div className="h-32 w-32 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-md mt-8 z-10 relative">
               <img 
@@ -318,7 +318,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
             </div>
 
             <h1 className="text-2xl font-bold text-slate-800 mt-4 leading-tight">{user.nombre}</h1>
-            <p className="text-sm font-semibold text-[#0f4c81] mt-1">{exalumno.cargo_actual || "Profesional"} en {exalumno.empresa_actual || "Empresa"}</p>
+            <p className="text-sm font-semibold text-ucr-celeste-medium mt-1">{exalumno.cargo_actual || "Profesional"} en {exalumno.empresa_actual || "Empresa"}</p>
             
             <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-3 pb-4 border-b border-slate-100 w-full justify-center">
               <GraduationCap className="h-4 w-4 text-slate-400" />
@@ -352,7 +352,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
                   </a>
                 )}
                 {exalumno.website_url && (
-                  <a href={exalumno.website_url} target="_blank" rel="noreferrer" className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:text-[#0f4c81] hover:bg-slate-50 transition-all">
+                  <a href={exalumno.website_url} target="_blank" rel="noreferrer" className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:text-ucr-celeste-medium hover:bg-slate-50 transition-all">
                     <Globe className="h-5 w-5" />
                   </a>
                 )}
@@ -389,7 +389,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
           {/* Work Experience */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
             <h2 className="text-xl font-bold text-slate-800 border-b pb-3 mb-5 flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-[#0f4c81]" />
+              <Briefcase className="h-5 w-5 text-ucr-celeste-medium" />
               Experiencia Laboral
             </h2>
             
@@ -399,7 +399,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
               <div className="relative border-l border-slate-200 ml-3 space-y-6 pb-2">
                 {experiences.map((exp: any, idx: number) => (
                   <div key={idx} className="relative pl-6">
-                    <div className="absolute -left-[5.5px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#0f4c81]"></div>
+                    <div className="absolute -left-[5.5px] top-1.5 h-2.5 w-2.5 rounded-full bg-ucr-celeste-medium"></div>
                     <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-1">
                       <div>
                         <h4 className="font-bold text-slate-800 text-base">{exp.cargo || exp.titulo}</h4>
@@ -441,7 +441,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
             {/* Certifications */}
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
               <h3 className="font-bold text-slate-800 text-lg border-b pb-2 mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5 text-[#0f4c81]" />
+                <Award className="h-5 w-5 text-ucr-celeste-medium" />
                 Certificaciones
               </h3>
               {certifications.length === 0 ? (
@@ -450,7 +450,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
                 <div className="space-y-4">
                   {certifications.map((cert: any, idx: number) => (
                     <div key={idx} className="flex gap-3 items-start">
-                      <div className="p-1.5 bg-blue-50 rounded-lg text-[#0f4c81] shrink-0 mt-0.5">
+                      <div className="p-1.5 bg-ucr-celeste-tint rounded-lg text-ucr-celeste-medium shrink-0 mt-0.5">
                         <Award className="h-4 w-4" />
                       </div>
                       <div>

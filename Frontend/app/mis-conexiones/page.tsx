@@ -99,7 +99,7 @@ export default function MisConexionesPage() {
         title: "¡Conexión Aceptada!",
         text: `Ahora estás conectado con ${senderName}.`,
         icon: "success",
-        confirmButtonColor: "#0f4c81"
+        confirmButtonColor: "#006AD3"
       });
       
       // Refresh
@@ -221,7 +221,7 @@ export default function MisConexionesPage() {
       <div className="min-h-screen bg-[#f8fafc]">
         <TopBar title="Mis Conexiones" />
         <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="h-12 w-12 animate-spin text-[#0f4c81] mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-ucr-celeste-medium mb-4" />
           <p className="text-slate-500 font-medium text-sm">Cargando tus conexiones...</p>
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function MisConexionesPage() {
               <Users className="h-4 w-4" />
               Contactos
               {activeConnections.length > 0 && (
-                <span className="bg-[#0f4c81] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                <span className="bg-ucr-celeste-medium text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                   {activeConnections.length}
                 </span>
               )}
@@ -281,7 +281,7 @@ export default function MisConexionesPage() {
                 <AlertCircle className="h-10 w-10 text-slate-400 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-lg">Aún no tienes conexiones</h3>
                 <p className="text-slate-400 text-sm max-w-sm mx-auto mt-1">Explora el directorio de exalumnos y envía solicitudes para expandir tu red profesional.</p>
-                <Button onClick={() => router.push("/directorio/exalumnos")} className="mt-5 bg-[#0f4c81] hover:bg-[#0b3a63]">
+                <Button onClick={() => router.push("/directorio/exalumnos")} className="mt-5 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90">
                   Ver Directorio
                 </Button>
               </Card>
@@ -304,7 +304,7 @@ export default function MisConexionesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-slate-800 text-base leading-tight truncate">{contactUser.nombre}</h4>
-                        <p className="text-xs font-semibold text-[#0f4c81] truncate mt-0.5">
+                        <p className="text-xs font-semibold text-ucr-celeste-medium truncate mt-0.5">
                           {alumniDetails.cargo_actual || "Profesional"} en {alumniDetails.empresa_actual || "Empresa"}
                         </p>
                         <p className="text-[11px] text-slate-400 truncate mt-0.5">{alumniDetails.carrera || "Exalumno"}</p>
