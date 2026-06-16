@@ -147,19 +147,19 @@ export default function MisMatchesPage() {
       <TopBar title="Mis Matches" />
       <div className="container mx-auto py-10 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#0f4c81] to-blue-500">
+          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-ucr-celeste-medium to-blue-500">
             Mis Matches
           </h1>
           <p className="mt-2 text-muted-foreground text-lg">
             {role === "EXALUMNO"
               ? "Estudiantes que han solicitado conectar contigo, ordenados por afinidad."
-              : "Exalumnos sugeridos basados en tu perfil y necesidades, ordenados por afinidad."}
+              : "Exalumnos sugeridos basados en tu perfil and necesidades, ordenados por afinidad."}
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
+            <Loader2 className="w-8 h-8 text-ucr-celeste-medium animate-spin" />
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -211,7 +211,7 @@ export default function MisMatchesPage() {
                             persona?.user?.image ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
                               personaNombre
-                            )}&background=0f4c81&color=fff`
+                            )}&background=006AD3&color=fff`
                           }
                           alt={personaNombre}
                           className="h-full w-full object-cover"
@@ -277,7 +277,7 @@ export default function MisMatchesPage() {
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                           <div className="flex-1 bg-slate-100 rounded-full h-1.5">
                             <div
-                              className="bg-[#0f4c81] h-1.5 rounded-full"
+                              className="bg-ucr-celeste-medium h-1.5 rounded-full"
                               style={{ width: `${match.estudiante.avanceProyecto}%` }}
                             />
                           </div>
@@ -287,11 +287,11 @@ export default function MisMatchesPage() {
                     )}
                   </CardContent>
 
-                  <CardFooter className="bg-slate-50 pt-4 border-t border-slate-100">
+                  <CardContent className="bg-slate-50 pt-4 border-t border-slate-100">
                     {/* Acciones para ESTUDIANTE */}
                     {role === "ESTUDIANTE" && match.status === "SUGERIDO" && (
                       <Button
-                        className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white"
+                        className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white"
                         disabled={!!isLoading}
                         onClick={() => handleAction(match.id, "CONTACTADO")}
                       >

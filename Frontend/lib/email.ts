@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = "Alumni UCR <noreply@alumni.ucr.ac.cr>";
+const FROM_EMAIL = "Alumni U <noreply@alumni.ucr.ac.cr>";
 
 /**
  * Envía email de notificación cuando un match es ACEPTADO (status → ACTIVO).
@@ -17,7 +17,7 @@ export async function sendMatchAceptado(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: `¡${exalumnoNombre} aceptó conectar contigo! — Alumni UCR`,
+      subject: `¡${exalumnoNombre} aceptó conectar contigo! — Alumni U`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -30,7 +30,7 @@ export async function sendMatchAceptado(
               
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Alumni UCR</h1>
+                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Alumni U</h1>
                 <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Plataforma de Conexión Universitaria</p>
               </div>
 
@@ -45,7 +45,7 @@ export async function sendMatchAceptado(
                   Hola <strong style="color: #0f172a;">${estudianteNombre}</strong>,
                 </p>
                 <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Nos alegra informarte que <strong style="color: #0f4c81;">${exalumnoNombre}</strong> ha aceptado conectar contigo en la plataforma Alumni UCR. ¡Es momento de iniciar una conversación y aprovechar esta oportunidad!
+                  Nos alegra informarte que <strong style="color: #0f4c81;">${exalumnoNombre}</strong> ha aceptado conectar contigo en la plataforma Alumni U. ¡Es momento de iniciar una conversación y aprovechar esta oportunidad!
                 </p>
 
                 <!-- CTA -->
@@ -57,8 +57,8 @@ export async function sendMatchAceptado(
                 </div>
 
                 <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 24px 0 0;">
-                  Este email fue enviado automáticamente por la plataforma Alumni UCR.<br>
-                  Universidad de Costa Rica — Fundación UCR.
+                  Este email fue enviado automáticamente por la plataforma Alumni U.<br>
+                  La Universidad — Fundación U.
                 </p>
               </div>
             </div>
@@ -84,7 +84,7 @@ export async function sendMatchRechazado(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: "Actualización sobre tu solicitud de match — Alumni UCR",
+      subject: "Actualización sobre tu solicitud de match — Alumni U",
       html: `
         <!DOCTYPE html>
         <html>
@@ -96,7 +96,7 @@ export async function sendMatchRechazado(
             <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
               
               <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni UCR</h1>
+                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni U</h1>
                 <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Plataforma de Conexión Universitaria</p>
               </div>
 
@@ -121,7 +121,7 @@ export async function sendMatchRechazado(
                 </div>
 
                 <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 24px 0 0;">
-                  Este email fue enviado automáticamente por la plataforma Alumni UCR.
+                  Este email fue enviado automáticamente por la plataforma Alumni U.
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export async function sendDonacionAprobada(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: "¡Tu donación fue aprobada! — Alumni UCR",
+      subject: "¡Tu donación fue aprobada! — Alumni U",
       html: `
         <!DOCTYPE html>
         <html>
@@ -156,7 +156,7 @@ export async function sendDonacionAprobada(
             <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
               
               <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni UCR</h1>
+                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni U</h1>
               </div>
 
               <div style="padding: 40px 32px;">
@@ -169,7 +169,7 @@ export async function sendDonacionAprobada(
                   Estimado/a <strong>${exalumnoNombre}</strong>,
                 </p>
                 <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Tu donación de <strong style="color: #0f4c81;">₡${monto.toLocaleString("es-CR")}</strong> destinada a <strong>${destino}</strong> ha sido verificada y aprobada por nuestro equipo. ¡Gracias por apoyar el talento de la UCR!
+                  Tu donación de <strong style="color: #0f4c81;">₡${monto.toLocaleString("es-CR")}</strong> destinada a <strong>${destino}</strong> ha sido verificada y aprobada por nuestro equipo. ¡Gracias por apoyar el talento de la U!
                 </p>
 
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
@@ -179,7 +179,7 @@ export async function sendDonacionAprobada(
                 </div>
 
                 <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-top: 32px;">
-                  Universidad de Costa Rica — Fundación UCR
+                  La Universidad — Fundación U
                 </p>
               </div>
             </div>

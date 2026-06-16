@@ -258,7 +258,7 @@ export function EstudianteRegisterForm() {
           )}
         />
 
-        <Button type="submit" disabled={isLoading} className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2">
+        <Button type="submit" disabled={isLoading} className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white py-2">
           {isLoading ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registrando...</>
           ) : (
@@ -266,7 +266,7 @@ export function EstudianteRegisterForm() {
           )}
         </Button>
         <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
-          ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] dark:text-sky-400 hover:underline font-medium">Volver al login</Link>
+          ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium dark:text-sky-400 hover:underline font-medium">Volver al login</Link>
         </div>
       </form>
     </Form>
