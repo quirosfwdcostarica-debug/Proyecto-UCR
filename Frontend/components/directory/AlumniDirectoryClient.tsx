@@ -131,7 +131,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
   // Help generate support tags to render on cards
   const getAlumniSupportTags = (al: any) => {
-    const tags = [];
+    const tags: string[] = [];
     if (al.ofrece_mentoria) tags.push("MENTORSHIP");
     if (al.ofrece_empleo) tags.push("HIRING");
     if (al.ofrece_guest_speaking) tags.push("GUEST SPEAKING");
@@ -149,12 +149,12 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
       
       {/* Sidebar Filters */}
       <div className="w-full md:w-64 shrink-0 space-y-6">
-        <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-slate-800 tracking-wide text-sm">FILTROS</h3>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 tracking-wide text-sm">FILTROS</h3>
             <button 
               onClick={handleClearFilters}
-              className="text-xs text-[#0f4c81] hover:underline font-medium"
+              className="text-xs text-[#0f4c81] dark:text-sky-400 hover:underline font-medium"
             >
               Limpiar
             </button>
@@ -163,11 +163,11 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
           <div className="space-y-5">
             {/* Career Selector */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Carrera UCR</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Carrera UCR</label>
               <select 
                 value={selectedCarrera}
                 onChange={(e) => setSelectedCarrera(e.target.value)}
-                className="w-full h-9 border border-slate-200 rounded text-sm text-slate-700 px-2 outline-none focus:border-[#0f4c81]"
+                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-[#0f4c81] dark:focus:border-sky-400"
               >
                 {careers.map((car, idx) => (
                   <option key={idx} value={car}>{car}</option>
@@ -177,7 +177,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
             {/* Industry Checkboxes */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Industria</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Industria</label>
               <div className="space-y-2">
                 {industries.map((ind) => (
                   <label key={ind} className="flex items-center gap-2 cursor-pointer">
@@ -185,9 +185,9 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                       type="checkbox" 
                       checked={selectedIndustries.includes(ind)}
                       onChange={() => handleIndustryChange(ind)}
-                      className="rounded border-slate-300 text-[#0f4c81] focus:ring-[#0f4c81]" 
+                      className="rounded border-slate-300 dark:border-slate-700 dark:bg-slate-950 text-[#0f4c81] focus:ring-[#0f4c81] dark:focus:ring-sky-400" 
                     />
-                    <span className="text-sm text-slate-700">{ind}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{ind}</span>
                   </label>
                 ))}
               </div>
@@ -195,7 +195,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
             {/* Type of Support Badges */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Tipo de Apoyo</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Tipo de Apoyo</label>
               <div className="flex flex-wrap gap-2">
                 {supportCategories.map((sup) => {
                   const isChecked = selectedSupports.includes(sup.key);
@@ -205,8 +205,8 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                       onClick={() => handleSupportClick(sup.key)}
                       className={`px-3 py-1 rounded-full text-xs cursor-pointer font-medium border transition-colors ${
                         isChecked 
-                          ? "bg-[#0f4c81] text-white border-[#0f4c81]" 
-                          : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                          ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300 border-[#0f4c81] dark:border-sky-800" 
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
                       }`}
                     >
                       {sup.label}
@@ -218,12 +218,12 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
             {/* Location Input */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">País / Ubicación</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">País / Ubicación</label>
               <Input 
                 value={locationQuery}
                 onChange={(e) => setLocationQuery(e.target.value)}
                 placeholder="Ej. Costa Rica, USA..." 
-                className="h-9 text-sm" 
+                className="h-9 text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200" 
               />
             </div>
           </div>
@@ -245,30 +245,30 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
         {/* Directory Controls Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Directorio de Exalumnos</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Encontrados: <span className="font-bold text-slate-700">{filteredAlumni.length}</span> profesionales conectados
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Directorio de Exalumnos</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              Encontrados: <span className="font-bold text-slate-700 dark:text-slate-300">{filteredAlumni.length}</span> profesionales conectados
             </p>
           </div>
           
-          <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-md p-1 self-start sm:self-auto shadow-sm">
+          <div className="flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-1 self-start sm:self-auto shadow-sm">
             <button 
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-[#0f4c81] text-white" : "text-slate-400 hover:text-slate-600"}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button 
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-[#0f4c81] text-white" : "text-slate-400 hover:text-slate-600"}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
             >
               <List className="w-4 h-4" />
             </button>
-            <div className="w-px h-6 bg-slate-200 mx-1"></div>
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border-0 bg-transparent text-sm font-medium outline-none pr-2 text-slate-700"
+              className="border-0 bg-transparent text-sm font-medium outline-none pr-2 text-slate-700 dark:text-slate-300"
             >
               <option>Relevancia</option>
             </select>
@@ -277,13 +277,13 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
         {/* Local Search bar */}
         <div className="relative mb-6">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+          <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400 dark:text-slate-500" />
           <Input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, correo, carrera, cargo o empresa..." 
-            className="pl-10 h-11 bg-white border-slate-200 shadow-sm text-sm"
+            className="pl-10 h-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-sm text-slate-800 dark:text-slate-200"
           />
         </div>
 
@@ -314,8 +314,8 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
               if (viewMode === "list") {
                 return (
-                  <Card key={alumni.user_id} className="p-4 border-slate-200 hover:border-[#0f4c81]/30 transition-all shadow-sm bg-white flex flex-col sm:flex-row items-center gap-4">
-                    <div className="h-16 w-16 rounded-md bg-slate-200 overflow-hidden shrink-0 border shadow-sm">
+                  <Card key={alumni.user_id} className="p-4 border-slate-200 dark:border-slate-800 hover:border-[#0f4c81]/30 dark:hover:border-sky-800/50 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                    <div className="h-16 w-16 rounded-md bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border dark:border-slate-700 shadow-sm">
                       <img 
                         src={u.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`} 
                         alt={name} 
@@ -323,20 +323,20 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                       />
                     </div>
                     <div className="flex-1 text-center sm:text-left min-w-0">
-                      <h3 className="font-bold text-lg text-slate-800 truncate leading-snug">{name}</h3>
-                      <p className="text-sm text-slate-500 truncate">{role} en {company}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{grad}</p>
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 truncate leading-snug">{name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{role} en {company}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{grad}</p>
                     </div>
                     <div className="flex flex-wrap gap-1 justify-center sm:justify-start max-w-xs">
                       {tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold tracking-wide">
+                        <span key={tag} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded text-[9px] font-bold tracking-wide">
                           {tag}
                         </span>
                       ))}
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
                       <Link href={`/perfil/${alumni.user_id}`} className="flex-1 sm:flex-none">
-                        <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2 px-4 text-xs font-semibold h-9">
+                        <Button className="w-full bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white py-2 px-4 text-xs font-semibold h-9">
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" />
                           Connect
                         </Button>
@@ -347,10 +347,10 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
               }
 
               return (
-                <Card key={alumni.user_id} className="overflow-hidden border-slate-200 hover:border-[#0f4c81]/30 transition-all shadow-sm hover:shadow-md flex flex-col bg-white">
+                <Card key={alumni.user_id} className="overflow-hidden border-slate-200 dark:border-slate-800 hover:border-[#0f4c81]/30 dark:hover:border-sky-800/50 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
                   <div className={`h-20 ${bgCover} w-full`}></div>
                   <div className="px-5 pb-5 flex-1 flex flex-col relative pt-10">
-                    <div className="absolute -top-8 left-5 h-16 w-16 rounded-md border-2 border-white bg-slate-200 overflow-hidden shadow-sm">
+                    <div className="absolute -top-8 left-5 h-16 w-16 rounded-md border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 overflow-hidden shadow-sm">
                       <img 
                         src={u.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`} 
                         alt={name} 
@@ -358,10 +358,10 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                       />
                     </div>
                     
-                    <h3 className="font-bold text-base text-slate-800 leading-tight mt-1 truncate">{name}</h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{role} en {company}</p>
+                    <h3 className="font-bold text-base text-slate-800 dark:text-slate-100 leading-tight mt-1 truncate">{name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{role} en {company}</p>
                     
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-2 mb-3">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 mt-2 mb-3">
                       <GraduationCap className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">{grad}</span>
                     </div>
@@ -371,7 +371,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                         <span 
                           key={tag} 
                           className={`px-2 py-0.5 rounded text-[8px] font-bold tracking-wide ${
-                            j === 0 ? 'bg-[#dcfce7] text-[#166534]' : 'bg-slate-100 text-slate-600'
+                            j === 0 ? 'bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                           }`}
                         >
                           {tag}
@@ -381,14 +381,14 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
                     <div className="flex gap-2">
                       <Link href={`/perfil/${alumni.user_id}`} className="flex-1">
-                        <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs h-9">
+                        <Button className="w-full bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white text-xs h-9">
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" />
                           Connect
                         </Button>
                       </Link>
                       <a href={`mailto:${u.email}`} className="shrink-0">
-                        <Button variant="outline" className="px-2.5 border-slate-200 h-9">
-                          <Mail className="h-4 w-4 text-slate-500" />
+                        <Button variant="outline" className="px-2.5 border-slate-200 dark:border-slate-700 h-9">
+                          <Mail className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                         </Button>
                       </a>
                     </div>

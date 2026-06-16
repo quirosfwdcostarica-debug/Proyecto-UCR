@@ -9,7 +9,9 @@ export default function LoadingAdmin() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <BookLoader message="Cargando panel de administración" />
+        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+          <BookLoader message="Cargando panel de administración..." />
+        </div>
       </div>
     </div>
   );

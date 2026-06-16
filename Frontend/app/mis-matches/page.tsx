@@ -78,6 +78,7 @@ export default function MisMatchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+<<<<<<< HEAD
 
   // Filter States
   const [activeTab, setActiveTab] = useState<"cards" | "table">("cards");
@@ -85,6 +86,8 @@ export default function MisMatchesPage() {
   const [statusFilter, setStatusFilter] = useState("TODOS");
   const [minAffinity, setMinAffinity] = useState(0);
   const [careerFilter, setCareerFilter] = useState("TODOS");
+=======
+>>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
 
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
 
@@ -529,6 +532,7 @@ export default function MisMatchesPage() {
               );
             })}
           </div>
+<<<<<<< HEAD
         ) : (
           /* Table Management View */
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -654,6 +658,8 @@ export default function MisMatchesPage() {
               </table>
             </div>
           </div>
+=======
+>>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
         )}
       </div>
     </div>

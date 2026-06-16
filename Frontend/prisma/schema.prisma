@@ -63,6 +63,7 @@ model Estudiante {
   matches         Match[]  @relation("EstudianteMatch")
   aplicaciones    Aplicacion[]
   curriculum      Curriculum?
+  proyectos       Proyecto[]
 }
 
 model Exalumno {
@@ -129,6 +130,18 @@ model ReportePerfil {
 
   reportador      User     @relation("Reportador", fields: [reportadorId], references: [id], onDelete: Cascade)
   reportado       User     @relation("Reportado", fields: [reportadoId], references: [id], onDelete: Cascade)
+}
+
+model Proyecto {
+  id              String   @id @default(uuid())
+  estudianteId    String
+  nombre          String
+  descripcion     String?
+  avance          Int      @default(0) // 0 a 100
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  estudiante      Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
 }
 
 enum TipoPosicion {

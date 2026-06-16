@@ -43,13 +43,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (data.user.status === "SUSPENDIDO") {
               throw new Error("Tu cuenta ha sido suspendida. Contacta al administrador.");
             }
-            // Devolver el usuario junto con el token
+            // Devolver solo los datos necesarios del usuario (NO incluir tokens)
+            // Incluir accessToken aquí infla el JWT cookie y causa error 431
             return {
               id: data.user.id,
               name: data.user.nombre,
               email: data.user.email,
               tipo: data.user.tipo,
-              accessToken: data.accessToken,
               foto_url: data.user.foto_url,
             } as any;
           }
@@ -59,9 +59,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (error: any) {
           // Re-lanzar si ya es CredentialsSignin (error de credenciales del backend)
           if (error instanceof CredentialsSignin) throw error;
-          // Error de red (backend caído) — retornar null muestra "CredentialsSignin" genérico
-          console.error("[auth] Error de conexión con el backend:", error.message);
-          return null;
+
+          // Propagar errores conocidos del backend como errores de credenciales
+          if (error && typeof error === "object" && "message" in error) {
+            throw new InvalidCredentials(error.message || "Credenciales inválidas");
+          }
+
+          // Error de red o excepción inesperada.
+          console.error("[auth] Error de conexión con el backend:", error?.message || error);
+          throw new InvalidCredentials("Error de conexión con el servidor. Intenta de nuevo más tarde.");
         }
       },
     }),
@@ -77,11 +83,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
+        // Solo guardar los campos estrictamente necesarios en el JWT
+        // para mantener la cookie pequeña y evitar el error 431
         token.id = user.id;
         token.tipo = (user as any).tipo || (user as any).role;
         token.role = (user as any).role || (user as any).tipo;
-        token.accessToken = (user as any).accessToken;
         token.foto_url = (user as any).foto_url;
+
+        // Limpiar campos innecesarios que NextAuth puede haber copiado
+        // del objeto user retornado por authorize()
+        delete (token as any).accessToken;
+        delete (token as any).refreshToken;
       }
 
       // Actualización local de la sesión (ej. cambiar foto de perfil)
@@ -97,7 +109,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.image = token.foto_url as string;
         (session.user as any).tipo = token.tipo || token.role;
         (session.user as any).role = token.role || token.tipo;
-        (session.user as any).accessToken = token.accessToken;
+        // NO incluir accessToken en la sesión - usar fetchAPI en su lugar
+        // (session.user as any).accessToken = token.accessToken;
         (session.user as any).foto_url = token.foto_url;
       }
       return session;

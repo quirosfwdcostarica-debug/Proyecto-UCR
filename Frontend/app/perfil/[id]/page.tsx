@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { ProfileDetailsClient } from "@/components/profile/ProfileDetailsClient";
 import { notFound } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 interface ProfilePageProps {
   params: {
