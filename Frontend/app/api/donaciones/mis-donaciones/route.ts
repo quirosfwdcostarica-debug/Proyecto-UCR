@@ -21,23 +21,32 @@ export async function GET(_request: NextRequest) {
   try {
     const donaciones = await prisma.donacion.findMany({
       where: {
-        exalumnoId: userId,
+        exalumno_id: userId,
       },
       orderBy: {
-        createdAt: "desc",
+        created_at: "desc",
       },
       select: {
         id: true,
         monto: true,
-        comprobanteUrl: true,
-        status: true,
+        estado: true,
         destino: true,
-        createdAt: true,
-        updatedAt: true,
+        metodo_pago: true,
+        moneda: true,
+        created_at: true,
+        updated_at: true,
       },
     });
 
-    return NextResponse.json(donaciones);
+    // Normalize field names for frontend compatibility
+    const normalized = donaciones.map((d) => ({
+      ...d,
+      status: d.estado,
+      createdAt: d.created_at,
+      updatedAt: d.updated_at,
+    }));
+
+    return NextResponse.json(normalized);
   } catch (error) {
     console.error("[GET /api/donaciones/mis-donaciones]", error);
     return NextResponse.json(
