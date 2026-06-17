@@ -76,8 +76,9 @@ interface DonacionAdmin {
 interface MatchAdmin {
   id: string;
   afinidad: number;
-  status: "SUGERIDO" | "CONTACTADO" | "ACTIVO";
+  status: "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "RECHAZADO" | "CERRADO";
   createdAt: string;
+  matchReasons: string[];
   estudiante: { user: { name: string | null; email: string | null } };
   exalumno: { user: { name: string | null; email: string | null } };
 }
@@ -354,9 +355,11 @@ export default function AdminDashboardPage() {
   // Colores de status
   // ============================================================
   const MATCH_STATUS_COLORS: Record<string, string> = {
-    SUGERIDO: "bg-blue-100 text-blue-700",
+    SUGERIDO: "bg-slate-100 text-slate-700",
     CONTACTADO: "bg-yellow-100 text-yellow-700",
     ACTIVO: "bg-green-100 text-green-700",
+    RECHAZADO: "bg-red-100 text-red-700",
+    CERRADO: "bg-slate-200 text-slate-500",
   };
 
   if ((status as string) === "loading") {
@@ -533,6 +536,8 @@ export default function AdminDashboardPage() {
                 <option value="SUGERIDO">Sugerido</option>
                 <option value="CONTACTADO">Contactado</option>
                 <option value="ACTIVO">Activo</option>
+                <option value="RECHAZADO">Rechazado</option>
+                <option value="CERRADO">Cerrado</option>
               </select>
               <Button onClick={exportCSV} variant="outline" className="gap-2 h-10">
                 <Download className="w-4 h-4" />
@@ -560,6 +565,7 @@ export default function AdminDashboardPage() {
                         <th className="text-center px-4 py-3 font-semibold text-slate-600">Afinidad</th>
                         <th className="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
                         <th className="text-left px-4 py-3 font-semibold text-slate-600">Fecha</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Razones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -585,6 +591,19 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="px-4 py-3 text-slate-500 text-xs">
                             {new Date(m.createdAt).toLocaleDateString("es-CR")}
+                          </td>
+                          <td className="px-4 py-3">
+                            {m.matchReasons && m.matchReasons.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {m.matchReasons.map((r, i) => (
+                                  <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 whitespace-nowrap">
+                                    {r}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}

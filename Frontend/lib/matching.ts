@@ -3,61 +3,54 @@ import { Estudiante, Exalumno, User } from "@prisma/client";
 export type EstudianteConUser = Estudiante & { user: User };
 export type ExalumnoConUser = Exalumno & { user: User };
 
-/**
- * Calcula la afinidad entre un estudiante y un exalumno.
- * Score máximo: 100 puntos
- *
- * Criterios:
- * - +40 pts: intersección entre apoyoBuscado[] del estudiante y apoyoOfrecido[] del exalumno
- * - +30 pts: carrera del exalumno coincide con la del estudiante (case-insensitive)
- * - +20 pts: intersección entre areaProyecto del estudiante y areasInteres[] del exalumno
- * - +10 pts: avanceProyecto del estudiante es >= 50 (proyecto maduro)
- */
 export function calcularAfinidad(
   estudiante: EstudianteConUser,
   exalumno: ExalumnoConUser
-): number {
+): { score: number; reasons: string[] } {
   let score = 0;
+  const reasons: string[] = [];
 
-  // --- +40 pts: Intersección de tipos de apoyo ---
-  const apoyoBuscadoSet = new Set(
-    (estudiante.apoyoBuscado || []).map((a) => a.toLowerCase().trim())
-  );
-  const apoyoOfrecidoSet = new Set(
-    (exalumno.apoyoOfrecido || []).map((a) => a.toLowerCase().trim())
-  );
-
-  const tieneInterseccionApoyo = Array.from(apoyoBuscadoSet).some((apoyo) =>
-    apoyoOfrecidoSet.has(apoyo)
-  );
-  if (tieneInterseccionApoyo) {
-    score += 40;
-  }
-
-  // --- +30 pts: Coincidencia de carrera ---
+  // 1. Misma carrera UCR (30 puntos)
   if (
     estudiante.carrera &&
     exalumno.carrera &&
     estudiante.carrera.toLowerCase().trim() === exalumno.carrera.toLowerCase().trim()
   ) {
     score += 30;
+    reasons.push("Carrera compartida");
   }
 
-  // --- +20 pts: Intersección de área de proyecto con áreas de interés ---
+  // 2. Áreas de interés en común (Hasta 30 puntos)
+  // El estudiante solo tiene areaProyecto en el esquema actual. Asignamos 30 puntos si hay coincidencia.
   if (estudiante.areaProyecto) {
     const areaProyectoNorm = estudiante.areaProyecto.toLowerCase().trim();
-    const areasInteresNorm = (exalumno.areasInteres || []).map((a) =>
-      a.toLowerCase().trim()
-    );
+    const areasInteresNorm = (exalumno.areasInteres || []).map((a) => a.toLowerCase().trim());
     if (areasInteresNorm.includes(areaProyectoNorm)) {
-      score += 20;
+      score += 30;
+      reasons.push(`Interés en común: ${estudiante.areaProyecto}`);
     }
   }
 
-  // --- +10 pts: Proyecto maduro (avance >= 50%) ---
-  if ((estudiante.avanceProyecto ?? 0) >= 50) {
-    score += 10;
+  // 3. Sector profesional del exalumno <-> área temática del proyecto (20 puntos)
+  if (estudiante.areaProyecto && exalumno.sector) {
+    const sectorNorm = exalumno.sector.toLowerCase().trim();
+    const areaProyectoNorm = estudiante.areaProyecto.toLowerCase().trim();
+    // Validamos coincidencia directa o si comparten palabras clave
+    if (sectorNorm === areaProyectoNorm || sectorNorm.includes(areaProyectoNorm) || areaProyectoNorm.includes(sectorNorm)) {
+      score += 20;
+      reasons.push(`Sector afín al proyecto`);
+    }
   }
 
-  return Math.min(score, 100);
+  // 4. Tipo de apoyo ofrecido <-> buscado (20 puntos)
+  const apoyoBuscadoSet = new Set((estudiante.apoyoBuscado || []).map((a) => a.toLowerCase().trim()));
+  const apoyoOfrecidoSet = new Set((exalumno.apoyoOfrecido || []).map((a) => a.toLowerCase().trim()));
+
+  const interseccionApoyo = Array.from(apoyoBuscadoSet).filter((apoyo) => apoyoOfrecidoSet.has(apoyo));
+  if (interseccionApoyo.length > 0) {
+    score += 20;
+    reasons.push(`Coincidencia en apoyo: ${interseccionApoyo.join(", ")}`);
+  }
+
+  return { score: Math.min(score, 100), reasons };
 }
