@@ -43,13 +43,16 @@ export async function GET(request: NextRequest) {
         timeStr = `Hace ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
       }
 
+      const isExalumno = (session.user as any)?.tipo === 'EXALUMNO';
+      const matchesUrl = isExalumno ? '/mis-matches/exalumno' : '/mis-matches';
+
       return {
         id: n.id,
         title: n.title,
         message: n.message,
         read: n.read,
         time: timeStr,
-        url: n.type.includes("accepted") ? "/mis-matches" : "/mis-matches"
+        url: matchesUrl
       };
     });
 

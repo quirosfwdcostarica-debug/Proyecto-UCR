@@ -29,6 +29,14 @@ module.exports = (sequelize) => {
     resultado: {
       type: DataTypes.TEXT,
     },
+    initiated_by: {
+      type: DataTypes.TEXT,
+      defaultValue: 'sistema',
+    },
+    rechazado_por_estudiante: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   }, {
     tableName: 'MATCHES',
     timestamps: true,
