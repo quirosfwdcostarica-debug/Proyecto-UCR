@@ -3,6 +3,11 @@
 -- Ejecutar en Supabase SQL Editor
 -- ============================================================
 
+-- 0. Agregar columnas faltantes a USERS (requeridas por Prisma)
+ALTER TABLE "USERS"
+  ADD COLUMN IF NOT EXISTS status       TEXT    NOT NULL DEFAULT 'ACTIVO',
+  ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0;
+
 -- 1. Agregar columnas a MATCHES
 ALTER TABLE "MATCHES"
   ADD COLUMN IF NOT EXISTS initiated_by TEXT NOT NULL DEFAULT 'sistema',
