@@ -21,6 +21,19 @@ export default async function MisMatchesPage() {
   // Datos mock para que la UI se vea sin BD configurada
   if (matches.length === 0) {
     matches = [
+      // 1. DATO INYECTADO: Naydelin (Adaptado a la estructura de la tarjeta)
+      {
+        id: "m0", 
+        afinidad: 98, 
+        status: "SUGERIDO",
+        exalumno: { 
+          user: { name: "NAYDELIN JUDITH RIVERA RODRIGUEZ" }, 
+          carrera: "Ingeniería en Computación", 
+          sector: "Desarrollo de Software", 
+          apoyoOfrecido: ["Mentoría Profesional", "Oportunidad Laboral", "Networking"] 
+        }
+      },
+      // 2. DATOS QUEMADOS ORIGINALES (Para mantener la UI llena)
       {
         id: "m1", afinidad: 95, status: "SUGERIDO",
         exalumno: { user: { name: "Sofía Cerdas" }, carrera: "Ingeniería Industrial", sector: "Sector Privado", apoyoOfrecido: ["Mentoría Profesional", "Revisión de CV"] }
