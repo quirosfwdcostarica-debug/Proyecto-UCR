@@ -14,7 +14,7 @@ export async function PATCH(
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  let body: { status: "APROBADA" | "RECHAZADA" };
+  let body: { status: "CONFIRMADA" | "RECHAZADA" };
   try {
     body = await request.json();
   } catch {
@@ -23,9 +23,17 @@ export async function PATCH(
 
   const { status } = body;
 
-  if (status !== "APROBADA" && status !== "RECHAZADA") {
+  // Map frontend status names to DB estado values
+  const estadoMap: Record<string, "CONFIRMADA" | "RECHAZADA"> = {
+    APROBADA: "CONFIRMADA",
+    CONFIRMADA: "CONFIRMADA",
+    RECHAZADA: "RECHAZADA",
+  };
+
+  const estado = estadoMap[status];
+  if (!estado) {
     return NextResponse.json(
-      { message: "Status debe ser APROBADA o RECHAZADA" },
+      { message: "Status debe ser CONFIRMADA (o APROBADA) o RECHAZADA" },
       { status: 400 }
     );
   }
@@ -36,7 +44,7 @@ export async function PATCH(
       include: {
         exalumno: {
           include: {
-            user: { select: { name: true, email: true } },
+            user: { select: { nombre: true, email: true } },
           },
         },
       },
@@ -48,20 +56,20 @@ export async function PATCH(
 
     const updated = await prisma.donacion.update({
       where: { id: params.id },
-      data: { status },
+      data: { estado },
     });
 
-    // Si se aprueba, enviar email de confirmación al exalumno
-    if (status === "APROBADA" && donacion.exalumno.user.email) {
+    // Si se aprueba/confirma, enviar email al exalumno
+    if (estado === "CONFIRMADA" && donacion.exalumno.user.email) {
       await sendDonacionAprobada(
         donacion.exalumno.user.email,
-        donacion.exalumno.user.name || "Exalumno",
-        donacion.monto,
-        donacion.destino
+        donacion.exalumno.user.nombre || "Exalumno",
+        Number(donacion.monto),
+        donacion.destino || "Fondo General"
       );
     }
 
-    return NextResponse.json(updated);
+    return NextResponse.json({ ...updated, status: updated.estado });
   } catch (error) {
     console.error("[PATCH /api/admin/donaciones/[id]]", error);
     return NextResponse.json({ message: "Error al actualizar la donación" }, { status: 500 });
