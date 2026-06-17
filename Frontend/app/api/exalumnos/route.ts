@@ -1,54 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const carrera = searchParams.get("carrera");
-  const sector = searchParams.get("sector");
   const apoyo = searchParams.get("apoyo");
   const nombre = searchParams.get("nombre");
 
   try {
     const exalumnos = await prisma.exalumno.findMany({
       where: {
-        // Filtros en el perfil de exalumno
         ...(carrera && {
-          carrera: { contains: carrera, mode: "insensitive" },
+          escuela_facultad: { contains: carrera, mode: "insensitive" },
         }),
-        ...(sector && {
-          sector: { contains: sector, mode: "insensitive" },
-        }),
-        ...(apoyo && {
-          apoyoOfrecido: { has: apoyo },
-        }),
-        // El usuario no debe estar pausado ni suspendido
+        ...(apoyo === "mentoria" && { ofrece_mentoria: true }),
+        ...(apoyo === "empleo" && { ofrece_empleo: true }),
+        ...(apoyo === "pasantia" && { ofrece_pasantia: true }),
+        ...(apoyo === "financiamiento" && { ofrece_donacion_dinero: true }),
         user: {
-          cuentaPausada: false,
+          activo: true,
           status: { not: "SUSPENDIDO" },
           ...(nombre && {
-            name: { contains: nombre, mode: "insensitive" },
+            nombre: { contains: nombre, mode: "insensitive" },
           }),
         },
       },
       select: {
-        id: true,
-        carrera: true,
-        sector: true,
-        areasInteres: true,
-        apoyoOfrecido: true,
-        createdAt: true,
+        user_id: true,
+        escuela_facultad: true,
+        empresa_actual: true,
+        cargo_actual: true,
+        pais_ciudad: true,
+        anios_experiencia: true,
+        linkedin_url: true,
+        biografia: true,
+        ofrece_mentoria: true,
+        ofrece_empleo: true,
+        ofrece_pasantia: true,
+        ofrece_donacion_dinero: true,
+        ofrece_networking: true,
+        ofrece_career_advice: true,
         user: {
           select: {
             id: true,
-            name: true,
-            image: true,
-            bio: true,
+            nombre: true,
+            foto_url: true,
+            email: true,
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { user: { created_at: "desc" } },
     });
 
     return NextResponse.json(exalumnos);
