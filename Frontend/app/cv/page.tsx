@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
 import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes";
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
+import { OptimizePanel } from "@/components/cv/OptimizePanel";
+import { ChatBot } from "@/components/cv/ChatBot";
 
 type AISection = "profile" | "experience";
 
@@ -36,6 +38,39 @@ export default function CVPage() {
     } finally {
       setDownloadingPDF(false);
     }
+  };
+
+  // Helper to apply a suggestion to the CV
+  const applySuggestion = (currentCV: any, suggestion: any) => {
+    const { section, changes } = suggestion;
+    const newCV = { ...currentCV };
+    if (section === "all" || section === "profile") {
+      // shallow merge for top-level fields
+      Object.assign(newCV, changes);
+    }
+    if (section === "experience" || section === "all") {
+      if (changes.add) {
+        newCV.experience = [...(newCV.experience || []), ...changes.add];
+      }
+      if (changes.update) {
+        newCV.experience = (newCV.experience || []).map((exp: any) =>
+          changes.update[exp.id] ? { ...exp, ...changes.update[exp.id] } : exp
+        );
+      }
+      if (changes.remove) {
+        newCV.experience = (newCV.experience || []).filter((exp: any) => !changes.remove.includes(exp.id));
+      }
+    }
+    if (section === "skills" || section === "all") {
+      if (changes.add) {
+        newCV.skills = Array.from(new Set([...(newCV.skills || []), ...changes.add]));
+      }
+      if (changes.remove) {
+        newCV.skills = (newCV.skills || []).filter((s: string) => !changes.remove.includes(s));
+      }
+    }
+    // other sections (education, certifications) can be handled similarly if needed
+    return newCV;
   };
 
   // Edit states
@@ -471,6 +506,12 @@ export default function CVPage() {
               </div>
               <p className="text-xs text-green-600 dark:text-green-500 italic">Estas habilidades aparecen frecuentemente en el perfil del cargo solicitado.</p>
             </div>
+
+            {/* ── OPTIMIZACIÓN IA CON GROK ───────────────────────────── */}
+            <OptimizePanel cv={cv} />
+
+            {/* ── ASISTENTE INTERACTIVO CAREERBOT ────────────────────── */}
+            <ChatBot cv={cv} onUpdateCV={setCV} />
 
           </div>
 
