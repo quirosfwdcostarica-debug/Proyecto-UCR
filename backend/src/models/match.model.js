@@ -7,7 +7,12 @@ module.exports = (sequelize) => {
     estudiante_id: { type: DataTypes.UUID, allowNull: false },
     tipo_apoyo: { type: DataTypes.TEXT },
     score_match: { type: DataTypes.INTEGER },
-    estado: { type: DataTypes.TEXT },
+    estado: { type: DataTypes.TEXT, defaultValue: 'SUGERIDO' },
+    initiated_by: { type: DataTypes.TEXT },
+    match_reasons: { type: DataTypes.JSONB },
+    accepted_at: { type: DataTypes.DATE },
+    rejected_at: { type: DataTypes.DATE },
+    closed_at: { type: DataTypes.DATE },
     resultado: { type: DataTypes.TEXT }
   }, {
     tableName: 'MATCHES',

@@ -12,15 +12,53 @@ exports.findById = asyncHandler(async (req, res) => {
   res.status(200).json(data);
 });
 
-exports.create = asyncHandler(async (req, res) => {
-  const data = await MatchService.create(req.body);
-  res.status(201).json(data);
+exports.getMyMatches = asyncHandler(async (req, res) => {
+  // Using Prisma token or dbUser
+  const userId = req.user?.id || req.dbUser?.id;
+  const role = req.dbUser?.tipo;
+  if (!userId || !role) return res.status(401).json({ message: 'No autenticado o rol indefinido' });
+  const data = await MatchService.getMyMatches(userId, role);
+  res.status(200).json(data);
 });
 
-exports.update = asyncHandler(async (req, res) => {
-  const data = await MatchService.update(req.params.id, req.body);
-  if (!data) return res.status(404).json({ message: 'Not found' });
+exports.getAdminMetrics = asyncHandler(async (req, res) => {
+  const data = await MatchService.getAdminMetrics();
   res.status(200).json(data);
+});
+
+exports.generateMatches = asyncHandler(async (req, res) => {
+  const data = await MatchService.generateMatches();
+  res.status(200).json({ message: 'Generación completada', ...data });
+});
+
+exports.initiateConnection = asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.dbUser?.id;
+  try {
+    const data = await MatchService.initiateConnection(req.params.id, userId);
+    res.status(200).json(data);
+  } catch(e) {
+    res.status(400).json({ message: e.message });
+  }
+});
+
+exports.acceptConnection = asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.dbUser?.id;
+  try {
+    const data = await MatchService.acceptConnection(req.params.id, userId);
+    res.status(200).json(data);
+  } catch(e) {
+    res.status(400).json({ message: e.message });
+  }
+});
+
+exports.rejectConnection = asyncHandler(async (req, res) => {
+  const userId = req.user?.id || req.dbUser?.id;
+  try {
+    const data = await MatchService.rejectConnection(req.params.id, userId);
+    res.status(200).json(data);
+  } catch(e) {
+    res.status(400).json({ message: e.message });
+  }
 });
 
 exports.delete = asyncHandler(async (req, res) => {
