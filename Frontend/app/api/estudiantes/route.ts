@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -14,8 +15,25 @@ export async function GET(request: NextRequest) {
   const nombre = searchParams.get("nombre");
 
   try {
+    // 1. Fetch active students from the USERS table (matching role, status, and name query)
+    const matchingUsers = await prisma.$queryRaw<any[]>`
+      SELECT id::text, nombre, foto_url
+      FROM "USERS"
+      WHERE tipo = 'ESTUDIANTE' 
+        AND activo = true
+        ${nombre ? Prisma.sql`AND nombre ILIKE ${`%${nombre}%`}` : Prisma.empty}
+    `;
+
+    const activeUserIds = matchingUsers.map(u => u.id);
+
+    if (activeUserIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 2. Fetch the corresponding student profiles using those IDs
     const estudiantes = await prisma.estudiante.findMany({
       where: {
+        id: { in: activeUserIds },
         ...(carrera && {
           carrera: { contains: carrera, mode: "insensitive" },
         }),
@@ -25,13 +43,6 @@ export async function GET(request: NextRequest) {
         ...(apoyoBuscado && {
           apoyoBuscado: { has: apoyoBuscado },
         }),
-        user: {
-          cuentaPausada: false,
-          status: { not: "SUSPENDIDO" },
-          ...(nombre && {
-            name: { contains: nombre, mode: "insensitive" },
-          }),
-        },
       },
       select: {
         id: true,
@@ -40,27 +51,32 @@ export async function GET(request: NextRequest) {
         areaProyecto: true,
         apoyoBuscado: true,
         createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            proyectoFinalizado: true,
-            // NUNCA incluir nivelBeca
-          },
-        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    // Excluir nivelBeca del resultado (double-safety: no está en el select, 
-    // pero lo dejamos explícito por claridad)
+    // 3. Fetch project completion status from the User table (NextAuth)
+    const nextAuthUsers = await prisma.user.findMany({
+      where: { id: { in: estudiantes.map(e => e.id) } },
+      select: { id: true, proyectoFinalizado: true }
+    });
+    const completionMap = new Map(nextAuthUsers.map(u => [u.id, u.proyectoFinalizado]));
+
+    // 4. Combine and return data
+    const userMap = new Map(matchingUsers.map(u => [u.id, u]));
     const sanitized = estudiantes.map((est) => {
-      // Si el solicitante es el propio usuario o ADMIN, podría ver nivelBeca,
-      // pero como no lo seleccionamos arriba, simplemente retornamos tal cual.
-      return est;
+      const dbUser = userMap.get(est.id);
+      return {
+        ...est,
+        user: {
+          id: est.id,
+          name: dbUser ? dbUser.nombre : "Estudiante UCR",
+          image: dbUser ? dbUser.foto_url : null,
+          proyectoFinalizado: completionMap.get(est.id) || false,
+        }
+      };
     });
 
     return NextResponse.json(sanitized);

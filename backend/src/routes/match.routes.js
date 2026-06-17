@@ -1,19 +1,20 @@
 const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/match.controller');
+const router  = express.Router();
+const c       = require('../controllers/match.controller');
 const { verifyToken } = require('../middlewares/auth.middleware');
-const { requireRole } = require('../middlewares/role.middleware');
 
-router.get('/my', verifyToken, requireRole('ESTUDIANTE', 'EXALUMNO'), controller.getMyMatches);
-router.get('/admin', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), controller.findAll);
-router.get('/admin/metrics', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), controller.getAdminMetrics);
-router.post('/admin/generate', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), controller.generateMatches);
+// CRUD base
+router.get('/',                          c.findAll);
+router.get('/:id',                       c.findById);
+router.get('/estudiante/:estudianteId',  c.findByEstudiante);
+router.get('/exalumno/:exalumnoId',      c.findByExalumno);
+router.post('/',    /* verifyToken, */   c.create);
+router.put('/:id',  /* verifyToken, */   c.update);
+router.delete('/:id', /* verifyToken, */ c.delete);
 
-router.post('/request/:id', verifyToken, requireRole('ESTUDIANTE', 'EXALUMNO'), controller.initiateConnection);
-router.put('/accept/:id', verifyToken, requireRole('ESTUDIANTE', 'EXALUMNO'), controller.acceptConnection);
-router.put('/reject/:id', verifyToken, requireRole('ESTUDIANTE', 'EXALUMNO'), controller.rejectConnection);
-
-router.get('/:id', controller.findById);
-router.delete('/:id', verifyToken, requireRole('ADMINISTRADOR', 'ADMIN'), controller.delete);
+// Transiciones de estado
+router.patch('/:id/contactar', /* verifyToken, */ c.contactar); // SUGERIDO   → CONTACTADO
+router.patch('/:id/aceptar',   /* verifyToken, */ c.aceptar);   // CONTACTADO → ACTIVO
+router.patch('/:id/cerrar',    /* verifyToken, */ c.cerrar);    // ACTIVO     → CERRADO
 
 module.exports = router;

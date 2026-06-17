@@ -6,7 +6,8 @@ class EstudianteRepository {
     return await Estudiante.findAll({
       include: [{
         model: db.User,
-        required: true
+        required: true,
+        where: { tipo: 'ESTUDIANTE' }
       }]
     });
   }

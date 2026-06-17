@@ -1,7 +1,4 @@
 const MatchRepository = require('../repositories/match.repository');
-const EstudianteRepository = require('../repositories/estudiante.repository');
-const ExalumnoRepository = require('../repositories/exalumno.repository');
-const { calcularAfinidad } = require('../utils/matchScoring');
 
 class MatchService {
   async findAll() {
@@ -12,89 +9,49 @@ class MatchService {
     return await MatchRepository.findById(id);
   }
 
-  async getMyMatches(userId, role) {
-    return await MatchRepository.findByUserId(userId, role);
+  async findByEstudiante(estudianteId) {
+    return await MatchRepository.findByEstudiante(estudianteId);
   }
 
-  async getAdminMetrics() {
-    return await MatchRepository.getMetrics();
+  async findByExalumno(exalumnoId) {
+    return await MatchRepository.findByExalumno(exalumnoId);
   }
 
-  async generateMatches() {
-    const estudiantes = await EstudianteRepository.findAll();
-    const exalumnos = await ExalumnoRepository.findAll();
-    
-    let creados = 0;
-    let actualizados = 0;
-
-    for (const est of estudiantes) {
-      for (const exa of exalumnos) {
-        const { score, reasons } = calcularAfinidad(est, exa);
-        
-        if (score > 0) {
-          const existing = await MatchRepository.findByPair(est.user_id, exa.user_id);
-          if (existing) {
-            await MatchRepository.update(existing.id, { 
-              score_match: score, 
-              match_reasons: reasons 
-            });
-            actualizados++;
-          } else {
-            await MatchRepository.create({
-              estudiante_id: est.user_id,
-              exalumno_id: exa.user_id,
-              score_match: score,
-              estado: 'SUGERIDO',
-              match_reasons: reasons
-            });
-            creados++;
-          }
-        }
-      }
-    }
-    return { creados, actualizados };
+  async create(data) {
+    return await MatchRepository.create(data);
   }
 
-  async initiateConnection(matchId, userId) {
-    const match = await MatchRepository.findById(matchId);
-    if (!match) throw new Error("Match no encontrado");
-    if (match.estado !== 'SUGERIDO') throw new Error("Match ya no está en estado sugerido");
-    
-    await MatchRepository.update(matchId, {
-      estado: 'CONTACTADO',
-      initiated_by: userId
-    });
-    return await MatchRepository.findById(matchId);
-  }
-
-  async acceptConnection(matchId, userId) {
-    const match = await MatchRepository.findById(matchId);
-    if (!match) throw new Error("Match no encontrado");
-    if (match.estado !== 'CONTACTADO') throw new Error("Solo puedes aceptar matches contactados");
-    // Ensure the acceptor is not the initiator
-    if (match.initiated_by === userId) throw new Error("No puedes aceptar tu propia solicitud");
-
-    await MatchRepository.update(matchId, {
-      estado: 'ACTIVO',
-      accepted_at: new Date()
-    });
-    return await MatchRepository.findById(matchId);
-  }
-
-  async rejectConnection(matchId, userId) {
-    const match = await MatchRepository.findById(matchId);
-    if (!match) throw new Error("Match no encontrado");
-    
-    await MatchRepository.update(matchId, {
-      estado: 'RECHAZADO',
-      rejected_at: new Date()
-    });
-    return await MatchRepository.findById(matchId);
+  async update(id, data) {
+    const [updated] = await MatchRepository.update(id, data);
+    if (!updated) return null;
+    return await MatchRepository.findById(id);
   }
 
   async delete(id) {
-    const deleted = await MatchRepository.delete(id);
-    return !!deleted;
+    return !!(await MatchRepository.delete(id));
+  }
+
+  /**
+   * Ejecuta una transición de estado con validación.
+   * @param {string} id - UUID del match
+   * @param {string} estadoRequerido - Estado que debe tener actualmente
+   * @param {string} estadoNuevo - Estado al que se quiere mover
+   */
+  async transicion(id, estadoRequerido, estadoNuevo) {
+    const match = await MatchRepository.findById(id);
+    if (!match) {
+      const err = new Error('Match no encontrado');
+      err.status = 404;
+      throw err;
+    }
+    if (match.estado !== estadoRequerido) {
+      const err = new Error(`Transición inválida: el match está en estado "${match.estado}", se requiere "${estadoRequerido}"`);
+      err.status = 422;
+      throw err;
+    }
+    const [updated] = await MatchRepository.update(id, { estado: estadoNuevo });
+    if (!updated) throw new Error('No se pudo actualizar el match');
+    return await MatchRepository.findById(id);
   }
 }
 
