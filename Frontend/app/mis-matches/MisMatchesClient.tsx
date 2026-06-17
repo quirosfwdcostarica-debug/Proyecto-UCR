@@ -54,6 +54,18 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
     setLoading(matchId);
     setError(null);
     try {
+      // --- INICIO DE LA SOLUCIÓN ---
+      // Si el ID empieza con "m" (m0, m1, m2...), sabemos que es un dato quemado.
+      // Simulamos la acción localmente para no romper la app buscando en la BD real.
+      if (matchId.startsWith("m")) {
+        await new Promise(resolve => setTimeout(resolve, 600)); // Simula el tiempo de carga
+        const updatedStatus = action === "contactar" ? "CONTACTADO" : "CERRADO";
+        setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status: updatedStatus as MatchStatus } : m));
+        setLoading(null);
+        return;
+      }
+      // --- FIN DE LA SOLUCIÓN ---
+
       const updated = action === "contactar"
         ? await contactarMatch(matchId)
         : await cerrarMatch(matchId);
