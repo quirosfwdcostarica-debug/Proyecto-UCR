@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
-import { getMatchesForExalumno } from "@/actions/matching.actions";
+import prisma from "@/lib/prisma";
 import MatchesExalumnoClient from "./MatchesExalumnoClient";
 
 export default async function MatchesExalumnoPage() {
@@ -9,30 +9,40 @@ export default async function MatchesExalumnoPage() {
   try {
     const session = await auth();
     if (session?.user?.id) {
-      matches = await getMatchesForExalumno(session.user.id);
-    }
-  } catch (e) {}
+      const userId = session.user.id;
 
-  // Mock para preview sin BD
-  if (matches.length === 0) {
-    matches = [
-      {
-        id: "m1", afinidad: 95, status: "CONTACTADO",
-        estudiante: { user: { name: "Valeria Campos" }, carrera: "Ingeniería Biomédica", avanceProyecto: 70, apoyoBuscado: ["Mentoría Profesional", "Financiamiento"] }
-      },
-      {
-        id: "m2", afinidad: 88, status: "ACTIVO",
-        estudiante: { user: { name: "Esteban Picado" }, carrera: "Ingeniería Eléctrica", avanceProyecto: 40, apoyoBuscado: ["Pasantía", "Networking"] }
-      },
-      {
-        id: "m3", afinidad: 74, status: "SUGERIDO",
-        estudiante: { user: { name: "Sofía Aguilar" }, carrera: "Economía", avanceProyecto: 20, apoyoBuscado: ["Revisión de CV", "Mentoría Profesional"] }
-      },
-      {
-        id: "m4", afinidad: 61, status: "CERRADO",
-        estudiante: { user: { name: "Andrés Solano" }, carrera: "Arquitectura", avanceProyecto: 90, apoyoBuscado: ["Financiamiento"] }
-      },
-    ];
+      const rawMatches = await prisma.match.findMany({
+        where: { exalumno_id: userId },
+        orderBy: { score_match: "desc" },
+        include: {
+          estudiante: {
+            include: {
+              user: { select: { nombre: true, foto_url: true } },
+            },
+          },
+        },
+      });
+
+      matches = rawMatches.map((m) => ({
+        id: m.id,
+        afinidad: m.score_match ?? 0,
+        status: m.estado as string,
+        initiated_by: m.initiated_by ?? "sistema",
+        estudiante: {
+          user: { name: m.estudiante?.user?.nombre ?? null },
+          carrera: m.estudiante?.carrera ?? "",
+          avanceProyecto: m.score_match ?? 0,
+          apoyoBuscado: [
+            m.estudiante?.busca_mentoria       ? "Mentoría"       : null,
+            m.estudiante?.busca_empleo         ? "Empleo"         : null,
+            m.estudiante?.busca_pasantia       ? "Pasantía"       : null,
+            m.estudiante?.busca_financiamiento ? "Financiamiento" : null,
+          ].filter(Boolean) as string[],
+        },
+      }));
+    }
+  } catch (e) {
+    console.error("[MatchesExalumnoPage]", e);
   }
 
   return (
