@@ -10,6 +10,20 @@ class MatchRepository {
     return await Match.findByPk(id);
   }
 
+  async findByEstudiante(estudianteId) {
+    return await Match.findAll({
+      where: { estudiante_id: estudianteId },
+      order: [['score_match', 'DESC']],
+    });
+  }
+
+  async findByExalumno(exalumnoId) {
+    return await Match.findAll({
+      where: { exalumno_id: exalumnoId },
+      order: [['score_match', 'DESC']],
+    });
+  }
+
   async create(data) {
     return await Match.create(data);
   }

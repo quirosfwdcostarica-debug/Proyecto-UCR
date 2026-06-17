@@ -41,6 +41,15 @@ class ConnectionService {
         'connection_request'
       );
 
+      // Enviar correo
+      try {
+        if (receiver && sender) {
+          await EmailService.sendConnectionRequestEmail(receiver.email, receiver.nombre, sender.nombre);
+        }
+      } catch (err) {
+        console.error("Error al enviar email de solicitud de conexión (reuso)", err);
+      }
+
       return existing;
     }
 
@@ -58,6 +67,15 @@ class ConnectionService {
       `${sender.nombre} te ha enviado una solicitud de conexión.`,
       'connection_request'
     );
+
+    // Enviar correo
+    try {
+      if (receiver && sender) {
+        await EmailService.sendConnectionRequestEmail(receiver.email, receiver.nombre, sender.nombre);
+      }
+    } catch (err) {
+      console.error("Error al enviar email de solicitud de conexión (nueva)", err);
+    }
 
     return connection;
   }

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Bell, Check, X } from "lucide-react";
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   time: string;
@@ -15,83 +15,33 @@ interface Notification {
   isMockRoute?: boolean; // Flag to prevent 404s while in development
 }
 
-const STORAGE_KEY = "ucr_notifications_state";
-
-const mockNotifications: Notification[] = [
-  { 
-    id: 1, 
-    title: "Mensaje de Juan Pérez", 
-    message: "Hola, vi tu perfil en la plataforma Alumni y me gustaría conectar.", 
-    time: "Hace 5 minutos", 
-    read: false,
-    url: "/mensajes?chatId=2",
-    isMockRoute: false
-  },
-  { 
-    id: 2, 
-    title: "Mensaje de Empresa XYZ", 
-    message: "Tienes un nuevo mensaje de Empresa XYZ.", 
-    time: "Hace 2 horas", 
-    read: false,
-    url: "/mensajes?chatId=1",
-    isMockRoute: false
-  },
-  { 
-    id: 3, 
-    title: "Respuesta de Soporte Técnico", 
-    message: "Tu solicitud de ayuda ha sido procesada. Por favor revisa tu correo.", 
-    time: "Hace 1 día", 
-    read: true,
-    url: "/mensajes?chatId=3",
-    isMockRoute: false
-  },
-  { 
-    id: 4, 
-    title: "Contenido eliminado", 
-    message: "Este es un ejemplo de contenido que ya no existe.", 
-    time: "Hace 2 días", 
-    read: true
-  },
-];
-
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [showAllModal, setShowAllModal] = useState(false);
   const [infoModalMessage, setInfoModalMessage] = useState("");
-  const [notificationsState, setNotificationsState] = useState<Notification[]>(mockNotifications);
+  const [notificationsState, setNotificationsState] = useState<Notification[]>([]);
   const [isClient, setIsClient] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Wrapper for setNotifications that syncs with localStorage
-  const setNotifications = (updater: Notification[] | ((prev: Notification[]) => Notification[])) => {
-    setNotificationsState(prev => {
-      const nextState = typeof updater === 'function' ? updater(prev) : updater;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setNotificationsState(data);
       }
-      return nextState;
-    });
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
   };
 
   useEffect(() => {
     setIsClient(true);
-    // Cargar estado persistido
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = mockNotifications.map(mock => {
-            const found = parsed.find((p: any) => p.id === mock.id);
-            return found ? { ...mock, read: found.read } : mock;
-          });
-          setNotificationsState(merged);
-        }
-      } catch (e) {
-        console.error("Error parsing notifications", e);
-      }
-    }
+    fetchNotifications();
+
+    // Poll for notifications every 10 seconds
+    const interval = setInterval(fetchNotifications, 10000);
 
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -99,8 +49,17 @@ export function NotificationsDropdown() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      clearInterval(interval);
+    };
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
 
   // Controlar scroll del body cuando hay modales abiertos
   useEffect(() => {
@@ -116,14 +75,31 @@ export function NotificationsDropdown() {
 
   const unreadCount = notificationsState.filter(n => !n.read).length;
 
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
+  const markAsRead = async (id: string) => {
+    setNotificationsState(prev => 
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
+    try {
+      await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    setNotificationsState(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
+    }
   };
 
   const handleNotificationClick = (notification: Notification) => {
