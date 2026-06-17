@@ -86,16 +86,16 @@ export default function DirectorioEstudiantes() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-full bg-ucr-gris-fondo dark:bg-slate-950 transition-colors duration-300">
       <TopBar title="Directorio" />
 
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">
-            Directorio de estudiantes
+          <h1 className="text-3xl font-bold text-ucr-celeste-medium dark:text-sky-400 mb-2 font-display uppercase">
+            Directorio de Proyectos Estudiantiles
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl text-base">
+          <p className="text-slate-600 dark:text-slate-400 max-w-2xl text-base font-medium">
             Conectando el talento emergente de la UCR con nuestra red global de exalumnos.
           </p>
         </div>
@@ -110,10 +110,14 @@ export default function DirectorioEstudiantes() {
               type="text"
               placeholder="Buscar por nombre de estudiante..."
 <<<<<<< HEAD
+<<<<<<< HEAD
               className="pl-10 h-12 bg-white border-slate-200 shadow-sm text-base"
 =======
               className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
 >>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
+=======
+              className="pl-10 h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
+>>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
             />
           </div>
           <Button
@@ -121,8 +125,8 @@ export default function DirectorioEstudiantes() {
             variant={showFilters ? "default" : "outline"}
             className={`h-12 px-6 ${
               showFilters
-                ? "bg-[#0f4c81] text-white hover:bg-[#0b3a63]"
-                : "border-slate-300 text-slate-700"
+                ? "bg-ucr-celeste-medium text-white hover:bg-ucr-celeste-medium/90 border-none"
+                : "border-slate-300 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
             }`}
           >
             <SlidersHorizontal className="mr-2 h-5 w-5" />
@@ -132,7 +136,7 @@ export default function DirectorioEstudiantes() {
             <Button
               variant="outline"
               onClick={clearFilters}
-              className="h-12 px-4 border-slate-300 text-slate-500"
+              className="h-12 px-4 border-slate-300 text-slate-500 hover:bg-slate-50 dark:text-slate-400"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -141,7 +145,7 @@ export default function DirectorioEstudiantes() {
 
         {/* Filtros expandibles */}
         {showFilters && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
             <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm uppercase tracking-wider">
               Filtros combinados con AND lógico
             </h3>
@@ -153,7 +157,7 @@ export default function DirectorioEstudiantes() {
               <select
                 value={carrera}
                 onChange={(e) => setCarrera(e.target.value)}
-                className="w-full h-9 border border-slate-200 dark:border-slate-700 rounded text-sm text-slate-700 dark:text-slate-300 dark:bg-slate-950 px-2 outline-none focus:border-[#0f4c81]"
+                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-ucr-celeste-medium"
               >
                 <option value="">Todas las carreras</option>
                 {CATALOGO_AREAS.map((area) => (
@@ -170,7 +174,7 @@ export default function DirectorioEstudiantes() {
               <select
                 value={areaProyecto}
                 onChange={(e) => setAreaProyecto(e.target.value)}
-                className="w-full h-9 border border-slate-200 dark:border-slate-700 rounded text-sm text-slate-700 dark:text-slate-300 dark:bg-slate-950 px-2 outline-none focus:border-[#0f4c81]"
+                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-ucr-celeste-medium"
               >
                 <option value="">Todas las áreas</option>
                 {CATALOGO_AREAS.map((area) => (
@@ -187,7 +191,7 @@ export default function DirectorioEstudiantes() {
               <select
                 value={apoyoBuscado}
                 onChange={(e) => setApoyoBuscado(e.target.value)}
-                className="w-full h-9 border border-slate-200 dark:border-slate-700 rounded text-sm text-slate-700 dark:text-slate-300 dark:bg-slate-950 px-2 outline-none focus:border-[#0f4c81]"
+                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-ucr-celeste-medium"
               >
                 <option value="">Todos los tipos</option>
                 {TIPOS_APOYO.map((tipo) => (
@@ -203,7 +207,7 @@ export default function DirectorioEstudiantes() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/55 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
             {error} —{" "}
             <button onClick={fetchEstudiantes} className="underline font-medium">
               Reintentar
@@ -214,23 +218,23 @@ export default function DirectorioEstudiantes() {
         {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-sky-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-ucr-celeste-medium dark:text-sky-400 animate-spin" />
           </div>
         ) : estudiantes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-3xl">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4 text-3xl">
               🎓
             </div>
             <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">
               No se encontraron estudiantes
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
               Intenta cambiar los filtros o ampliar la búsqueda.
             </p>
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="mt-4 text-[#0f4c81] text-sm font-medium hover:underline"
+                className="mt-4 text-ucr-celeste-medium hover:text-ucr-celeste-medium/80 text-sm font-semibold hover:underline"
               >
                 Limpiar filtros
               </button>
@@ -238,23 +242,25 @@ export default function DirectorioEstudiantes() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">
               {estudiantes.length} estudiante{estudiantes.length !== 1 ? "s" : ""} encontrado{estudiantes.length !== 1 ? "s" : ""}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {estudiantes.map((student) => (
                 <Card
                   key={student.id}
-                  className="p-6 border-border dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 flex flex-col h-full hover:shadow-md transition-shadow"
+                  className="p-6 border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden group"
                 >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-ucr-celeste-medium transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                  
                   <div className="flex gap-4 mb-5">
-                    <div className="h-14 w-14 rounded-md bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0">
+                    <div className="h-14 w-14 rounded-md bg-slate-200 dark:bg-slate-900 overflow-hidden shrink-0 border dark:border-slate-800">
                       <img
                         src={
                           student.user.image ||
                           `https://ui-avatars.com/api/?name=${encodeURIComponent(
                             student.user.name || "E"
-                          )}&background=0f4c81&color=fff`
+                          )}&background=006AD3&color=fff`
                         }
                         alt={student.user.name || "Estudiante"}
                         className="h-full w-full object-cover"
@@ -262,17 +268,17 @@ export default function DirectorioEstudiantes() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-lg text-foreground leading-tight">
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight">
                           {student.user.name || "Estudiante UCR"}
                         </h3>
                         {student.user.proyectoFinalizado && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 rounded-full text-[10px] font-bold">
                             <CheckCircle2 className="w-3 h-3" />
                             Finalizado
                           </span>
                         )}
                       </div>
-                      <p className="text-sm font-semibold text-[#0f4c81] dark:text-sky-400 mt-0.5 truncate">
+                      <p className="text-sm font-semibold text-ucr-celeste-medium dark:text-sky-400 mt-0.5 truncate">
                         {student.carrera}
                       </p>
                     </div>
@@ -280,12 +286,17 @@ export default function DirectorioEstudiantes() {
 
                   {student.areaProyecto && (
 <<<<<<< HEAD
+<<<<<<< HEAD
                     <div className="bg-blue-50/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81]">
                       <p className="text-xs font-semibold text-slate-500 mb-1">
                         Área / Escuela
 =======
                     <div className="bg-blue-50/50 dark:bg-slate-800/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81] dark:border-sky-500">
                       <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+=======
+                    <div className="bg-ucr-celeste-medium/10 dark:bg-slate-800/50 p-3 rounded-md mb-5 border-l-2 border-ucr-celeste-medium dark:border-sky-500">
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
+>>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
                         Área del Proyecto
 >>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
                       </p>
@@ -305,7 +316,7 @@ export default function DirectorioEstudiantes() {
                   </div>
 
                   <div className="mb-4 mt-auto">
-                    <div className="flex justify-between text-xs font-medium mb-1.5">
+                    <div className="flex justify-between text-xs font-semibold mb-1.5">
                       <span className="text-slate-500 dark:text-slate-400">
                         {getFaseLabel(student.avanceProyecto)}
                       </span>
@@ -315,7 +326,7 @@ export default function DirectorioEstudiantes() {
                     </div>
                     <Progress
                       value={student.avanceProyecto}
-                      className="h-1.5 bg-slate-100 dark:bg-slate-800"
+                      className="h-1.5 bg-slate-100 dark:bg-slate-900"
                     />
                   </div>
 
@@ -323,14 +334,14 @@ export default function DirectorioEstudiantes() {
                     {student.apoyoBuscado.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-1 bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400 rounded text-[10px] font-bold tracking-wide"
+                        className="px-2 py-1 bg-ucr-celeste-tint dark:bg-green-900/40 text-ucr-celeste-medium dark:text-green-400 rounded text-[10px] font-bold tracking-wide uppercase"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
 
-                  <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+                  <Button className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 dark:bg-ucr-celeste dark:hover:bg-ucr-celeste/90 text-white dark:text-slate-950 font-bold tracking-wide transition-all shadow-md">
                     <HeartIcon className="mr-2 h-4 w-4" />
                     Ofrecer Apoyo
                   </Button>

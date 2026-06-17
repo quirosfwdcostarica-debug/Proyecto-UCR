@@ -15,11 +15,6 @@ export default function RegistroExalumnoPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-ucr-esmeralda/90 via-ucr-esmeralda/30 to-transparent" />
         
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-12 py-16">
-          <div className="absolute top-16 left-0 right-0 flex justify-center">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg font-display leading-tight text-center">
-              Fundación Exalumnos<br/>UCR
-            </h1>
-          </div>
           <p className="text-lg md:text-xl text-sky-100 max-w-lg font-medium drop-shadow-md text-center mt-10">
             Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
           </p>
@@ -36,7 +31,7 @@ export default function RegistroExalumnoPage() {
         
         <div className="w-full max-w-xl bg-white p-6 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative z-10 my-8">
           <div className="text-center mb-8">
-            <img src="/UCR_EXALUMNOS-1024x1024.png" alt="Escudo UCR" className="w-24 h-24 mx-auto mb-6 object-contain" />
+            <img src="/logo.png" alt="Logo Exalumnos U" className="w-24 h-24 mx-auto mb-6 object-contain" />
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 font-display mb-3">
               Registro de Exalumno
             </h2>
