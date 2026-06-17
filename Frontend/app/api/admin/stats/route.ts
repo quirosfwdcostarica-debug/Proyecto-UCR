@@ -7,51 +7,52 @@ export async function GET(_request: NextRequest) {
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
 
   if (!session?.user || role !== "ADMIN") {
-    return NextResponse.json({ message: "Solo ADMIN puede acceder a estas estadísticas" }, { status: 403 });
+    return NextResponse.json(
+      { message: "Solo ADMIN puede acceder a estas estadísticas" },
+      { status: 403 }
+    );
   }
 
   try {
-    // --- KPIs principales ---
+    // KPIs desde las tablas MAYÚSCULAS vía rawQuery (más eficiente)
     const [
-      donacionesAprobadas,
+      totalDonadoResult,
       matchesActivos,
       estudiantesActivos,
       exalumnosActivos,
-      todasDonaciones,
     ] = await Promise.all([
-      prisma.donacion.aggregate({
-        where: { status: "APROBADA" },
-        _sum: { monto: true },
-        _count: true,
-      }),
-      prisma.match.count({ where: { status: "ACTIVO" } }),
-      prisma.user.count({
-        where: { role: "ESTUDIANTE", status: "ACTIVO", cuentaPausada: false },
-      }),
-      prisma.user.count({
-        where: { role: "EXALUMNO", status: "ACTIVO", cuentaPausada: false },
-      }),
-      // Donaciones de los últimos 12 meses agrupadas por mes
-      prisma.donacion.findMany({
-        where: {
-          status: "APROBADA",
-          createdAt: {
-            gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
-          },
-        },
-        select: { monto: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
-      }),
+      prisma.$queryRaw<{ total: number; count: number }[]>`
+        SELECT 
+          COALESCE(SUM(monto), 0) as total,
+          COUNT(*) as count
+        FROM "DONACIONES"
+        WHERE estado = 'CONFIRMADA'
+      `,
+      prisma.match.count({ where: { estado: "ACTIVO" } }),
+      prisma.user.count({ where: { tipo: "ESTUDIANTE", status: "ACTIVO", activo: true } }),
+      prisma.user.count({ where: { tipo: "EXALUMNO", status: "ACTIVO", activo: true } }),
     ]);
 
-    // Procesar donaciones por mes para el gráfico
+    // Donaciones de los últimos 12 meses agrupadas por mes
+    const todasDonaciones = await prisma.donacion.findMany({
+      where: {
+        estado: "CONFIRMADA",
+        created_at: {
+          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
+        },
+      },
+      select: { monto: true, created_at: true },
+      orderBy: { created_at: "asc" },
+    });
+
+    // Procesar donaciones por mes
     const donacionesPorMes: Record<string, number> = {};
     const mesesES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
     for (const donacion of todasDonaciones) {
-      const fecha = new Date(donacion.createdAt);
+      const fecha = new Date(donacion.created_at);
       const key = `${mesesES[fecha.getMonth()]} ${fecha.getFullYear()}`;
-      donacionesPorMes[key] = (donacionesPorMes[key] || 0) + donacion.monto;
+      donacionesPorMes[key] = (donacionesPorMes[key] || 0) + Number(donacion.monto);
     }
 
     const graficoDonaciones = Object.entries(donacionesPorMes).map(([mes, total]) => ({
@@ -59,31 +60,49 @@ export async function GET(_request: NextRequest) {
       total,
     }));
 
-    // Donaciones pendientes para la cola
+    // Donaciones pendientes
     const donacionesPendientes = await prisma.donacion.findMany({
-      where: { status: "PENDIENTE" },
-      orderBy: { createdAt: "asc" },
+      where: { estado: "PENDIENTE" },
+      orderBy: { created_at: "asc" },
       include: {
         exalumno: {
           include: {
-            user: {
-              select: { id: true, name: true, email: true },
-            },
+            user: { select: { id: true, nombre: true, email: true } },
           },
         },
       },
     });
 
+    // Normalize pendientes for frontend
+    const pendientesNormalized = donacionesPendientes.map((d) => ({
+      ...d,
+      status: d.estado,
+      createdAt: d.created_at,
+      exalumno: d.exalumno
+        ? {
+            ...d.exalumno,
+            id: d.exalumno.user_id,
+            user: {
+              id: d.exalumno.user.id,
+              name: d.exalumno.user.nombre,
+              email: d.exalumno.user.email,
+            },
+          }
+        : null,
+    }));
+
+    const totales = totalDonadoResult[0];
+
     return NextResponse.json({
       kpis: {
-        totalDonado: donacionesAprobadas._sum.monto || 0,
-        donacionesAprobadas: donacionesAprobadas._count,
+        totalDonado: Number(totales?.total) || 0,
+        donacionesAprobadas: Number(totales?.count) || 0,
         matchesActivos,
         estudiantesActivos,
         exalumnosActivos,
       },
       graficoDonaciones,
-      donacionesPendientes,
+      donacionesPendientes: pendientesNormalized,
     });
   } catch (error) {
     console.error("[GET /api/admin/stats]", error);
