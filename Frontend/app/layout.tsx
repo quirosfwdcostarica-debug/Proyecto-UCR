@@ -12,8 +12,11 @@ import { NavigationLoadingProvider } from "@/components/providers/NavigationLoad
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Fundación Exalumnos UCR",
-  description: "Plataforma de mentoría, donaciones y empleo para la comunidad de egresados de la Universidad de Costa Rica.",
+  title: "Fundación Exalumnos U",
+  description: "Plataforma de mentoría, donaciones y empleo para la comunidad de egresados de la Universidad.",
+  icons: {
+    icon: "/logo.png?v=2",
+  },
 }
 
 export default function RootLayout({

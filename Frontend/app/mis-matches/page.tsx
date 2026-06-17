@@ -228,6 +228,7 @@ export default function MisMatchesPage() {
   return (
     <div className="min-h-full bg-[#f8fafc] pb-12">
       <TopBar title="Mis Matches" />
+<<<<<<< HEAD
 
       <div className="container mx-auto py-10 px-6">
         {/* Header Area */}
@@ -268,6 +269,18 @@ export default function MisMatchesPage() {
               Gestión (Tabla)
             </button>
           </div>
+=======
+      <div className="container mx-auto py-10 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-ucr-celeste-medium to-blue-500">
+            Mis Matches
+          </h1>
+          <p className="mt-2 text-muted-foreground text-lg">
+            {role === "EXALUMNO"
+              ? "Estudiantes que han solicitado conectar contigo, ordenados por afinidad."
+              : "Exalumnos sugeridos basados en tu perfil and necesidades, ordenados por afinidad."}
+          </p>
+>>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
         </div>
 
         {/* Filters Bar */}
@@ -358,7 +371,11 @@ export default function MisMatchesPage() {
         {/* Loading / Error States */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
+<<<<<<< HEAD
             <Loader2 className="w-12 h-12 text-[#0f4c81] animate-spin" />
+=======
+            <Loader2 className="w-8 h-8 text-ucr-celeste-medium animate-spin" />
+>>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -475,10 +492,99 @@ export default function MisMatchesPage() {
                     </CardContent>
                   </div>
 
+<<<<<<< HEAD
                   <CardFooter className="bg-slate-50/80 pt-4 border-t border-slate-100 mt-4">
+=======
+                  <CardHeader className="pr-16">
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="h-10 w-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                        <img
+                          src={
+                            persona?.user?.image ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              personaNombre
+                            )}&background=006AD3&color=fff`
+                          }
+                          alt={personaNombre}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg leading-tight">
+                          {personaNombre}
+                        </CardTitle>
+                        {role === "ESTUDIANTE" && match.exalumno && (
+                          <CardDescription className="text-xs mt-0.5">
+                            {match.exalumno.carrera} • {match.exalumno.sector}
+                          </CardDescription>
+                        )}
+                        {role === "EXALUMNO" && match.estudiante && (
+                          <CardDescription className="text-xs mt-0.5">
+                            {match.estudiante.carrera}
+                          </CardDescription>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    <div className="mb-3">
+                      <Badge
+                        variant="outline"
+                        className={`px-3 py-1 ${STATUS_COLORS[match.status]}`}
+                      >
+                        {STATUS_LABELS[match.status]}
+                      </Badge>
+                    </div>
+
+                    {role === "ESTUDIANTE" && match.exalumno && (
+                      <div>
+                        <p className="text-sm font-semibold mb-2 text-slate-600">Ofrece:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {match.exalumno.apoyoOfrecido.slice(0, 3).map((apoyo) => (
+                            <Badge key={apoyo} variant="secondary" className="text-xs">
+                              {apoyo}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {role === "EXALUMNO" && match.estudiante && (
+                      <div className="space-y-2">
+                        {match.estudiante.areaProyecto && (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                            <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                            <span>{match.estudiante.areaProyecto}</span>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          <p className="text-xs font-semibold text-slate-500 w-full">Busca:</p>
+                          {match.estudiante.apoyoBuscado.slice(0, 3).map((apoyo) => (
+                            <Badge key={apoyo} variant="secondary" className="text-xs">
+                              {apoyo}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <div className="flex-1 bg-slate-100 rounded-full h-1.5">
+                            <div
+                              className="bg-ucr-celeste-medium h-1.5 rounded-full"
+                              style={{ width: `${match.estudiante.avanceProyecto}%` }}
+                            />
+                          </div>
+                          <span>{match.estudiante.avanceProyecto}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+
+                  <CardContent className="bg-slate-50 pt-4 border-t border-slate-100">
+                    {/* Acciones para ESTUDIANTE */}
+>>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
                     {role === "ESTUDIANTE" && match.status === "SUGERIDO" && (
                       <Button
-                        className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white"
+                        className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white"
                         disabled={!!isLoading}
                         onClick={() => handleAction(match.id, "CONTACTADO")}
                       >
