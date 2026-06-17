@@ -1,24 +1,52 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sendMatchAceptado, sendMatchRechazado, sendMatchConnectionRequest, sendAdminNewActiveMatch } from "@/lib/email";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
 
     const match = await prisma.match.findUnique({
       where: { id: params.id },
       include: {
-        estudiante: { include: { user: { select: { name: true, email: true, image: true, phone: true } } } },
-        exalumno: { include: { user: { select: { name: true, email: true, image: true, phone: true } } } },
+        estudiante: {
+          include: {
+            user: { select: { nombre: true, email: true, foto_url: true } },
+          },
+        },
+        exalumno: {
+          include: {
+            user: { select: { nombre: true, email: true, foto_url: true } },
+          },
+        },
       },
     });
 
     if (!match) return NextResponse.json({ message: "Match no encontrado" }, { status: 404 });
-    return NextResponse.json(match);
+
+    // Normalize for frontend
+    const normalized = {
+      ...match,
+      status: match.estado,
+      afinidad: match.score_match,
+      estudianteId: match.estudiante_id,
+      exalumnoId: match.exalumno_id,
+      initiatedBy: match.initiated_by,
+      estudiante: match.estudiante ? {
+        ...match.estudiante,
+        id: match.estudiante.user_id,
+        user: { name: match.estudiante.user.nombre, email: match.estudiante.user.email, image: match.estudiante.user.foto_url },
+      } : null,
+      exalumno: match.exalumno ? {
+        ...match.exalumno,
+        id: match.exalumno.user_id,
+        user: { name: match.exalumno.user.nombre, email: match.exalumno.user.email, image: match.exalumno.user.foto_url },
+      } : null,
+    };
+
+    return NextResponse.json(normalized);
   } catch (error) {
     console.error("[Match] Error GET:", error);
     return NextResponse.json({ message: "Error interno" }, { status: 500 });
@@ -27,7 +55,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
     const userId = session.user.id;
 
@@ -44,75 +72,70 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (!match) return NextResponse.json({ message: "Match no encontrado" }, { status: 404 });
 
-    const isEstudiante = match.estudianteId === userId;
-    const isExalumno = match.exalumnoId === userId;
+    const isEstudiante = match.estudiante_id === userId;
+    const isExalumno = match.exalumno_id === userId;
     if (!isEstudiante && !isExalumno) return NextResponse.json({ message: "No autorizado" }, { status: 403 });
 
-    const emisorNombre = isEstudiante ? match.estudiante.user.name : match.exalumno.user.name;
-    const receptorNombre = isEstudiante ? match.exalumno.user.name : match.estudiante.user.name;
+    const emisorNombre = isEstudiante ? match.estudiante.user.nombre : match.exalumno.user.nombre;
+    const receptorNombre = isEstudiante ? match.exalumno.user.nombre : match.estudiante.user.nombre;
     const receptorEmail = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
 
     if (action === "CONTACTAR") {
-      if (match.status !== "SUGERIDO") return NextResponse.json({ message: "Match ya no está sugerido" }, { status: 400 });
+      if (match.estado !== "SUGERIDO") return NextResponse.json({ message: "Match ya no está sugerido" }, { status: 400 });
 
       const updated = await prisma.match.update({
         where: { id: params.id },
-        data: { status: "CONTACTADO", initiatedBy: userId },
+        data: { estado: "CONTACTADO", initiated_by: userId },
       });
 
       if (receptorEmail) {
         await sendMatchConnectionRequest(receptorEmail, receptorNombre || "", emisorNombre || "");
       }
-      return NextResponse.json(updated);
-    } 
-    
+      return NextResponse.json({ ...updated, status: updated.estado });
+    }
+
     if (action === "ACEPTAR") {
-      if (match.status !== "CONTACTADO") return NextResponse.json({ message: "Match no contactado" }, { status: 400 });
-      if (match.initiatedBy === userId) return NextResponse.json({ message: "No puedes aceptar tu propia solicitud" }, { status: 400 });
+      if (match.estado !== "CONTACTADO") return NextResponse.json({ message: "Match no contactado" }, { status: 400 });
+      if (match.initiated_by === userId) return NextResponse.json({ message: "No puedes aceptar tu propia solicitud" }, { status: 400 });
 
       const updated = await prisma.match.update({
         where: { id: params.id },
-        data: { status: "ACTIVO", acceptedAt: new Date() },
+        data: { estado: "ACTIVO", accepted_at: new Date() },
       });
 
       const emisorEmailOriginal = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
-      
       if (emisorEmailOriginal) {
         await sendMatchAceptado(emisorEmailOriginal, emisorNombre || "", receptorNombre || "");
       }
-      
-      // Notificar al admin (Opcional, asumiendo admin@alumni.ucr.ac.cr)
-      await sendAdminNewActiveMatch("admin@alumni.ucr.ac.cr", match.estudiante.user.name || "", match.exalumno.user.name || "");
+      await sendAdminNewActiveMatch("admin@alumni.ucr.ac.cr", match.estudiante.user.nombre || "", match.exalumno.user.nombre || "");
 
-      return NextResponse.json(updated);
-    } 
-    
+      return NextResponse.json({ ...updated, status: updated.estado });
+    }
+
     if (action === "RECHAZAR") {
-      if (match.status !== "CONTACTADO") return NextResponse.json({ message: "Match no contactado" }, { status: 400 });
-      if (match.initiatedBy === userId) return NextResponse.json({ message: "No puedes rechazar tu propia solicitud" }, { status: 400 });
+      if (match.estado !== "CONTACTADO") return NextResponse.json({ message: "Match no contactado" }, { status: 400 });
+      if (match.initiated_by === userId) return NextResponse.json({ message: "No puedes rechazar tu propia solicitud" }, { status: 400 });
 
       const updated = await prisma.match.update({
         where: { id: params.id },
-        data: { status: "RECHAZADO", rejectedAt: new Date() },
+        data: { estado: "CERRADO", rejected_at: new Date() },
       });
 
       const emisorEmailOriginal = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
       if (emisorEmailOriginal) {
         await sendMatchRechazado(emisorEmailOriginal, emisorNombre || "");
       }
-
-      return NextResponse.json(updated);
+      return NextResponse.json({ ...updated, status: updated.estado });
     }
 
     if (action === "CERRAR") {
-      if (match.status !== "ACTIVO") return NextResponse.json({ message: "Solo puedes cerrar matches activos" }, { status: 400 });
+      if (match.estado !== "ACTIVO") return NextResponse.json({ message: "Solo puedes cerrar matches activos" }, { status: 400 });
 
       const updated = await prisma.match.update({
         where: { id: params.id },
-        data: { status: "CERRADO", closedAt: new Date() },
+        data: { estado: "CERRADO", closed_at: new Date() },
       });
-
-      return NextResponse.json(updated);
+      return NextResponse.json({ ...updated, status: updated.estado });
     }
 
     return NextResponse.json({ message: "Acción inválida" }, { status: 400 });

@@ -1,10 +1,9 @@
 /**
  * Script de seed para NAYDELIN JUDITH RIVERA RODRIGUEZ
- * Crea su perfil de Estudiante en Prisma, un User en NextAuth,
+ * Crea su perfil de Estudiante en la tabla ESTUDIANTES,
  * y Matches SUGERIDOS con todos los exalumnos activos.
  *
- * Ejecutar: npx ts-node --skip-project seed_naydelin.ts
- * o desde el directorio Frontend: npx tsx seed_naydelin.ts
+ * Ejecutar: npx tsx seed_naydelin.ts
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -27,100 +26,110 @@ const EXALUMNOS = [
 async function main() {
   console.log("🌱 Iniciando seed de NAYDELIN...\n");
 
-  // 1. Crear User en la tabla NextAuth (si no existe)
-  await prisma.user.upsert({
-    where: { id: NAYDELIN_ID },
-    update: {
-      name: "NAYDELIN JUDITH RIVERA RODRIGUEZ",
-      email: "jeancarlosbarberena29@gmail.com",
-      role: "ESTUDIANTE",
-      status: "ACTIVO",
-    },
-    create: {
-      id: NAYDELIN_ID,
-      name: "NAYDELIN JUDITH RIVERA RODRIGUEZ",
-      email: "jeancarlosbarberena29@gmail.com",
-      role: "ESTUDIANTE",
-      status: "ACTIVO",
-    },
-  });
-  console.log("✅ User de NextAuth creado/actualizado para NAYDELIN");
+  // 1. Asegurar que el user exista en USERS
+  const existingUser = await prisma.user.findUnique({ where: { id: NAYDELIN_ID } });
+  if (!existingUser) {
+    await prisma.user.create({
+      data: {
+        id: NAYDELIN_ID,
+        nombre: "NAYDELIN JUDITH RIVERA RODRIGUEZ",
+        email: "jeancarlosbarberena29@gmail.com",
+        tipo: "ESTUDIANTE",
+        status: "ACTIVO",
+        activo: true,
+      },
+    });
+    console.log("✅ User creado en USERS para NAYDELIN");
+  } else {
+    await prisma.user.update({
+      where: { id: NAYDELIN_ID },
+      data: {
+        nombre: "NAYDELIN JUDITH RIVERA RODRIGUEZ",
+        tipo: "ESTUDIANTE",
+        status: "ACTIVO",
+        activo: true,
+      },
+    });
+    console.log("✅ User actualizado en USERS para NAYDELIN");
+  }
 
-  // 2. Crear perfil de Estudiante (si no existe)
+  // 2. Crear perfil de Estudiante en ESTUDIANTES
   await prisma.estudiante.upsert({
-    where: { id: NAYDELIN_ID },
+    where: { user_id: NAYDELIN_ID },
     update: {
       carrera: "Ingeniería en Computación",
-      avanceProyecto: 65,
-      areaProyecto: "Desarrollo de Software",
-      apoyoBuscado: ["Mentoría Profesional", "Oportunidad Laboral", "Networking"],
+      busca_mentoria: true,
+      busca_empleo: true,
+      proyecto_titulo: "Sistema de Análisis de Datos para Proyectos Estudiantiles",
+      proyecto_tipo: "Tesis",
     },
     create: {
-      id: NAYDELIN_ID,
+      user_id: NAYDELIN_ID,
       carrera: "Ingeniería en Computación",
-      avanceProyecto: 65,
-      areaProyecto: "Desarrollo de Software",
-      apoyoBuscado: ["Mentoría Profesional", "Oportunidad Laboral", "Networking"],
+      busca_mentoria: true,
+      busca_empleo: true,
+      proyecto_titulo: "Sistema de Análisis de Datos para Proyectos Estudiantiles",
+      proyecto_tipo: "Tesis",
     },
   });
-  console.log("✅ Perfil de Estudiante creado/actualizado para NAYDELIN");
+  console.log("✅ Perfil de Estudiante creado/actualizado en ESTUDIANTES para NAYDELIN");
 
-  // 3. Para cada exalumno: asegurarse de que tenga User y Exalumno en Prisma,
-  //    luego crear Match SUGERIDO con NAYDELIN
+  // 3. Para cada exalumno: crear Match SUGERIDO con NAYDELIN
   for (const exalumno of EXALUMNOS) {
-    // 3a. Asegurar que el User de NextAuth exista para el exalumno
-    const existingUser = await prisma.user.findUnique({ where: { id: exalumno.id } });
-    if (!existingUser) {
+    // 3a. Verificar que el exalumno exista en USERS y EXALUMNOS
+    const existingExaUser = await prisma.user.findUnique({ where: { id: exalumno.id } });
+    if (!existingExaUser) {
       await prisma.user.create({
         data: {
           id: exalumno.id,
-          name: exalumno.nombre,
-          role: "EXALUMNO",
+          nombre: exalumno.nombre,
+          email: `${exalumno.id}@placeholder.ucr.ac.cr`,
+          tipo: "EXALUMNO",
           status: "ACTIVO",
+          activo: true,
         },
       });
-      console.log(`  ✅ User NextAuth creado para exalumno: ${exalumno.nombre}`);
+      console.log(`  ✅ User creado en USERS para exalumno: ${exalumno.nombre}`);
     }
 
-    // 3b. Asegurar que el perfil de Exalumno exista en Prisma
-    const existingExalumno = await prisma.exalumno.findUnique({ where: { id: exalumno.id } });
+    const existingExalumno = await prisma.exalumno.findUnique({ where: { user_id: exalumno.id } });
     if (!existingExalumno) {
       await prisma.exalumno.create({
         data: {
-          id: exalumno.id,
-          carrera: "Ingeniería en Computación",
-          sector: "Sector Privado",
-          areasInteres: ["Desarrollo de Software", "Tecnología", "Innovación"],
-          apoyoOfrecido: ["Mentoría Profesional", "Networking", "Revisión de CV"],
+          user_id: exalumno.id,
+          escuela_facultad: "Ingeniería en Computación",
+          ofrece_mentoria: true,
+          ofrece_empleo: true,
+          ofrece_networking: true,
         },
       });
-      console.log(`  ✅ Perfil Exalumno creado para: ${exalumno.nombre}`);
+      console.log(`  ✅ Perfil Exalumno creado en EXALUMNOS para: ${exalumno.nombre}`);
     } else {
       console.log(`  ℹ️  Perfil Exalumno ya existe para: ${exalumno.nombre}`);
     }
 
-    // 3c. Crear el Match SUGERIDO entre NAYDELIN y el exalumno
+    // 3b. Crear el Match SUGERIDO entre NAYDELIN y el exalumno
     await prisma.match.upsert({
       where: {
-        estudianteId_exalumnoId: {
-          estudianteId: NAYDELIN_ID,
-          exalumnoId: exalumno.id,
+        estudiante_id_exalumno_id: {
+          estudiante_id: NAYDELIN_ID,
+          exalumno_id: exalumno.id,
         },
       },
       update: {
-        afinidad: 78,
-        status: "SUGERIDO",
+        score_match: 78,
+        estado: "SUGERIDO",
       },
       create: {
-        estudianteId: NAYDELIN_ID,
-        exalumnoId: exalumno.id,
-        afinidad: 78,
-        status: "SUGERIDO",
+        estudiante_id: NAYDELIN_ID,
+        exalumno_id: exalumno.id,
+        score_match: 78,
+        estado: "SUGERIDO",
       },
     });
     console.log(`  ✅ Match SUGERIDO creado entre NAYDELIN y ${exalumno.nombre}`);
 
-    // 3d. Crear notificación en la tabla NOTIFICATIONS para el exalumno
+    // 3c. Crear notificación en la tabla NOTIFICATIONS
     await prisma.$executeRaw`
       INSERT INTO "NOTIFICATIONS" (id, user_id, title, message, type, read, created_at, updated_at)
       VALUES (
@@ -140,9 +149,9 @@ async function main() {
 
   console.log("\n🎉 Seed completado exitosamente!");
   console.log(`\n📋 Resumen:`);
-  console.log(`   - NAYDELIN (${NAYDELIN_ID}) registrada como Estudiante en Prisma`);
-  console.log(`   - ${EXALUMNOS.length} Matches SUGERIDOS creados`);
-  console.log(`   - ${EXALUMNOS.length} Notificaciones enviadas a los exalumnos`);
+  console.log(`   - NAYDELIN (${NAYDELIN_ID}) registrada como Estudiante en ESTUDIANTES`);
+  console.log(`   - ${EXALUMNOS.length} Matches SUGERIDOS creados en MATCHES`);
+  console.log(`   - ${EXALUMNOS.length} Notificaciones enviadas a los exalumnos en NOTIFICATIONS`);
 }
 
 main()

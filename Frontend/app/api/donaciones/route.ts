@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
   let body: {
     exalumnoId: string;
     monto: number;
-    comprobanteUrl: string;
     destino: string;
     metodoPago?: string;
+    moneda?: string;
   };
 
   try {
@@ -32,12 +32,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  const { exalumnoId, monto, comprobanteUrl, destino, metodoPago } = body;
+  const { exalumnoId, monto, destino, metodoPago, moneda } = body;
 
-  // Validaciones básicas
-  if (!exalumnoId || !monto || !comprobanteUrl || !destino) {
+  if (!exalumnoId || !monto || !destino) {
     return NextResponse.json(
-      { message: "Faltan campos requeridos: exalumnoId, monto, comprobanteUrl, destino" },
+      { message: "Faltan campos requeridos: exalumnoId, monto, destino" },
       { status: 400 }
     );
   }
@@ -46,14 +45,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "El monto debe ser mayor a 0" }, { status: 400 });
   }
 
-  // Verificar que el exalumnoId coincide con el usuario autenticado (a menos que sea ADMIN)
   if (role !== "ADMIN" && exalumnoId !== userId) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
   // Verificar que existe el perfil de exalumno
   const exalumno = await prisma.exalumno.findUnique({
-    where: { id: exalumnoId },
+    where: { user_id: exalumnoId },
   });
   if (!exalumno) {
     return NextResponse.json({ message: "Perfil de exalumno no encontrado" }, { status: 404 });
@@ -62,11 +60,12 @@ export async function POST(request: NextRequest) {
   try {
     const donacion = await prisma.donacion.create({
       data: {
-        exalumnoId,
+        exalumno_id: exalumnoId,
         monto,
-        comprobanteUrl,
         destino,
-        status: "PENDIENTE",
+        metodo_pago: metodoPago || null,
+        moneda: moneda || "CRC",
+        estado: "PENDIENTE",
       },
     });
 
