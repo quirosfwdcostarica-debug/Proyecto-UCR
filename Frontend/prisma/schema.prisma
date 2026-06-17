@@ -23,25 +23,23 @@ enum UserStatus {
 }
 
 model User {
-  id                 String     @id @default(uuid())
-  name               String?
-  email              String?    @unique
-  emailVerified      DateTime?
-  image              String?
-  role               Role       @default(ESTUDIANTE)
-  status             UserStatus @default(PENDIENTE)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-  phone              String?
-  bio                String?
-  socialLinks        Json?
-  proyectoFinalizado Boolean    @default(false)
-  cuentaPausada      Boolean    @default(false)
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(ESTUDIANTE)
+  status        UserStatus @default(PENDIENTE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  phone         String?
+  bio           String?
+  socialLinks   Json?
 
   // Perfiles extendidos
-  estudiante Estudiante?
-  exalumno   Exalumno?
-
+  estudiante    Estudiante?
+  exalumno      Exalumno?
+  
   // Relaciones generales
   reportesRecibidos ReportePerfil[] @relation("Reportado")
   reportesHechos    ReportePerfil[] @relation("Reportador")
@@ -50,61 +48,54 @@ model User {
 }
 
 model Estudiante {
-  id             String   @id // FK a User.id
-  user           User     @relation(fields: [id], references: [id], onDelete: Cascade)
-  carrera        String
-  nivelBeca      String? // CRÍTICO: Dato privado
-  avanceProyecto Int      @default(0) // 0 a 100
-  areaProyecto   String? // Área principal del proyecto de graduación
-  apoyoBuscado   String[] // Tags de lo que busca
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id // FK a User.id
+  user            User     @relation(fields: [id], references: [id], onDelete: Cascade)
+  carrera         String
+  nivelBeca       String?  // CRÍTICO: Dato privado
+  avanceProyecto  Int      @default(0) // 0 a 100
+  areaProyecto    String?  // Área principal del proyecto de graduación
+  apoyoBuscado    String[] // Tags de lo que busca
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  matches      Match[]      @relation("EstudianteMatch")
-  aplicaciones Aplicacion[]
-  curriculum   Curriculum?
-  proyectos    Proyecto[]
+  matches         Match[]  @relation("EstudianteMatch")
+  aplicaciones    Aplicacion[]
+  curriculum      Curriculum?
 }
 
 model Exalumno {
-  id            String   @id // FK a User.id
-  user          User     @relation(fields: [id], references: [id], onDelete: Cascade)
-  carrera       String
-  sector        String
-  areasInteres  String[] // Catálogo estricto (14 áreas)
-  apoyoOfrecido String[] // Mentoria, Pasantias, etc.
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id // FK a User.id
+  user            User     @relation(fields: [id], references: [id], onDelete: Cascade)
+  carrera         String
+  sector          String
+  areasInteres    String[] // Catálogo estricto (14 áreas)
+  apoyoOfrecido   String[] // Mentoria, Pasantias, etc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  matches    Match[]    @relation("ExalumnoMatch")
-  donaciones Donacion[]
-  posiciones Posicion[]
+  matches         Match[]      @relation("ExalumnoMatch")
+  donaciones      Donacion[]
+  posiciones      Posicion[]
 }
 
 enum MatchStatus {
   SUGERIDO
   CONTACTADO
   ACTIVO
-  RECHAZADO
   CERRADO
 }
 
 model Match {
-  id           String      @id @default(uuid())
-  estudianteId String
-  exalumnoId   String
-  afinidad     Int // 0 a 100 puntos calculados
-  status       MatchStatus @default(SUGERIDO)
-  initiatedBy  String? // UUID del usuario que inició la conexión
-  matchReasons Json? // Razones del match
-  acceptedAt   DateTime?
-  rejectedAt   DateTime?
-  closedAt     DateTime?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  estudianteId    String
+  exalumnoId      String
+  afinidad        Int         // 0 a 100 puntos calculados
+  status          MatchStatus @default(SUGERIDO)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  estudiante Estudiante @relation("EstudianteMatch", fields: [estudianteId], references: [id], onDelete: Cascade)
-  exalumno   Exalumno   @relation("ExalumnoMatch", fields: [exalumnoId], references: [id], onDelete: Cascade)
+  estudiante      Estudiante  @relation("EstudianteMatch", fields: [estudianteId], references: [id], onDelete: Cascade)
+  exalumno        Exalumno    @relation("ExalumnoMatch", fields: [exalumnoId], references: [id], onDelete: Cascade)
 
   @@unique([estudianteId, exalumnoId])
 }
@@ -116,39 +107,27 @@ enum DonacionStatus {
 }
 
 model Donacion {
-  id             String         @id @default(uuid())
-  exalumnoId     String
-  monto          Float
-  comprobanteUrl String // URL en Supabase Storage
-  status         DonacionStatus @default(PENDIENTE)
-  destino        String // Proyecto específico o Fondo General
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id              String         @id @default(uuid())
+  exalumnoId      String
+  monto           Float
+  comprobanteUrl  String         // URL en Supabase Storage
+  status          DonacionStatus @default(PENDIENTE)
+  destino         String         // Proyecto específico o Fondo General
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  exalumno Exalumno @relation(fields: [exalumnoId], references: [id], onDelete: Cascade)
+  exalumno        Exalumno       @relation(fields: [exalumnoId], references: [id], onDelete: Cascade)
 }
 
 model ReportePerfil {
-  id           String   @id @default(uuid())
-  reportadorId String
-  reportadoId  String
-  motivo       String
-  createdAt    DateTime @default(now())
+  id              String   @id @default(uuid())
+  reportadorId    String
+  reportadoId     String
+  motivo          String
+  createdAt       DateTime @default(now())
 
-  reportador User @relation("Reportador", fields: [reportadorId], references: [id], onDelete: Cascade)
-  reportado  User @relation("Reportado", fields: [reportadoId], references: [id], onDelete: Cascade)
-}
-
-model Proyecto {
-  id           String   @id @default(uuid())
-  estudianteId String
-  nombre       String
-  descripcion  String?
-  avance       Int      @default(0) // 0 a 100
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  estudiante Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  reportador      User     @relation("Reportador", fields: [reportadorId], references: [id], onDelete: Cascade)
+  reportado       User     @relation("Reportado", fields: [reportadoId], references: [id], onDelete: Cascade)
 }
 
 enum TipoPosicion {
@@ -157,19 +136,19 @@ enum TipoPosicion {
 }
 
 model Posicion {
-  id          String       @id @default(uuid())
-  exalumnoId  String
-  titulo      String
-  tipo        TipoPosicion
-  descripcion String
-  habilidades String[]
-  fechaLimite DateTime
-  activa      Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String       @id @default(uuid())
+  exalumnoId      String
+  titulo          String
+  tipo            TipoPosicion
+  descripcion     String
+  habilidades     String[]
+  fechaLimite     DateTime
+  activa          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  exalumno     Exalumno     @relation(fields: [exalumnoId], references: [id], onDelete: Cascade)
-  aplicaciones Aplicacion[]
+  exalumno        Exalumno     @relation(fields: [exalumnoId], references: [id], onDelete: Cascade)
+  aplicaciones    Aplicacion[]
 }
 
 enum EstadoAplicacion {
@@ -179,39 +158,39 @@ enum EstadoAplicacion {
 }
 
 model Aplicacion {
-  id           String           @id @default(uuid())
-  posicionId   String
-  estudianteId String
-  cvVersionId  String
-  estado       EstadoAplicacion @default(PENDIENTE)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id              String           @id @default(uuid())
+  posicionId      String
+  estudianteId    String
+  cvVersionId     String
+  estado          EstadoAplicacion @default(PENDIENTE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  posicion   Posicion          @relation(fields: [posicionId], references: [id], onDelete: Cascade)
-  estudiante Estudiante        @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
-  cvVersion  CurriculumVersion @relation(fields: [cvVersionId], references: [id], onDelete: Cascade)
+  posicion        Posicion          @relation(fields: [posicionId], references: [id], onDelete: Cascade)
+  estudiante      Estudiante        @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  cvVersion       CurriculumVersion @relation(fields: [cvVersionId], references: [id], onDelete: Cascade)
 }
 
 model Curriculum {
-  id           String   @id @default(uuid())
-  estudianteId String   @unique
-  datosBase    Json // Estructura ATS base del CV
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(uuid())
+  estudianteId    String   @unique
+  datosBase       Json     // Estructura ATS base del CV
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  estudiante Estudiante          @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
-  versiones  CurriculumVersion[]
+  estudiante      Estudiante          @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  versiones       CurriculumVersion[]
 }
 
 model CurriculumVersion {
-  id           String   @id @default(uuid())
-  curriculumId String
-  contenido    Json // Versión específica para una aplicación (adaptada por usuario o IA)
-  creadoPorIA  Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id              String     @id @default(uuid())
+  curriculumId    String
+  contenido       Json       // Versión específica para una aplicación (adaptada por usuario o IA)
+  creadoPorIA     Boolean    @default(false)
+  createdAt       DateTime   @default(now())
 
-  curriculum   Curriculum   @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
-  aplicaciones Aplicacion[]
+  curriculum      Curriculum   @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  aplicaciones    Aplicacion[]
 }
 
 // ----------------------------------------------------------------------
@@ -219,18 +198,18 @@ model CurriculumVersion {
 // ----------------------------------------------------------------------
 
 model Account {
-  id                String  @id @default(uuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

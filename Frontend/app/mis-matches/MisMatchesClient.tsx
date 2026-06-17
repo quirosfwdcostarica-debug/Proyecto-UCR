@@ -1,0 +1,219 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { contactarMatch, cerrarMatch } from "@/actions/matching.actions";
+import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles } from "lucide-react";
+
+type MatchStatus = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
+
+interface Match {
+  id: string;
+  afinidad: number;
+  status: MatchStatus;
+  exalumno: {
+    user: { name?: string | null };
+    carrera: string;
+    sector: string;
+    apoyoOfrecido: string[];
+  };
+}
+
+const STATUS_CONFIG: Record<MatchStatus, { label: string; color: string; Icon: any }> = {
+  SUGERIDO:   { label: "Sugerido",   color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300",     Icon: Sparkles   },
+  CONTACTADO: { label: "Contactado", color: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300", Icon: Clock      },
+  ACTIVO:     { label: "Activo",     color: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",   Icon: Handshake  },
+  CERRADO:    { label: "Cerrado",    color: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/40 dark:text-gray-400",        Icon: XCircle    },
+};
+
+const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
+  { key: "TODOS",      label: "Todos"      },
+  { key: "SUGERIDO",   label: "Sugeridos"  },
+  { key: "CONTACTADO", label: "Contactados"},
+  { key: "ACTIVO",     label: "Activos"    },
+  { key: "CERRADO",    label: "Cerrados"   },
+];
+
+export default function MisMatchesClient({ matches: initial }: { matches: Match[] }) {
+  const [matches, setMatches]   = useState<Match[]>(initial);
+  const [filter, setFilter]     = useState<MatchStatus | "TODOS">("TODOS");
+  const [loadingId, setLoading] = useState<string | null>(null);
+  const [error, setError]       = useState<string | null>(null);
+  const [, startTransition]     = useTransition();
+
+  const visible = filter === "TODOS" ? matches : matches.filter(m => m.status === filter);
+
+  const counts = FILTER_TABS.reduce((acc, t) => {
+    acc[t.key] = t.key === "TODOS" ? matches.length : matches.filter(m => m.status === t.key).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  async function handleAction(matchId: string, action: "contactar" | "cerrar") {
+    setLoading(matchId);
+    setError(null);
+    try {
+      const updated = action === "contactar"
+        ? await contactarMatch(matchId)
+        : await cerrarMatch(matchId);
+
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status: updated.status as MatchStatus } : m));
+    } catch (e: any) {
+      setError(e.message ?? "Error al actualizar el match");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  return (
+    <div className="container mx-auto py-12 px-4 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+          Mis Matches
+        </h1>
+        <p className="mt-2 text-muted-foreground text-lg">
+          Exalumnos sugeridos por la plataforma según tu perfil y necesidades.
+        </p>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {FILTER_TABS.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              filter === tab.key
+                ? "bg-primary text-white border-primary shadow-sm"
+                : "bg-white text-muted-foreground border-border hover:border-primary/50 dark:bg-muted dark:text-muted-foreground"
+            }`}
+          >
+            {tab.label}
+            {counts[tab.key] > 0 && (
+              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold ${filter === tab.key ? "bg-white/20" : "bg-muted"}`}>
+                {counts[tab.key]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      {visible.length === 0 ? (
+        <div className="text-center py-24 text-muted-foreground">
+          No hay matches en este estado aún.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {visible.map(match => {
+            const cfg = STATUS_CONFIG[match.status];
+            const isLoading = loadingId === match.id;
+            const isClosed  = match.status === "CERRADO";
+
+            return (
+              <Card
+                key={match.id}
+                className={`relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-primary/10 ${isClosed ? "opacity-60" : ""}`}
+              >
+                {/* Score */}
+                <div className="absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg shadow-lg">
+                  {match.afinidad}
+                </div>
+
+                <CardHeader className="pr-16">
+                  <CardTitle className="text-xl">{match.exalumno.user.name ?? "Exalumno"}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {match.exalumno.carrera} • {match.exalumno.sector}
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                  {/* Estado badge */}
+                  <div className="mb-4">
+                    <Badge variant="outline" className={`px-3 py-1 flex w-fit items-center gap-1.5 ${cfg.color}`}>
+                      <cfg.Icon size={12} />
+                      {cfg.label}
+                    </Badge>
+                  </div>
+
+                  {/* Flujo de estados */}
+                  <div className="flex items-center gap-1 mb-4">
+                    {(["SUGERIDO", "CONTACTADO", "ACTIVO", "CERRADO"] as MatchStatus[]).map((s, i) => {
+                      const steps = ["SUGERIDO", "CONTACTADO", "ACTIVO", "CERRADO"] as MatchStatus[];
+                      const currentIdx = steps.indexOf(match.status);
+                      const stepIdx    = steps.indexOf(s);
+                      const done       = stepIdx <= currentIdx;
+                      return (
+                        <div key={s} className="flex items-center gap-1 flex-1 last:flex-none">
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${done ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                          {i < 3 && <div className={`h-px flex-1 ${stepIdx < currentIdx ? "bg-primary" : "bg-muted-foreground/20"}`} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Apoyo */}
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Ofrece:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {match.exalumno.apoyoOfrecido.map(apoyo => (
+                        <Badge key={apoyo} variant="secondary" className="bg-muted text-xs">{apoyo}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="bg-muted/30 pt-4 border-t border-border/50">
+                  {match.status === "SUGERIDO" && (
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90 text-white shadow-md"
+                      disabled={isLoading}
+                      onClick={() => handleAction(match.id, "contactar")}
+                    >
+                      {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <UserCheck size={16} className="mr-2" />}
+                      Contactar
+                    </Button>
+                  )}
+                  {match.status === "CONTACTADO" && (
+                    <Button disabled variant="outline" className="w-full text-yellow-600 border-yellow-300">
+                      <Clock size={16} className="mr-2" /> Esperando respuesta...
+                    </Button>
+                  )}
+                  {match.status === "ACTIVO" && (
+                    <div className="flex gap-2 w-full">
+                      <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                        <Handshake size={16} className="mr-2" /> Ver conversación
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-500 hover:text-red-600 hover:border-red-300"
+                        disabled={isLoading}
+                        onClick={() => handleAction(match.id, "cerrar")}
+                        title="Cerrar match"
+                      >
+                        {isLoading ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      </Button>
+                    </div>
+                  )}
+                  {match.status === "CERRADO" && (
+                    <p className="w-full text-center text-sm text-muted-foreground">Match cerrado</p>
+                  )}
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
