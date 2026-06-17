@@ -181,54 +181,52 @@ export async function aceptarMatch(matchId: string) {
 }
 
 /**
- * Ofrecer Apoyo (lo ejecuta el EXALUMNO en el directorio de estudiantes)
+ * Ofrecer Apoyo (lo ejecuta el EXALUMNO en el directorio de estudiantes).
+ * El backend crea la notificación y envía el email al estudiante,
+ * y verifica que el exalumno no haya sido rechazado previamente.
  */
 export async function ofrecerApoyo(estudianteId: string) {
   const session = await auth();
   const exalumnoId = session?.user?.id;
   if (!exalumnoId) throw new Error("No estás autenticado.");
 
-  // Buscar match existente
-  const existingRes = await fetch(`${API_URL}/matches/exalumno/${exalumnoId}`, { cache: "no-store" });
-  const existingMatches = existingRes.ok ? await existingRes.json() : [];
-  const existingMatch = existingMatches.find((m: any) => m.estudiante_id === estudianteId);
+  const res = await fetch(`${API_URL}/matches/ofrecer-apoyo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ estudianteId, exalumnoId }),
+  });
 
-  if (existingMatch) {
-    await fetch(`${API_URL}/matches/${existingMatch.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: "CONTACTADO" }),
-    });
-  } else {
-    await fetch(`${API_URL}/matches`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        estudiante_id: estudianteId,
-        exalumno_id: exalumnoId,
-        score_match: 85,
-        estado: "CONTACTADO",
-      }),
-    });
-  }
-
-  // Obtener nombres para el email
-  const [estudianteUserRes, exalumnoUserRes] = await Promise.all([
-    fetch(`${API_URL}/users/${estudianteId}`, { cache: "no-store" }),
-    fetch(`${API_URL}/users/${exalumnoId}`, { cache: "no-store" }),
-  ]);
-
-  if (estudianteUserRes.ok && exalumnoUserRes.ok) {
-    const estudianteUser = await estudianteUserRes.json();
-    const exalumnoUser = await exalumnoUserRes.json();
-    if (estudianteUser.email) {
-      await sendConnectionEmail(estudianteUser.email, estudianteUser.nombre, exalumnoUser.nombre);
-    }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al ofrecer apoyo");
   }
 
   revalidatePath("/directorio/estudiantes");
-  revalidatePath("/mis-matches");
+  revalidatePath("/mis-matches/exalumno");
   return { success: true };
+}
+
+/**
+ * CONTACTADO → CERRADO (rechazo)
+ * rejectedBy: 'estudiante' cuando el estudiante rechaza una oferta del exalumno
+ *             'exalumno' cuando el exalumno rechaza la solicitud del estudiante
+ */
+export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | "exalumno") {
+  const res = await fetch(`${API_URL}/matches/${matchId}/rechazar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rejectedBy }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al rechazar el match");
+  }
+
+  const updated = await res.json();
+  revalidatePath("/mis-matches");
+  revalidatePath("/mis-matches/exalumno");
+  return updated;
 }
 
 /**

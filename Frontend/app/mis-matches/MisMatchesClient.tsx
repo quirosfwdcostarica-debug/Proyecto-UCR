@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { contactarMatch, cerrarMatch } from "@/actions/matching.actions";
-import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles } from "lucide-react";
+import { contactarMatch, cerrarMatch, aceptarMatch, rechazarMatch } from "@/actions/matching.actions";
+import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles, CheckCircle2, MessageCircle } from "lucide-react";
 
 type MatchStatus = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
@@ -13,6 +14,7 @@ interface Match {
   id: string;
   afinidad: number;
   status: MatchStatus;
+  initiated_by?: string;
   exalumno: {
     user: { name?: string | null };
     carrera: string;
@@ -22,10 +24,10 @@ interface Match {
 }
 
 const STATUS_CONFIG: Record<MatchStatus, { label: string; color: string; Icon: any }> = {
-  SUGERIDO:   { label: "Sugerido",   color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300",     Icon: Sparkles   },
-  CONTACTADO: { label: "Contactado", color: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300", Icon: Clock      },
-  ACTIVO:     { label: "Activo",     color: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",   Icon: Handshake  },
-  CERRADO:    { label: "Cerrado",    color: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/40 dark:text-gray-400",        Icon: XCircle    },
+  SUGERIDO:   { label: "Sugerido",    color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300",      Icon: Sparkles   },
+  CONTACTADO: { label: "Contactado",  color: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300", Icon: Clock      },
+  ACTIVO:     { label: "Activo",      color: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",   Icon: Handshake  },
+  CERRADO:    { label: "Cerrado",     color: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/40 dark:text-gray-400",        Icon: XCircle    },
 };
 
 const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
@@ -37,6 +39,7 @@ const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
 ];
 
 export default function MisMatchesClient({ matches: initial }: { matches: Match[] }) {
+  const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
   const [filter, setFilter]     = useState<MatchStatus | "TODOS">("TODOS");
   const [loadingId, setLoading] = useState<string | null>(null);
@@ -50,27 +53,42 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
     return acc;
   }, {} as Record<string, number>);
 
-  async function handleAction(matchId: string, action: "contactar" | "cerrar") {
+  async function handleAction(
+    matchId: string,
+    action: "contactar" | "cerrar" | "aceptar" | "rechazar"
+  ) {
     setLoading(matchId);
     setError(null);
     try {
-      // --- INICIO DE LA SOLUCIÓN ---
-      // Si el ID empieza con "m" (m0, m1, m2...), sabemos que es un dato quemado.
-      // Simulamos la acción localmente para no romper la app buscando en la BD real.
       if (matchId.startsWith("m")) {
-        await new Promise(resolve => setTimeout(resolve, 600)); // Simula el tiempo de carga
-        const updatedStatus = action === "contactar" ? "CONTACTADO" : "CERRADO";
-        setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status: updatedStatus as MatchStatus } : m));
+        // Datos mock: simular localmente
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const statusMap: Record<string, MatchStatus> = {
+          contactar: "CONTACTADO",
+          cerrar: "CERRADO",
+          aceptar: "ACTIVO",
+          rechazar: "CERRADO",
+        };
+        setMatches(prev => prev.map(m =>
+          m.id === matchId ? { ...m, status: statusMap[action] } : m
+        ));
         setLoading(null);
         return;
       }
-      // --- FIN DE LA SOLUCIÓN ---
 
-      const updated = action === "contactar"
-        ? await contactarMatch(matchId)
-        : await cerrarMatch(matchId);
+      let updated: any;
+      if (action === "contactar") updated = await contactarMatch(matchId);
+      else if (action === "cerrar")   updated = await cerrarMatch(matchId);
+      else if (action === "aceptar")  updated = await aceptarMatch(matchId);
+      else                            updated = await rechazarMatch(matchId, "estudiante");
 
-      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status: updated.status as MatchStatus } : m));
+      setMatches(prev => prev.map(m =>
+        m.id === matchId ? { ...m, status: updated.estado as MatchStatus } : m
+      ));
+
+      if (action === "aceptar") {
+        router.push(`/mensajes?matchId=${matchId}`);
+      }
     } catch (e: any) {
       setError(e.message ?? "Error al actualizar el match");
     } finally {
@@ -80,7 +98,6 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
 
   return (
     <div className="container mx-auto py-12 px-4 min-h-screen">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
           Mis Matches
@@ -90,7 +107,6 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
         </p>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
           {error}
@@ -119,7 +135,6 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
         ))}
       </div>
 
-      {/* Grid */}
       {visible.length === 0 ? (
         <div className="text-center py-24 text-muted-foreground">
           No hay matches en este estado aún.
@@ -127,14 +142,20 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visible.map(match => {
-            const cfg = STATUS_CONFIG[match.status];
+            const cfg       = STATUS_CONFIG[match.status];
             const isLoading = loadingId === match.id;
             const isClosed  = match.status === "CERRADO";
+            // El exalumno ofreció ayuda: el estudiante debe aceptar/rechazar
+            const exalumnoOfrece =
+              match.status === "CONTACTADO" && match.initiated_by === "exalumno";
 
             return (
               <Card
                 key={match.id}
-                className={`relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-primary/10 ${isClosed ? "opacity-60" : ""}`}
+                className={`relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-primary/10
+                  ${isClosed ? "opacity-60" : ""}
+                  ${exalumnoOfrece ? "ring-2 ring-yellow-300/60" : ""}
+                `}
               >
                 {/* Score */}
                 <div className="absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg shadow-lg">
@@ -149,11 +170,10 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                 </CardHeader>
 
                 <CardContent>
-                  {/* Estado badge */}
                   <div className="mb-4">
                     <Badge variant="outline" className={`px-3 py-1 flex w-fit items-center gap-1.5 ${cfg.color}`}>
                       <cfg.Icon size={12} />
-                      {cfg.label}
+                      {exalumnoOfrece ? "Te ofrece apoyo" : cfg.label}
                     </Badge>
                   </div>
 
@@ -173,7 +193,6 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                     })}
                   </div>
 
-                  {/* Apoyo */}
                   <div>
                     <p className="text-sm font-semibold mb-2">Ofrece:</p>
                     <div className="flex flex-wrap gap-2">
@@ -185,6 +204,7 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                 </CardContent>
 
                 <CardFooter className="bg-muted/30 pt-4 border-t border-border/50">
+                  {/* SUGERIDO: estudiante contacta al exalumno */}
                   {match.status === "SUGERIDO" && (
                     <Button
                       className="w-full bg-primary hover:bg-primary/90 text-white shadow-md"
@@ -195,15 +215,45 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                       Contactar
                     </Button>
                   )}
-                  {match.status === "CONTACTADO" && (
+
+                  {/* CONTACTADO: estudiante inició → espera respuesta del exalumno */}
+                  {match.status === "CONTACTADO" && !exalumnoOfrece && (
                     <Button disabled variant="outline" className="w-full text-yellow-600 border-yellow-300">
                       <Clock size={16} className="mr-2" /> Esperando respuesta...
                     </Button>
                   )}
+
+                  {/* CONTACTADO: exalumno ofreció → estudiante acepta o rechaza */}
+                  {exalumnoOfrece && (
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        disabled={isLoading}
+                        onClick={() => handleAction(match.id, "aceptar")}
+                      >
+                        {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <CheckCircle2 size={16} className="mr-2" />}
+                        Aceptar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-gray-500 hover:text-red-600 hover:border-red-300"
+                        disabled={isLoading}
+                        onClick={() => handleAction(match.id, "rechazar")}
+                      >
+                        {isLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <XCircle size={16} className="mr-2" />}
+                        Rechazar
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* ACTIVO: chat disponible */}
                   {match.status === "ACTIVO" && (
                     <div className="flex gap-2 w-full">
-                      <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                        <Handshake size={16} className="mr-2" /> Ver conversación
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => router.push(`/mensajes?matchId=${match.id}`)}
+                      >
+                        <MessageCircle size={16} className="mr-2" /> Ver conversación
                       </Button>
                       <Button
                         variant="outline"
@@ -217,6 +267,7 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                       </Button>
                     </div>
                   )}
+
                   {match.status === "CERRADO" && (
                     <p className="w-full text-center text-sm text-muted-foreground">Match cerrado</p>
                   )}
