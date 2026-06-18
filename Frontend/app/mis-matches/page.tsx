@@ -1,5 +1,9 @@
-"use client";
+import { Suspense } from "react";
+import { auth } from "@/lib/auth";
+import { getMatchesForEstudiante } from "@/actions/matching.actions";
+import MisMatchesClient from "./MisMatchesClient";
 
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
@@ -106,9 +110,24 @@ export default function MisMatchesPage() {
       setError(err.message || "Error desconocido");
     } finally {
       setLoading(false);
-    }
-  };
+=======
+export default async function MisMatchesPage() {
+  // Intentar obtener la sesión; si no hay BD/sesión, usar mock para preview
+  let matches: any[] = [];
+  let userId: string | undefined;
 
+  try {
+    const session = await auth();
+    userId = session?.user?.id;
+    if (userId) {
+      matches = await getMatchesForEstudiante(userId);
+>>>>>>> 90eec3fe0d45ab796ae19a62cf4a9674f0db6290
+    }
+  } catch (e) {
+    // Sin BD: mostrar UI con datos mock
+  }
+
+<<<<<<< HEAD
   useEffect(() => {
     if (session) {
       fetchMatches();
@@ -769,5 +788,33 @@ export default function MisMatchesPage() {
         )}
       </div>
     </div>
+=======
+  // Datos mock para que la UI se vea sin BD configurada
+  if (matches.length === 0) {
+    matches = [
+      {
+        id: "m1", afinidad: 95, status: "SUGERIDO",
+        exalumno: { user: { name: "Sofía Cerdas" }, carrera: "Ingeniería Industrial", sector: "Sector Privado", apoyoOfrecido: ["Mentoría Profesional", "Revisión de CV"] }
+      },
+      {
+        id: "m2", afinidad: 82, status: "CONTACTADO",
+        exalumno: { user: { name: "David Rojas" }, carrera: "Administración de Negocios", sector: "Emprendimiento / Startup", apoyoOfrecido: ["Oportunidad Laboral", "Networking"] }
+      },
+      {
+        id: "m3", afinidad: 100, status: "ACTIVO",
+        exalumno: { user: { name: "Laura Montero" }, carrera: "Ingeniería en Computación", sector: "Sector Privado", apoyoOfrecido: ["Apoyo para Proyecto de Graduación", "Mentoría Profesional"] }
+      },
+      {
+        id: "m4", afinidad: 71, status: "CERRADO",
+        exalumno: { user: { name: "Marco Solano" }, carrera: "Derecho", sector: "Sector Público", apoyoOfrecido: ["Networking", "Mentoría Profesional"] }
+      },
+    ];
+  }
+
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-muted-foreground">Cargando matches...</div>}>
+      <MisMatchesClient matches={matches} />
+    </Suspense>
+>>>>>>> 90eec3fe0d45ab796ae19a62cf4a9674f0db6290
   );
 }

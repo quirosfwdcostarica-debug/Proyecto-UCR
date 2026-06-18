@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { CATALOGO_AREAS, TIPOS_APOYO } from "@/lib/constants";
+import { ofrecerApoyo } from "@/actions/matching.actions";
 
 interface EstudianteItem {
   id: string;
@@ -35,6 +36,7 @@ export default function DirectorioEstudiantes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [offeredIds, setOfferedIds] = useState<string[]>([]);
 
   // Estado de filtros
   const [nombre, setNombre] = useState("");
@@ -341,10 +343,29 @@ export default function DirectorioEstudiantes() {
                     ))}
                   </div>
 
-                  <Button className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 dark:bg-ucr-celeste dark:hover:bg-ucr-celeste/90 text-white dark:text-slate-950 font-bold tracking-wide transition-all shadow-md">
-                    <HeartIcon className="mr-2 h-4 w-4" />
-                    Ofrecer Apoyo
-                  </Button>
+                  {offeredIds.includes(student.id) ? (
+                    <Button disabled className="w-full bg-green-600 dark:bg-green-700 text-white font-bold tracking-wide transition-all shadow-md">
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Apoyo Ofrecido
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          const res = await ofrecerApoyo(student.id);
+                          if (res.success) {
+                            setOfferedIds(prev => [...prev, student.id]);
+                          }
+                        } catch (error: any) {
+                          alert(error.message || "Error al ofrecer apoyo");
+                        }
+                      }}
+                      className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 dark:bg-ucr-celeste dark:hover:bg-ucr-celeste/90 text-white dark:text-slate-950 font-bold tracking-wide transition-all shadow-md"
+                    >
+                      <HeartIcon className="mr-2 h-4 w-4" />
+                      Ofrecer Apoyo
+                    </Button>
+                  )}
                 </Card>
               ))}
             </div>
