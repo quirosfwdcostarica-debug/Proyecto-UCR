@@ -92,7 +92,89 @@
   background-color: hsl(var(--muted-foreground));
 }
 
-/* Ocultar overlay de error de Next.js en entorno local para evitar impacto en presentación */
-nextjs-portal {
-  display: none !important;
+/* ============================================================
+   Efectos Premium: Líneas Brillantes, Glow y Destellos
+   ============================================================ */
+
+@keyframes border-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
+.glowing-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.glowing-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent,
+    rgba(84, 188, 235, 0.15),
+    rgba(15, 76, 129, 0.3),
+    rgba(84, 188, 235, 0.4),
+    transparent 50%
+  );
+  animation: border-rotate 6s linear infinite;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.glowing-card:hover::before {
+  opacity: 1;
+}
+
+/* Shiny sliding sheen effect for premium buttons */
+@keyframes shiny-sheen {
+  0% {
+    left: -120%;
+  }
+  35%, 100% {
+    left: 120%;
+  }
+}
+
+.shiny-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shiny-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-25deg);
+  animation: shiny-sheen 3.5s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.shiny-button:active {
+  box-shadow: 0 0 20px rgba(84, 188, 235, 0.85), 0 0 40px rgba(84, 188, 235, 0.45) !important;
+  transform: scale(0.96) !important;
+}
+
+/* Special glow ring for inputs on focus */
+.glow-input:focus {
+  box-shadow: 0 0 12px rgba(84, 188, 235, 0.5) !important;
+  border-color: rgba(84, 188, 235, 0.8) !important;
+}
+
