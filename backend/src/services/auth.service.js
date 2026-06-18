@@ -42,7 +42,7 @@ class AuthService {
    * RF-01: Registro de Estudiante
    * Solo permite correos @ucr.ac.cr. Envía magic link de verificación.
    */
-  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero }) {
+  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero, carnet_ucr, carrera, escuela_facultad, sede, anio_ingreso, nivel_academico, promedio_ponderado }) {
     // Validaciones
     // Nota: Se quitó la restricción de @ucr.ac.cr temporalmente por solicitud
     /*if (!isUCREmail(email)) {
@@ -86,8 +86,17 @@ class AuthService {
       genero
     });
 
-    // Crear perfil de estudiante vacío (se completa después)
-    await db.Estudiante.create({ user_id: authData.user.id });
+    // Crear perfil de estudiante con información académica
+    await db.Estudiante.create({ 
+      user_id: authData.user.id,
+      carnet_ucr,
+      carrera,
+      escuela_facultad,
+      sede,
+      anio_ingreso: anio_ingreso ? parseInt(anio_ingreso) : null,
+      nivel_academico,
+      promedio_ponderado: promedio_ponderado ? parseFloat(promedio_ponderado) : null
+    });
 
     // Generar token de verificación y enviarlo
     // Guardar token en metadata de Supabase (o usar Supabase's own magic link)

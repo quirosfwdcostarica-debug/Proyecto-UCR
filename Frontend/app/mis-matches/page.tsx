@@ -58,10 +58,10 @@ const STATUS_LABELS: Record<string, string> = {
   ACTIVO: "Activo",
 };
 
-const SCORE_GRADIENT: Record<string, string> = {
-  alto: "from-green-500 to-emerald-600",
-  medio: "from-yellow-500 to-amber-600",
-  bajo: "from-slate-400 to-slate-500",
+const SCORE_SOLID: Record<string, string> = {
+  alto: "bg-emerald-600",
+  medio: "bg-amber-500",
+  bajo: "bg-slate-500",
 };
 
 export default function MisMatchesPage() {
@@ -125,10 +125,10 @@ export default function MisMatchesPage() {
     }
   };
 
-  const getScoreGradient = (score: number) => {
-    if (score >= 70) return SCORE_GRADIENT.alto;
-    if (score >= 40) return SCORE_GRADIENT.medio;
-    return SCORE_GRADIENT.bajo;
+  const getScoreSolid = (score: number) => {
+    if (score >= 70) return SCORE_SOLID.alto;
+    if (score >= 40) return SCORE_SOLID.medio;
+    return SCORE_SOLID.bajo;
   };
 
   if (!session) {
@@ -147,7 +147,7 @@ export default function MisMatchesPage() {
       <TopBar title="Mis Matches" />
       <div className="container mx-auto py-10 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-ucr-celeste-medium to-blue-500">
+          <h1 className="text-3xl font-extrabold tracking-tight text-ucr-celeste-medium">
             Mis Matches
           </h1>
           <p className="mt-2 text-muted-foreground text-lg">
@@ -196,7 +196,7 @@ export default function MisMatchesPage() {
                 >
                   {/* Score Badge */}
                   <div
-                    className={`absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br ${getScoreGradient(
+                    className={`absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full ${getScoreSolid(
                       match.afinidad
                     )} text-white font-bold text-lg shadow-lg`}
                   >
@@ -343,7 +343,7 @@ export default function MisMatchesPage() {
                         Pendiente de contacto
                       </Button>
                     )}
-                  </CardFooter>
+                  </CardContent>
                 </Card>
               );
             })}

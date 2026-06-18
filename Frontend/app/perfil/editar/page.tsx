@@ -36,8 +36,8 @@ export default async function EditarPerfilPage() {
           style={{ backgroundImage: "url('/login-pattern.png')" }}
         ></div>
         
-        {/* Degradado celeste elegante para integrarlo suavemente y asegurar contraste */}
-        <div className="absolute inset-0 bg-gradient-to-r from-sky-200/80 via-sky-100/40 to-transparent z-0"></div>
+        {/* Fondo celeste elegante para integrarlo suavemente y asegurar contraste */}
+        <div className="absolute inset-0 bg-sky-100/50 z-0"></div>
         <div className="absolute inset-0 bg-white/10 backdrop-blur-[0.5px] z-0"></div>
         
         <div className="max-w-5xl mx-auto relative z-10 flex items-center gap-6">

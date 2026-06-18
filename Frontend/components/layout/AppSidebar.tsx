@@ -18,8 +18,9 @@ export function AppSidebar() {
   
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
+  const isAdmin = role === "ADMIN";
 
-  const navItems: NavItem[] = isEstudiante 
+  let navItems: NavItem[] = isEstudiante 
     ? [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
@@ -27,7 +28,6 @@ export function AppSidebar() {
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
-        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ]
     : [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
@@ -35,8 +35,11 @@ export function AppSidebar() {
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
-        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
       ];
+
+  if (isAdmin) {
+    navItems.push({ labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert });
+  }
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-30 transition-all duration-300 ease-in-out group shadow-lg hover:shadow-2xl">

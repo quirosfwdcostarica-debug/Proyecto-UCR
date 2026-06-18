@@ -137,7 +137,7 @@ export function ExalumnoRegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-x-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-6">
         
         <div className="md:col-span-2 mb-2 border-b pb-2">
           <h3 className="text-lg font-medium text-ucr-celeste-medium">Datos de Cuenta</h3>
@@ -217,7 +217,7 @@ export function ExalumnoRegisterForm() {
             control={form.control}
             name="ya_graduado"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm md:col-span-2 bg-slate-50">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm md:col-span-2 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -317,10 +317,10 @@ export function ExalumnoRegisterForm() {
               "Crear cuenta y solicitar aprobación"
             )}
           </Button>
-          <div className="text-center mt-4 text-sm text-slate-600">
-            ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium hover:underline font-medium">Volver al login</Link>
+          <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
+            ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium dark:text-ucr-celeste hover:underline font-medium">Volver al login</Link>
           </div>
-          <p className="text-xs text-center text-slate-500 mt-4">
+          <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-4">
             Al registrarte, tu perfil entrará en estado pendiente y será verificado por el equipo de la Fundación.
           </p>
         </div>
