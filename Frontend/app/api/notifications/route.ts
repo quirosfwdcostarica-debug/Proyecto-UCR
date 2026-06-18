@@ -11,21 +11,45 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const notifications = await prisma.$queryRaw<any[]>`
-      SELECT 
-        id::text, 
-        title, 
-        message, 
-        type, 
-        read, 
-        created_at AS "time"
-      FROM "NOTIFICATIONS"
-      WHERE user_id = ${userId}::uuid
-      ORDER BY created_at DESC
-      LIMIT 50
-    `;
+    // Try with reference_id column (requires migration). Falls back gracefully if column doesn't exist yet.
+    let notifications: any[];
+    try {
+      notifications = await prisma.$queryRaw<any[]>`
+        SELECT
+          id::text,
+          title,
+          message,
+          type,
+          read,
+          created_at AS "time",
+          reference_id::text AS "matchId"
+        FROM "NOTIFICATIONS"
+        WHERE user_id = ${userId}::uuid
+          AND created_at >= NOW() - INTERVAL '7 days'
+        ORDER BY created_at DESC
+        LIMIT 100
+      `;
+    } catch {
+      notifications = await prisma.$queryRaw<any[]>`
+        SELECT
+          id::text,
+          title,
+          message,
+          type,
+          read,
+          created_at AS "time",
+          NULL::text AS "matchId"
+        FROM "NOTIFICATIONS"
+        WHERE user_id = ${userId}::uuid
+          AND created_at >= NOW() - INTERVAL '7 days'
+        ORDER BY created_at DESC
+        LIMIT 100
+      `;
+    }
 
-    // Map database timestamp to relative or formatted string
+    const isExalumno = (session.user as any)?.tipo === 'EXALUMNO';
+    const matchesUrl = isExalumno ? '/mis-matches/exalumno' : '/mis-matches';
+
     const formatted = notifications.map(n => {
       const date = new Date(n.time);
       const now = new Date();
@@ -43,8 +67,19 @@ export async function GET(request: NextRequest) {
         timeStr = `Hace ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
       }
 
-      const isExalumno = (session.user as any)?.tipo === 'EXALUMNO';
-      const matchesUrl = isExalumno ? '/mis-matches/exalumno' : '/mis-matches';
+      // Notifications where the user can Accept/Reject inline
+      const isActionable =
+        (n.type === 'match_offer' && !isExalumno) ||
+        (n.type === 'match_contact_request' && isExalumno);
+
+      // Role to pass to rechazarMatch
+      const rejectedBy = isExalumno ? 'exalumno' : 'estudiante';
+
+      // For accepted matches, link directly to chat
+      let url = matchesUrl;
+      if (n.type === 'match_accepted' && n.matchId) {
+        url = `/mensajes?matchId=${n.matchId}`;
+      }
 
       return {
         id: n.id,
@@ -52,7 +87,11 @@ export async function GET(request: NextRequest) {
         message: n.message,
         read: n.read,
         time: timeStr,
-        url: matchesUrl
+        type: n.type,
+        matchId: n.matchId || null,
+        actionable: isActionable && !!n.matchId && !n.read,
+        rejectedBy,
+        url,
       };
     });
 

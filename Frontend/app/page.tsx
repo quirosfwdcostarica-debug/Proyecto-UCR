@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
-import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -95,8 +94,6 @@ function Dashboard() {
         <WelcomeCarousel className="absolute inset-0 w-full h-full z-0 bg-slate-950" />
         <IntroVideo />
         <div id="dashboard-main-content" className="relative z-10 h-full flex flex-col justify-between">
-          <TopBar title="Tablero" />
-          
           <div className="px-8 pb-6 mt-auto">
             <h1 className="text-2xl font-bold text-white drop-shadow-md">
               {isEstudiante ? "Comunidad Exalumnos UCR" : "Portal de Mentoría y Filantropía"}

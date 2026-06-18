@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert, Plus } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Heart, UserCircle, Settings, HelpCircle, ShieldAlert, Plus, Handshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
@@ -24,6 +24,8 @@ export function AppSidebar() {
   const studentItems: NavItem[] = [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
+        { labelKey: "sidebar.matches", href: "/mis-matches", icon: Handshake },
+        { labelKey: "sidebar.messages", href: "/mensajes", icon: MessageCircle },
         { labelKey: "sidebar.positions.student", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
@@ -34,6 +36,8 @@ export function AppSidebar() {
   const exalumnoItems: NavItem[] = [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.student", href: "/directorio/estudiantes", icon: Users },
+        { labelKey: "sidebar.matches", href: "/mis-matches/exalumno", icon: Handshake },
+        { labelKey: "sidebar.messages", href: "/mensajes", icon: MessageCircle },
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },

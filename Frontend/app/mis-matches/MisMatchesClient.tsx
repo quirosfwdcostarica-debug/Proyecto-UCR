@@ -10,9 +10,12 @@ import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles, CheckCircle2, 
 
 type MatchStatus = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
+type Desglose = { C: number; I: number; A: number; S: number };
+
 interface Match {
   id: string;
   afinidad: number;
+  desglose: Desglose | null;
   status: MatchStatus;
   initiated_by?: string;
   exalumno: {
@@ -157,9 +160,38 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
                   ${exalumnoOfrece ? "ring-2 ring-yellow-300/60" : ""}
                 `}
               >
-                {/* Score */}
-                <div className="absolute top-4 right-4 flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg shadow-lg">
-                  {match.afinidad}
+                {/* Score con tooltip de desglose */}
+                <div className="absolute top-4 right-4 group/score z-20">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg shadow-lg cursor-help select-none">
+                    {match.afinidad}
+                  </div>
+                  {match.desglose && (
+                    <div className="absolute top-0 right-full mr-2 hidden group-hover/score:block w-48 bg-slate-900 text-white text-xs rounded-lg px-3 py-2.5 shadow-2xl pointer-events-none">
+                      <p className="font-semibold text-slate-300 mb-1.5 text-[11px]">Puntuación</p>
+                      <div className="space-y-1 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Carrera UCR</span>
+                          <span className={match.desglose.C > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.C}/30</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Intereses</span>
+                          <span className={match.desglose.I > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.I}/30</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Área proyecto</span>
+                          <span className={match.desglose.A > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.A}/20</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Tipo apoyo</span>
+                          <span className={match.desglose.S > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.S}/20</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-1.5 border-t border-slate-700 flex justify-between">
+                        <span className="text-slate-300 font-semibold">Total</span>
+                        <span className="text-white font-bold">{match.afinidad}/100</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <CardHeader className="pr-16">

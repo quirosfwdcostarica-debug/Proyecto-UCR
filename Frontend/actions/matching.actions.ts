@@ -47,37 +47,48 @@ export async function calculateAfinidad(estudianteId: string, exalumnoId: string
     const estudiante = await estudianteRes.json();
     const exalumno = await exalumnoRes.json();
 
-    let score = 0;
-
-    // +30: misma carrera
+    // 1. Misma carrera UCR (30 pts)
+    let scoreCarrera = 0;
     if (
       estudiante.carrera &&
       exalumno.escuela_facultad &&
       estudiante.carrera.trim().toLowerCase() === exalumno.escuela_facultad.trim().toLowerCase()
-    ) score += 30;
+    ) scoreCarrera = 30;
 
-    // +20: apoyo en común
+    // 2. Áreas de interés en común (30 pts, proporcional)
     const apoyoBuscado: string[] = [];
-    if (estudiante.busca_mentoria) apoyoBuscado.push("mentoria");
-    if (estudiante.busca_empleo) apoyoBuscado.push("empleo");
-    if (estudiante.busca_pasantia) apoyoBuscado.push("pasantia");
+    if (estudiante.busca_mentoria)       apoyoBuscado.push("mentoria");
+    if (estudiante.busca_empleo)         apoyoBuscado.push("empleo");
+    if (estudiante.busca_pasantia)       apoyoBuscado.push("pasantia");
     if (estudiante.busca_financiamiento) apoyoBuscado.push("financiamiento");
 
     const apoyoOfrecido: string[] = [];
-    if (exalumno.ofrece_mentoria) apoyoOfrecido.push("mentoria");
-    if (exalumno.ofrece_empleo) apoyoOfrecido.push("empleo");
-    if (exalumno.ofrece_pasantia) apoyoOfrecido.push("pasantia");
+    if (exalumno.ofrece_mentoria)        apoyoOfrecido.push("mentoria");
+    if (exalumno.ofrece_empleo)          apoyoOfrecido.push("empleo");
+    if (exalumno.ofrece_pasantia)        apoyoOfrecido.push("pasantia");
     if (exalumno.ofrece_donacion_dinero) apoyoOfrecido.push("financiamiento");
 
     const apoyosEnComun = apoyoBuscado.filter(a => apoyoOfrecido.includes(a));
-    if (apoyosEnComun.length > 0) {
-      score += Math.floor(20 * (apoyosEnComun.length / Math.max(apoyoBuscado.length, 1)));
+    let scoreIntereses = 0;
+    if (apoyoBuscado.length > 0) {
+      scoreIntereses = Math.round(30 * apoyosEnComun.length / apoyoBuscado.length);
     }
 
-    score += 10; // puntaje base
+    // 3. Sector exalumno ↔ área temática del proyecto (20 pts)
+    let scoreArea = 0;
+    if (exalumno.escuela_facultad && estudiante.proyecto_tipo) {
+      const sector = exalumno.escuela_facultad.trim().toLowerCase();
+      const area   = estudiante.proyecto_tipo.trim().toLowerCase();
+      if (sector === area || sector.includes(area) || area.includes(sector)) {
+        scoreArea = 20;
+      }
+    }
 
-    const scoreMatch = Math.min(score, 100);
-    const tipoApoyo = apoyosEnComun[0] || "general";
+    // 4. Tipo de apoyo ofrecido ↔ buscado: al menos 1 coincidencia = 20 pts (flat)
+    const scoreApoyo = apoyosEnComun.length > 0 ? 20 : 0;
+
+    const scoreMatch = Math.min(scoreCarrera + scoreIntereses + scoreArea + scoreApoyo, 100);
+    const tipoApoyo  = `C:${scoreCarrera},I:${scoreIntereses},A:${scoreArea},S:${scoreApoyo}`;
 
     // Crear o actualizar el match vía backend API
     const existing = await fetch(`${API_URL}/matches/estudiante/${estudianteId}`, { cache: "no-store" });
@@ -201,9 +212,10 @@ export async function ofrecerApoyo(estudianteId: string) {
     throw new Error(err.message || "Error al ofrecer apoyo");
   }
 
+  const match = await res.json();
   revalidatePath("/directorio/estudiantes");
   revalidatePath("/mis-matches/exalumno");
-  return { success: true };
+  return { success: true, matchId: match.id as string };
 }
 
 /**

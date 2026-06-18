@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +66,6 @@ export default function NuevoProyecto() {
 
   return (
     <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
-      <TopBar title="Crear Nuevo Proyecto" />
 
       <div className="p-8 max-w-3xl mx-auto space-y-6">
         {/* Breadcrumb */}
