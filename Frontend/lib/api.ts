@@ -22,7 +22,7 @@ export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 
   // Manejar 401: token expirado o inválido → cerrar sesión y redirigir al login
   if (response.status === 401) {
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ redirectTo: "/login" });
     throw new Error("Sesión expirada. Por favor vuelve a iniciar sesión.");
   }
 
