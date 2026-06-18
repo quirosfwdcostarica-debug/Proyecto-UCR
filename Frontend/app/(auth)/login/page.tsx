@@ -89,119 +89,147 @@ export default function LoginPage() {
     }
   };
   return (
-    <div className="flex min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body relative overflow-hidden">
-      {/* Background (Left panel with image and right-edge gradient fade) */}
-      <div className="absolute inset-y-0 left-0 w-full lg:w-[50%] z-0 overflow-hidden">
+    <div className="min-h-screen w-full relative overflow-hidden bg-ucr-gris-fondo dark:bg-ucr-negro font-body flex flex-col md:flex-row">
+
+
+      {/* Background igual que inscribirse - imagen solo en panel izquierdo */}
+      <div className="absolute inset-y-0 left-0 w-full md:w-[50%] z-0 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-[30%_center]"
           style={{ backgroundImage: "url('/pretilUCR.png')" }}
         />
-        {/* Transparent esmeralda color overlay over the image */}
+        {/* Overlay de color esmeralda transparente */}
         <div className="absolute inset-0 bg-ucr-esmeralda/20 dark:bg-ucr-esmeralda/35" />
-        {/* Smooth horizontal gradient fade: Blends the image's right edge into the solid gris-fondo background */}
+        {/* Fade horizontal suave hacia el panel derecho */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-ucr-gris-fondo/10 via-[60%] to-ucr-gris-fondo dark:via-ucr-negro/10 dark:via-[60%] dark:to-ucr-negro" />
       </div>
 
-      {/* Content wrapper */}
-      <div className="relative z-10 flex flex-col lg:flex-row w-full min-h-screen">
-        {/* Panel Izquierdo Content (Text floating over left side) */}
-        <div className="hidden lg:flex lg:w-[50%] flex-col justify-between px-16 py-20 text-white min-h-screen">
-          <div className="pt-8">
-          </div>
-          <div className="pb-8">
-            <p className="text-lg md:text-xl text-sky-100 max-w-lg font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
-              Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
+      {/* Sombra vertical suave */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/60 z-10 pointer-events-none md:hidden" />
+
+
+      {/* Lado Izquierdo: Solo Tagline (visible en md y superior) */}
+      <div className="hidden md:flex md:w-[50%] min-h-screen flex-col justify-end p-6 lg:p-8 relative z-20">
+        <div className="max-w-md mb-4">
+          <p className="text-sm lg:text-base text-white/90 font-bold leading-relaxed font-body drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+            Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
+          </p>
+        </div>
+      </div>
+
+      {/* Lado Derecho: Panel blanco igual que registro */}
+      <div 
+        className="w-full md:w-[50%] min-h-screen flex items-center justify-center p-8 sm:p-12 relative z-20 bg-ucr-gris-fondo dark:bg-ucr-negro md:bg-transparent"
+      >
+        <div className="w-full max-w-[440px]">
+          {/* Botón de volver al Dashboard */}
+          <Link 
+            href="/" 
+            className="absolute top-8 right-8 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-naranja transition-colors font-bold text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver al Dashboard</span>
+          </Link>
+
+          <div className="text-center mb-8 flex flex-col items-center">
+            {/* Logo de Alumni */}
+            <img 
+              src="/logo.png" 
+              alt="Logo Alumni UCR" 
+              className="w-16 h-16 object-contain mb-1" 
+            />
+            {/* El texto ALUMNI en mayúsculas debajo */}
+            <span className="text-[10px] font-bold tracking-[0.25em] text-slate-500 dark:text-slate-400 font-display uppercase mb-6">
+              ALUMNI
+            </span>
+            
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display mb-2 uppercase">
+              BIENVENIDO DE VUELTA
+            </h2>
+            <p className="text-slate-700 dark:text-slate-300 text-sm font-semibold font-body leading-relaxed">
+              Inicia tu sesión para conectar con la comunidad.
             </p>
           </div>
-        </div>
 
-        {/* Panel Derecho (Forms sitting over the blended background with watermark) */}
-        <div className="w-full lg:w-[50%] flex items-center justify-center p-8 sm:p-12 min-h-screen relative bg-ucr-gris-fondo dark:bg-ucr-negro lg:bg-transparent">
-          <Link href="/" className="absolute top-8 right-8 sm:top-10 sm:right-10 lg:right-16 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-naranja transition-colors font-bold">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Volver al Dashboard</span>
-          </Link>
-          
-          {/* Watermark pattern overlay */}
-          <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.12] dark:opacity-[0.05] bg-cover bg-bottom mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"></div>
-          
-          <div className="w-full max-w-md relative z-10 py-12">
-            <div className="text-center mb-10">
-              <img src="/logo.png" alt="Logo Alumni U" className="w-24 h-24 mx-auto mb-6 object-contain" />
-              <h2 className="text-3xl font-medium tracking-tight text-[#333333] dark:text-white font-display mb-3 uppercase">
-                Bienvenido de vuelta
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium font-body">
-                Ingresa a la plataforma de Exalumnos U
-              </p>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Correo Electrónico */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="font-semibold text-slate-700 dark:text-slate-300 text-xs tracking-wide uppercase">
+                Correo Electrónico
+              </Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="exalumno@ucr.ac.cr"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-12 rounded-[14px] border border-gray-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/30 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 orange-focus transition-all"
+                />
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="font-bold text-slate-800 dark:text-slate-200">Correo Electrónico</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="juan.perez@ucr.ac.cr"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="pl-11 h-14 rounded-[10px] border-slate-200 dark:border-slate-800 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white dark:bg-slate-900 text-base text-slate-900 dark:text-slate-100"
-                  />
-                </div>
+            {/* Contraseña */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="font-semibold text-slate-700 dark:text-slate-300 text-xs tracking-wide uppercase">
+                  Contraseña
+                </Label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-xs font-semibold text-[#006AD3] dark:text-sky-400 hover:text-sky-500 hover:underline transition-colors font-body"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
               </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="font-bold text-slate-800 dark:text-slate-200">Contraseña</Label>
-                  <Link href="/forgot-password" className="text-sm font-semibold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors font-body">
-                    ¿Olvidaste tu contraseña?
-                  </Link>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
                 </div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className="pl-11 h-14 rounded-[10px] border-slate-200 dark:border-slate-800 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white dark:bg-slate-900 text-base text-slate-900 dark:text-slate-100"
-                  />
-                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-12 rounded-[14px] border border-gray-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/30 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 orange-focus transition-all"
+                />
               </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-14 text-base rounded-[10px] bg-ucr-naranja hover:bg-[#d73b1d] text-white font-bold shadow-lg transition-all border-none"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : (
-                  "Iniciar sesión"
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-10 text-center text-slate-500 font-medium font-body">
-              ¿No tienes cuenta?{" "}
-              <Link href="/registro" className="font-bold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors">
-                Regístrate aquí
-              </Link>
             </div>
+
+            {/* Botón de Ingresar */}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 text-sm rounded-[14px] bg-[#E8522A] hover:bg-[#d1431d] text-white font-bold shadow-[0_6px_20px_rgba(232,82,42,0.35)] hover:shadow-[0_8px_24px_rgba(232,82,42,0.45)] transition-all border-none mt-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                "Iniciar sesión"
+              )}
+            </Button>
+          </form>
+
+          {/* Enlace de Registro */}
+          <div className="mt-8 text-center text-slate-500 dark:text-slate-400 text-xs font-medium font-body">
+            ¿No tienes cuenta?{" "}
+            <Link 
+              href="/registro" 
+              className="font-bold text-[#006AD3] dark:text-sky-400 hover:text-sky-500 hover:underline transition-colors"
+            >
+              Regístrate aquí
+            </Link>
           </div>
         </div>
       </div>
