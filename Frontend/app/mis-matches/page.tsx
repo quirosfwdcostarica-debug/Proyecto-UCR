@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { TopBar } from "@/components/layout/TopBar";
 import { Loader2, GraduationCap, Briefcase } from "lucide-react";
 
 interface MatchItem {
@@ -134,7 +133,6 @@ export default function MisMatchesPage() {
   if (!session) {
     return (
       <div className="min-h-full bg-[#f8fafc]">
-        <TopBar title="Mis Matches" />
         <div className="flex items-center justify-center py-24">
           <p className="text-slate-500">Inicia sesión para ver tus matches.</p>
         </div>
@@ -144,7 +142,6 @@ export default function MisMatchesPage() {
 
   return (
     <div className="min-h-full bg-[#f8fafc]">
-      <TopBar title="Mis Matches" />
       <div className="container mx-auto py-10 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-ucr-celeste-medium">
