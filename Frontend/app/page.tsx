@@ -53,18 +53,31 @@ function Dashboard() {
 
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
+  const userName = session?.user?.name || "Usuario";
 
-  // Stats
+  // Profile data from API
+  const [profile, setProfile] = useState<any>(null);
   const [mentorCount, setMentorCount] = useState<number | null>(null);
 
   useEffect(() => {
+    // Fetch own profile for real data
+    fetch("/api/users/me")
+      .then((r) => r.json())
+      .then((d) => { if (d?.id) setProfile(d); })
+      .catch(() => {});
+
+    // Fetch mentor count
     fetch("/api/exalumnos")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setMentorCount(data.length);
-      })
-      .catch(() => setMentorCount(null));
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setMentorCount(d.length); })
+      .catch(() => {});
   }, []);
+
+  // Student profile fields (with sensible fallbacks)
+  const proyectoTitulo  = profile?.estudiante?.proyecto_titulo  || "Proyecto de Graduación";
+  const carrera         = profile?.estudiante?.carrera          || "Carrera UCR";
+  const matchesActivos  = profile?.matchesActivos  ?? 0;
+  const matchesPendientes = profile?.matchesPendientes ?? 0;
 
   // Beca Modal States
   const [isBecaOpen, setIsBecaOpen] = useState(false);
@@ -84,7 +97,7 @@ function Dashboard() {
     setBecaJustification("");
     toast({
       title: "Solicitud de Beca Enviada",
-      description: "Tu postulación al fondo de Excelencia de Exalumnos por ¢450,000 ha sido recibida con éxito y está en revisión."
+      description: `Tu postulación al fondo de Excelencia de Exalumnos por ${becaMonto} ha sido recibida con éxito y está en revisión.`
     });
   };
 
@@ -99,6 +112,7 @@ function Dashboard() {
       description: `Se ha enviado la solicitud a ${selectedMentor?.name} para el día ${coffeeDate} a las ${coffeeTime}. Recibirás un correo de confirmación.`
     });
   };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-900 relative flex flex-col">
       {/* Portada Superior (Hero con Carrusel) */}
@@ -131,13 +145,20 @@ function Dashboard() {
               {/* Main Welcome Card */}
               <Card className="lg:col-span-2 p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex relative overflow-hidden">
                 <div className="w-full relative z-10 text-foreground flex flex-col justify-center min-h-[200px]">
-                  <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Bienvenido de nuevo, Gabriel</p>
+                  <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Bienvenido de nuevo, {userName}</p>
                   <h1 className="text-4xl font-extrabold text-foreground mb-4 leading-tight">
-                    Tu camino a la graduación está <br/>
-                    <span className="text-[#22c55e]">75% completado.</span>
+                    {proyectoTitulo !== "Proyecto de Graduación" ? (
+                      <>{proyectoTitulo}<br/><span className="text-[#22c55e]">{carrera}</span></>
+                    ) : (
+                      <>Tu comunidad de Exalumnos UCR<br/><span className="text-[#22c55e]">te espera.</span></>
+                    )}
                   </h1>
                   <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
-                    Sigue con el excelente trabajo en tu Proyecto de Graduación. Tienes 2 revisiones pendientes de tu mentor esta semana.
+                    {matchesActivos > 0
+                      ? `Tienes ${matchesActivos} match${matchesActivos > 1 ? "es" : ""} activo${matchesActivos > 1 ? "s" : ""}. Continúa conectando con la red de exalumnos.`
+                      : matchesPendientes > 0
+                        ? `Tienes ${matchesPendientes} match${matchesPendientes > 1 ? "es" : ""} sugerido${matchesPendientes > 1 ? "s" : ""}. ¡Revísalos y conecta con exalumnos!`
+                        : "Explora el directorio de exalumnos y conecta con mentores que te ayudarán a avanzar en tu carrera."}
                   </p>
                   <div className="flex gap-4">
                     <Link href="/proyecto/hitos">
@@ -159,10 +180,15 @@ function Dashboard() {
                 
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2 font-medium">
-                    <span className="text-slate-700 dark:text-slate-300">Investigación de Energía Renovable</span>
-                    <span className="text-[#0f4c81] dark:text-sky-400 text-lg font-bold">75%</span>
+                    <span className="text-slate-700 dark:text-slate-300">{proyectoTitulo}</span>
+                    <span className="text-[#0f4c81] dark:text-sky-400 text-sm font-semibold">{carrera}</span>
                   </div>
-                  <Progress value={75} className="h-2.5 bg-slate-100 dark:bg-slate-800" />
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                      {matchesActivos > 0 ? `${matchesActivos} mentor${matchesActivos > 1 ? "es" : ""} activo${matchesActivos > 1 ? "s" : ""}` : "Sin matches activos aún"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -327,11 +353,11 @@ function Dashboard() {
         <form onSubmit={handleApplyBeca} className="space-y-4 my-2">
           <div className="space-y-1">
             <Label className="text-xs font-bold text-slate-700">Nombre del Solicitante</Label>
-            <Input value="Gabriel Solano" disabled className="text-xs bg-slate-50 text-slate-500" />
+            <Input value={userName} disabled className="text-xs bg-slate-50 text-slate-500" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs font-bold text-slate-700">Proyecto de Graduación</Label>
-            <Input value="Investigación de Energía Renovable" disabled className="text-xs bg-slate-50 text-slate-500" />
+            <Input value={proyectoTitulo} disabled className="text-xs bg-slate-50 text-slate-500" />
           </div>
           <div className="space-y-1">
             <Label htmlFor="beca-justificacion" className="text-xs font-bold text-slate-700">Justificación de la Solicitud</Label>
