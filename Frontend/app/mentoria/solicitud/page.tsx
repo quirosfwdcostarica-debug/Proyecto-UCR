@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
-import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +43,6 @@ function SolicitudForm() {
 
   return (
     <div className="min-h-full bg-[#f8fafc]">
-      <TopBar title="Solicitar Café Virtual" />
 
       <div className="p-8 max-w-2xl mx-auto space-y-6">
         {/* Breadcrumb */}

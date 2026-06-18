@@ -1,43 +1,63 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
-import { getMatchesForEstudiante } from "@/actions/matching.actions";
+import prisma from "@/lib/prisma";
 import MisMatchesClient from "./MisMatchesClient";
 
+type Desglose = { C: number; I: number; A: number; S: number };
+
+function parseDesglose(tipoApoyo: string | null): Desglose | null {
+  if (!tipoApoyo || !tipoApoyo.startsWith("C:")) return null;
+  const obj: Record<string, number> = {};
+  tipoApoyo.split(",").forEach(p => {
+    const idx = p.indexOf(":");
+    if (idx > 0) obj[p.slice(0, idx)] = parseInt(p.slice(idx + 1), 10) || 0;
+  });
+  return { C: obj.C ?? 0, I: obj.I ?? 0, A: obj.A ?? 0, S: obj.S ?? 0 };
+}
+
 export default async function MisMatchesPage() {
-  // Intentar obtener la sesión; si no hay BD/sesión, usar mock para preview
   let matches: any[] = [];
-  let userId: string | undefined;
 
   try {
     const session = await auth();
-    userId = session?.user?.id;
-    if (userId) {
-      matches = await getMatchesForEstudiante(userId);
+    if (session?.user?.id) {
+      const userId = session.user.id;
+
+      const rawMatches = await prisma.match.findMany({
+        where: { estudiante_id: userId },
+        orderBy: { score_match: "desc" },
+        include: {
+          exalumno: {
+            include: {
+              user: { select: { nombre: true, foto_url: true } },
+            },
+          },
+        },
+      });
+
+      matches = rawMatches.map((m) => ({
+        id: m.id,
+        afinidad: m.score_match ?? 0,
+        desglose: parseDesglose(m.tipo_apoyo),
+        status: m.estado as string,
+        initiated_by: m.initiated_by ?? "sistema",
+        exalumno: {
+          user: { name: m.exalumno?.user?.nombre ?? null },
+          carrera: m.exalumno?.escuela_facultad ?? "",
+          sector: m.exalumno?.empresa_actual ?? m.exalumno?.cargo_actual ?? "",
+          apoyoOfrecido: [
+            m.exalumno?.ofrece_mentoria         ? "Mentoría"        : null,
+            m.exalumno?.ofrece_empleo           ? "Empleo"          : null,
+            m.exalumno?.ofrece_pasantia         ? "Pasantía"        : null,
+            m.exalumno?.ofrece_donacion_dinero  ? "Financiamiento"  : null,
+            m.exalumno?.ofrece_guest_speaking   ? "Guest Speaking"  : null,
+            m.exalumno?.ofrece_networking       ? "Networking"      : null,
+          ].filter(Boolean) as string[],
+        },
+      }));
     }
   } catch (e) {
-    // Sin BD: mostrar UI con datos mock
-  }
-
-  // Datos mock para que la UI se vea sin BD configurada
-  if (matches.length === 0) {
-    matches = [
-      {
-        id: "m1", afinidad: 95, status: "SUGERIDO",
-        exalumno: { user: { name: "Sofía Cerdas" }, carrera: "Ingeniería Industrial", sector: "Sector Privado", apoyoOfrecido: ["Mentoría Profesional", "Revisión de CV"] }
-      },
-      {
-        id: "m2", afinidad: 82, status: "CONTACTADO",
-        exalumno: { user: { name: "David Rojas" }, carrera: "Administración de Negocios", sector: "Emprendimiento / Startup", apoyoOfrecido: ["Oportunidad Laboral", "Networking"] }
-      },
-      {
-        id: "m3", afinidad: 100, status: "ACTIVO",
-        exalumno: { user: { name: "Laura Montero" }, carrera: "Ingeniería en Computación", sector: "Sector Privado", apoyoOfrecido: ["Apoyo para Proyecto de Graduación", "Mentoría Profesional"] }
-      },
-      {
-        id: "m4", afinidad: 71, status: "CERRADO",
-        exalumno: { user: { name: "Marco Solano" }, carrera: "Derecho", sector: "Sector Público", apoyoOfrecido: ["Networking", "Mentoría Profesional"] }
-      },
-    ];
+    console.error("[MisMatchesPage]", e);
   }
 
   return (

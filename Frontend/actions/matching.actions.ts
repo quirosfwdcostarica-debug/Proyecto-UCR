@@ -47,37 +47,48 @@ export async function calculateAfinidad(estudianteId: string, exalumnoId: string
     const estudiante = await estudianteRes.json();
     const exalumno = await exalumnoRes.json();
 
-    let score = 0;
-
-    // +30: misma carrera
+    // 1. Misma carrera UCR (30 pts)
+    let scoreCarrera = 0;
     if (
       estudiante.carrera &&
       exalumno.escuela_facultad &&
       estudiante.carrera.trim().toLowerCase() === exalumno.escuela_facultad.trim().toLowerCase()
-    ) score += 30;
+    ) scoreCarrera = 30;
 
-    // +20: apoyo en común
+    // 2. Áreas de interés en común (30 pts, proporcional)
     const apoyoBuscado: string[] = [];
-    if (estudiante.busca_mentoria) apoyoBuscado.push("mentoria");
-    if (estudiante.busca_empleo) apoyoBuscado.push("empleo");
-    if (estudiante.busca_pasantia) apoyoBuscado.push("pasantia");
+    if (estudiante.busca_mentoria)       apoyoBuscado.push("mentoria");
+    if (estudiante.busca_empleo)         apoyoBuscado.push("empleo");
+    if (estudiante.busca_pasantia)       apoyoBuscado.push("pasantia");
     if (estudiante.busca_financiamiento) apoyoBuscado.push("financiamiento");
 
     const apoyoOfrecido: string[] = [];
-    if (exalumno.ofrece_mentoria) apoyoOfrecido.push("mentoria");
-    if (exalumno.ofrece_empleo) apoyoOfrecido.push("empleo");
-    if (exalumno.ofrece_pasantia) apoyoOfrecido.push("pasantia");
+    if (exalumno.ofrece_mentoria)        apoyoOfrecido.push("mentoria");
+    if (exalumno.ofrece_empleo)          apoyoOfrecido.push("empleo");
+    if (exalumno.ofrece_pasantia)        apoyoOfrecido.push("pasantia");
     if (exalumno.ofrece_donacion_dinero) apoyoOfrecido.push("financiamiento");
 
     const apoyosEnComun = apoyoBuscado.filter(a => apoyoOfrecido.includes(a));
-    if (apoyosEnComun.length > 0) {
-      score += Math.floor(20 * (apoyosEnComun.length / Math.max(apoyoBuscado.length, 1)));
+    let scoreIntereses = 0;
+    if (apoyoBuscado.length > 0) {
+      scoreIntereses = Math.round(30 * apoyosEnComun.length / apoyoBuscado.length);
     }
 
-    score += 10; // puntaje base
+    // 3. Sector exalumno ↔ área temática del proyecto (20 pts)
+    let scoreArea = 0;
+    if (exalumno.escuela_facultad && estudiante.proyecto_tipo) {
+      const sector = exalumno.escuela_facultad.trim().toLowerCase();
+      const area   = estudiante.proyecto_tipo.trim().toLowerCase();
+      if (sector === area || sector.includes(area) || area.includes(sector)) {
+        scoreArea = 20;
+      }
+    }
 
-    const scoreMatch = Math.min(score, 100);
-    const tipoApoyo = apoyosEnComun[0] || "general";
+    // 4. Tipo de apoyo ofrecido ↔ buscado: al menos 1 coincidencia = 20 pts (flat)
+    const scoreApoyo = apoyosEnComun.length > 0 ? 20 : 0;
+
+    const scoreMatch = Math.min(scoreCarrera + scoreIntereses + scoreArea + scoreApoyo, 100);
+    const tipoApoyo  = `C:${scoreCarrera},I:${scoreIntereses},A:${scoreArea},S:${scoreApoyo}`;
 
     // Crear o actualizar el match vía backend API
     const existing = await fetch(`${API_URL}/matches/estudiante/${estudianteId}`, { cache: "no-store" });
@@ -181,54 +192,53 @@ export async function aceptarMatch(matchId: string) {
 }
 
 /**
- * Ofrecer Apoyo (lo ejecuta el EXALUMNO en el directorio de estudiantes)
+ * Ofrecer Apoyo (lo ejecuta el EXALUMNO en el directorio de estudiantes).
+ * El backend crea la notificación y envía el email al estudiante,
+ * y verifica que el exalumno no haya sido rechazado previamente.
  */
 export async function ofrecerApoyo(estudianteId: string) {
   const session = await auth();
   const exalumnoId = session?.user?.id;
   if (!exalumnoId) throw new Error("No estás autenticado.");
 
-  // Buscar match existente
-  const existingRes = await fetch(`${API_URL}/matches/exalumno/${exalumnoId}`, { cache: "no-store" });
-  const existingMatches = existingRes.ok ? await existingRes.json() : [];
-  const existingMatch = existingMatches.find((m: any) => m.estudiante_id === estudianteId);
+  const res = await fetch(`${API_URL}/matches/ofrecer-apoyo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ estudianteId, exalumnoId }),
+  });
 
-  if (existingMatch) {
-    await fetch(`${API_URL}/matches/${existingMatch.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: "CONTACTADO" }),
-    });
-  } else {
-    await fetch(`${API_URL}/matches`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        estudiante_id: estudianteId,
-        exalumno_id: exalumnoId,
-        score_match: 85,
-        estado: "CONTACTADO",
-      }),
-    });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al ofrecer apoyo");
   }
 
-  // Obtener nombres para el email
-  const [estudianteUserRes, exalumnoUserRes] = await Promise.all([
-    fetch(`${API_URL}/users/${estudianteId}`, { cache: "no-store" }),
-    fetch(`${API_URL}/users/${exalumnoId}`, { cache: "no-store" }),
-  ]);
-
-  if (estudianteUserRes.ok && exalumnoUserRes.ok) {
-    const estudianteUser = await estudianteUserRes.json();
-    const exalumnoUser = await exalumnoUserRes.json();
-    if (estudianteUser.email) {
-      await sendConnectionEmail(estudianteUser.email, estudianteUser.nombre, exalumnoUser.nombre);
-    }
-  }
-
+  const match = await res.json();
   revalidatePath("/directorio/estudiantes");
+  revalidatePath("/mis-matches/exalumno");
+  return { success: true, matchId: match.id as string };
+}
+
+/**
+ * CONTACTADO → CERRADO (rechazo)
+ * rejectedBy: 'estudiante' cuando el estudiante rechaza una oferta del exalumno
+ *             'exalumno' cuando el exalumno rechaza la solicitud del estudiante
+ */
+export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | "exalumno") {
+  const res = await fetch(`${API_URL}/matches/${matchId}/rechazar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rejectedBy }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al rechazar el match");
+  }
+
+  const updated = await res.json();
   revalidatePath("/mis-matches");
-  return { success: true };
+  revalidatePath("/mis-matches/exalumno");
+  return updated;
 }
 
 /**
