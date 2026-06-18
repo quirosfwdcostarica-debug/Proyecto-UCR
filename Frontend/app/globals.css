@@ -178,3 +178,14 @@
   border-color: rgba(84, 188, 235, 0.8) !important;
 }
 
+/* Focus naranja para inputs del login */
+.orange-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(232, 82, 42, 0.3) !important;
+  border-color: #E8522A !important;
+}
+
+/* dark:border-slate-850 helper (Tailwind no incluye 850 por defecto) */
+.dark .border-slate-850 {
+  border-color: rgb(15 23 42 / 0.5);
+}
