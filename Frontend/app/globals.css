@@ -189,3 +189,15 @@
 .dark .border-slate-850 {
   border-color: rgb(15 23 42 / 0.5);
 }
+
+/* =======================================================
+   Ocultar overlay de errores de Next.js en modo dev
+   (no afecta producción, solo limpia la UI durante demos)
+   ======================================================= */
+nextjs-portal {
+  display: none !important;
+}
+#__next-build-watcher,
+#nextjs__container_build_indicator {
+  display: none !important;
+}
