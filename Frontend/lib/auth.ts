@@ -10,6 +10,7 @@ class InvalidCredentials extends CredentialsSignin {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET || "ucr-alumni-nextauth-secret-2026-change-in-prod",
+  trustHost: true,
   providers: [
     CredentialsProvider({
       name: "Credentials",

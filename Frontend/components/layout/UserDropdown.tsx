@@ -1,10 +1,11 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, User } from "lucide-react";
+import { logoutAction } from "@/actions/auth.actions";
 
 export function UserDropdown() {
   const { data: session } = useSession();
@@ -13,6 +14,7 @@ export function UserDropdown() {
   const [open, setOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
   const [mounted, setMounted] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -109,13 +111,15 @@ export function UserDropdown() {
 
           <button
             onClick={() => {
-              setOpen(false);
-              signOut({ callbackUrl: "/login" });
+              startTransition(() => {
+                logoutAction();
+              });
             }}
-            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 font-medium transition-colors"
+            disabled={isPending}
+            className={`flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 font-medium transition-colors ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <LogOut className="h-4 w-4" />
-            Cerrar sesión
+            <LogOut className={`h-4 w-4 ${isPending ? "animate-pulse" : ""}`} />
+            {isPending ? "Cerrando..." : "Cerrar sesión"}
           </button>
         </div>,
         document.body
