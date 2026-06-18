@@ -154,7 +154,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
             <h3 className="font-bold text-slate-800 dark:text-slate-200 tracking-wide text-sm">FILTROS</h3>
             <button 
               onClick={handleClearFilters}
-              className="text-xs text-[#0f4c81] dark:text-sky-400 hover:underline font-medium"
+              className="text-xs text-ucr-celeste-medium dark:text-sky-400 hover:underline font-semibold"
             >
               Limpiar
             </button>
@@ -163,11 +163,11 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
           <div className="space-y-5">
             {/* Career Selector */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Carrera UCR</label>
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Carrera</label>
               <select 
                 value={selectedCarrera}
                 onChange={(e) => setSelectedCarrera(e.target.value)}
-                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-[#0f4c81] dark:focus:border-sky-400"
+                className="w-full h-9 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded text-sm text-slate-700 dark:text-slate-300 px-2 outline-none focus:border-ucr-celeste-medium dark:focus:border-sky-400"
               >
                 {careers.map((car, idx) => (
                   <option key={idx} value={car}>{car}</option>
@@ -185,7 +185,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                       type="checkbox" 
                       checked={selectedIndustries.includes(ind)}
                       onChange={() => handleIndustryChange(ind)}
-                      className="rounded border-slate-300 dark:border-slate-700 dark:bg-slate-950 text-[#0f4c81] focus:ring-[#0f4c81] dark:focus:ring-sky-400" 
+                      className="rounded border-slate-300 dark:border-slate-700 dark:bg-slate-950 text-ucr-celeste-medium focus:ring-ucr-celeste-medium dark:focus:ring-sky-400" 
                     />
                     <span className="text-sm text-slate-700 dark:text-slate-300">{ind}</span>
                   </label>
@@ -203,9 +203,9 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                     <span 
                       key={sup.key}
                       onClick={() => handleSupportClick(sup.key)}
-                      className={`px-3 py-1 rounded-full text-xs cursor-pointer font-medium border transition-colors ${
+                      className={`px-3 py-1 rounded-full text-xs cursor-pointer font-semibold border transition-colors ${
                         isChecked 
-                          ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300 border-[#0f4c81] dark:border-sky-800" 
+                          ? "bg-ucr-celeste-medium dark:bg-sky-900/40 text-white dark:text-sky-300 border-ucr-celeste-medium dark:border-sky-800" 
                           : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
                       }`}
                     >
@@ -230,11 +230,11 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
         </div>
 
         {/* Sidebar Info Card */}
-        <div className="bg-[#0f4c81] text-white p-5 rounded-xl shadow-sm">
+        <div className="bg-ucr-celeste-medium text-white p-5 rounded-xl shadow-sm">
           <h4 className="font-bold mb-2">Sé un Mentor</h4>
-          <p className="text-sm text-blue-100 mb-4">Comparte tu experiencia con las nuevas generaciones de la UCR.</p>
+          <p className="text-sm text-blue-100 mb-4">Comparte tu experiencia con las nuevas generaciones de la U.</p>
           <Link href="/perfil/editar">
-            <Button className="w-full bg-white text-[#0f4c81] hover:bg-slate-100 border-0">Actualizar Perfil</Button>
+            <Button className="w-full bg-white text-ucr-celeste-medium hover:bg-slate-100 border-0">Actualizar Perfil</Button>
           </Link>
         </div>
       </div>
@@ -254,13 +254,13 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
           <div className="flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-1 self-start sm:self-auto shadow-sm">
             <button 
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-ucr-celeste-medium dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button 
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-[#0f4c81] dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-ucr-celeste-medium dark:bg-sky-900/40 text-white dark:text-sky-300" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"}`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -291,7 +291,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
         {filteredAlumni.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
             <p className="text-slate-500 text-lg">No se encontraron exalumnos con los filtros seleccionados.</p>
-            <Button onClick={handleClearFilters} className="mt-4 bg-[#0f4c81] hover:bg-[#0b3a63]">
+            <Button onClick={handleClearFilters} className="mt-4 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white">
               Limpiar Filtros
             </Button>
           </div>
@@ -304,17 +304,17 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
               const u = alumni.User || {};
               const name = u.nombre || "Usuario";
               const role = alumni.cargo_actual || "Exalumno";
-              const company = alumni.empresa_actual || "UCR";
-              const grad = alumni.carrera ? `${alumni.carrera}, ${alumni.anio_graduacion}` : "Exalumno UCR";
+              const company = alumni.empresa_actual || "U";
+              const grad = alumni.carrera ? `${alumni.carrera}, ${alumni.anio_graduacion}` : "Exalumno de la U";
               const tags = getAlumniSupportTags(alumni);
               
               // Colors mapping for top cover design to keep it premium and aesthetic
-              const bgColors = ["bg-[#0b3a63]", "bg-slate-900", "bg-[#0b5c43]", "bg-[#4a154b]", "bg-[#5c0b0b]"];
+              const bgColors = ["bg-ucr-celeste-medium", "bg-ucr-celeste", "bg-ucr-amarillo", "bg-ucr-naranja", "bg-slate-900"];
               const bgCover = bgColors[name.charCodeAt(0) % bgColors.length];
 
               if (viewMode === "list") {
                 return (
-                  <Card key={alumni.user_id} className="p-4 border-slate-200 dark:border-slate-800 hover:border-[#0f4c81]/30 dark:hover:border-sky-800/50 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                  <Card key={alumni.user_id} className="p-4 border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 dark:hover:border-sky-800/50 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
                     <div className="h-16 w-16 rounded-md bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border dark:border-slate-700 shadow-sm">
                       <img 
                         src={u.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`} 
@@ -336,7 +336,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
                       <Link href={`/perfil/${alumni.user_id}`} className="flex-1 sm:flex-none">
-                        <Button className="w-full bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white py-2 px-4 text-xs font-semibold h-9">
+                        <Button className="w-full bg-ucr-celeste-medium dark:bg-sky-600 hover:bg-ucr-celeste-medium/90 dark:hover:bg-sky-500 text-white py-2 px-4 text-xs font-semibold h-9">
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" />
                           Connect
                         </Button>
@@ -347,7 +347,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
               }
 
               return (
-                <Card key={alumni.user_id} className="overflow-hidden border-slate-200 dark:border-slate-800 hover:border-[#0f4c81]/30 dark:hover:border-sky-800/50 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
+                <Card key={alumni.user_id} className="overflow-hidden border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 dark:hover:border-sky-800/50 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
                   <div className={`h-20 ${bgCover} w-full`}></div>
                   <div className="px-5 pb-5 flex-1 flex flex-col relative pt-10">
                     <div className="absolute -top-8 left-5 h-16 w-16 rounded-md border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 overflow-hidden shadow-sm">
@@ -371,7 +371,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
                         <span 
                           key={tag} 
                           className={`px-2 py-0.5 rounded text-[8px] font-bold tracking-wide ${
-                            j === 0 ? 'bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                            j === 0 ? 'bg-ucr-celeste-tint dark:bg-green-900/40 text-ucr-celeste-medium dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                           }`}
                         >
                           {tag}
@@ -381,7 +381,7 @@ export function AlumniDirectoryClient({ initialAlumni }: AlumniDirectoryClientPr
 
                     <div className="flex gap-2">
                       <Link href={`/perfil/${alumni.user_id}`} className="flex-1">
-                        <Button className="w-full bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white text-xs h-9">
+                        <Button className="w-full bg-ucr-celeste-medium dark:bg-sky-600 hover:bg-ucr-celeste-medium/90 dark:hover:bg-sky-500 text-white text-xs h-9">
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" />
                           Connect
                         </Button>

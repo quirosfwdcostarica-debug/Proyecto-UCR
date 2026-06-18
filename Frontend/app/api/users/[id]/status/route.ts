@@ -19,28 +19,19 @@ export async function PATCH(
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  let body: { cuentaPausada?: boolean; proyectoFinalizado?: boolean };
+  let body: { cuentaPausada?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  const { cuentaPausada, proyectoFinalizado } = body;
+  const { cuentaPausada } = body;
   const updateData: Record<string, boolean> = {};
 
+  // cuentaPausada = true → activo = false (cuenta pausada = no activa)
   if (typeof cuentaPausada === "boolean") {
-    updateData.cuentaPausada = cuentaPausada;
-  }
-  if (typeof proyectoFinalizado === "boolean") {
-    // Solo ESTUDIANTE puede marcar proyecto como finalizado
-    if (role !== "ADMIN" && role !== "ESTUDIANTE") {
-      return NextResponse.json(
-        { message: "Solo estudiantes pueden finalizar proyectos" },
-        { status: 403 }
-      );
-    }
-    updateData.proyectoFinalizado = proyectoFinalizado;
+    updateData.activo = !cuentaPausada;
   }
 
   if (Object.keys(updateData).length === 0) {
@@ -53,11 +44,15 @@ export async function PATCH(
       data: updateData,
       select: {
         id: true,
-        cuentaPausada: true,
-        proyectoFinalizado: true,
+        activo: true,
+        status: true,
       },
     });
-    return NextResponse.json(updated);
+
+    return NextResponse.json({
+      ...updated,
+      cuentaPausada: !updated.activo,
+    });
   } catch (error) {
     console.error("[PATCH /api/users/[id]/status]", error);
     return NextResponse.json(
@@ -88,13 +83,17 @@ export async function GET(
       where: { id: params.id },
       select: {
         id: true,
-        cuentaPausada: true,
-        proyectoFinalizado: true,
+        activo: true,
         status: true,
       },
     });
+
     if (!user) return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
-    return NextResponse.json(user);
+
+    return NextResponse.json({
+      ...user,
+      cuentaPausada: !user.activo,
+    });
   } catch (error) {
     console.error("[GET /api/users/[id]/status]", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });

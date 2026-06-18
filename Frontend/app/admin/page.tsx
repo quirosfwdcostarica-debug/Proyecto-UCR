@@ -42,6 +42,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { TopBar } from "@/components/layout/TopBar";
+import { DashboardImpact } from "@/components/admin/DashboardImpact";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 // ============================================================
 // Tipos
@@ -73,8 +76,9 @@ interface DonacionAdmin {
 interface MatchAdmin {
   id: string;
   afinidad: number;
-  status: "SUGERIDO" | "CONTACTADO" | "ACTIVO";
+  status: "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "RECHAZADO" | "CERRADO";
   createdAt: string;
+  matchReasons: string[];
   estudiante: { user: { name: string | null; email: string | null } };
   exalumno: { user: { name: string | null; email: string | null } };
 }
@@ -182,7 +186,7 @@ export default function AdminDashboardPage() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [loadingReportes, setLoadingReportes] = useState(true);
-  const [activeSection, setActiveSection] = useState<"dashboard" | "matches" | "donaciones" | "reportes">("dashboard");
+  const [activeSection, setActiveSection] = useState<"dashboard" | "impacto" | "matches" | "donaciones" | "reportes">("dashboard");
 
   // ---- Filtros matches ----
   const [matchStatus, setMatchStatus] = useState("");
@@ -321,17 +325,41 @@ export default function AdminDashboardPage() {
   };
 
   // ============================================================
-  // Export PDF (print)
+  // Export PDF
   // ============================================================
-  const exportPDF = () => window.print();
+  const adminRef = useRef<HTMLDivElement>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const exportPDF = async () => {
+    if (!adminRef.current) return;
+    try {
+      setDownloadingPDF(true);
+      const canvas = await html2canvas(adminRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      alert("Hubo un error al generar el PDF.");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
 
   // ============================================================
   // Colores de status
   // ============================================================
   const MATCH_STATUS_COLORS: Record<string, string> = {
-    SUGERIDO: "bg-blue-100 text-blue-700",
+    SUGERIDO: "bg-slate-100 text-slate-700",
     CONTACTADO: "bg-yellow-100 text-yellow-700",
     ACTIVO: "bg-green-100 text-green-700",
+    RECHAZADO: "bg-red-100 text-red-700",
+    CERRADO: "bg-slate-200 text-slate-500",
   };
 
   if ((status as string) === "loading") {
@@ -343,7 +371,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] print:bg-white">
+    <div ref={adminRef} className="min-h-full bg-[#f8fafc] print:bg-white">
       <TopBar title="Admin" />
 
       <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -366,9 +394,9 @@ export default function AdminDashboardPage() {
               {generatingMatches ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Generar Matches
             </Button>
-            <Button onClick={exportPDF} variant="outline" className="gap-2 print:hidden">
-              <Printer className="w-4 h-4" />
-              Exportar PDF
+            <Button onClick={exportPDF} disabled={downloadingPDF} variant="outline" className="gap-2 print:hidden">
+              {downloadingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+              {downloadingPDF ? "Generando..." : "Exportar PDF"}
             </Button>
           </div>
         </div>
@@ -381,7 +409,7 @@ export default function AdminDashboardPage() {
 
         {/* ---- Navegación de secciones ---- */}
         <div className="flex gap-1 p-1 bg-white border border-slate-200 rounded-xl shadow-sm w-fit">
-          {(["dashboard", "matches", "donaciones", "reportes"] as const).map((sec) => (
+          {(["dashboard", "impacto", "matches", "donaciones", "reportes"] as const).map((sec) => (
             <button
               key={sec}
               onClick={() => setActiveSection(sec)}
@@ -391,7 +419,7 @@ export default function AdminDashboardPage() {
                   : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              {sec === "donaciones" ? "Cola Donaciones" : sec === "reportes" ? "Perfiles Reportados" : sec === "matches" ? "Gestión Matches" : "Dashboard"}
+              {sec === "donaciones" ? "Cola Donaciones" : sec === "reportes" ? "Perfiles Reportados" : sec === "matches" ? "Gestión Matches" : sec === "impacto" ? "Impacto" : "Dashboard"}
             </button>
           ))}
         </div>
@@ -477,6 +505,13 @@ export default function AdminDashboardPage() {
         )}
 
         {/* =========================================== */}
+        {/* SECCIÓN: IMPACTO                          */}
+        {/* =========================================== */}
+        {activeSection === "impacto" && (
+          <DashboardImpact />
+        )}
+
+        {/* =========================================== */}
         {/* SECCIÓN: GESTIÓN DE MATCHES                */}
         {/* =========================================== */}
         {activeSection === "matches" && (
@@ -501,6 +536,8 @@ export default function AdminDashboardPage() {
                 <option value="SUGERIDO">Sugerido</option>
                 <option value="CONTACTADO">Contactado</option>
                 <option value="ACTIVO">Activo</option>
+                <option value="RECHAZADO">Rechazado</option>
+                <option value="CERRADO">Cerrado</option>
               </select>
               <Button onClick={exportCSV} variant="outline" className="gap-2 h-10">
                 <Download className="w-4 h-4" />
@@ -528,6 +565,7 @@ export default function AdminDashboardPage() {
                         <th className="text-center px-4 py-3 font-semibold text-slate-600">Afinidad</th>
                         <th className="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
                         <th className="text-left px-4 py-3 font-semibold text-slate-600">Fecha</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Razones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -553,6 +591,19 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="px-4 py-3 text-slate-500 text-xs">
                             {new Date(m.createdAt).toLocaleDateString("es-CR")}
+                          </td>
+                          <td className="px-4 py-3">
+                            {m.matchReasons && m.matchReasons.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {m.matchReasons.map((r, i) => (
+                                  <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 whitespace-nowrap">
+                                    {r}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}

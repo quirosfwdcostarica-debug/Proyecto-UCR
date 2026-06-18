@@ -41,16 +41,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (res.ok && data.user) {
             // Verificar que el usuario no esté suspendido
             if (data.user.status === "SUSPENDIDO") {
-              throw new Error("Tu cuenta ha sido suspendida. Contacta al administrador.");
+               throw new Error("Tu cuenta ha sido suspendida. Contacta al administrador.");
             }
-            // Devolver solo los datos necesarios del usuario (NO incluir tokens)
-            // Incluir accessToken aquí infla el JWT cookie y causa error 431
             return {
               id: data.user.id,
               name: data.user.nombre,
               email: data.user.email,
               tipo: data.user.tipo,
               foto_url: data.user.foto_url,
+              accessToken: data.accessToken,
             } as any;
           }
 
@@ -89,10 +88,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.tipo = (user as any).tipo || (user as any).role;
         token.role = (user as any).role || (user as any).tipo;
         token.foto_url = (user as any).foto_url;
+        token.accessToken = (user as any).accessToken;
 
         // Limpiar campos innecesarios que NextAuth puede haber copiado
         // del objeto user retornado por authorize()
-        delete (token as any).accessToken;
         delete (token as any).refreshToken;
       }
 
@@ -109,8 +108,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.image = token.foto_url as string;
         (session.user as any).tipo = token.tipo || token.role;
         (session.user as any).role = token.role || token.tipo;
-        // NO incluir accessToken en la sesión - usar fetchAPI en su lugar
-        // (session.user as any).accessToken = token.accessToken;
+        (session.user as any).accessToken = token.accessToken;
         (session.user as any).foto_url = token.foto_url;
       }
       return session;

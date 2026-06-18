@@ -5,7 +5,7 @@ import { Loader2, UserCheck } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
 
 export const metadata = {
-  title: "Completar Perfil | Exalumnos UCR",
+  title: "Completar Perfil | Exalumnos U",
 };
 
 export default async function CompletarPerfilPage() {

@@ -140,7 +140,7 @@ export function ExalumnoRegisterForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-x-6">
         
         <div className="md:col-span-2 mb-2 border-b pb-2">
-          <h3 className="text-lg font-medium text-[#0f4c81]">Datos de Cuenta</h3>
+          <h3 className="text-lg font-medium text-ucr-celeste-medium">Datos de Cuenta</h3>
         </div>
 
         <FormField
@@ -264,7 +264,7 @@ export function ExalumnoRegisterForm() {
         />
 
         <div className="md:col-span-2 mt-6 mb-2 border-b pb-2">
-          <h3 className="text-lg font-medium text-[#0f4c81]">Datos Universitarios</h3>
+          <h3 className="text-lg font-medium text-ucr-celeste-medium">Datos Universitarios</h3>
         </div>
 
         <FormField
@@ -310,7 +310,7 @@ export function ExalumnoRegisterForm() {
         />
 
         <div className="md:col-span-2 pt-4">
-          <Button type="submit" disabled={isLoading} className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2">
+          <Button type="submit" disabled={isLoading} className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white py-2">
             {isLoading ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registrando...</>
             ) : (
@@ -318,7 +318,7 @@ export function ExalumnoRegisterForm() {
             )}
           </Button>
           <div className="text-center mt-4 text-sm text-slate-600">
-            ¿Ya tienes cuenta? <Link href="/login" className="text-[#0f4c81] hover:underline font-medium">Volver al login</Link>
+            ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium hover:underline font-medium">Volver al login</Link>
           </div>
           <p className="text-xs text-center text-slate-500 mt-4">
             Al registrarte, tu perfil entrará en estado pendiente y será verificado por el equipo de la Fundación.

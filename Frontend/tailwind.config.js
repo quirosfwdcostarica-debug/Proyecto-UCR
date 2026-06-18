@@ -17,7 +17,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ["'Taviraj'", "serif"],
+        display: ["'Plus Jakarta Sans'", "sans-serif"],
         body: ["'Work Sans'", "sans-serif"],
       },
       colors: {

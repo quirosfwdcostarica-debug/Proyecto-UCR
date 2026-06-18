@@ -1,17 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award } from "lucide-react";
+import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
 import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes";
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
+import { OptimizePanel } from "@/components/cv/OptimizePanel";
+import { ChatBot } from "@/components/cv/ChatBot";
 
 type AISection = "profile" | "experience";
 
 export default function CVPage() {
   const [cv, setCV] = useState<CVData>(initialCV);
+  const cvRef = useRef<HTMLDivElement>(null);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!cvRef.current) return;
+    try {
+      setDownloadingPDF(true);
+      const canvas = await html2canvas(cvRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Mi_CV_${cv.name.replace(/\s+/g, "_")}.pdf`);
+    } catch (err) {
+      console.error("Error al exportar PDF:", err);
+      alert("Hubo un error al generar el PDF.");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
+  // Helper to apply a suggestion to the CV
+  const applySuggestion = (currentCV: any, suggestion: any) => {
+    const { section, changes } = suggestion;
+    const newCV = { ...currentCV };
+    if (section === "all" || section === "profile") {
+      // shallow merge for top-level fields
+      Object.assign(newCV, changes);
+    }
+    if (section === "experience" || section === "all") {
+      if (changes.add) {
+        newCV.experience = [...(newCV.experience || []), ...changes.add];
+      }
+      if (changes.update) {
+        newCV.experience = (newCV.experience || []).map((exp: any) =>
+          changes.update[exp.id] ? { ...exp, ...changes.update[exp.id] } : exp
+        );
+      }
+      if (changes.remove) {
+        newCV.experience = (newCV.experience || []).filter((exp: any) => !changes.remove.includes(exp.id));
+      }
+    }
+    if (section === "skills" || section === "all") {
+      if (changes.add) {
+        newCV.skills = Array.from(new Set([...(newCV.skills || []), ...changes.add]));
+      }
+      if (changes.remove) {
+        newCV.skills = (newCV.skills || []).filter((s: string) => !changes.remove.includes(s));
+      }
+    }
+    // other sections (education, certifications) can be handled similarly if needed
+    return newCV;
+  };
 
   // Edit states
   const [editingSummary, setEditingSummary] = useState(false);
@@ -24,6 +84,28 @@ export default function CVPage() {
   const [certInput, setCertInput] = useState("");
   const [editingHeader, setEditingHeader] = useState(false);
   const [headerDraft, setHeaderDraft] = useState({ name: cv.name, title: cv.title, location: cv.location, email: cv.email, phone: cv.phone });
+  const [uploadingCV, setUploadingCV] = useState(false);
+
+  const handleUploadCV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCV(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/cv/extract", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Error extrayendo texto");
+      const data = await res.json();
+      setCV(c => ({ ...c, summary: data.text }));
+      alert("CV cargado y texto extraído al perfil.");
+    } catch (error) {
+      console.error(error);
+      alert("Error procesando el archivo");
+    } finally {
+      setUploadingCV(false);
+      e.target.value = ''; // reset input
+    }
+  };
 
   // AI states
   const [acceptedAI, setAcceptedAI] = useState<Set<AISection>>(new Set());
@@ -70,14 +152,20 @@ export default function CVPage() {
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
+            <label className="relative cursor-pointer bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+              {uploadingCV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploadingCV ? "Extrayendo..." : "Cargar CV (.pdf, .docx, .txt)"}
+              <input type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleUploadCV} disabled={uploadingCV} />
+            </label>
             <Badge className="bg-[#dcfce7] dark:bg-green-900/40 text-[#166534] dark:text-green-400 hover:bg-[#dcfce7] dark:hover:bg-green-900/60 border-0 px-3 py-1 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-1.5" /> Análisis AI Activo
             </Badge>
             <span className="text-slate-600 dark:text-slate-400 font-medium">Puntaje: <span className="text-green-600 dark:text-green-500 font-bold text-lg">88%</span></span>
           </div>
           <div className="flex gap-3 border-l border-slate-200 dark:border-slate-700 pl-6">
-            <Button variant="outline" className="border-slate-300 dark:border-slate-700 dark:text-slate-300" onClick={() => alert("Generando PDF...")}>
-              <Download className="w-4 h-4 mr-2" /> Descargar PDF
+            <Button variant="outline" className="border-slate-300 dark:border-slate-700 dark:text-slate-300" onClick={handleDownloadPDF} disabled={downloadingPDF}>
+              {downloadingPDF ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} 
+              {downloadingPDF ? "Generando..." : "Descargar PDF"}
             </Button>
             <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
               Finalizar y Aplicar
@@ -97,7 +185,7 @@ export default function CVPage() {
             <Badge variant="outline" className="text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 uppercase tracking-widest text-[10px]">EDITABLE</Badge>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <div ref={cvRef} className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
             {/* Header limpio sin superposición */}
             <div className="relative bg-gradient-to-r from-[#0f4c81] via-[#1a6db5] to-[#2196f3] px-8 pt-8 pb-6">
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "25px 25px" }} />
@@ -418,6 +506,12 @@ export default function CVPage() {
               </div>
               <p className="text-xs text-green-600 dark:text-green-500 italic">Estas habilidades aparecen frecuentemente en el perfil del cargo solicitado.</p>
             </div>
+
+            {/* ── OPTIMIZACIÓN IA CON GROK ───────────────────────────── */}
+            <OptimizePanel cv={cv} />
+
+            {/* ── ASISTENTE INTERACTIVO CAREERBOT ────────────────────── */}
+            <ChatBot cv={cv} onUpdateCV={setCV} />
 
           </div>
 
