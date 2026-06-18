@@ -1,60 +1,63 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
-  const session = await auth();
-  const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
-
-  if (!session?.user || role !== "ADMIN") {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  const { searchParams } = new URL(request.url);
-  const status = searchParams.get("status");
-  const nombre = searchParams.get("nombre");
-
+export async function GET(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user || (session.user as any).tipo !== "ADMIN") {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const estado = searchParams.get("status") || undefined;
+    const nombre = searchParams.get("nombre") || undefined;
+
     const matches = await prisma.match.findMany({
       where: {
-        ...(status && { status: status as "SUGERIDO" | "CONTACTADO" | "ACTIVO" }),
-        ...(nombre && {
-          OR: [
-            {
-              estudiante: {
-                user: { name: { contains: nombre, mode: "insensitive" } },
-              },
-            },
-            {
-              exalumno: {
-                user: { name: { contains: nombre, mode: "insensitive" } },
-              },
-            },
-          ],
-        }),
+        ...(estado ? { estado: estado as any } : {}),
+        ...(nombre
+          ? {
+              OR: [
+                { estudiante: { user: { nombre: { contains: nombre, mode: "insensitive" } } } },
+                { exalumno: { user: { nombre: { contains: nombre, mode: "insensitive" } } } },
+              ],
+            }
+          : {}),
       },
-      orderBy: { afinidad: "desc" },
+      orderBy: { created_at: "desc" },
       include: {
-        estudiante: {
-          include: {
-            user: {
-              select: { id: true, name: true, email: true },
-            },
-          },
-        },
-        exalumno: {
-          include: {
-            user: {
-              select: { id: true, name: true, email: true },
-            },
-          },
-        },
+        estudiante: { include: { user: { select: { nombre: true, email: true } } } },
+        exalumno: { include: { user: { select: { nombre: true, email: true } } } },
       },
     });
 
-    return NextResponse.json(matches);
+    // Normalize for frontend compatibility
+    const normalized = matches.map((m) => ({
+      ...m,
+      status: m.estado,
+      afinidad: m.score_match,
+      estudianteId: m.estudiante_id,
+      exalumnoId: m.exalumno_id,
+      estudiante: m.estudiante
+        ? {
+            ...m.estudiante,
+            id: m.estudiante.user_id,
+            user: { name: m.estudiante.user.nombre, email: m.estudiante.user.email },
+          }
+        : null,
+      exalumno: m.exalumno
+        ? {
+            ...m.exalumno,
+            id: m.exalumno.user_id,
+            user: { name: m.exalumno.user.nombre, email: m.exalumno.user.email },
+          }
+        : null,
+    }));
+
+    return NextResponse.json(normalized);
   } catch (error) {
-    console.error("[GET /api/admin/matches]", error);
-    return NextResponse.json({ message: "Error al obtener matches" }, { status: 500 });
+    console.error("[Admin Matches] Error:", error);
+    return NextResponse.json({ message: "Error interno" }, { status: 500 });
   }
 }

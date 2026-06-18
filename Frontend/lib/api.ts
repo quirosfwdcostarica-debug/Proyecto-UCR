@@ -11,10 +11,9 @@ export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     headers.set("Content-Type", "application/json");
   }
 
-  // El accessToken ya no se envía en la sesión - el backend manejará autenticación por correo
-  // if (session?.user && (session.user as any).accessToken) {
-  //   headers.set("Authorization", `Bearer ${(session.user as any).accessToken}`);
-  // }
+  if (session?.user && (session.user as any).accessToken) {
+    headers.set("Authorization", `Bearer ${(session.user as any).accessToken}`);
+  }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,

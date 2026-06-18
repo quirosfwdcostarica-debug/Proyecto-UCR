@@ -35,14 +35,19 @@ export async function PATCH(
       data: { status },
       select: {
         id: true,
-        name: true,
+        nombre: true,
         email: true,
         status: true,
-        role: true,
+        tipo: true,
       },
     });
 
-    return NextResponse.json(updated);
+    // Normalize for frontend
+    return NextResponse.json({
+      ...updated,
+      name: updated.nombre,
+      role: updated.tipo,
+    });
   } catch (error) {
     console.error("[PATCH /api/admin/users/[id]/status]", error);
     return NextResponse.json({ message: "Error al actualizar el status del usuario" }, { status: 500 });

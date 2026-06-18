@@ -1,78 +1,269 @@
 "use server";
 
-import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
-export async function calculateAfinidad(estudianteId: string, exalumnoId: string) {
-  const estudiante = await prisma.estudiante.findUnique({
-    where: { id: estudianteId }
-  });
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
-  const exalumno = await prisma.exalumno.findUnique({
-    where: { id: exalumnoId }
-  });
+// Helper to send connection email via EmailJS
+async function sendConnectionEmail(email: string, receptorNombre: string, emisorNombre: string) {
+  const SERVICE_ID = process.env.NEXT_PUBLIC_MENTOR_EMAILJS_SERVICE_ID || "service_d5bz6g6";
+  const TEMPLATE_ID = process.env.NEXT_PUBLIC_MENTOR_EMAILJS_TEMPLATE_ID || "template_hih689c";
+  const PUBLIC_KEY = process.env.NEXT_PUBLIC_MENTOR_EMAILJS_PUBLIC_KEY || "aHutWhaN4ipX-uMVq";
 
-  if (!estudiante || !exalumno) throw new Error("Perfiles no encontrados");
-
-  let score = 0;
-
-  // 1. +30 puntos: Misma carrera exacta
-  if (estudiante.carrera.trim().toLowerCase() === exalumno.carrera.trim().toLowerCase()) {
-    score += 30;
+  try {
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: SERVICE_ID,
+        template_id: TEMPLATE_ID,
+        user_id: PUBLIC_KEY,
+        template_params: { email, name: receptorNombre, nombre_emisor: emisorNombre },
+      }),
+    });
+    return res.ok;
+  } catch (error) {
+    console.error("Error sending connection email:", error);
+    return false;
   }
-
-  // 2. +30 puntos: Proporción de áreas de interés en común
-  // El estudiante tiene 1 areaProyecto, el exalumno tiene N areasInteres
-  if (estudiante.areaProyecto && exalumno.areasInteres.includes(estudiante.areaProyecto)) {
-    score += 30; // 100% de match de área principal
-  }
-
-  // 3. +20 puntos: Coincidencia entre sector del exalumno y área del proyecto/carrera
-  // Simplificación semántica o mapeo si fuera necesario. 
-  // Por ahora, asumimos que si el sector tiene relación léxica directa, se otorgan puntos
-  // En un motor real avanzado usaríamos embeddings. Aquí aplicamos una regla heurística base:
-  if (estudiante.areaProyecto && exalumno.sector.toLowerCase().includes(estudiante.areaProyecto.split(" ")[0].toLowerCase())) {
-    score += 20;
-  } else if (score < 50) {
-    // Bonus alternativo si comparten muchas áreas
-    score += 10;
-  }
-
-  // 4. +20 puntos: Coincidencia en tipo de apoyo ofrecido/buscado
-  const apoyosEnComun = estudiante.apoyoBuscado.filter(apoyo => exalumno.apoyoOfrecido.includes(apoyo));
-  if (apoyosEnComun.length > 0) {
-    const proportion = apoyosEnComun.length / Math.max(estudiante.apoyoBuscado.length, 1);
-    score += Math.floor(20 * proportion);
-  }
-
-  // Clampear puntaje a 100 max
-  const afinidad = Math.min(score, 100);
-
-  // Upsert the match
-  const match = await prisma.match.upsert({
-    where: {
-      estudianteId_exalumnoId: {
-        estudianteId,
-        exalumnoId
-      }
-    },
-    update: {
-      afinidad
-    },
-    create: {
-      estudianteId,
-      exalumnoId,
-      afinidad,
-      status: "SUGERIDO"
-    }
-  });
-
-  return match;
 }
 
-export async function getMatchesForEstudiante(estudianteId: string) {
-  return await prisma.match.findMany({
-    where: { estudianteId },
-    include: { exalumno: { include: { user: true } } },
-    orderBy: { afinidad: "desc" }
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+export type MatchEstado = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
+
+// ─── Cálculo de afinidad ──────────────────────────────────────────────────────
+
+export async function calculateAfinidad(estudianteId: string, exalumnoId: string) {
+  try {
+    const [estudianteRes, exalumnoRes] = await Promise.all([
+      fetch(`${API_URL}/estudiantes/${estudianteId}`, { cache: "no-store" }),
+      fetch(`${API_URL}/exalumnos/${exalumnoId}`, { cache: "no-store" }),
+    ]);
+
+    if (!estudianteRes.ok || !exalumnoRes.ok) throw new Error("Perfiles no encontrados");
+
+    const estudiante = await estudianteRes.json();
+    const exalumno = await exalumnoRes.json();
+
+    let score = 0;
+
+    // +30: misma carrera
+    if (
+      estudiante.carrera &&
+      exalumno.escuela_facultad &&
+      estudiante.carrera.trim().toLowerCase() === exalumno.escuela_facultad.trim().toLowerCase()
+    ) score += 30;
+
+    // +20: apoyo en común
+    const apoyoBuscado: string[] = [];
+    if (estudiante.busca_mentoria) apoyoBuscado.push("mentoria");
+    if (estudiante.busca_empleo) apoyoBuscado.push("empleo");
+    if (estudiante.busca_pasantia) apoyoBuscado.push("pasantia");
+    if (estudiante.busca_financiamiento) apoyoBuscado.push("financiamiento");
+
+    const apoyoOfrecido: string[] = [];
+    if (exalumno.ofrece_mentoria) apoyoOfrecido.push("mentoria");
+    if (exalumno.ofrece_empleo) apoyoOfrecido.push("empleo");
+    if (exalumno.ofrece_pasantia) apoyoOfrecido.push("pasantia");
+    if (exalumno.ofrece_donacion_dinero) apoyoOfrecido.push("financiamiento");
+
+    const apoyosEnComun = apoyoBuscado.filter(a => apoyoOfrecido.includes(a));
+    if (apoyosEnComun.length > 0) {
+      score += Math.floor(20 * (apoyosEnComun.length / Math.max(apoyoBuscado.length, 1)));
+    }
+
+    score += 10; // puntaje base
+
+    const scoreMatch = Math.min(score, 100);
+    const tipoApoyo = apoyosEnComun[0] || "general";
+
+    // Crear o actualizar el match vía backend API
+    const existing = await fetch(`${API_URL}/matches/estudiante/${estudianteId}`, { cache: "no-store" });
+    const existingMatches = existing.ok ? await existing.json() : [];
+    const existingMatch = existingMatches.find((m: any) => m.exalumno_id === exalumnoId);
+
+    if (existingMatch) {
+      const res = await fetch(`${API_URL}/matches/${existingMatch.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score_match: scoreMatch, tipo_apoyo: tipoApoyo }),
+      });
+      return res.ok ? await res.json() : existingMatch;
+    } else {
+      const res = await fetch(`${API_URL}/matches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          estudiante_id: estudianteId,
+          exalumno_id: exalumnoId,
+          score_match: scoreMatch,
+          tipo_apoyo: tipoApoyo,
+          estado: "SUGERIDO",
+        }),
+      });
+      return res.ok ? await res.json() : null;
+    }
+  } catch (error) {
+    console.error("Error calculating afinidad:", error);
+    return null;
+  }
+}
+
+// ─── Queries ──────────────────────────────────────────────────────────────────
+
+/** Matches del estudiante autenticado, ordenados por score */
+export async function getMatchesForEstudiante(estudianteId?: string) {
+  const session = await auth();
+  const id = estudianteId ?? session?.user?.id;
+  if (!id) throw new Error("No autenticado");
+
+  const res = await fetch(`${API_URL}/matches/estudiante/${id}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+/** Matches del exalumno autenticado */
+export async function getMatchesForExalumno(exalumnoId?: string) {
+  const session = await auth();
+  const id = exalumnoId ?? session?.user?.id;
+  if (!id) throw new Error("No autenticado");
+
+  const res = await fetch(`${API_URL}/matches/exalumno/${id}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+// ─── Transiciones de estado ───────────────────────────────────────────────────
+
+/**
+ * SUGERIDO → CONTACTADO
+ * Lo ejecuta el ESTUDIANTE cuando hace clic en "Contactar".
+ */
+export async function contactarMatch(matchId: string) {
+  const res = await fetch(`${API_URL}/matches/${matchId}/contactar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
   });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al contactar el match");
+  }
+
+  const updated = await res.json();
+
+  // Notificaciones y email se manejan en el backend
+  revalidatePath("/mis-matches");
+  return updated;
+}
+
+/**
+ * CONTACTADO → ACTIVO
+ * Lo ejecuta el EXALUMNO cuando acepta el contacto.
+ */
+export async function aceptarMatch(matchId: string) {
+  const res = await fetch(`${API_URL}/matches/${matchId}/aceptar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al aceptar el match");
+  }
+
+  const updated = await res.json();
+  revalidatePath("/mis-matches");
+  revalidatePath("/mis-matches/exalumno");
+  return updated;
+}
+
+/**
+ * Ofrecer Apoyo (lo ejecuta el EXALUMNO en el directorio de estudiantes)
+ */
+export async function ofrecerApoyo(estudianteId: string) {
+  const session = await auth();
+  const exalumnoId = session?.user?.id;
+  if (!exalumnoId) throw new Error("No estás autenticado.");
+
+  // Buscar match existente
+  const existingRes = await fetch(`${API_URL}/matches/exalumno/${exalumnoId}`, { cache: "no-store" });
+  const existingMatches = existingRes.ok ? await existingRes.json() : [];
+  const existingMatch = existingMatches.find((m: any) => m.estudiante_id === estudianteId);
+
+  if (existingMatch) {
+    await fetch(`${API_URL}/matches/${existingMatch.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado: "CONTACTADO" }),
+    });
+  } else {
+    await fetch(`${API_URL}/matches`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        estudiante_id: estudianteId,
+        exalumno_id: exalumnoId,
+        score_match: 85,
+        estado: "CONTACTADO",
+      }),
+    });
+  }
+
+  // Obtener nombres para el email
+  const [estudianteUserRes, exalumnoUserRes] = await Promise.all([
+    fetch(`${API_URL}/users/${estudianteId}`, { cache: "no-store" }),
+    fetch(`${API_URL}/users/${exalumnoId}`, { cache: "no-store" }),
+  ]);
+
+  if (estudianteUserRes.ok && exalumnoUserRes.ok) {
+    const estudianteUser = await estudianteUserRes.json();
+    const exalumnoUser = await exalumnoUserRes.json();
+    if (estudianteUser.email) {
+      await sendConnectionEmail(estudianteUser.email, estudianteUser.nombre, exalumnoUser.nombre);
+    }
+  }
+
+  revalidatePath("/directorio/estudiantes");
+  revalidatePath("/mis-matches");
+  return { success: true };
+}
+
+/**
+ * ACTIVO → CERRADO
+ * Lo puede ejecutar cualquiera de los dos participantes.
+ */
+export async function cerrarMatch(matchId: string) {
+  const res = await fetch(`${API_URL}/matches/${matchId}/cerrar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Error al cerrar el match");
+  }
+
+  const updated = await res.json();
+  revalidatePath("/mis-matches");
+  revalidatePath("/mis-matches/exalumno");
+  return updated;
+}
+
+/**
+ * Genera sugerencias de match para un estudiante contra todos los exalumnos activos.
+ */
+export async function generarSugerenciasParaEstudiante(estudianteId: string) {
+  const exalumnosRes = await fetch(`${API_URL}/exalumnos`, { cache: "no-store" });
+  if (!exalumnosRes.ok) return [];
+  const exalumnos = await exalumnosRes.json();
+
+  const results = await Promise.all(
+    exalumnos.map((e: any) => calculateAfinidad(estudianteId, e.user_id))
+  );
+
+  revalidatePath("/mis-matches");
+  return results.filter(Boolean);
 }
