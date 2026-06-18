@@ -49,7 +49,47 @@ export type TranslationKeys =
   | "settings.help.contact.message"
   | "settings.help.contact.send"
   | "settings.help.contact.success"
-  | "settings.help.contact.sending";
+  | "settings.help.contact.sending"
+  | "dashboard.title.student"
+  | "dashboard.title.exalumno"
+  | "dashboard.subtitle.student"
+  | "dashboard.subtitle.exalumno"
+  | "dashboard.welcome.student"
+  | "dashboard.welcome.exalumno"
+  | "dashboard.welcome.title.student"
+  | "dashboard.welcome.title.exalumno"
+  | "dashboard.welcome.desc.student"
+  | "dashboard.welcome.desc.exalumno"
+  | "dashboard.welcome.btn.milestones"
+  | "dashboard.welcome.btn.logbook"
+  | "dashboard.welcome.btn.students"
+  | "dashboard.welcome.btn.postJob"
+  | "dashboard.status.title"
+  | "dashboard.status.ontrack"
+  | "dashboard.applications.title"
+  | "dashboard.applications.viewall"
+  | "dashboard.support.title"
+  | "dashboard.support.funds"
+  | "dashboard.support.mentorships"
+  | "dashboard.support.available"
+  | "dashboard.support.available.desc"
+  | "dashboard.support.apply"
+  | "dashboard.mentors.title"
+  | "dashboard.mentors.ia"
+  | "dashboard.mentors.coffee"
+  | "dashboard.mentors.find"
+  | "dashboard.mentors.find.desc"
+  | "dashboard.mentors.explore"
+  | "dashboard.impact.title"
+  | "dashboard.impact.badge"
+  | "dashboard.impact.total"
+  | "dashboard.impact.sponsored"
+  | "dashboard.applicants.title"
+  | "dashboard.applicants.viewall"
+  | "dashboard.projects.title"
+  | "dashboard.projects.details"
+  | "dashboard.students.title"
+  | "dashboard.students.offer";
 
 const translations: Record<Language, Record<TranslationKeys, string>> = {
   es: {
@@ -98,6 +138,46 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Enviar Mensaje",
     "settings.help.contact.success": "¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.",
     "settings.help.contact.sending": "Enviando...",
+    "dashboard.title.student": "Comunidad Exalumnos UCR",
+    "dashboard.title.exalumno": "Portal de Mentoría y Filantropía",
+    "dashboard.subtitle.student": "Conectando generaciones de la Universidad de Costa Rica",
+    "dashboard.subtitle.exalumno": "Apoya a la comunidad estudiantil y comparte tu experiencia profesional",
+    "dashboard.welcome.student": "Bienvenido de nuevo, Gabriel",
+    "dashboard.welcome.exalumno": "Tablero del Exalumno",
+    "dashboard.welcome.title.student": "Tu camino a la graduación está",
+    "dashboard.welcome.title.exalumno": "Tu red está activa.",
+    "dashboard.welcome.desc.student": "Sigue con el excelente trabajo en tu Proyecto de Graduación. Tienes 2 revisiones pendientes de tu mentor esta semana.",
+    "dashboard.welcome.desc.exalumno": "Gracias por apoyar al talento de la UCR. Tienes 3 solicitudes de café virtual de estudiantes esperando tu respuesta esta semana.",
+    "dashboard.welcome.btn.milestones": "Ver Hitos",
+    "dashboard.welcome.btn.logbook": "Bitácora",
+    "dashboard.welcome.btn.students": "Ver Estudiantes",
+    "dashboard.welcome.btn.postJob": "Publicar Empleo",
+    "dashboard.status.title": "Estado del Proyecto",
+    "dashboard.status.ontrack": "EN CAMINO",
+    "dashboard.applications.title": "Postulaciones Recientes",
+    "dashboard.applications.viewall": "Ver Todas",
+    "dashboard.support.title": "Apoyo y Recursos",
+    "dashboard.support.funds": "Fondos de Beca",
+    "dashboard.support.mentorships": "Mentorías Activas",
+    "dashboard.support.available": "Beca de Carrera Disponible",
+    "dashboard.support.available.desc": "Tu perfil califica para el fondo de Excelencia de Exalumnos.",
+    "dashboard.support.apply": "Aplicar Ahora",
+    "dashboard.mentors.title": "Mentores Recomendados",
+    "dashboard.mentors.ia": "⚡ EMPAREJAMIENTO IA",
+    "dashboard.mentors.coffee": "Solicitar Café Virtual",
+    "dashboard.mentors.find": "Encontrar Más Mentores",
+    "dashboard.mentors.find.desc": "Explora nuestra base de datos con más de 5,000 exalumnos verificados.",
+    "dashboard.mentors.explore": "Explorar Directorio",
+    "dashboard.impact.title": "Tu Impacto",
+    "dashboard.impact.badge": "FILÁNTROPO UCR",
+    "dashboard.impact.total": "Donación Total Acumulada",
+    "dashboard.impact.sponsored": "Proyectos Patrocinados",
+    "dashboard.applicants.title": "Postulantes a tus Vacantes",
+    "dashboard.applicants.viewall": "Ver Todas",
+    "dashboard.projects.title": "Proyectos Estudiantiles buscando Apoyo",
+    "dashboard.projects.details": "Ver Detalles y Donar",
+    "dashboard.students.title": "Estudiantes Sugeridos para Mentoría",
+    "dashboard.students.offer": "Ofrecer Mentoría",
   },
   en: {
     "sidebar.dashboard": "Dashboard",
@@ -145,6 +225,46 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Send Message",
     "settings.help.contact.success": "Message sent successfully! We will get in touch with you soon.",
     "settings.help.contact.sending": "Sending...",
+    "dashboard.title.student": "UCR Alumni Community",
+    "dashboard.title.exalumno": "Mentorship & Philanthropy Portal",
+    "dashboard.subtitle.student": "Connecting generations of the University of Costa Rica",
+    "dashboard.subtitle.exalumno": "Support the student community and share your professional experience",
+    "dashboard.welcome.student": "Welcome back, Gabriel",
+    "dashboard.welcome.exalumno": "Alumni Dashboard",
+    "dashboard.welcome.title.student": "Your path to graduation is",
+    "dashboard.welcome.title.exalumno": "Your network is active.",
+    "dashboard.welcome.desc.student": "Keep up the excellent work on your Graduation Project. You have 2 pending reviews from your mentor this week.",
+    "dashboard.welcome.desc.exalumno": "Thank you for supporting UCR talent. You have 3 virtual coffee requests from students waiting for your response this week.",
+    "dashboard.welcome.btn.milestones": "View Milestones",
+    "dashboard.welcome.btn.logbook": "Logbook",
+    "dashboard.welcome.btn.students": "View Students",
+    "dashboard.welcome.btn.postJob": "Post a Job",
+    "dashboard.status.title": "Project Status",
+    "dashboard.status.ontrack": "ON TRACK",
+    "dashboard.applications.title": "Recent Applications",
+    "dashboard.applications.viewall": "View All",
+    "dashboard.support.title": "Support & Resources",
+    "dashboard.support.funds": "Scholarship Funds",
+    "dashboard.support.mentorships": "Active Mentorships",
+    "dashboard.support.available": "Career Scholarship Available",
+    "dashboard.support.available.desc": "Your profile qualifies for the Alumni Excellence Fund.",
+    "dashboard.support.apply": "Apply Now",
+    "dashboard.mentors.title": "Recommended Mentors",
+    "dashboard.mentors.ia": "⚡ AI MATCHING",
+    "dashboard.mentors.coffee": "Request Virtual Coffee",
+    "dashboard.mentors.find": "Find More Mentors",
+    "dashboard.mentors.find.desc": "Explore our database of over 5,000 verified alumni.",
+    "dashboard.mentors.explore": "Explore Directory",
+    "dashboard.impact.title": "Your Impact",
+    "dashboard.impact.badge": "UCR PHILANTHROPIST",
+    "dashboard.impact.total": "Total Cumulative Donation",
+    "dashboard.impact.sponsored": "Sponsored Projects",
+    "dashboard.applicants.title": "Applicants to your Openings",
+    "dashboard.applicants.viewall": "View All",
+    "dashboard.projects.title": "Student Projects Seeking Support",
+    "dashboard.projects.details": "View Details and Donate",
+    "dashboard.students.title": "Suggested Students for Mentoring",
+    "dashboard.students.offer": "Offer Mentoring",
   },
   pt: {
     "sidebar.dashboard": "Painel",
@@ -192,6 +312,46 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Enviar Mensagem",
     "settings.help.contact.success": "Mensagem enviada com sucesso! Entraremos em contato em breve.",
     "settings.help.contact.sending": "Enviando...",
+    "dashboard.title.student": "Comunidade de Ex-alunos da UCR",
+    "dashboard.title.exalumno": "Portal de Mentoria e Filantropia",
+    "dashboard.subtitle.student": "Conectando gerações da Universidade de Costa Rica",
+    "dashboard.subtitle.exalumno": "Apoie a comunidade estudantil e compartilhe sua experiência profissional",
+    "dashboard.welcome.student": "Bem-vindo de volta, Gabriel",
+    "dashboard.welcome.exalumno": "Painel do Ex-aluno",
+    "dashboard.welcome.title.student": "Seu caminho para a graduação está",
+    "dashboard.welcome.title.exalumno": "Sua rede está ativa.",
+    "dashboard.welcome.desc.student": "Continue o excelente trabalho no seu Projeto de Graduação. Você tem 2 revisões pendentes do seu mentor esta semana.",
+    "dashboard.welcome.desc.exalumno": "Obrigado por apoiar o talento da UCR. Você tem 3 solicitações de café virtual de estudantes aguardando sua resposta esta semana.",
+    "dashboard.welcome.btn.milestones": "Ver Marcos",
+    "dashboard.welcome.btn.logbook": "Diário de bordo",
+    "dashboard.welcome.btn.students": "Ver Estudantes",
+    "dashboard.welcome.btn.postJob": "Publicar Emprego",
+    "dashboard.status.title": "Status do Projeto",
+    "dashboard.status.ontrack": "EM ANDAMENTO",
+    "dashboard.applications.title": "Candidaturas Recentes",
+    "dashboard.applications.viewall": "Ver Todas",
+    "dashboard.support.title": "Apoio e Recursos",
+    "dashboard.support.funds": "Fundos de Bolsa",
+    "dashboard.support.mentorships": "Mentorias Ativas",
+    "dashboard.support.available": "Bolsa de Carreira Disponível",
+    "dashboard.support.available.desc": "Seu perfil se qualifica para o fundo de Excelência de Ex-alunos.",
+    "dashboard.support.apply": "Candidatar-se Agora",
+    "dashboard.mentors.title": "Mentores Recomendados",
+    "dashboard.mentors.ia": "⚡ COMBINAÇÃO IA",
+    "dashboard.mentors.coffee": "Solicitar Café Virtual",
+    "dashboard.mentors.find": "Encontrar Mais Mentores",
+    "dashboard.mentors.find.desc": "Explore nosso banco de dados com mais de 5.000 ex-alunos verificados.",
+    "dashboard.mentors.explore": "Explorar Diretório",
+    "dashboard.impact.title": "Seu Impacto",
+    "dashboard.impact.badge": "FILANTROPO UCR",
+    "dashboard.impact.total": "Doação Total Acumulada",
+    "dashboard.impact.sponsored": "Projetos Patrocinados",
+    "dashboard.applicants.title": "Candidatos às suas Vagas",
+    "dashboard.applicants.viewall": "Ver Todas",
+    "dashboard.projects.title": "Projetos Estudantis buscando Apoio",
+    "dashboard.projects.details": "Ver Detalhes e Doar",
+    "dashboard.students.title": "Estudantes Sugeridos para Mentoria",
+    "dashboard.students.offer": "Oferecer Mentoria",
   },
   fr: {
     "sidebar.dashboard": "Tableau de Bord",
@@ -239,6 +399,46 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "settings.help.contact.send": "Envoyer le Message",
     "settings.help.contact.success": "Message envoyé avec succès ! Nous vous contacterons bientôt.",
     "settings.help.contact.sending": "Envoi en cours...",
+    "dashboard.title.student": "Communauté des Anciens de l'UCR",
+    "dashboard.title.exalumno": "Portail de Mentorat & Philantropie",
+    "dashboard.subtitle.student": "Connecter les générations de l'Université du Costa Rica",
+    "dashboard.subtitle.exalumno": "Soutenez la communauté étudiante et partagez votre expérience professionnelle",
+    "dashboard.welcome.student": "Bon retour, Gabriel",
+    "dashboard.welcome.exalumno": "Tableau de Bord des Anciens",
+    "dashboard.welcome.title.student": "Votre chemin vers la remise des diplômes est",
+    "dashboard.welcome.title.exalumno": "Votre réseau est actif.",
+    "dashboard.welcome.desc.student": "Continuez votre excellent travail sur votre projet de fin d'études. Vous avez 2 révisions en attente de votre mentor cette semaine.",
+    "dashboard.welcome.desc.exalumno": "Merci de soutenir les talents de l'UCR. Vous avez 3 demandes de café virtuel d'étudiants en attente de réponse cette semaine.",
+    "dashboard.welcome.btn.milestones": "Voir les Jalons",
+    "dashboard.welcome.btn.logbook": "Carnet de Bord",
+    "dashboard.welcome.btn.students": "Voir les Étudiants",
+    "dashboard.welcome.btn.postJob": "Publier un Emploi",
+    "dashboard.status.title": "Statut du Projet",
+    "dashboard.status.ontrack": "EN BONNE VOIE",
+    "dashboard.applications.title": "Candidatures Récentes",
+    "dashboard.applications.viewall": "Voir Tout",
+    "dashboard.support.title": "Aide & Ressources",
+    "dashboard.support.funds": "Fonds de Bourses",
+    "dashboard.support.mentorships": "Mentorat Actif",
+    "dashboard.support.available": "Bourse de Carrière Disponible",
+    "dashboard.support.available.desc": "Votre profil est éligible au fonds d'excellence des anciens.",
+    "dashboard.support.apply": "Postuler Maintenant",
+    "dashboard.mentors.title": "Mentors Recommandés",
+    "dashboard.mentors.ia": "⚡ MATCHING IA",
+    "dashboard.mentors.coffee": "Demander un Café Virtuel",
+    "dashboard.mentors.find": "Trouver Plus de Mentors",
+    "dashboard.mentors.find.desc": "Explorez notre base de données de plus de 5 000 anciens élèves vérifiés.",
+    "dashboard.mentors.explore": "Explorer l'Annuaire",
+    "dashboard.impact.title": "Votre Impact",
+    "dashboard.impact.badge": "PHILANTHROPE UCR",
+    "dashboard.impact.total": "Don Total Cumulé",
+    "dashboard.impact.sponsored": "Projets Parrainés",
+    "dashboard.applicants.title": "Candidats à vos Offres",
+    "dashboard.applicants.viewall": "Voir Tout",
+    "dashboard.projects.title": "Projets Étudiants Cherchant un Soutien",
+    "dashboard.projects.details": "Voir les Détails et Donner",
+    "dashboard.students.title": "Étudiants Suggérés pour le Mentorat",
+    "dashboard.students.offer": "Offrir du Mentorat",
   }
 };
 

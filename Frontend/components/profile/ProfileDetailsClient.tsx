@@ -307,7 +307,7 @@ if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emer
         {/* Left Card: Main Details */}
         <div className="w-full lg:w-1/3 shrink-0">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80"></div>
+            <div className="absolute top-0 left-0 right-0 h-24 bg-ucr-celeste-medium"></div>
             
             <div className="h-32 w-32 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-md mt-8 z-10 relative">
               <img 
