@@ -2,7 +2,8 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { LogOut, User } from "lucide-react";
 
 export function UserDropdown() {
@@ -10,24 +11,61 @@ export function UserDropdown() {
   const imageUrl = session?.user?.image || "https://github.com/shadcn.png";
 
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
+  const [mounted, setMounted] = useState(false);
 
-  // Cierra el menú si el usuario hace click fuera
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    setMounted(true);
+  }, []);
+
+  // Recalcula la posición del dropdown basado en el botón del avatar
+  const updatePos = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setDropdownPos({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+  }, []);
+
+  // Cierra al hacer click fuera o al hacer scroll/resize
+  useEffect(() => {
+    if (!open) return;
+
+    function handleClose(e: MouseEvent) {
+      // Si el click fue en el botón del avatar, lo ignora (el toggle lo maneja)
+      if (buttonRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    function handleScrollResize() {
+      setOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClose);
+    window.addEventListener("scroll", handleScrollResize, true);
+    window.addEventListener("resize", handleScrollResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClose);
+      window.removeEventListener("scroll", handleScrollResize, true);
+      window.removeEventListener("resize", handleScrollResize);
+    };
   }, [open]);
 
+  const handleToggle = () => {
+    if (!open) updatePos();
+    setOpen((v) => !v);
+  };
+
   return (
-    <div className="relative" ref={ref}>
-      {/* Avatar — click para abrir/cerrar */}
+    <>
+      {/* Botón avatar */}
       <button
-        onClick={() => setOpen((v) => !v)}
+        ref={buttonRef}
+        onClick={handleToggle}
         className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center cursor-pointer ring-2 ring-offset-2 ring-transparent hover:ring-[#0f4c81] transition-all overflow-hidden focus:outline-none focus:ring-[#0f4c81]"
         aria-label="Menú de usuario"
         aria-expanded={open}
@@ -35,9 +73,19 @@ export function UserDropdown() {
         <img src={imageUrl} alt="User" className="h-full w-full object-cover" />
       </button>
 
-      {/* Dropdown — controlado por estado, no por hover */}
-      {open && (
-        <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+      {/* Dropdown en portal → renderizado en document.body, sin stacking context padre */}
+      {mounted && open && createPortal(
+        <div
+          style={{
+            position: "fixed",
+            top: dropdownPos.top,
+            right: dropdownPos.right,
+            zIndex: 99999,
+          }}
+          className="w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1 animate-in fade-in slide-in-from-top-1 duration-150"
+          // Evita que mousedown en el dropdown cierre el menú
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {/* Info usuario */}
           {session?.user?.name && (
             <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
@@ -69,8 +117,9 @@ export function UserDropdown() {
             <LogOut className="h-4 w-4" />
             Cerrar sesión
           </button>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
