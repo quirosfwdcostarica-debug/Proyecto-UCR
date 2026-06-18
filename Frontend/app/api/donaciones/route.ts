@@ -51,12 +51,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  // Verificar que existe el perfil de exalumno
-  const exalumno = await prisma.exalumno.findUnique({
+  // Magia para restaurar la sesión si el usuario fue borrado por detrás:
+  let userExists = await prisma.user.findUnique({ where: { id: exalumnoId } });
+  
+  if (!userExists) {
+    try {
+      await prisma.user.create({
+        data: {
+          id: exalumnoId,
+          name: session.user?.name || "Usuario Restaurado",
+          email: session.user?.email || `user_${exalumnoId}@example.com`,
+          role: role as any || "EXALUMNO",
+          status: "ACTIVO",
+          proyectoFinalizado: false,
+          cuentaPausada: false
+        }
+      });
+    } catch (e) {
+      console.error("Fallo auto-creando usuario:", e);
+    }
+  }
+
+  // Verificar que existe el perfil de exalumno, si no existe lo creamos
+  let exalumno = await prisma.exalumno.findUnique({
     where: { id: exalumnoId },
   });
+  
   if (!exalumno) {
-    return NextResponse.json({ message: "Perfil de exalumno no encontrado" }, { status: 404 });
+    try {
+      exalumno = await prisma.exalumno.create({
+        data: {
+          id: exalumnoId,
+          carrera: "No especificada",
+          sector: "No especificado",
+          areasInteres: [],
+          apoyoOfrecido: [],
+        }
+      });
+    } catch (err: any) {
+      console.error("Error creating exalumno profile:", err);
+      return NextResponse.json({ message: "Error interno creando perfil: " + err.message }, { status: 500 });
+    }
   }
 
   try {

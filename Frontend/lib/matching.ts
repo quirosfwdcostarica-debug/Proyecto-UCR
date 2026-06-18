@@ -17,7 +17,21 @@ export function calcularAfinidad(
   estudiante: EstudianteConUser,
   exalumno: ExalumnoConUser
 ): number {
-  let score = 0;
+  const carreraEst = estudiante.carrera ? estudiante.carrera.toLowerCase().trim() : "";
+  const carreraExa = exalumno.carrera ? exalumno.carrera.toLowerCase().trim() : "";
+
+  // --- REGLA ESTRICTA: Solo hacer match si son de la misma carrera / sector de estudio ---
+  // Se usa includes para que "Computación" e "Ingeniería en Computación" hagan match.
+  if (
+    !carreraEst ||
+    !carreraExa ||
+    (!carreraEst.includes(carreraExa) && !carreraExa.includes(carreraEst))
+  ) {
+    return 0; // Rechazar automáticamente si no son del mismo sector de estudio
+  }
+
+  // Base score por ser de la misma carrera
+  let score = 30;
 
   // --- +40 pts: Intersección de tipos de apoyo ---
   const apoyoBuscadoSet = new Set(
@@ -32,15 +46,6 @@ export function calcularAfinidad(
   );
   if (tieneInterseccionApoyo) {
     score += 40;
-  }
-
-  // --- +30 pts: Coincidencia de carrera ---
-  if (
-    estudiante.carrera &&
-    exalumno.carrera &&
-    estudiante.carrera.toLowerCase().trim() === exalumno.carrera.toLowerCase().trim()
-  ) {
-    score += 30;
   }
 
   // --- +20 pts: Intersección de área de proyecto con áreas de interés ---
