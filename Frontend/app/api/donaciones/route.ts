@@ -59,12 +59,11 @@ export async function POST(request: NextRequest) {
       await prisma.user.create({
         data: {
           id: exalumnoId,
-          name: session.user?.name || "Usuario Restaurado",
+          nombre: session.user?.name || "Usuario Restaurado",
           email: session.user?.email || `user_${exalumnoId}@example.com`,
-          role: role as any || "EXALUMNO",
-          status: "ACTIVO",
-          proyectoFinalizado: false,
-          cuentaPausada: false
+          tipo: "EXALUMNO" as any,
+          activo: true,
+          email_verified: true,
         }
       });
     } catch (e) {
@@ -74,18 +73,14 @@ export async function POST(request: NextRequest) {
 
   // Verificar que existe el perfil de exalumno, si no existe lo creamos
   let exalumno = await prisma.exalumno.findUnique({
-    where: { id: exalumnoId },
+    where: { user_id: exalumnoId },
   });
   
   if (!exalumno) {
     try {
       exalumno = await prisma.exalumno.create({
         data: {
-          id: exalumnoId,
-          carrera: "No especificada",
-          sector: "No especificado",
-          areasInteres: [],
-          apoyoOfrecido: [],
+          user_id: exalumnoId,
         }
       });
     } catch (err: any) {
@@ -97,11 +92,11 @@ export async function POST(request: NextRequest) {
   try {
     const donacion = await prisma.donacion.create({
       data: {
-        exalumnoId,
+        exalumno_id: exalumnoId,
         monto,
-        comprobanteUrl,
         destino,
-        status: "PENDIENTE",
+        estado: "PENDIENTE",
+        ...(metodoPago ? { metodo_pago: metodoPago } : {}),
       },
     });
 
