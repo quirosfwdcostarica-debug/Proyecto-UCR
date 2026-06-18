@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -53,6 +53,18 @@ function Dashboard() {
 
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
+
+  // Stats
+  const [mentorCount, setMentorCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/exalumnos")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setMentorCount(data.length);
+      })
+      .catch(() => setMentorCount(null));
+  }, []);
 
   // Beca Modal States
   const [isBecaOpen, setIsBecaOpen] = useState(false);
@@ -191,8 +203,10 @@ function Dashboard() {
                       <Users className="h-5 w-5" />
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Mentorías Activas</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">2 Mentores</h4>
-                    <p className="text-xs font-medium text-slate-500">Última sesión: hace 2 días</p>
+                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">
+                      {mentorCount === null ? "..." : `${mentorCount} Mentor${mentorCount !== 1 ? "es" : ""}`}
+                    </h4>
+                    <p className="text-xs font-medium text-slate-500">Exalumnos en la plataforma</p>
                   </Card>
                 </div>
                 <Card className="p-5 border-dashed border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950/40 backdrop-blur-md flex items-center justify-between shadow-md">
