@@ -60,15 +60,28 @@ exports.contactar = asyncHandler(async (req, res) => {
   );
 
   try {
-    const estudianteUser = await db.User.findByPk(data.estudiante_id, { attributes: ['nombre'] });
+    const [estudianteUser, exalumnoUser] = await Promise.all([
+      db.User.findByPk(data.estudiante_id, { attributes: ['nombre'] }),
+      db.User.findByPk(data.exalumno_id,   { attributes: ['nombre', 'email'] }),
+    ]);
+
     await NotificationService.createNotification(
       data.exalumno_id,
       'Solicitud de Apoyo',
-      `${estudianteUser?.nombre || 'Un estudiante'} te ha enviado una solicitud de apoyo. Revisa tus matches.`,
-      'match_contact_request'
+      `${estudianteUser?.nombre || 'Un estudiante'} te ha enviado una solicitud de apoyo.`,
+      'match_contact_request',
+      data.id
     );
+
+    if (exalumnoUser?.email) {
+      await EmailService.sendStudentToAlumniEmail(
+        exalumnoUser.email,
+        exalumnoUser.nombre,
+        estudianteUser?.nombre || 'Un estudiante'
+      );
+    }
   } catch (notifErr) {
-    console.error('[contactar] Error enviando notificación:', notifErr.message);
+    console.error('[contactar] Error enviando notificación/email:', notifErr.message);
   }
 
   res.status(200).json(data);
@@ -94,7 +107,8 @@ exports.aceptar = asyncHandler(async (req, res) => {
         data.estudiante_id,
         'Solicitud Aceptada',
         `${exalumnoUser?.nombre || 'El exalumno'} aceptó tu solicitud. ¡Ya pueden chatear!`,
-        'match_accepted'
+        'match_accepted',
+        data.id
       );
       const estudianteUser = await db.User.findByPk(data.estudiante_id, { attributes: ['nombre', 'email'] });
       if (estudianteUser?.email) {
@@ -107,7 +121,8 @@ exports.aceptar = asyncHandler(async (req, res) => {
         data.exalumno_id,
         'Oferta Aceptada',
         `${estudianteUser?.nombre || 'El estudiante'} aceptó tu oferta de apoyo. ¡Ya pueden chatear!`,
-        'match_accepted'
+        'match_accepted',
+        data.id
       );
     }
   } catch (notifErr) {
@@ -218,23 +233,26 @@ exports.ofrecerApoyo = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [estudianteUser, exalumnoUser] = await Promise.all([
-      db.User.findByPk(estudianteId, { attributes: ['nombre', 'email'] }),
-      db.User.findByPk(exalumnoId,   { attributes: ['nombre', 'email'] }),
+    const [estudianteUser, exalumnoUser, estudiantePerfil] = await Promise.all([
+      db.User.findByPk(estudianteId,       { attributes: ['nombre', 'email'] }),
+      db.User.findByPk(exalumnoId,         { attributes: ['nombre'] }),
+      db.Estudiante.findByPk(estudianteId, { attributes: ['proyecto_titulo'] }),
     ]);
 
     await NotificationService.createNotification(
       estudianteId,
       'Nueva Oferta de Apoyo',
-      `${exalumnoUser?.nombre || 'Un exalumno'} te ha ofrecido apoyo. ¡Revisa tus matches!`,
-      'match_offer'
+      `${exalumnoUser?.nombre || 'Un exalumno'} te ha ofrecido apoyo.`,
+      'match_offer',
+      match.id
     );
 
-    if (estudianteUser?.email && exalumnoUser?.nombre) {
-      await EmailService.sendConnectionRequestEmail(
+    if (estudianteUser?.email) {
+      await EmailService.sendAlumniToStudentEmail(
         estudianteUser.email,
         estudianteUser.nombre,
-        exalumnoUser.nombre
+        estudiantePerfil?.proyecto_titulo || null,
+        exalumnoUser?.nombre || 'Un exalumno'
       );
     }
   } catch (notifErr) {

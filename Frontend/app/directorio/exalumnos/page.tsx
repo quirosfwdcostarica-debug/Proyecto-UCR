@@ -1,4 +1,3 @@
-import { TopBar } from "@/components/layout/TopBar";
 import { AlumniDirectoryClient } from "@/components/directory/AlumniDirectoryClient";
 
 const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
@@ -26,7 +25,6 @@ export default async function DirectorioExalumnosPage() {
 
   return (
     <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
-      <TopBar title="Directory" />
       <AlumniDirectoryClient initialAlumni={initialAlumni} />
     </div>
   );
