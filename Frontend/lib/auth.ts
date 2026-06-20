@@ -5,7 +5,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 // instancias de CredentialsSignin se convierten en "Configuration".
 // Por eso extendemos CredentialsSignin para errores conocidos.
 class InvalidCredentials extends CredentialsSignin {
-  code = "Credenciales inválidas";
+  constructor(message?: string) {
+    super(message);
+    this.code = message || "Credenciales inválidas";
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
