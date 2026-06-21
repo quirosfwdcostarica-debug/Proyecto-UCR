@@ -3,6 +3,30 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sendMatchAceptado, sendMatchRechazado, sendMatchConnectionRequest, sendAdminNewActiveMatch } from "@/lib/email";
 
+// Explicit selects — only existing DB columns
+const MATCH_WITH_USERS_SELECT = {
+  id: true, estado: true, score_match: true, tipo_apoyo: true, resultado: true,
+  estudiante_id: true, exalumno_id: true, initiated_by: true,
+  match_reasons: true, accepted_at: true, rejected_at: true, closed_at: true,
+  created_at: true, updated_at: true,
+  estudiante: {
+    select: {
+      user_id: true, carrera: true, escuela_facultad: true, proyecto_titulo: true, proyecto_tipo: true,
+      busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
+      user: { select: { nombre: true, email: true, foto_url: true } },
+    },
+  },
+  exalumno: {
+    select: {
+      user_id: true, escuela_facultad: true, empresa_actual: true, cargo_actual: true,
+      ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
+      ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
+      ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
+      user: { select: { nombre: true, email: true, foto_url: true } },
+    },
+  },
+} as const;
+
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
@@ -10,23 +34,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     const match = await prisma.match.findUnique({
       where: { id: params.id },
-      include: {
-        estudiante: {
-          include: {
-            user: { select: { nombre: true, email: true, foto_url: true } },
-          },
-        },
-        exalumno: {
-          include: {
-            user: { select: { nombre: true, email: true, foto_url: true } },
-          },
-        },
-      },
+      select: MATCH_WITH_USERS_SELECT,
     });
 
     if (!match) return NextResponse.json({ message: "Match no encontrado" }, { status: 404 });
 
-    // Normalize for frontend
     const normalized = {
       ...match,
       status: match.estado,
@@ -64,10 +76,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     const match = await prisma.match.findUnique({
       where: { id: params.id },
-      include: {
-        estudiante: { include: { user: true } },
-        exalumno: { include: { user: true } },
-      },
+      select: MATCH_WITH_USERS_SELECT,
     });
 
     if (!match) return NextResponse.json({ message: "Match no encontrado" }, { status: 404 });
@@ -76,9 +85,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const isExalumno = match.exalumno_id === userId;
     if (!isEstudiante && !isExalumno) return NextResponse.json({ message: "No autorizado" }, { status: 403 });
 
-    const emisorNombre = isEstudiante ? match.estudiante.user.nombre : match.exalumno.user.nombre;
-    const receptorNombre = isEstudiante ? match.exalumno.user.nombre : match.estudiante.user.nombre;
-    const receptorEmail = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
+    const emisorNombre = isEstudiante ? match.estudiante?.user.nombre : match.exalumno?.user.nombre;
+    const receptorNombre = isEstudiante ? match.exalumno?.user.nombre : match.estudiante?.user.nombre;
+    const receptorEmail = isEstudiante ? match.exalumno?.user.email : match.estudiante?.user.email;
 
     if (action === "CONTACTAR") {
       if (match.estado !== "SUGERIDO") return NextResponse.json({ message: "Match ya no está sugerido" }, { status: 400 });
@@ -103,11 +112,15 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         data: { estado: "ACTIVO", accepted_at: new Date() },
       });
 
-      const emisorEmailOriginal = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
+      const emisorEmailOriginal = isEstudiante ? match.exalumno?.user.email : match.estudiante?.user.email;
       if (emisorEmailOriginal) {
         await sendMatchAceptado(emisorEmailOriginal, emisorNombre || "", receptorNombre || "");
       }
-      await sendAdminNewActiveMatch("admin@alumni.ucr.ac.cr", match.estudiante.user.nombre || "", match.exalumno.user.nombre || "");
+      await sendAdminNewActiveMatch(
+        "admin@alumni.ucr.ac.cr",
+        match.estudiante?.user.nombre || "",
+        match.exalumno?.user.nombre || ""
+      );
 
       return NextResponse.json({ ...updated, status: updated.estado });
     }
@@ -121,7 +134,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         data: { estado: "CERRADO", rejected_at: new Date() },
       });
 
-      const emisorEmailOriginal = isEstudiante ? match.exalumno.user.email : match.estudiante.user.email;
+      const emisorEmailOriginal = isEstudiante ? match.exalumno?.user.email : match.estudiante?.user.email;
       if (emisorEmailOriginal) {
         await sendMatchRechazado(emisorEmailOriginal, emisorNombre || "");
       }
