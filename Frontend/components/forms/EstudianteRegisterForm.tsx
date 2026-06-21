@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { registerStudentAction } from "@/actions/auth.actions";
 
 const registerSchema = z.object({
   tipo_identificacion: z.string().min(1, "Seleccione un tipo de identificación"),
@@ -94,29 +95,23 @@ export function EstudianteRegisterForm() {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register/student`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: data.nombre,
-          email: data.email,
-          password: data.password,
-          cedula: data.cedula,
-          fecha_nacimiento: data.fechaNacimiento,
-          genero: data.genero,
-          carnet_ucr: data.carnet_ucr,
-          carrera: data.carrera,
-          escuela_facultad: data.escuela_facultad,
-          sede: data.sede,
-          anio_ingreso: parseInt(data.anio_ingreso),
-          nivel_academico: data.nivel_academico,
-          promedio_ponderado: parseFloat(data.promedio_ponderado)
-        }),
+      const result = await registerStudentAction({
+        nombre: data.nombre,
+        email: data.email,
+        password: data.password,
+        cedula: data.cedula,
+        fecha_nacimiento: data.fechaNacimiento,
+        genero: data.genero,
+        carnet_ucr: data.carnet_ucr,
+        carrera: data.carrera,
+        escuela_facultad: data.escuela_facultad,
+        sede: data.sede,
+        anio_ingreso: parseInt(data.anio_ingreso),
+        nivel_academico: data.nivel_academico,
+        promedio_ponderado: parseFloat(data.promedio_ponderado),
       });
 
-      const result = await res.json();
-
-      if (res.ok) {
+      if (result.success) {
         toast({
           title: "Registro exitoso",
           description: "Revisa tu correo para verificar tu cuenta.",
@@ -125,14 +120,14 @@ export function EstudianteRegisterForm() {
       } else {
         toast({
           title: "Error en el registro",
-          description: result.message || "Ocurrió un error al registrarse.",
+          description: result.message,
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error de conexión",
-        description: "No se pudo conectar con el servidor.",
+        title: "Error inesperado",
+        description: "Ocurrió un error al registrarse. Intenta de nuevo.",
         variant: "destructive",
       });
     } finally {

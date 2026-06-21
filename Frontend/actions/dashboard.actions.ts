@@ -1,16 +1,27 @@
 "use server";
 
-// Acciones para obtener datos del backend en lugar de usar datos quemados
-// Usamos el API_URL del backend (ej. http://localhost:3001/api)
-
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+import prisma from "@/lib/prisma";
 
 export async function getJobPositions() {
   try {
-    const res = await fetch(`${API_URL}/posiciones`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.posiciones || data || [];
+    const posiciones = await prisma.posicion.findMany({
+      where: { estado: "activa" },
+      select: {
+        id: true, titulo: true, tipo: true, modalidad: true,
+        empresa: true, jornada: true, fecha_limite: true,
+      },
+      orderBy: { created_at: "desc" },
+      take: 20,
+    });
+    return posiciones.map((p) => ({
+      id: p.id,
+      titulo: p.titulo,
+      tipo: p.tipo,
+      modalidad: p.modalidad,
+      empresa: p.empresa,
+      jornada: p.jornada,
+      fecha_limite: p.fecha_limite?.toISOString() ?? null,
+    }));
   } catch (error) {
     console.error("Error fetching posiciones:", error);
     return [];
@@ -19,22 +30,32 @@ export async function getJobPositions() {
 
 export async function getStudentProjects() {
   try {
-    const res = await fetch(`${API_URL}/estudiantes`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const estudiantes = data.estudiantes || data || [];
-    
-    // Filtrar estudiantes que buscan financiamiento
-    return estudiantes
-      .filter((e: any) => e.busca_financiamiento && e.proyecto_titulo)
-      .map((e: any) => ({
-        id: e.user_id,
-        nombre: e.proyecto_titulo,
-        carrera: e.carrera || "Carrera no especificada",
-        descripcion: e.proyecto_tipo || "Proyecto de estudiante",
-        avance: e.promedio_ponderado ? Math.round(Number(e.promedio_ponderado) * 10) : 0, // Mock de avance basado en promedio si no hay
-        estudianteNombre: e.User?.nombre || "Estudiante",
-      }));
+    const estudiantes = await prisma.estudiante.findMany({
+      where: {
+        visible_en_directorio: true,
+        busca_financiamiento: true,
+        proyecto_titulo: { not: null },
+        user: { activo: true },
+      },
+      select: {
+        user_id: true,
+        carrera: true,
+        proyecto_titulo: true,
+        proyecto_tipo: true,
+        proyecto_descripcion: true,
+        proyecto_porcentaje_avance: true,
+        user: { select: { nombre: true, foto_url: true } },
+      },
+    });
+
+    return estudiantes.map((e) => ({
+      id: e.user_id,
+      nombre: e.proyecto_titulo ?? "Sin título",
+      carrera: e.carrera ?? "Carrera no especificada",
+      descripcion: e.proyecto_descripcion ?? e.proyecto_tipo ?? "Proyecto de estudiante",
+      avance: e.proyecto_porcentaje_avance ?? 0,
+      estudianteNombre: e.user?.nombre ?? "Estudiante",
+    }));
   } catch (error) {
     console.error("Error fetching student projects:", error);
     return [];

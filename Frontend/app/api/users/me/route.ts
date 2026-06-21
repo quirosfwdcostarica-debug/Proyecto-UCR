@@ -50,30 +50,64 @@ export async function GET() {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
 
-    // Get match counts
     let matchesActivos = 0;
     let matchesPendientes = 0;
+    let matchesContactados = 0;
+    let donacionTotalConfirmada = 0;
+    let proyectosPatrocinados: any[] = [];
 
     if (tipo === "ESTUDIANTE") {
-      matchesActivos = await prisma.match.count({
-        where: { estudiante_id: userId, estado: "ACTIVO" },
-      });
-      matchesPendientes = await prisma.match.count({
-        where: { estudiante_id: userId, estado: "SUGERIDO" },
-      });
+      [matchesActivos, matchesPendientes] = await Promise.all([
+        prisma.match.count({ where: { estudiante_id: userId, estado: "ACTIVO" } }),
+        prisma.match.count({ where: { estudiante_id: userId, estado: "SUGERIDO" } }),
+      ]);
     } else if (tipo === "EXALUMNO") {
-      matchesActivos = await prisma.match.count({
-        where: { exalumno_id: userId, estado: "ACTIVO" },
-      });
-      matchesPendientes = await prisma.match.count({
-        where: { exalumno_id: userId, estado: "SUGERIDO" },
-      });
+      [matchesActivos, matchesPendientes, matchesContactados] = await Promise.all([
+        prisma.match.count({ where: { exalumno_id: userId, estado: "ACTIVO" } }),
+        prisma.match.count({ where: { exalumno_id: userId, estado: "SUGERIDO" } }),
+        prisma.match.count({ where: { exalumno_id: userId, estado: "CONTACTADO" } }),
+      ]);
+
+      const [agg, recentDonaciones] = await Promise.all([
+        prisma.donacion.aggregate({
+          where: { exalumno_id: userId, estado: "CONFIRMADA" },
+          _sum: { monto: true },
+        }),
+        prisma.donacion.findMany({
+          where: { exalumno_id: userId, proyecto_estudiante_id: { not: null } },
+          select: {
+            monto: true,
+            estado: true,
+            estudiante: {
+              select: {
+                proyecto_titulo: true,
+                proyecto_porcentaje_avance: true,
+                user: { select: { nombre: true } },
+              },
+            },
+          },
+          orderBy: { created_at: "desc" },
+          take: 3,
+        }),
+      ]);
+
+      donacionTotalConfirmada = Number(agg._sum.monto ?? 0);
+      proyectosPatrocinados = recentDonaciones.map((d) => ({
+        monto: Number(d.monto),
+        estado: d.estado,
+        nombre_estudiante: d.estudiante?.user?.nombre ?? "Estudiante",
+        proyecto_titulo: d.estudiante?.proyecto_titulo ?? "Proyecto",
+        avance: d.estudiante?.proyecto_porcentaje_avance ?? 0,
+      }));
     }
 
     return NextResponse.json({
       ...user,
       matchesActivos,
       matchesPendientes,
+      matchesContactados,
+      donacionTotalConfirmada,
+      proyectosPatrocinados,
     });
   } catch (error) {
     console.error("[GET /api/users/me]", error);

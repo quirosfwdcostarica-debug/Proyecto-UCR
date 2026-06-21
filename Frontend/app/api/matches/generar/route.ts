@@ -11,11 +11,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
+    // Only existing DB columns
     const estudiantes = await prisma.estudiante.findMany({
-      include: { user: true },
+      select: {
+        user_id: true, carrera: true, proyecto_tipo: true,
+        busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
+      },
     });
     const exalumnos = await prisma.exalumno.findMany({
-      include: { user: true },
+      where: { escuela_facultad: { not: null }, empresa_actual: { not: null }, user: { status: { not: "SUSPENDIDO" } } },
+      select: {
+        user_id: true, escuela_facultad: true,
+        ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
+        ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
+        ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
+      },
     });
 
     let creados = 0;
@@ -23,10 +33,7 @@ export async function POST(req: Request) {
 
     for (const est of estudiantes) {
       for (const exa of exalumnos) {
-        // Build compatible objects for calcularAfinidad
         const estCompat = {
-          ...est,
-          id: est.user_id,
           carrera: est.carrera || "",
           apoyoBuscado: [
             ...(est.busca_mentoria ? ["mentoria"] : []),
@@ -35,34 +42,30 @@ export async function POST(req: Request) {
             ...(est.busca_financiamiento ? ["financiamiento"] : []),
           ],
           areaProyecto: est.proyecto_tipo || null,
-          user: { ...est.user, name: est.user.nombre, image: est.user.foto_url },
-        } as any;
+          areasInteres: [] as string[],
+        };
 
         const exaCompat = {
-          ...exa,
-          id: exa.user_id,
           carrera: exa.escuela_facultad || "",
-          sector: exa.empresa_actual || "",
-          areasInteres: [],
+          sector: null as string | null,
+          areasInteres: [] as string[],
           apoyoOfrecido: [
             ...(exa.ofrece_mentoria ? ["mentoria"] : []),
             ...(exa.ofrece_empleo ? ["empleo"] : []),
             ...(exa.ofrece_pasantia ? ["pasantia"] : []),
             ...(exa.ofrece_donacion_dinero ? ["financiamiento"] : []),
+            ...(exa.ofrece_guest_speaking ? ["guest speaking"] : []),
+            ...(exa.ofrece_volunteering ? ["volunteering"] : []),
+            ...(exa.ofrece_career_advice ? ["career advice"] : []),
+            ...(exa.ofrece_networking ? ["networking"] : []),
           ],
-          user: { ...exa.user, name: exa.user.nombre, image: exa.user.foto_url },
-        } as any;
+        };
 
         const { score, reasons } = calcularAfinidad(estCompat, exaCompat);
 
         if (score > 0) {
           const existingMatch = await prisma.match.findUnique({
-            where: {
-              estudiante_id_exalumno_id: {
-                estudiante_id: est.user_id,
-                exalumno_id: exa.user_id,
-              },
-            },
+            where: { estudiante_id_exalumno_id: { estudiante_id: est.user_id, exalumno_id: exa.user_id } },
           });
 
           if (existingMatch) {
@@ -89,11 +92,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({
-      message: "Proceso de matching completado",
-      creados,
-      actualizados,
-    });
+    return NextResponse.json({ message: "Proceso de matching completado", creados, actualizados });
   } catch (error) {
     console.error("[Matches] Error en generación:", error);
     return NextResponse.json({ message: "Error interno" }, { status: 500 });
