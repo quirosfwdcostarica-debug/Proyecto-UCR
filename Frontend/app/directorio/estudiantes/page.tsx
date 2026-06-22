@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { TopBar } from "@/components/layout/TopBar";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
@@ -14,7 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { CATALOGO_AREAS, TIPOS_APOYO } from "@/lib/constants";
-import { ofrecerApoyo } from "@/actions/matching.actions";
+import { ofrecerApoyo, getMatchesForExalumno, rechazarMatch } from "@/actions/matching.actions";
 
 interface EstudianteItem {
   id: string;
@@ -32,11 +32,20 @@ interface EstudianteItem {
 }
 
 export default function DirectorioEstudiantes() {
+  const { data: session } = useSession();
   const [estudiantes, setEstudiantes] = useState<EstudianteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [offeredIds, setOfferedIds] = useState<string[]>([]);
+
+  // studentId → matchId para ofertas ya enviadas (persiste entre sesiones)
+  const [offeredMatches, setOfferedMatches] = useState<Record<string, string>>({});
+  // studentIds en cuenta regresiva (antes de enviar)
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  // cuenta regresiva por studentId
+  const [countdowns, setCountdowns] = useState<Record<string, number>>({});
+  const timeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const intervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   // Estado de filtros
   const [nombre, setNombre] = useState("");
@@ -79,6 +88,84 @@ export default function DirectorioEstudiantes() {
     setApoyoBuscado("");
   };
 
+  // Cargar ofertas existentes desde la BD al montar el componente
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    getMatchesForExalumno().then((matches: any[]) => {
+      const offered: Record<string, string> = {};
+      for (const m of matches) {
+        if (m.estado === "CONTACTADO" && m.initiated_by === "exalumno") {
+          offered[m.estudiante_id] = m.id;
+        }
+      }
+      setOfferedMatches(offered);
+    }).catch(() => {});
+  }, [session?.user?.id]);
+
+  // Limpiar timeouts/intervals al desmontar
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutsRef.current).forEach(clearTimeout);
+      Object.values(intervalsRef.current).forEach(clearInterval);
+    };
+  }, []);
+
+  // Click en "Ofrecer Apoyo": inicia cuenta regresiva de 5s antes de enviar
+  const handleOfrecerApoyo = (studentId: string) => {
+    if (pendingIds.has(studentId) || offeredMatches[studentId]) return;
+
+    setPendingIds(prev => new Set(Array.from(prev).concat(studentId)));
+    setCountdowns(prev => ({ ...prev, [studentId]: 5 }));
+
+    intervalsRef.current[studentId] = setInterval(() => {
+      setCountdowns(prev => {
+        const remaining = (prev[studentId] ?? 1) - 1;
+        if (remaining <= 0) {
+          clearInterval(intervalsRef.current[studentId]);
+          delete intervalsRef.current[studentId];
+        }
+        return { ...prev, [studentId]: remaining };
+      });
+    }, 1000);
+
+    timeoutsRef.current[studentId] = setTimeout(async () => {
+      delete timeoutsRef.current[studentId];
+      try {
+        const result = await ofrecerApoyo(studentId);
+        if (result.success) {
+          setOfferedMatches(prev => ({ ...prev, [studentId]: result.matchId }));
+        }
+      } catch (err: any) {
+        alert(err.message || "Error al ofrecer apoyo");
+      } finally {
+        setPendingIds(prev => { const s = new Set(prev); s.delete(studentId); return s; });
+        setCountdowns(prev => { const { [studentId]: _, ...rest } = prev; return rest; });
+      }
+    }, 5000);
+  };
+
+  // Cancelar durante la cuenta regresiva (no llama API, no envía correo)
+  const handleCancelarPendiente = (studentId: string) => {
+    clearTimeout(timeoutsRef.current[studentId]);
+    clearInterval(intervalsRef.current[studentId]);
+    delete timeoutsRef.current[studentId];
+    delete intervalsRef.current[studentId];
+    setPendingIds(prev => { const s = new Set(prev); s.delete(studentId); return s; });
+    setCountdowns(prev => { const { [studentId]: _, ...rest } = prev; return rest; });
+  };
+
+  // Cancelar una oferta ya enviada (llama al backend para revertir el match)
+  const handleCancelarOferta = async (studentId: string) => {
+    const matchId = offeredMatches[studentId];
+    if (!matchId) return;
+    try {
+      await rechazarMatch(matchId, "exalumno");
+      setOfferedMatches(prev => { const { [studentId]: _, ...rest } = prev; return rest; });
+    } catch (err: any) {
+      alert(err.message || "Error al cancelar la oferta");
+    }
+  };
+
   const hasFilters = nombre || carrera || areaProyecto || apoyoBuscado;
 
   const getFaseLabel = (progreso: number) => {
@@ -89,7 +176,6 @@ export default function DirectorioEstudiantes() {
 
   return (
     <div className="min-h-full bg-ucr-gris-fondo dark:bg-slate-950 transition-colors duration-300">
-      <TopBar title="Directorio" />
 
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -343,23 +429,26 @@ export default function DirectorioEstudiantes() {
                     ))}
                   </div>
 
-                  {offeredIds.includes(student.id) ? (
-                    <Button disabled className="w-full bg-green-600 dark:bg-green-700 text-white font-bold tracking-wide transition-all shadow-md">
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Apoyo Ofrecido
+                  {offeredMatches[student.id] ? (
+                    <Button
+                      onClick={() => handleCancelarOferta(student.id)}
+                      variant="outline"
+                      className="w-full border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 font-bold tracking-wide transition-all"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancelar Oferta
+                    </Button>
+                  ) : pendingIds.has(student.id) ? (
+                    <Button
+                      onClick={() => handleCancelarPendiente(student.id)}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold tracking-wide transition-all shadow-md"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancelar ({countdowns[student.id] ?? 5}s)
                     </Button>
                   ) : (
-                    <Button 
-                      onClick={async () => {
-                        try {
-                          const res = await ofrecerApoyo(student.id);
-                          if (res.success) {
-                            setOfferedIds(prev => [...prev, student.id]);
-                          }
-                        } catch (error: any) {
-                          alert(error.message || "Error al ofrecer apoyo");
-                        }
-                      }}
+                    <Button
+                      onClick={() => handleOfrecerApoyo(student.id)}
                       className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 dark:bg-ucr-celeste dark:hover:bg-ucr-celeste/90 text-white dark:text-slate-950 font-bold tracking-wide transition-all shadow-md"
                     >
                       <HeartIcon className="mr-2 h-4 w-4" />

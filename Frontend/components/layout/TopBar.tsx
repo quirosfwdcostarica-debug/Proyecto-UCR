@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { UserDropdown } from "./UserDropdown";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
 
@@ -53,16 +53,7 @@ export function TopBar({ title, titleKey }: TopBarProps) {
           />
         </div>
 
-        {session ? (
-          <Button 
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            variant="outline" 
-            size="sm" 
-            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-body font-semibold transition-colors"
-          >
-            {mounted && t("topbar.logout" as any) !== "topbar.logout" ? t("topbar.logout" as any) : "Cerrar Sesión"}
-          </Button>
-        ) : (
+        {!session && (
           <Link href="/login">
             <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
               {mounted && t("topbar.login" as any) !== "topbar.login" ? t("topbar.login" as any) : "Iniciar Sesión"}

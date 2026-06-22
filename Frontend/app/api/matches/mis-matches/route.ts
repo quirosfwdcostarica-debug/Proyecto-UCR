@@ -16,10 +16,7 @@ export async function GET(req: Request) {
 
     if (role === "ESTUDIANTE") {
       matches = await prisma.match.findMany({
-        where: {
-          estudiante_id: userId,
-          score_match: { gt: 0 },
-        },
+        where: { estudiante_id: userId },
         orderBy: { score_match: "desc" },
         include: {
           exalumno: {
@@ -33,10 +30,7 @@ export async function GET(req: Request) {
       });
     } else if (role === "EXALUMNO") {
       matches = await prisma.match.findMany({
-        where: {
-          exalumno_id: userId,
-          score_match: { gt: 0 },
-        },
+        where: { exalumno_id: userId },
         orderBy: { score_match: "desc" },
         include: {
           estudiante: {
@@ -55,10 +49,21 @@ export async function GET(req: Request) {
       ...m,
       afinidad: m.score_match,
       status: m.estado,
+      initiated_by: m.initiated_by ?? "sistema",
       exalumno: m.exalumno
         ? {
             ...m.exalumno,
             id: m.exalumno.user_id,
+            carrera: m.exalumno.escuela_facultad ?? "",
+            sector: m.exalumno.empresa_actual ?? m.exalumno.cargo_actual ?? "",
+            apoyoOfrecido: [
+              m.exalumno.ofrece_mentoria        ? "Mentoría"       : null,
+              m.exalumno.ofrece_empleo          ? "Empleo"         : null,
+              m.exalumno.ofrece_pasantia        ? "Pasantía"       : null,
+              m.exalumno.ofrece_donacion_dinero ? "Financiamiento" : null,
+              m.exalumno.ofrece_guest_speaking  ? "Guest Speaking" : null,
+              m.exalumno.ofrece_networking      ? "Networking"     : null,
+            ].filter(Boolean) as string[],
             user: m.exalumno.user
               ? {
                   name: m.exalumno.user.nombre,
@@ -72,6 +77,13 @@ export async function GET(req: Request) {
         ? {
             ...m.estudiante,
             id: m.estudiante.user_id,
+            avanceProyecto: m.score_match ?? 0,
+            apoyoBuscado: [
+              m.estudiante.busca_mentoria       ? "Mentoría"       : null,
+              m.estudiante.busca_empleo         ? "Empleo"         : null,
+              m.estudiante.busca_pasantia       ? "Pasantía"       : null,
+              m.estudiante.busca_financiamiento ? "Financiamiento" : null,
+            ].filter(Boolean) as string[],
             user: m.estudiante.user
               ? {
                   name: m.estudiante.user.nombre,

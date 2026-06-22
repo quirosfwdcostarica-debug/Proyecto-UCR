@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
-import { getMatchesForEstudiante } from "@/actions/matching.actions";
+import prisma from "@/lib/prisma";
 import MisMatchesClient from "./MisMatchesClient";
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -111,13 +112,26 @@ export default function MisMatchesPage() {
     } finally {
       setLoading(false);
 =======
+=======
+type Desglose = { C: number; I: number; A: number; S: number };
+
+function parseDesglose(tipoApoyo: string | null): Desglose | null {
+  if (!tipoApoyo || !tipoApoyo.startsWith("C:")) return null;
+  const obj: Record<string, number> = {};
+  tipoApoyo.split(",").forEach(p => {
+    const idx = p.indexOf(":");
+    if (idx > 0) obj[p.slice(0, idx)] = parseInt(p.slice(idx + 1), 10) || 0;
+  });
+  return { C: obj.C ?? 0, I: obj.I ?? 0, A: obj.A ?? 0, S: obj.S ?? 0 };
+}
+
+>>>>>>> 536d699f309e5f3adcf36b069fad3bf79afbe40f
 export default async function MisMatchesPage() {
-  // Intentar obtener la sesión; si no hay BD/sesión, usar mock para preview
   let matches: any[] = [];
-  let userId: string | undefined;
 
   try {
     const session = await auth();
+<<<<<<< HEAD
     userId = session?.user?.id;
     if (userId) {
       matches = await getMatchesForEstudiante(userId);
@@ -809,6 +823,46 @@ export default async function MisMatchesPage() {
         exalumno: { user: { name: "Marco Solano" }, carrera: "Derecho", sector: "Sector Público", apoyoOfrecido: ["Networking", "Mentoría Profesional"] }
       },
     ];
+=======
+    if (session?.user?.id) {
+      const userId = session.user.id;
+
+      const rawMatches = await prisma.match.findMany({
+        where: { estudiante_id: userId },
+        orderBy: { score_match: "desc" },
+        include: {
+          exalumno: {
+            include: {
+              user: { select: { nombre: true, foto_url: true } },
+            },
+          },
+        },
+      });
+
+      matches = rawMatches.map((m) => ({
+        id: m.id,
+        afinidad: m.score_match ?? 0,
+        desglose: parseDesglose(m.tipo_apoyo),
+        status: m.estado as string,
+        initiated_by: m.initiated_by ?? "sistema",
+        exalumno: {
+          user: { name: m.exalumno?.user?.nombre ?? null },
+          carrera: m.exalumno?.escuela_facultad ?? "",
+          sector: m.exalumno?.empresa_actual ?? m.exalumno?.cargo_actual ?? "",
+          apoyoOfrecido: [
+            m.exalumno?.ofrece_mentoria         ? "Mentoría"        : null,
+            m.exalumno?.ofrece_empleo           ? "Empleo"          : null,
+            m.exalumno?.ofrece_pasantia         ? "Pasantía"        : null,
+            m.exalumno?.ofrece_donacion_dinero  ? "Financiamiento"  : null,
+            m.exalumno?.ofrece_guest_speaking   ? "Guest Speaking"  : null,
+            m.exalumno?.ofrece_networking       ? "Networking"      : null,
+          ].filter(Boolean) as string[],
+        },
+      }));
+    }
+  } catch (e) {
+    console.error("[MisMatchesPage]", e);
+>>>>>>> 536d699f309e5f3adcf36b069fad3bf79afbe40f
   }
 
   return (

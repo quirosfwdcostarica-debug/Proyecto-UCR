@@ -14,13 +14,10 @@ class NotificationService {
     return await NotificationRepository.findUnreadByUser(userId);
   }
 
-  async createNotification(userId, title, message, type) {
-    return await NotificationRepository.create({
-      user_id: userId,
-      title,
-      message,
-      type
-    });
+  async createNotification(userId, title, message, type, referenceId = null) {
+    const data = { user_id: userId, title, message, type };
+    if (referenceId) data.reference_id = referenceId;
+    return await NotificationRepository.create(data);
   }
 
   async markAsRead(id, userId) {
