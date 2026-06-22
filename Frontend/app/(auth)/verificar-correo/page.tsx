@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/Button";
 import { MailCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
+import { resendMagicLinkAction } from "@/actions/auth.actions";
 import { Suspense } from "react";
 
 function VerificarCorreoContent() {
@@ -18,34 +18,24 @@ function VerificarCorreoContent() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const handleResend = async () => {
+    const emailParam = searchParams?.get("email");
+    if (!emailParam) return;
+
     setIsResending(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-link`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: searchParams?.get("email") }),
-      });
-      
-      if (res.ok) {
-        toast({ title: "Enlace reenviado", description: "Revisa tu bandeja de entrada o spam." });
-        setResendCooldown(60);
-        const timer = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } else {
-        const data = await res.json();
-        toast({ title: "Error", description: data.message || "No se pudo reenviar el enlace", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error de red", description: "Verifica tu conexión a internet", variant: "destructive" });
-    } finally {
-      setIsResending(false);
+    const result = await resendMagicLinkAction(emailParam);
+    setIsResending(false);
+
+    if (result.success) {
+      toast({ title: "Enlace reenviado", description: "Revisa tu bandeja de entrada o spam." });
+      setResendCooldown(60);
+      const timer = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) { clearInterval(timer); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      toast({ title: "Error", description: result.message, variant: "destructive" });
     }
   };
 

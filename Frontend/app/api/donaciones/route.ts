@@ -2,6 +2,110 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// ─── GET /api/donaciones ──────────────────────────────────────────────────────
+// EXALUMNO: donaciones enviadas (exalumno_id = yo)
+// ESTUDIANTE: donaciones recibidas (proyecto_estudiante_id = yo)
+// ADMIN: todas; con ?userId=xxx filtra las de ese usuario (enviadas o recibidas)
+export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+  }
+
+  const userId = (session.user as any).id as string;
+  const tipo = (session.user as any).tipo as string;
+  const { searchParams } = new URL(request.url);
+  const targetUserId = searchParams.get("userId");
+
+  let whereClause: any;
+
+  if (tipo === "ADMIN") {
+    if (targetUserId) {
+      whereClause = {
+        OR: [
+          { exalumno_id: targetUserId },
+          { proyecto_estudiante_id: targetUserId },
+        ],
+      };
+    } else {
+      whereClause = {};
+    }
+  } else if (tipo === "EXALUMNO") {
+    whereClause = { exalumno_id: userId };
+  } else if (tipo === "ESTUDIANTE") {
+    whereClause = { proyecto_estudiante_id: userId };
+  } else {
+    return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+  }
+
+  try {
+    const [donaciones, aggConfirmada, aggPendiente] = await Promise.all([
+      (prisma.donacion.findMany as any)({
+        where: whereClause,
+        select: {
+          id: true,
+          monto: true,
+          destino: true,
+          moneda: true,
+          metodo_pago: true,
+          estado: true,
+          comprobante_url: true,
+          created_at: true,
+          updated_at: true,
+          exalumno: {
+            select: {
+              user: { select: { id: true, nombre: true, foto_url: true } },
+            },
+          },
+          estudiante: {
+            select: {
+              proyecto_titulo: true,
+              user: { select: { nombre: true } },
+            },
+          },
+        },
+        orderBy: { created_at: "desc" },
+      }) as Promise<any[]>,
+      prisma.donacion.aggregate({
+        where: { ...whereClause, estado: "CONFIRMADA" },
+        _sum: { monto: true },
+      }),
+      prisma.donacion.aggregate({
+        where: { ...whereClause, estado: "PENDIENTE" },
+        _sum: { monto: true },
+      }),
+    ]);
+
+    const data = donaciones.map((d: any) => ({
+      id: d.id,
+      monto: Number(d.monto),
+      destino: d.destino,
+      moneda: d.moneda ?? "CRC",
+      metodo_pago: d.metodo_pago,
+      estado: d.estado,
+      comprobante_url: d.comprobante_url ?? null,
+      created_at: d.created_at.toISOString(),
+      updated_at: d.updated_at.toISOString(),
+      proyecto_titulo: d.estudiante?.proyecto_titulo ?? d.destino ?? "Donación general",
+      estudiante_nombre: d.estudiante?.user?.nombre ?? null,
+      exalumno_nombre: d.exalumno?.user?.nombre ?? null,
+      exalumno_id: d.exalumno?.user?.id ?? null,
+      exalumno_foto: d.exalumno?.user?.foto_url ?? null,
+    }));
+
+    return NextResponse.json({
+      data,
+      total: data.length,
+      totalConfirmada: Number(aggConfirmada._sum.monto ?? 0),
+      totalPendiente: Number(aggPendiente._sum.monto ?? 0),
+    });
+  } catch (error) {
+    console.error("[GET /api/donaciones]", error);
+    return NextResponse.json({ message: "Error al obtener donaciones" }, { status: 500 });
+  }
+}
+
+// ─── POST /api/donaciones ────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user) {
@@ -24,6 +128,7 @@ export async function POST(request: NextRequest) {
     comprobanteUrl: string;
     destino: string;
     metodoPago?: string;
+    proyectoEstudianteId?: string;
   };
 
   try {
@@ -32,9 +137,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  const { exalumnoId, monto, comprobanteUrl, destino, metodoPago } = body;
+  const { exalumnoId, monto, comprobanteUrl, destino, metodoPago, proyectoEstudianteId } = body;
 
-  // Validaciones básicas
   if (!exalumnoId || !monto || !comprobanteUrl || !destino) {
     return NextResponse.json(
       { message: "Faltan campos requeridos: exalumnoId, monto, comprobanteUrl, destino" },
@@ -46,14 +150,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "El monto debe ser mayor a 0" }, { status: 400 });
   }
 
-  // Verificar que el exalumnoId coincide con el usuario autenticado (a menos que sea ADMIN)
   if (role !== "ADMIN" && exalumnoId !== userId) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  // Magia para restaurar la sesión si el usuario fue borrado por detrás:
-  let userExists = await prisma.user.findUnique({ where: { id: exalumnoId } });
-  
+  const userExists = await prisma.user.findUnique({ where: { id: exalumnoId } });
   if (!userExists) {
     try {
       await prisma.user.create({
@@ -64,48 +165,38 @@ export async function POST(request: NextRequest) {
           tipo: "EXALUMNO" as any,
           activo: true,
           email_verified: true,
-        }
+        },
       });
     } catch (e) {
       console.error("Fallo auto-creando usuario:", e);
     }
   }
 
-  // Verificar que existe el perfil de exalumno, si no existe lo creamos
-  let exalumno = await prisma.exalumno.findUnique({
-    where: { user_id: exalumnoId },
-  });
-  
+  let exalumno = await prisma.exalumno.findUnique({ where: { user_id: exalumnoId } });
   if (!exalumno) {
     try {
-      exalumno = await prisma.exalumno.create({
-        data: {
-          user_id: exalumnoId,
-        }
-      });
+      exalumno = await prisma.exalumno.create({ data: { user_id: exalumnoId } });
     } catch (err: any) {
-      console.error("Error creating exalumno profile:", err);
       return NextResponse.json({ message: "Error interno creando perfil: " + err.message }, { status: 500 });
     }
   }
 
   try {
-    const donacion = await prisma.donacion.create({
+    const donacion = await (prisma.donacion.create as any)({
       data: {
         exalumno_id: exalumnoId,
         monto,
         destino,
         estado: "PENDIENTE",
+        comprobante_url: comprobanteUrl || null,
         ...(metodoPago ? { metodo_pago: metodoPago } : {}),
+        ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
       },
     });
 
     return NextResponse.json(donacion, { status: 201 });
   } catch (error) {
     console.error("[POST /api/donaciones]", error);
-    return NextResponse.json(
-      { message: "Error al registrar la donación" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Error al registrar la donación" }, { status: 500 });
   }
 }

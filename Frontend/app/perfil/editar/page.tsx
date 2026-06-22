@@ -8,8 +8,8 @@ export const metadata = {
 };
 
 export default async function EditarPerfilPage() {
-  let userData = null;
-  let errorMsg = null;
+  let userData: any = null;
+  let errorMsg: string | null = null;
   
   try {
     userData = await getUserProfile();
