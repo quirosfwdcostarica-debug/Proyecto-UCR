@@ -139,9 +139,9 @@ export async function POST(request: NextRequest) {
 
   const { exalumnoId, monto, comprobanteUrl, destino, metodoPago, proyectoEstudianteId } = body;
 
-  if (!exalumnoId || !monto || !comprobanteUrl || !destino) {
+  if (!exalumnoId || !monto || !destino) {
     return NextResponse.json(
-      { message: "Faltan campos requeridos: exalumnoId, monto, comprobanteUrl, destino" },
+      { message: "Faltan campos requeridos: exalumnoId, monto, destino" },
       { status: 400 }
     );
   }
