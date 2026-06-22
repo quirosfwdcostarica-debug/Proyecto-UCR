@@ -1,10 +1,6 @@
 const { supabase } = require('../config/db');
 const { sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail } = require('../config/email');
 const db = require('../models');
-const crypto = require('crypto');
-
-// Validación del dominio UCR
-const isUCREmail = (email) => email?.toLowerCase().endsWith('@ucr.ac.cr');
 
 // Validación de contraseña: mínimo 8 chars, una mayúscula y un número
 const isValidPassword = (password) => {
@@ -14,25 +10,21 @@ const isValidPassword = (password) => {
   return true;
 };
 
-// Generar contraseña temporal segura (8+ caracteres, una mayúscula, un número)
+// Generar contraseña temporal segura (10 caracteres, sin caracteres especiales HTML)
+// Se evitan &, <, >, ", ' para que no se distorsionen al mostrarse en el email HTML
 const generateTemporaryPassword = () => {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const numbers = '0123456789';
-  const special = '!@#$%^&*';
-  
+
   let password = '';
-  // Garantizar al menos una mayúscula
   password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  // Garantizar al menos un número
   password += numbers[Math.floor(Math.random() * numbers.length)];
-  // Agregar 6 caracteres más aleatorios
-  const all = uppercase + lowercase + numbers + special;
-  for (let i = 0; i < 6; i++) {
+  const all = uppercase + lowercase + numbers;
+  for (let i = 0; i < 8; i++) {
     password += all[Math.floor(Math.random() * all.length)];
   }
-  
-  // Mezclar la contraseña
+
   return password.split('').sort(() => Math.random() - 0.5).join('');
 };
 
@@ -42,7 +34,7 @@ class AuthService {
    * RF-01: Registro de Estudiante
    * Solo permite correos @ucr.ac.cr. Envía magic link de verificación.
    */
-  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero }) {
+  async registerStudent({ email, nombre, password, cedula, fecha_nacimiento, genero, carnet_ucr, carrera, escuela_facultad, sede, anio_ingreso, nivel_academico, promedio_ponderado }) {
     // Validaciones
     // Nota: Se quitó la restricción de @ucr.ac.cr temporalmente por solicitud
     /*if (!isUCREmail(email)) {
@@ -86,8 +78,17 @@ class AuthService {
       genero
     });
 
-    // Crear perfil de estudiante vacío (se completa después)
-    await db.Estudiante.create({ user_id: authData.user.id });
+    // Crear perfil de estudiante con información académica
+    await db.Estudiante.create({ 
+      user_id: authData.user.id,
+      carnet_ucr,
+      carrera,
+      escuela_facultad,
+      sede,
+      anio_ingreso: anio_ingreso ? parseInt(anio_ingreso) : null,
+      nivel_academico,
+      promedio_ponderado: promedio_ponderado ? parseFloat(promedio_ponderado) : null
+    });
 
     // Generar token de verificación y enviarlo
     // Guardar token en metadata de Supabase (o usar Supabase's own magic link)
@@ -316,26 +317,25 @@ class AuthService {
     // No revelar si el correo existe por seguridad
     const user = await db.User.findOne({ where: { email } });
     if (user) {
+      const tempPassword = generateTemporaryPassword();
+
+      // Actualizar contraseña en Supabase Auth
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { password: tempPassword, email_confirm: true }
+      );
+
+      if (updateError) {
+        console.error('Error actualizando contraseña en Supabase:', updateError);
+        throw { status: 500, message: 'Error al procesar la recuperación de contraseña.' };
+      }
+
+      // Enviar email solo si Supabase actualizó correctamente
       try {
-        // Generar contraseña temporal
-        const tempPassword = generateTemporaryPassword();
-        
-        // Actualizar contraseña en Supabase
-        const { error: updateError } = await supabase.auth.admin.updateUserById(
-          user.id,
-          { password: tempPassword }
-        );
-        
-        if (updateError) {
-          console.error('Error actualizando contraseña en Supabase:', updateError);
-          throw { status: 500, message: 'Error al procesar la recuperación de contraseña.' };
-        }
-        
-        // Enviar email con contraseña temporal usando EmailJS
         await sendPasswordReset(email, user.nombre, tempPassword);
-      } catch (error) {
-        console.error('Error en forgotPassword:', error);
-        // No revelar el error al usuario por seguridad, pero loguearlo
+      } catch (emailError) {
+        console.error('Error enviando email de recuperación:', emailError);
+        // El email falló pero la contraseña sí se actualizó; no revelar al usuario
       }
     }
     return { message: 'Si existe una cuenta con ese correo, recibirás tu contraseña temporal por email.' };

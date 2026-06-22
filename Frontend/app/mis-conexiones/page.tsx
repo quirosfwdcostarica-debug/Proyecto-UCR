@@ -15,7 +15,6 @@ import {
   Trash2,
   AlertCircle
 } from "lucide-react";
-import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -219,7 +218,6 @@ export default function MisConexionesPage() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-[#f8fafc]">
-        <TopBar title="Mis Conexiones" />
         <div className="flex flex-col items-center justify-center py-32">
           <Loader2 className="h-12 w-12 animate-spin text-ucr-celeste-medium mb-4" />
           <p className="text-slate-500 font-medium text-sm">Cargando tus conexiones...</p>
@@ -230,8 +228,6 @@ export default function MisConexionesPage() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-12">
-      <TopBar title="Mis Conexiones" />
-      
       <div className="max-w-5xl mx-auto px-6 mt-8">
         
         {/* Header */}

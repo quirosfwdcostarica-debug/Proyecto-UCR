@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getStudentProjects } from "@/actions/dashboard.actions";
 import { StudentApplicationModal } from "@/components/donaciones/StudentApplicationModal";
@@ -437,7 +436,6 @@ export default function DonacionesPage() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
-      <TopBar title="Donaciones y Apoyo" />
 
       <div className="p-8 max-w-7xl mx-auto space-y-8">
         {/* ====== VISTA PARA ESTUDIANTES ====== */}
@@ -446,7 +444,7 @@ export default function DonacionesPage() {
             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl shadow-sm mb-2">
               🎓
             </div>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#0f4c81] to-blue-500">
+            <h1 className="text-4xl font-extrabold text-[#0f4c81]">
               Impulsa tu Proyecto de Graduación
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">

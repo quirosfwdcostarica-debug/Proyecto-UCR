@@ -73,6 +73,7 @@ model User {
   notifications     Notification[]
   reportesHechos    ReportePerfil[] @relation("Reportador")
   reportesRecibidos ReportePerfil[] @relation("Reportado")
+  messages          Message[]       @relation("MessageSender")
 
   @@map("USERS")
 }
@@ -148,7 +149,8 @@ model Match {
   estado       MatchEstado @default(SUGERIDO)
   resultado    String?
   match_reasons Json?
-  initiated_by  String?    @db.Uuid
+  initiated_by  String?   @default("sistema")
+  rechazado_por_estudiante Boolean @default(false)
   accepted_at  DateTime?
   rejected_at  DateTime?
   closed_at    DateTime?
@@ -158,9 +160,23 @@ model Match {
   estudiante   Estudiante  @relation("EstudianteMatch", fields: [estudiante_id], references: [user_id], onDelete: Cascade)
   exalumno     Exalumno    @relation("ExalumnoMatch", fields: [exalumno_id], references: [user_id], onDelete: Cascade)
   history      MatchHistory[]
+  messages     Message[]
 
   @@unique([estudiante_id, exalumno_id])
   @@map("MATCHES")
+}
+
+model Message {
+  id         String   @id @default(uuid()) @db.Uuid
+  match_id   String   @db.Uuid
+  sender_id  String   @db.Uuid
+  content    String
+  created_at DateTime @default(now())
+
+  match  Match @relation(fields: [match_id], references: [id], onDelete: Cascade)
+  sender User  @relation("MessageSender", fields: [sender_id], references: [id])
+
+  @@map("MESSAGES")
 }
 
 model MatchHistory {

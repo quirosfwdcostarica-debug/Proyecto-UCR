@@ -37,7 +37,7 @@ class MatchService {
    * @param {string} estadoRequerido - Estado que debe tener actualmente
    * @param {string} estadoNuevo - Estado al que se quiere mover
    */
-  async transicion(id, estadoRequerido, estadoNuevo) {
+  async transicion(id, estadoRequerido, estadoNuevo, extraData = {}) {
     const match = await MatchRepository.findById(id);
     if (!match) {
       const err = new Error('Match no encontrado');
@@ -49,7 +49,7 @@ class MatchService {
       err.status = 422;
       throw err;
     }
-    const [updated] = await MatchRepository.update(id, { estado: estadoNuevo });
+    const [updated] = await MatchRepository.update(id, { estado: estadoNuevo, ...extraData });
     if (!updated) throw new Error('No se pudo actualizar el match');
     return await MatchRepository.findById(id);
   }

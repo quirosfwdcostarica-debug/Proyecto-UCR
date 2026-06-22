@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { TopBar } from "@/components/layout/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
@@ -134,7 +133,6 @@ export default function CVPage() {
 
   return (
     <div className="min-h-full bg-[#f0f4f8] dark:bg-slate-950 flex flex-col transition-colors duration-300">
-      <TopBar title="My CV" />
 
       {deleteExpId && (
         <ConfirmModal

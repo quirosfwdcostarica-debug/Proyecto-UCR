@@ -39,7 +39,7 @@ export default function AplicantesPage({ params }: { params: { id: string } }) {
     <div className="container mx-auto py-10 px-4 min-h-screen">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+          <h1 className="text-3xl font-extrabold tracking-tight text-primary">
             Candidatos: {posicion.titulo}
           </h1>
           <div className="flex items-center gap-2 mt-2">

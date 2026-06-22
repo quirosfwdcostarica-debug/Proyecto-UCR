@@ -18,29 +18,28 @@ export function AppSidebar() {
   
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
-
   const isAdmin = role === "ADMIN";
 
-  const studentItems: NavItem[] = [
+  let navItems: NavItem[] = isEstudiante 
+    ? [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.exalumno", href: "/directorio/exalumnos", icon: Users },
         { labelKey: "sidebar.positions.student", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.student", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.cv", href: "/cv", icon: Briefcase },
         { labelKey: "sidebar.profile.student", href: "/perfil/editar", icon: UserCircle },
-        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
-  ];
-
-  const exalumnoItems: NavItem[] = [
+      ]
+    : [
         { labelKey: "sidebar.dashboard", href: "/", icon: LayoutDashboard },
         { labelKey: "sidebar.directory.student", href: "/directorio/estudiantes", icon: Users },
         { labelKey: "sidebar.positions.exalumno", href: "/posiciones", icon: Briefcase },
         { labelKey: "sidebar.donations.exalumno", href: "/donaciones", icon: Heart },
         { labelKey: "sidebar.profile.exalumno", href: "/perfil/editar", icon: UserCircle },
-        { labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert },
-  ];
+      ];
 
-  const navItems = (isEstudiante ? studentItems : exalumnoItems).filter(item => item.labelKey !== "sidebar.admin" || isAdmin);
+  if (isAdmin) {
+    navItems.push({ labelKey: "sidebar.admin", href: "/admin", icon: ShieldAlert });
+  }
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-30 transition-all duration-300 ease-in-out group shadow-lg hover:shadow-2xl">
@@ -88,16 +87,14 @@ export function AppSidebar() {
             </span>
           </Button>
         </Link>
-        {isEstudiante && (
-          <Link href="/proyectos/nuevo" className="block w-full">
-            <Button className="w-full bg-ucr-azul-2 hover:bg-ucr-azul-1 dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-all duration-300 flex items-center justify-center gap-0 group-hover:gap-2 px-2 group-hover:px-4 py-2.5">
-              <Plus className="h-4 w-4 shrink-0" />
-              <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden">
-                {t("sidebar.startProject")}
-              </span>
-            </Button>
-          </Link>
-        )}
+        <Link href="/proyectos/nuevo" className="block w-full">
+          <Button className="w-full bg-[#004C63] hover:bg-[#00384a] dark:bg-sky-500 dark:hover:bg-sky-600 dark:text-slate-950 font-bold text-white transition-all duration-300 flex items-center justify-center gap-0 group-hover:gap-2 px-2 group-hover:px-4 py-2.5">
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden">
+              {t("sidebar.startProject")}
+            </span>
+          </Button>
+        </Link>
       </div>
     </aside>
   );
