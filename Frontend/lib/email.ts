@@ -685,3 +685,53 @@ export async function sendAplicacionDescartada(
     console.error("[sendAplicacionDescartada] Error enviando email:", error);
   }
 }
+
+/**
+ * Notifica al estudiante que se aprobó una donación para su proyecto.
+ */
+export async function sendDonacionRecibidaStudent(
+  toEmail: string,
+  estudianteNombre: string,
+  proyectoTitulo: string,
+  monto: number
+): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: toEmail,
+      subject: `¡Buenas noticias! Has recibido una donación — Alumni U`,
+      html: `
+        <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;margin:0;padding:40px 20px;">
+          <div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,76,129,0.08);">
+            <div style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:40px 32px;text-align:center;">
+              <h1 style="color:white;margin:0;font-size:26px;font-weight:700;">Alumni U</h1>
+              <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;">Plataforma de Conexión Universitaria</p>
+            </div>
+            <div style="padding:40px 32px;">
+              <div style="text-align:center;margin-bottom:28px;">
+                <div style="width:64px;height:64px;background:#dcfce7;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px;">🎉</div>
+                <h2 style="color:#059669;font-size:22px;font-weight:700;margin:0 0 8px;">¡Nueva donación recibida!</h2>
+              </div>
+              <p style="color:#475569;line-height:1.6;font-size:16px;">Hola <strong style="color:#0f172a;">${estudianteNombre}</strong>,</p>
+              <p style="color:#475569;line-height:1.6;font-size:16px;">
+                ¡Felicidades! Un exalumno ha realizado una donación de <strong style="color:#059669;">₡${monto.toLocaleString("es-CR")}</strong> para apoyar tu proyecto <strong>"${proyectoTitulo}"</strong>.
+              </p>
+              <p style="color:#475569;line-height:1.6;font-size:16px;">
+                La Fundación UCR se pondrá en contacto pronto para gestionar la entrega de estos fondos.
+              </p>
+              <div style="text-align:center;margin:32px 0;">
+                <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}"
+                   style="background:#059669;color:white;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;display:inline-block;">
+                  Ir a Alumni U →
+                </a>
+              </div>
+              <p style="color:#94a3b8;font-size:13px;text-align:center;">Notificación automática del sistema Alumni U.</p>
+            </div>
+          </div>
+        </body>
+      `,
+    });
+  } catch (error) {
+    console.error("[sendDonacionRecibidaStudent] Error enviando email:", error);
+  }
+}

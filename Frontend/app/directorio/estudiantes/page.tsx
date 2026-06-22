@@ -204,7 +204,7 @@ export default function DirectorioEstudiantes() {
               onChange={(e) => setNombre(e.target.value)}
               type="text"
               placeholder="Buscar por nombre de estudiante..."
-              className="pl-10 h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
+              className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
             />
           </div>
           <Button
@@ -372,15 +372,24 @@ export default function DirectorioEstudiantes() {
                   </div>
 
                   {student.areaProyecto && (
-                    <div className="bg-ucr-celeste-medium/10 dark:bg-slate-800/50 p-3 rounded-md mb-5 border-l-2 border-ucr-celeste-medium dark:border-sky-500">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                        Área del Proyecto
+                    <div className="bg-blue-50/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81]">
+                      <p className="text-xs font-semibold text-slate-500 mb-1">
+                        Área / Escuela
                       </p>
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug">
                         {student.areaProyecto}
                       </p>
                     </div>
                   )}
+
+                  <div className="bg-slate-50 p-3 rounded-md mb-5 border-l-2 border-slate-300">
+                    <p className="text-xs font-semibold text-slate-500 mb-1">
+                      Detalles del Proyecto
+                    </p>
+                    <p className="text-sm font-medium text-slate-800 leading-snug">
+                      {student.user.bio || "No especificado"}
+                    </p>
+                  </div>
 
                   <div className="mb-4 mt-auto">
                     <div className="flex justify-between text-xs font-semibold mb-1.5">
