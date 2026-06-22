@@ -38,6 +38,7 @@ export const userProfileUpdateSchema = z.object({
   genero: z.string().optional().nullable(),
   
   // Student fields
+  nivel_beca: z.string().optional().nullable(),
   carnet_ucr: z.string().optional().nullable(),
   carrera: z.string().optional().nullable(),
   escuela_facultad: z.string().optional().nullable(),
@@ -47,6 +48,12 @@ export const userProfileUpdateSchema = z.object({
   promedio_ponderado: z.coerce.number().optional().nullable(),
   proyecto_titulo: z.string().optional().nullable(),
   proyecto_tipo: z.string().optional().nullable(),
+  proyecto_descripcion: z.string().max(1000).optional().nullable(),
+  proyecto_necesidades: z.array(z.string()).optional().nullable(),
+  proyecto_porcentaje_avance: z.coerce.number().min(0).max(100).optional().nullable(),
+  area_tematica: z.string().optional().nullable(),
+  areas_interes: z.array(z.string()).optional().nullable(),
+  habilidades: z.array(z.string()).optional().nullable(),
   busca_financiamiento: z.boolean().optional(),
   busca_mentoria: z.boolean().optional(),
   busca_empleo: z.boolean().optional(),
@@ -56,14 +63,20 @@ export const userProfileUpdateSchema = z.object({
   anio_graduacion: z.coerce.number().optional().nullable(),
   empresa_actual: z.string().optional().nullable(),
   cargo_actual: z.string().optional().nullable(),
+  sector: z.string().optional().nullable(),
   pais_ciudad: z.string().optional().nullable(),
   anios_experiencia: z.coerce.number().optional().nullable(),
   linkedin_url: z.string().optional().nullable(),
+  biografia: z.string().max(1000).optional().nullable(),
   ofrece_mentoria: z.boolean().optional(),
   ofrece_empleo: z.boolean().optional(),
   ofrece_pasantia: z.boolean().optional(),
   ofrece_proyecto: z.boolean().optional(),
-  ofrece_donacion_dinero: z.boolean().optional()
+  ofrece_donacion_dinero: z.boolean().optional(),
+  ofrece_guest_speaking: z.boolean().optional(),
+  ofrece_volunteering: z.boolean().optional(),
+  ofrece_career_advice: z.boolean().optional(),
+  ofrece_networking: z.boolean().optional()
 });
 
 export type UserProfileUpdateValues = z.infer<typeof userProfileUpdateSchema>;

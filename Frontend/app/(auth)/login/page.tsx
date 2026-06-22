@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,9 +29,16 @@ export default function LoginPage() {
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure`;
       }
     }
+
+    if (searchParams?.get("verified") === "1") {
+      toast({
+        title: "Correo verificado",
+        description: "Tu cuenta fue activada. Ahora puedes iniciar sesión.",
+      });
+    }
   }, []);
   const [formData, setFormData] = useState({
-    email: "",
+    email: searchParams?.get("email") ?? "",
     password: "",
   });
 
@@ -75,7 +84,18 @@ export default function LoginPage() {
           title: "Inicio de sesión exitoso",
           description: "Redirigiendo a tu panel...",
         });
-        router.push("/");
+        const session = await getSession();
+        const tipo = ((session?.user as any)?.tipo as string | undefined)?.toUpperCase();
+        const callbackUrl = searchParams?.get("callbackUrl");
+        if (callbackUrl) {
+          router.push(callbackUrl);
+        } else if (tipo === "ADMIN") {
+          router.push("/admin");
+        } else if (tipo === "EXALUMNO") {
+          router.push("/directorio/estudiantes");
+        } else {
+          router.push("/mis-matches");
+        }
         router.refresh();
       }
     } catch (error: any) {
@@ -234,5 +254,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro" />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
