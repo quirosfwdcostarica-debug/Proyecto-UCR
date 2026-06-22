@@ -106,6 +106,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         delete (token as any).refreshToken;
       }
 
+      // Si el token no tiene tipo (sesión creada antes de que se agregara el campo),
+      // lo buscamos en la BD para que el sidebar y el middleware tengan el rol correcto.
+      if (!token.tipo && token.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { tipo: true, foto_url: true },
+          });
+          if (dbUser) {
+            token.tipo = dbUser.tipo;
+            token.role = dbUser.tipo;
+            if (!token.foto_url) token.foto_url = dbUser.foto_url;
+          }
+        } catch {}
+      }
+
       if (trigger === "update" && session?.user?.image) {
         token.foto_url = session.user.image;
       }

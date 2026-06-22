@@ -4,28 +4,34 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Building2, CalendarDays } from "lucide-react";
+import { Briefcase, Building2, CalendarDays, CheckCircle2, Loader2, Users } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { getJobPositions } from "@/actions/dashboard.actions";
 
 export function AvailableJobsList() {
   const { toast } = useToast();
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.tipo as string | undefined;
+  const isStudent = role === "ESTUDIANTE";
+
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
+  const [appIdMap, setAppIdMap] = useState<Record<string, string>>({});
+  const [loadingApplied, setLoadingApplied] = useState(true);
 
+  // Cargar lista de posiciones activas
   useEffect(() => {
     async function loadJobs() {
       try {
         const data = await getJobPositions();
         setJobs(data);
-      } catch (error) {
-        console.error("Error loading jobs:", error);
+      } catch {
+        // ignore
       } finally {
         setLoading(false);
       }
@@ -33,144 +39,251 @@ export function AvailableJobsList() {
     loadJobs();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected) {
-      if (selected.size > 5 * 1024 * 1024) {
-        toast({ title: "Error", description: "El CV no debe pesar más de 5MB.", variant: "destructive" });
-        return;
+  // Cargar aplicaciones existentes del estudiante
+  useEffect(() => {
+    if (!isStudent) {
+      setLoadingApplied(false);
+      return;
+    }
+    async function loadApplied() {
+      try {
+        const res = await fetch("/api/aplicaciones");
+        if (res.ok) {
+          const json = await res.json();
+          const ids = new Set<string>();
+          const map: Record<string, string> = {};
+          for (const a of (json.data || [])) {
+            if (a.posicion?.id) {
+              ids.add(a.posicion.id);
+              map[a.posicion.id] = a.id;
+            }
+          }
+          setAppliedIds(ids);
+          setAppIdMap(map);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoadingApplied(false);
       }
-      if (selected.type !== "application/pdf") {
-        toast({ title: "Error", description: "Solo se permiten archivos PDF para el CV.", variant: "destructive" });
-        return;
+    }
+    loadApplied();
+  }, [isStudent]);
+
+  const handleApply = async (jobId: string) => {
+    if (isApplying) return;
+    setIsApplying(true);
+    try {
+      const res = await fetch("/api/aplicaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posicion_id: jobId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAppliedIds((prev) => new Set([...prev, jobId]));
+        setAppIdMap((prev) => ({ ...prev, [jobId]: data.id }));
+        setSelectedJobId(null);
+        toast({
+          title: "Aplicación enviada",
+          description: "Tu perfil UCR ha sido enviado al exalumno. Te notificaremos cuando haya respuesta.",
+        });
+      } else {
+        // Si ya aplicó antes (race condition), actualizar estado local
+        if (res.status === 409) {
+          setAppliedIds((prev) => new Set([...prev, jobId]));
+        }
+        toast({
+          title: "Error",
+          description: data.message || "No se pudo enviar la aplicación.",
+          variant: "destructive",
+        });
+        setSelectedJobId(null);
       }
-      setFile(selected);
+    } catch {
+      toast({
+        title: "Error de conexión",
+        description: "Revisa tu conexión e intenta de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplying(false);
     }
   };
 
-  const handleApplySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file || !selectedJobId) return;
-
-    setIsApplying(true);
-    
-    // Simulación del Server Action de postulación
-    setTimeout(() => {
-      setIsApplying(false);
-      toast({
-        title: "Aplicación Enviada",
-        description: "Tu CV ha sido enviado exitosamente al exalumno encargado de esta vacante.",
-      });
-      setFile(null);
-      setSelectedJobId(null); // Cerrar formulario
-    }, 2000);
-  };
+  const isLoadingAll = loading || (isStudent && loadingApplied);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-extrabold text-primary mb-2">Bolsa de Empleo</h2>
-        <p className="text-lg text-muted-foreground">Explora oportunidades laborales y de pasantía publicadas por la red de exalumnos UCR.</p>
+        <p className="text-lg text-muted-foreground">
+          Explora oportunidades laborales y de pasantía publicadas por la red de exalumnos UCR.
+        </p>
       </div>
 
       <div className="flex flex-col gap-6">
-        {loading ? (
-          <div className="text-center py-10">Cargando empleos...</div>
+        {isLoadingAll ? (
+          <div className="text-center py-10 flex items-center justify-center gap-2 text-slate-500">
+            <Loader2 className="w-5 h-5 animate-spin" /> Cargando empleos...
+          </div>
         ) : jobs.length === 0 ? (
-          <div className="text-center py-10 text-slate-500">No hay vacantes disponibles en este momento.</div>
+          <div className="text-center py-10 text-slate-500">
+            No hay vacantes disponibles en este momento.
+          </div>
         ) : (
-          jobs.map((job) => (
-            <Card key={job.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg dark:bg-slate-900/40 dark:border-slate-800">
-              <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 pb-4 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl text-primary dark:text-sky-400 font-bold">{job.titulo}</CardTitle>
-                    <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
-                      <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      {job.empresa || "Empresa Confidencial"}
-                    </CardDescription>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
-                    {job.tipo === "EMPLEO" ? "Tiempo Completo" : "Pasantía"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="py-5">
-                <p className="text-slate-700 dark:text-slate-300 mb-6 text-sm leading-relaxed">{job.descripcion || "Descripción de la posición"}</p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400 mb-2">
-                  <div>
-                    <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1">Modalidad / Jornada</span>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
-                        {job.modalidad || "No especificada"}
-                      </span>
-                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
-                        {job.jornada || "No especificada"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium">
-                      <CalendarDays className="w-4 h-4" />
-                      <span>Cierra: {job.fecha_limite ? new Date(job.fecha_limite).toLocaleDateString() : "Sin fecha"}</span>
-                    </div>
-                  </div>
-                </div>
+          jobs.map((job) => {
+            const alreadyApplied = appliedIds.has(job.id);
+            const isExpanded = selectedJobId === job.id;
 
-              {/* Formulario de Aplicación Expandible */}
-              {selectedJobId === job.id ? (
-                <div className="mt-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95">
-                  <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2">Aplicar a esta posición</h4>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                    Sube tu Curriculum Vitae en formato PDF. Asegúrate de resaltar las habilidades requeridas.
-                  </p>
-                  
-                  <form onSubmit={handleApplySubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Curriculum Vitae (PDF)</Label>
-                      <Input 
-                        type="file" 
-                        accept=".pdf" 
-                        onChange={handleFileChange} 
-                        required 
-                        className="file:bg-primary file:text-primary-foreground file:border-0 file:rounded-md file:px-4 file:py-1 cursor-pointer bg-white"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Máximo 5MB.</p>
+            return (
+              <Card
+                key={job.id}
+                className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg dark:bg-slate-900/40 dark:border-slate-800"
+              >
+                <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 pb-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-xl text-primary dark:text-sky-400 font-bold">
+                        {job.titulo}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                        <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                        {job.empresa || "Empresa Confidencial"}
+                      </CardDescription>
                     </div>
+                    <div className="flex items-center gap-2">
+                      {alreadyApplied && (
+                        <Badge className="bg-green-100 text-green-700 border-0 gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Aplicado
+                        </Badge>
+                      )}
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
+                        {job.tipo === "EMPLEO" ? "Tiempo Completo" : "Pasantía"}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
 
-                    {file && (
-                      <div className="bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 mt-4">
-                        <h5 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-2">Resumen de Aplicación</h5>
-                        <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-3">
-                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">Posición seleccionada:</span> {job.titulo}</li>
-                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">CV que será enviado:</span> {file.name}</li>
-                        </ul>
-                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
-                          Una vez enviada tu aplicación, el exalumno podrá revisar tu perfil profesional y CV.
-                        </p>
+                <CardContent className="py-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400 mb-2">
+                    <div>
+                      <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                        Modalidad / Jornada
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
+                          {job.modalidad || "No especificada"}
+                        </span>
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
+                          {job.jornada || "No especificada"}
+                        </span>
                       </div>
-                    )}
-
-                    <div className="flex gap-3 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setSelectedJobId(null)}>Cancelar</Button>
-                      <Button type="submit" disabled={isApplying || !file} className="bg-primary text-white">
-                        {isApplying ? "Enviando..." : "Enviar Aplicación"}
-                      </Button>
                     </div>
-                  </form>
-                </div>
-              ) : null}
-            </CardContent>
-            <CardFooter className="bg-white dark:bg-slate-900/40 pt-0 pb-4 justify-end">
-              {selectedJobId !== job.id && (
-                <Button onClick={() => setSelectedJobId(job.id)} variant="default" className="bg-[#0f4c81] hover:bg-[#0b3a63]">
-                  Aplicar Ahora
-                </Button>
-              )}
-            </CardFooter>
-            </Card>
-          ))
+                    <div className="flex items-end justify-end">
+                      <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium">
+                        <CalendarDays className="w-4 h-4" />
+                        <span>
+                          Cierra:{" "}
+                          {job.fecha_limite
+                            ? new Date(job.fecha_limite).toLocaleDateString("es-CR", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
+                              })
+                            : "Sin fecha límite"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Formulario de confirmación expandible */}
+                  {isExpanded && !alreadyApplied && (
+                    <div className="mt-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1 text-base">
+                        Confirmar tu aplicación
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-5">
+                        Al confirmar, tu perfil UCR y currículum digital serán compartidos con el exalumno
+                        encargado de esta vacante.
+                      </p>
+
+                      <div className="bg-[#005da4]/5 border border-[#005da4]/20 rounded-lg p-4 mb-5 text-sm space-y-1.5">
+                        <p>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">Posición: </span>
+                          <span className="text-slate-600 dark:text-slate-400">{job.titulo}</span>
+                        </p>
+                        <p>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">Empresa: </span>
+                          <span className="text-slate-600 dark:text-slate-400">
+                            {job.empresa || "Empresa Confidencial"}
+                          </span>
+                        </p>
+                        {job.modalidad && (
+                          <p>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">Modalidad: </span>
+                            <span className="text-slate-600 dark:text-slate-400">{job.modalidad}</span>
+                          </p>
+                        )}
+                        {job.jornada && (
+                          <p>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">Jornada: </span>
+                            <span className="text-slate-600 dark:text-slate-400">{job.jornada}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3 pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setSelectedJobId(null)}
+                          disabled={isApplying}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          onClick={() => handleApply(job.id)}
+                          disabled={isApplying}
+                          className="bg-[#005da4] hover:bg-[#004a85] text-white"
+                        >
+                          {isApplying ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 mr-2" /> Confirmar Aplicación
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Estado: ya aplicó */}
+                  {alreadyApplied && (
+                    <div className="mt-5 flex items-center gap-2.5 px-4 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm font-semibold text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      Tu aplicación está en revisión. El exalumno se pondrá en contacto si hay interés.
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="bg-white dark:bg-slate-900/40 pt-0 pb-4 justify-end">
+                  {isStudent && !alreadyApplied && !isExpanded && (
+                    <Button
+                      onClick={() => setSelectedJobId(job.id)}
+                      variant="default"
+                      className="bg-[#005da4] hover:bg-[#004a85]"
+                    >
+                      Aplicar Ahora
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

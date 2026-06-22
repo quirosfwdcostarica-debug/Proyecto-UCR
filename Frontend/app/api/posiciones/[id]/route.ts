@@ -23,6 +23,9 @@ export async function GET(
         id: true, titulo: true, tipo: true, modalidad: true,
         jornada: true, empresa: true, estado: true, fecha_limite: true,
         created_at: true, updated_at: true, exalumno_id: true,
+        descripcion: true, responsabilidades: true, horario: true, beneficios: true,
+        nivel_grado_minimo: true, area_estudio: true, hard_skills: true,
+        idiomas_requeridos: true, soft_skills: true, matching_weights: true,
         _count: { select: { aplicaciones: true } },
         exalumno: {
           select: {
@@ -53,6 +56,16 @@ export async function GET(
       updated_at: posicion.updated_at.toISOString(),
       exalumno_id: posicion.exalumno_id,
       aplicantes: posicion._count.aplicaciones,
+      descripcion: posicion.descripcion,
+      responsabilidades: posicion.responsabilidades,
+      horario: posicion.horario,
+      beneficios: posicion.beneficios,
+      nivel_grado_minimo: posicion.nivel_grado_minimo,
+      area_estudio: posicion.area_estudio,
+      hard_skills: posicion.hard_skills,
+      idiomas_requeridos: posicion.idiomas_requeridos,
+      soft_skills: posicion.soft_skills,
+      matching_weights: posicion.matching_weights,
       exalumno: {
         id: posicion.exalumno?.user?.id ?? null,
         nombre: posicion.exalumno?.user?.nombre ?? null,
@@ -107,10 +120,21 @@ export async function PATCH(
         ...(body.fecha_limite !== undefined && {
           fecha_limite: body.fecha_limite ? new Date(body.fecha_limite) : null,
         }),
+        ...(body.descripcion !== undefined && { descripcion: body.descripcion }),
+        ...(body.responsabilidades !== undefined && { responsabilidades: body.responsabilidades }),
+        ...(body.horario !== undefined && { horario: body.horario }),
+        ...(body.beneficios !== undefined && { beneficios: body.beneficios }),
+        ...(body.nivel_grado_minimo !== undefined && { nivel_grado_minimo: body.nivel_grado_minimo }),
+        ...(body.area_estudio !== undefined && { area_estudio: body.area_estudio }),
+        ...(body.hard_skills !== undefined && { hard_skills: body.hard_skills }),
+        ...(body.idiomas_requeridos !== undefined && { idiomas_requeridos: body.idiomas_requeridos }),
+        ...(body.soft_skills !== undefined && { soft_skills: body.soft_skills }),
+        ...(body.matching_weights !== undefined && { matching_weights: body.matching_weights }),
       },
       select: {
         id: true, titulo: true, tipo: true, modalidad: true,
         jornada: true, empresa: true, estado: true, fecha_limite: true,
+        descripcion: true, responsabilidades: true, horario: true,
       },
     });
     return NextResponse.json(updated);
