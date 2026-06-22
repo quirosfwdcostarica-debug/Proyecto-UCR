@@ -33,6 +33,7 @@ module.exports = {
           negro: "#141414",
           "gris-fondo": "#F8F8F8",   // Fondo de sección oficial
           "footer-bg": "#272829",    // Fondo gris oscuro del footer de la web
+          "texto-oscuro": "#1A1A2E",  // Texto oscuro para secciones claras
 
           // Tints oficiales al 20%
           turquesa: "#004C63",
