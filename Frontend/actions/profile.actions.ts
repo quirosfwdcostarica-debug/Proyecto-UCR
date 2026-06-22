@@ -69,21 +69,7 @@ export async function getUserProfile() {
   });
   const user = rawUser as any;
 
-<<<<<<< HEAD
-  try {
-    const token = (session?.user as any)?.accessToken;
-    const headers: HeadersInit = {};
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const res = await fetch(`${API_URL}/users/${userId}`, {
-      headers,
-      cache: "no-store",
-    });
-=======
   if (!user) throw new Error("Usuario no encontrado.");
->>>>>>> 907fc53ecfd76e3a1553856ec28ef26b58240508
 
   const ex = user.exalumno;
   const est = user.estudiante;
@@ -106,94 +92,6 @@ export async function getUserProfile() {
       website: ex?.website_url ?? "",
     },
 
-<<<<<<< HEAD
-    // Map backend schema to frontend schema expected by forms
-    return {
-      id: userData.id,
-      name: userData.nombre || "Usuario",
-      email: userData.email || "",
-      image: userData.foto_url || "",
-      tipo: userData.tipo || userRole,
-      phone: "+506 8888-8888", // Mock, not stored in DB
-      bio: "Esta es tu biografía profesional en la red Exalumnos UCR.", // Mock, not stored in DB
-      socialLinks: { 
-        linkedin: userData.Exalumno?.linkedin_url || "https://linkedin.com",
-        github: "",
-        twitter: "",
-        website: ""
-      },
-      
-      // Estudiante fields
-      carnet_ucr: userData.Estudiante?.carnet_ucr || "",
-      carrera: userData.Estudiante?.carrera || "",
-      escuela_facultad: userData.Estudiante?.escuela_facultad || "",
-      sede: userData.Estudiante?.sede || "",
-      anio_ingreso: userData.Estudiante?.anio_ingreso || "",
-      nivel_academico: userData.Estudiante?.nivel_academico || "",
-      promedio_ponderado: userData.Estudiante?.promedio_ponderado || "",
-      proyecto_titulo: userData.Estudiante?.proyecto_titulo || "",
-      proyecto_tipo: userData.Estudiante?.proyecto_tipo || "",
-      busca_financiamiento: !!userData.Estudiante?.busca_financiamiento,
-      busca_mentoria: !!userData.Estudiante?.busca_mentoria,
-      busca_empleo: !!userData.Estudiante?.busca_empleo,
-      busca_pasantia: !!userData.Estudiante?.busca_pasantia,
-      nivel_beca: userData.Estudiante?.nivel_beca || "",
-
-      // Exalumno fields
-      anio_graduacion: userData.Exalumno?.anio_graduacion || "",
-      empresa_actual: userData.Exalumno?.empresa_actual || "",
-      cargo_actual: userData.Exalumno?.cargo_actual || "",
-      pais_ciudad: userData.Exalumno?.pais_ciudad || "",
-      anios_experiencia: userData.Exalumno?.anios_experiencia || "",
-      linkedin_url: userData.Exalumno?.linkedin_url || "",
-      ofrece_mentoria: !!userData.Exalumno?.ofrece_mentoria,
-      ofrece_empleo: !!userData.Exalumno?.ofrece_empleo,
-      ofrece_pasantia: !!userData.Exalumno?.ofrece_pasantia,
-      ofrece_proyecto: !!userData.Exalumno?.ofrece_proyecto,
-      ofrece_donacion_dinero: !!userData.Exalumno?.ofrece_donacion_dinero,
-    } as any;
-  } catch (error) {
-    // Retornar mock según rol si hay error para no romper la UI
-    return {
-      id: userId,
-      name: session?.user?.name || "Usuario de Prueba",
-      email: session?.user?.email || "",
-      image: session?.user?.image || "",
-      tipo: userRole,
-      phone: "+506 8888-8888",
-      bio: "No se pudo conectar al servidor. Mostrando perfil local.",
-      socialLinks: { linkedin: "https://linkedin.com" },
-      
-      // Estudiante defaults
-      carnet_ucr: "B98765",
-      carrera: userRole === "ESTUDIANTE" ? "Ingeniería Eléctrica" : "",
-      escuela_facultad: "Ingeniería",
-      sede: "Sede Rodrigo Facio",
-      anio_ingreso: 2021,
-      nivel_academico: "Bachillerato",
-      promedio_ponderado: 8.5,
-      proyecto_titulo: userRole === "ESTUDIANTE" ? "Investigación de Energía Renovable" : "",
-      proyecto_tipo: "Tesis",
-      busca_financiamiento: true,
-      busca_mentoria: true,
-      busca_empleo: true,
-      busca_pasantia: false,
-
-      // Exalumno defaults
-      anio_graduacion: userRole === "EXALUMNO" ? 2018 : "",
-      empresa_actual: userRole === "EXALUMNO" ? "Intel Costa Rica" : "",
-      cargo_actual: userRole === "EXALUMNO" ? "Software Architect" : "",
-      pais_ciudad: "San José, Costa Rica",
-      anios_experiencia: 6,
-      linkedin_url: "https://linkedin.com",
-      ofrece_mentoria: true,
-      ofrece_empleo: true,
-      ofrece_pasantia: false,
-      ofrece_proyecto: true,
-      ofrece_donacion_dinero: true,
-    } as any;
-  }
-=======
     // Estudiante (nivel_beca es privado: solo el propio estudiante lo ve)
     nivel_beca: est?.nivel_beca ?? "",
     carnet_ucr: est?.carnet_ucr ?? "",
@@ -236,7 +134,6 @@ export async function getUserProfile() {
     ofrece_networking: !!ex?.ofrece_networking,
     perfil_completo: !!ex?.perfil_completo,
   };
->>>>>>> 907fc53ecfd76e3a1553856ec28ef26b58240508
 }
 
 // ─── GET perfil público por ID ────────────────────────────────────────────────
@@ -317,70 +214,6 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
   const tipo = ((session.user as any).tipo as string)?.toUpperCase();
   const d = parsed.data;
 
-<<<<<<< HEAD
-  try {
-    const token = (session?.user as any)?.accessToken;
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    // 1. Actualizar datos en tabla USERS
-    await fetch(`${API_URL}/users/${userId}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        nombre: parsedData.data.name,
-        foto_url: parsedData.data.image || null,
-      }),
-    });
-
-    // 2. Actualizar tabla específica según rol
-    if (userRole === "ESTUDIANTE") {
-      await fetch(`${API_URL}/estudiantes/${userId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          carnet_ucr: parsedData.data.carnet_ucr || null,
-          carrera: parsedData.data.carrera || null,
-          escuela_facultad: parsedData.data.escuela_facultad || null,
-          sede: parsedData.data.sede || null,
-          anio_ingreso: parsedData.data.anio_ingreso ? Number(parsedData.data.anio_ingreso) : null,
-          nivel_academico: parsedData.data.nivel_academico || null,
-          promedio_ponderado: parsedData.data.promedio_ponderado ? Number(parsedData.data.promedio_ponderado) : null,
-          proyecto_titulo: parsedData.data.proyecto_titulo || null,
-          proyecto_tipo: parsedData.data.proyecto_tipo || null,
-          busca_financiamiento: !!parsedData.data.busca_financiamiento,
-          busca_mentoria: !!parsedData.data.busca_mentoria,
-          busca_empleo: !!parsedData.data.busca_empleo,
-          busca_pasantia: !!parsedData.data.busca_pasantia,
-          nivel_beca: parsedData.data.nivel_beca || null,
-        }),
-      });
-    } else if (userRole === "EXALUMNO") {
-      await fetch(`${API_URL}/exalumnos/${userId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          carnet_ucr: parsedData.data.carnet_ucr || null,
-          escuela_facultad: parsedData.data.escuela_facultad || null,
-          anio_graduacion: parsedData.data.anio_graduacion ? Number(parsedData.data.anio_graduacion) : null,
-          empresa_actual: parsedData.data.empresa_actual || null,
-          cargo_actual: parsedData.data.cargo_actual || null,
-          pais_ciudad: parsedData.data.pais_ciudad || null,
-          anios_experiencia: parsedData.data.anios_experiencia ? Number(parsedData.data.anios_experiencia) : null,
-          linkedin_url: parsedData.data.linkedin_url || parsedData.data.socialLinks?.linkedin || null,
-          ofrece_mentoria: !!parsedData.data.ofrece_mentoria,
-          ofrece_empleo: !!parsedData.data.ofrece_empleo,
-          ofrece_pasantia: !!parsedData.data.ofrece_pasantia,
-          ofrece_proyecto: !!parsedData.data.ofrece_proyecto,
-          ofrece_donacion_dinero: !!parsedData.data.ofrece_donacion_dinero,
-        }),
-      });
-    }
-  } catch (error) {
-    console.error("Error actualizando perfil en el backend:", error);
-=======
   // 1. Actualizar tabla USERS
   await prisma.user.update({
     where: { id: userId },
@@ -449,7 +282,6 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
       create: { user_id: userId, ...estUpdate },
       update: estUpdate,
     });
->>>>>>> 907fc53ecfd76e3a1553856ec28ef26b58240508
   }
 
   revalidatePath("/perfil/editar");

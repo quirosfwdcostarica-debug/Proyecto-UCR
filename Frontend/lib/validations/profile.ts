@@ -38,7 +38,6 @@ export const userProfileUpdateSchema = z.object({
   genero: z.string().optional().nullable(),
   
   // Student fields
-  nivel_beca: z.string().optional().nullable(),
   carnet_ucr: z.string().optional().nullable(),
   carrera: z.string().optional().nullable(),
   escuela_facultad: z.string().optional().nullable(),
