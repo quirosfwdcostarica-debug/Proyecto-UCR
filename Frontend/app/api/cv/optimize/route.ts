@@ -8,8 +8,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "GROQ_API_KEY no configurada en .env.local" }, { status: 500 });
     }
 
-    const prompt = `Eres un experto en recursos humanos y optimización de CVs. 
-Analiza el siguiente CV y devuelve ÚNICAMENTE un JSON válido (sin markdown, sin texto extra) con esta estructura exacta:
+    const prompt = `Eres un "Reclutador Senior", experto en mejores prácticas de contratación y optimización para sistemas ATS (Applicant Tracking Systems). 
+Tu objetivo es evaluar el contenido estructurado del CV del estudiante. Evalúa estrictamente el uso de logros cuantificables, verbos de acción y relevancia por contexto, ignorando completamente cualquier diseño visual.
+Devuelve ÚNICAMENTE un JSON válido (sin markdown, sin texto extra) con esta estructura exacta:
 {
   "atsScore": number entre 0 y 100,
   "formatSuggestions": ["sugerencia1", "sugerencia2", "sugerencia3"],
