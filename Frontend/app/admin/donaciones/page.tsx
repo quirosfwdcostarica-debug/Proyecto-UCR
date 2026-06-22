@@ -10,7 +10,6 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AiAnalysisViewer } from "@/components/donaciones/AiAnalysisViewer";
 
 interface Donacion {
   id: string;
@@ -264,10 +263,6 @@ export default function AdminDonacionesPage() {
                       )}
                     </div>
                   </div>
-
-                  {d.estado === "PENDIENTE" && (
-                    <AiAnalysisViewer donacionId={d.id} />
-                  )}
                 </Card>
               );
             })}
