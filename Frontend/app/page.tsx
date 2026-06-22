@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -53,11 +53,35 @@ function Dashboard() {
 
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
+  const userName = session?.user?.name || "Usuario";
+
+  // Profile data from API
+  const [profile, setProfile] = useState<any>(null);
+  const [mentorCount, setMentorCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Fetch own profile for real data
+    fetch("/api/users/me")
+      .then((r) => r.json())
+      .then((d) => { if (d?.id) setProfile(d); })
+      .catch(() => {});
+
+    // Fetch mentor count
+    fetch("/api/exalumnos")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setMentorCount(d.length); })
+      .catch(() => {});
+  }, []);
+
+  // Student profile fields (with sensible fallbacks)
+  const proyectoTitulo  = profile?.estudiante?.proyecto_titulo  || "Proyecto de Graduación";
+  const carrera         = profile?.estudiante?.carrera          || "Carrera UCR";
+  const matchesActivos  = profile?.matchesActivos  ?? 0;
+  const matchesPendientes = profile?.matchesPendientes ?? 0;
 
   // Beca Modal States
   const [isBecaOpen, setIsBecaOpen] = useState(false);
   const [becaJustification, setBecaJustification] = useState("");
-  const [becaMonto] = useState("¢450,000");
 
   // Coffee Modal States
   const [isCoffeeOpen, setIsCoffeeOpen] = useState(false);
@@ -72,7 +96,7 @@ function Dashboard() {
     setBecaJustification("");
     toast({
       title: "Solicitud de Beca Enviada",
-      description: "Tu postulación al fondo de Excelencia de Exalumnos por ¢450,000 ha sido recibida con éxito y está en revisión."
+      description: "Tu postulación al fondo de Excelencia de Exalumnos ha sido recibida con éxito y está en revisión."
     });
   };
 
@@ -87,6 +111,7 @@ function Dashboard() {
       description: `Se ha enviado la solicitud a ${selectedMentor?.name} para el día ${coffeeDate} a las ${coffeeTime}. Recibirás un correo de confirmación.`
     });
   };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-900 relative flex flex-col">
       {/* Portada Superior (Hero con Carrusel) */}
@@ -119,13 +144,20 @@ function Dashboard() {
               {/* Main Welcome Card */}
               <Card className="lg:col-span-2 p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex relative overflow-hidden">
                 <div className="w-full relative z-10 text-foreground flex flex-col justify-center min-h-[200px]">
-                  <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Bienvenido de nuevo, Gabriel</p>
+                  <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Bienvenido de nuevo, {userName}</p>
                   <h1 className="text-4xl font-extrabold text-foreground mb-4 leading-tight">
-                    Tu camino a la graduación está <br/>
-                    <span className="text-[#22c55e]">75% completado.</span>
+                    {proyectoTitulo !== "Proyecto de Graduación" ? (
+                      <>{proyectoTitulo}<br/><span className="text-[#22c55e]">{carrera}</span></>
+                    ) : (
+                      <>Tu comunidad de Exalumnos UCR<br/><span className="text-[#22c55e]">te espera.</span></>
+                    )}
                   </h1>
                   <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
-                    Sigue con el excelente trabajo en tu Proyecto de Graduación. Tienes 2 revisiones pendientes de tu mentor esta semana.
+                    {matchesActivos > 0
+                      ? `Tienes ${matchesActivos} match${matchesActivos > 1 ? "es" : ""} activo${matchesActivos > 1 ? "s" : ""}. Continúa conectando con la red de exalumnos.`
+                      : matchesPendientes > 0
+                        ? `Tienes ${matchesPendientes} match${matchesPendientes > 1 ? "es" : ""} sugerido${matchesPendientes > 1 ? "s" : ""}. ¡Revísalos y conecta con exalumnos!`
+                        : "Explora el directorio de exalumnos y conecta con mentores que te ayudarán a avanzar en tu carrera."}
                   </p>
                   <div className="flex gap-4">
                     <Link href="/proyecto/hitos">
@@ -147,10 +179,15 @@ function Dashboard() {
                 
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2 font-medium">
-                    <span className="text-slate-700 dark:text-slate-300">Investigación de Energía Renovable</span>
-                    <span className="text-[#0f4c81] dark:text-sky-400 text-lg font-bold">75%</span>
+                    <span className="text-slate-700 dark:text-slate-300">{proyectoTitulo}</span>
+                    <span className="text-[#0f4c81] dark:text-sky-400 text-sm font-semibold">{carrera}</span>
                   </div>
-                  <Progress value={75} className="h-2.5 bg-slate-100 dark:bg-slate-800" />
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                      {matchesActivos > 0 ? `${matchesActivos} mentor${matchesActivos > 1 ? "es" : ""} activo${matchesActivos > 1 ? "s" : ""}` : "Sin matches activos aún"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -183,16 +220,18 @@ function Dashboard() {
                       <Building2 className="h-5 w-5" />
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Fondos de Beca</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">¢450,000</h4>
-                    <p className="text-xs font-semibold text-green-600">+12% desde el ciclo anterior</p>
+                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
+                    <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
                   </Card>
                   <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
                     <div className="h-10 w-10 rounded-lg bg-green-700 flex items-center justify-center text-white mb-4">
                       <Users className="h-5 w-5" />
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Mentorías Activas</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">2 Mentores</h4>
-                    <p className="text-xs font-medium text-slate-500">Última sesión: hace 2 días</p>
+                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">
+                      {mentorCount === null ? "..." : `${mentorCount} Mentor${mentorCount !== 1 ? "es" : ""}`}
+                    </h4>
+                    <p className="text-xs font-medium text-slate-500">Exalumnos en la plataforma</p>
                   </Card>
                 </div>
                 <Card className="p-5 border-dashed border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950/40 backdrop-blur-md flex items-center justify-between shadow-md">
@@ -233,7 +272,10 @@ function Dashboard() {
                     <span className="text-[#0f4c81] dark:text-sky-400">Tu red está activa.</span>
                   </h1>
                   <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
-                    Gracias por apoyar al talento de la UCR. Tienes 3 solicitudes de café virtual de estudiantes esperando tu respuesta esta semana.
+                    Gracias por apoyar al talento de la UCR.{" "}
+                    {profile?.matchesContactados > 0
+                      ? `Tienes ${profile.matchesContactados} solicitud${profile.matchesContactados !== 1 ? "es" : ""} de estudiantes esperando tu respuesta.`
+                      : "Sigue conectando con estudiantes de la red UCR."}
                   </p>
                   <div className="flex gap-4">
                     <Link href="/directorio/estudiantes">
@@ -256,28 +298,33 @@ function Dashboard() {
                   
                   <div className="space-y-6">
                     <div>
-                      <span className="text-sm text-slate-500 block mb-1">Donación Total Acumulada</span>
-                      <span className="text-3xl font-extrabold text-[#0f4c81] dark:text-sky-400">¢950,000</span>
+                      <span className="text-sm text-slate-500 block mb-1">Donación Total Confirmada</span>
+                      <span className="text-3xl font-extrabold text-[#0f4c81] dark:text-sky-400">
+                        {profile?.donacionTotalConfirmada != null
+                          ? `₡${Number(profile.donacionTotalConfirmada).toLocaleString("es-CR")}`
+                          : "₡0"}
+                      </span>
                     </div>
-                    
+
                     <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
                       <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Proyectos Patrocinados</span>
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="font-medium text-slate-700 dark:text-slate-300">Energía Renovable (Gabriel)</span>
-                            <span className="font-bold text-[#0f4c81] dark:text-sky-400">75%</span>
-                          </div>
-                          <Progress value={75} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+                      {Array.isArray(profile?.proyectosPatrocinados) && profile.proyectosPatrocinados.length > 0 ? (
+                        <div className="space-y-3">
+                          {profile.proyectosPatrocinados.map((p: any, i: number) => (
+                            <div key={i}>
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
+                                  {p.proyecto_titulo} ({p.nombre_estudiante})
+                                </span>
+                                <span className="font-bold text-[#0f4c81] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
+                              </div>
+                              <Progress value={p.avance ?? 0} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+                            </div>
+                          ))}
                         </div>
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="font-medium text-slate-700 dark:text-slate-300">Plataforma Inclusiva (María)</span>
-                            <span className="font-bold text-[#0f4c81] dark:text-sky-400">40%</span>
-                          </div>
-                          <Progress value={40} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
-                        </div>
-                      </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">Sin proyectos patrocinados aún.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -306,18 +353,18 @@ function Dashboard() {
             Aplicar a Beca de Excelencia
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
-            Estás postulando para el fondo especial de exalumnos por un monto total de <span className="font-semibold text-slate-700">{becaMonto}</span>.
+            Estás postulando al fondo especial de Excelencia de Exalumnos de la UCR.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleApplyBeca} className="space-y-4 my-2">
           <div className="space-y-1">
             <Label className="text-xs font-bold text-slate-700">Nombre del Solicitante</Label>
-            <Input value="Gabriel Solano" disabled className="text-xs bg-slate-50 text-slate-500" />
+            <Input value={userName} disabled className="text-xs bg-slate-50 text-slate-500" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs font-bold text-slate-700">Proyecto de Graduación</Label>
-            <Input value="Investigación de Energía Renovable" disabled className="text-xs bg-slate-50 text-slate-500" />
+            <Input value={proyectoTitulo} disabled className="text-xs bg-slate-50 text-slate-500" />
           </div>
           <div className="space-y-1">
             <Label htmlFor="beca-justificacion" className="text-xs font-bold text-slate-700">Justificación de la Solicitud</Label>

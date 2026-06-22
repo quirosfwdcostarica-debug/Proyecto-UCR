@@ -444,7 +444,7 @@ export default function DonacionesPage() {
             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-4xl shadow-sm mb-2">
               🎓
             </div>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#0f4c81] to-blue-500">
+            <h1 className="text-4xl font-extrabold text-[#0f4c81]">
               Impulsa tu Proyecto de Graduación
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">

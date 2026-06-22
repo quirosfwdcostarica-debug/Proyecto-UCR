@@ -46,6 +46,7 @@ module.exports = (sequelize) => {
   Match.associate = (models) => {
     Match.belongsTo(models.Exalumno, { foreignKey: 'exalumno_id' });
     Match.belongsTo(models.Estudiante, { foreignKey: 'estudiante_id' });
+    Match.hasMany(models.Message, { foreignKey: 'match_id', as: 'messages' });
   };
 
   return Match;

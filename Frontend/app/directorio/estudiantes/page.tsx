@@ -34,6 +34,9 @@ interface EstudianteItem {
 export default function DirectorioEstudiantes() {
   const { data: session } = useSession();
   const [estudiantes, setEstudiantes] = useState<EstudianteItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -53,20 +56,24 @@ export default function DirectorioEstudiantes() {
   const [areaProyecto, setAreaProyecto] = useState("");
   const [apoyoBuscado, setApoyoBuscado] = useState("");
 
-  const fetchEstudiantes = useCallback(async () => {
+  const fetchEstudiantes = useCallback(async (currentPage = 1) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
       if (nombre) params.set("nombre", nombre);
       if (carrera) params.set("carrera", carrera);
-      if (areaProyecto) params.set("areaProyecto", areaProyecto);
-      if (apoyoBuscado) params.set("apoyoBuscado", apoyoBuscado);
+      if (areaProyecto) params.set("area_tematica", areaProyecto);
+      if (apoyoBuscado) params.set("tipo_apoyo", apoyoBuscado);
+      params.set("page", String(currentPage));
 
       const res = await fetch(`/api/estudiantes?${params.toString()}`);
       if (!res.ok) throw new Error("Error al cargar el directorio");
-      const data: EstudianteItem[] = await res.json();
-      setEstudiantes(data);
+      const json = await res.json();
+      setEstudiantes(json.data ?? []);
+      setTotal(json.total ?? 0);
+      setTotalPages(json.totalPages ?? 1);
+      setPage(currentPage);
     } catch (err: any) {
       setError(err.message || "Error desconocido");
     } finally {
@@ -76,7 +83,7 @@ export default function DirectorioEstudiantes() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchEstudiantes();
+      fetchEstudiantes(1);
     }, 400);
     return () => clearTimeout(timer);
   }, [fetchEstudiantes]);
@@ -297,7 +304,7 @@ export default function DirectorioEstudiantes() {
         {error && (
           <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/55 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
             {error} —{" "}
-            <button onClick={fetchEstudiantes} className="underline font-medium">
+            <button onClick={() => fetchEstudiantes(page)} className="underline font-medium">
               Reintentar
             </button>
           </div>
@@ -331,7 +338,7 @@ export default function DirectorioEstudiantes() {
         ) : (
           <>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">
-              {estudiantes.length} estudiante{estudiantes.length !== 1 ? "s" : ""} encontrado{estudiantes.length !== 1 ? "s" : ""}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {estudiantes.map((student) => (
@@ -458,6 +465,30 @@ export default function DirectorioEstudiantes() {
                 </Card>
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchEstudiantes(page - 1)}
+                  disabled={page <= 1 || loading}
+                  className="h-9 px-3 border-slate-300"
+                >
+                  ← Anterior
+                </Button>
+                <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+                  Página {page} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => fetchEstudiantes(page + 1)}
+                  disabled={page >= totalPages || loading}
+                  className="h-9 px-3 border-slate-300"
+                >
+                  Siguiente →
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

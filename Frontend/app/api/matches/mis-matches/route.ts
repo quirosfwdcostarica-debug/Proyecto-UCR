@@ -2,6 +2,30 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+// Columnas existentes en EXALUMNOS (sin: carrera, sector, areas_interes, perfil_completo, visible_en_directorio)
+const EXALUMNO_SELECT = {
+  user_id: true, carnet_ucr: true, escuela_facultad: true,
+  anio_graduacion: true, empresa_actual: true, cargo_actual: true,
+  pais_ciudad: true, anios_experiencia: true, linkedin_url: true,
+  biografia: true, github_url: true, website_url: true,
+  habilidades: true, certificaciones: true, experiencia_laboral: true,
+  ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
+  ofrece_proyecto: true, ofrece_donacion_dinero: true,
+  ofrece_guest_speaking: true, ofrece_volunteering: true,
+  ofrece_career_advice: true, ofrece_networking: true,
+  user: { select: { nombre: true, email: true, foto_url: true } },
+} as const;
+
+// Columnas existentes en ESTUDIANTES (sin: visible_en_directorio, proyecto_descripcion, etc.)
+const ESTUDIANTE_SELECT = {
+  user_id: true, carnet_ucr: true, carrera: true, escuela_facultad: true,
+  sede: true, anio_ingreso: true, nivel_academico: true,
+  promedio_ponderado: true, proyecto_titulo: true, proyecto_tipo: true,
+  busca_financiamiento: true, busca_mentoria: true,
+  busca_empleo: true, busca_pasantia: true,
+  user: { select: { nombre: true, email: true, foto_url: true } },
+} as const;
+
 export async function GET(req: Request) {
   try {
     const session = await auth();
@@ -18,33 +42,30 @@ export async function GET(req: Request) {
       matches = await prisma.match.findMany({
         where: { estudiante_id: userId },
         orderBy: { score_match: "desc" },
-        include: {
-          exalumno: {
-            include: {
-              user: {
-                select: { nombre: true, email: true, foto_url: true },
-              },
-            },
-          },
+        select: {
+          id: true, exalumno_id: true, estudiante_id: true,
+          tipo_apoyo: true, score_match: true, estado: true, resultado: true,
+          initiated_by: true, match_reasons: true,
+          accepted_at: true, rejected_at: true, closed_at: true,
+          created_at: true, updated_at: true,
+          exalumno: { select: EXALUMNO_SELECT },
         },
       });
     } else if (role === "EXALUMNO") {
       matches = await prisma.match.findMany({
         where: { exalumno_id: userId },
         orderBy: { score_match: "desc" },
-        include: {
-          estudiante: {
-            include: {
-              user: {
-                select: { nombre: true, email: true, foto_url: true },
-              },
-            },
-          },
+        select: {
+          id: true, exalumno_id: true, estudiante_id: true,
+          tipo_apoyo: true, score_match: true, estado: true, resultado: true,
+          initiated_by: true, match_reasons: true,
+          accepted_at: true, rejected_at: true, closed_at: true,
+          created_at: true, updated_at: true,
+          estudiante: { select: ESTUDIANTE_SELECT },
         },
       });
     }
 
-    // Normalize field names for frontend compatibility
     const normalized = matches.map((m) => ({
       ...m,
       afinidad: m.score_match,
@@ -65,11 +86,7 @@ export async function GET(req: Request) {
               m.exalumno.ofrece_networking      ? "Networking"     : null,
             ].filter(Boolean) as string[],
             user: m.exalumno.user
-              ? {
-                  name: m.exalumno.user.nombre,
-                  email: m.exalumno.user.email,
-                  image: m.exalumno.user.foto_url,
-                }
+              ? { name: m.exalumno.user.nombre, email: m.exalumno.user.email, image: m.exalumno.user.foto_url }
               : null,
           }
         : undefined,
@@ -85,11 +102,7 @@ export async function GET(req: Request) {
               m.estudiante.busca_financiamiento ? "Financiamiento" : null,
             ].filter(Boolean) as string[],
             user: m.estudiante.user
-              ? {
-                  name: m.estudiante.user.nombre,
-                  email: m.estudiante.user.email,
-                  image: m.estudiante.user.foto_url,
-                }
+              ? { name: m.estudiante.user.nombre, email: m.estudiante.user.email, image: m.estudiante.user.foto_url }
               : null,
           }
         : undefined,

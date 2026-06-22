@@ -3,15 +3,32 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  let session: any = null;
+  let userId: string | undefined;
+
+  // Robust auth handling with detailed logging
+  try {
+    session = await auth();
+    userId = session?.user?.id;
+    console.log("[notifications] session userId:", userId, "| type:", typeof userId);
+  } catch (authErr: any) {
+    console.error("[notifications] auth() falló:", authErr?.message);
+    return NextResponse.json({ message: "Error de autenticación" }, { status: 500 });
+  }
 
   if (!userId) {
     return NextResponse.json({ message: "No autenticado" }, { status: 401 });
   }
 
+  // Validate UUID format before casting in raw SQL
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(userId)) {
+    console.error("[notifications] userId no es UUID válido:", userId);
+    return NextResponse.json({ message: "ID de usuario inválido" }, { status: 400 });
+  }
+
   try {
-    // Try with reference_id column (requires migration). Falls back gracefully if column doesn't exist yet.
+    // Try with reference_id column (added in RF06 migration). Falls back gracefully if column doesn't exist yet.
     let notifications: any[];
     try {
       notifications = await prisma.$queryRaw<any[]>`
@@ -79,6 +96,8 @@ export async function GET(request: NextRequest) {
       let url = matchesUrl;
       if (n.type === 'match_accepted' && n.matchId) {
         url = `/mensajes?matchId=${n.matchId}`;
+      } else if (n.type?.includes('connection')) {
+        url = '/mis-conexiones';
       }
 
       return {
@@ -96,8 +115,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(formatted);
-  } catch (error) {
-    console.error("[GET /api/notifications]", error);
+  } catch (error: any) {
+    console.error("[GET /api/notifications] DB ERROR:", error?.message, error?.code);
     return NextResponse.json({ message: "Error al obtener notificaciones" }, { status: 500 });
   }
 }
