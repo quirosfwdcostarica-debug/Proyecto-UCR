@@ -45,17 +45,12 @@ server.listen(PORT, () => {
   console.log(`📡 Entorno: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Intentar sincronizar BD en background (no bloquea el servidor)
+// Intentar conectar BD en background (no bloquea el servidor)
 sequelize.authenticate()
-  .then(() => {
-    console.log('✅ Conexión a base de datos establecida.');
-    return sequelize.sync({ alter: false }); // alter:false en producción para no alterar schema
-  })
-  .then(() => console.log('✅ Modelos sincronizados con la base de datos.'))
-  .catch(err => {
-    console.warn('⚠️  Sequelize no pudo conectar directamente (puerto bloqueado por red). El servidor opera normalmente via Supabase REST API.');
-    if (process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true') {
-      console.warn('   Error técnico:', err.message);
-    }
+  .then(() => console.log('✅ Conexión a base de datos establecida.'))
+  .catch(() => {
+    // El pooler de Supabase (puerto 6543/PgBouncer) no soporta los comandos
+    // de autenticación de Sequelize — esperado en este entorno. El servidor
+    // opera normalmente vía Supabase REST API y Prisma (Next.js).
   });
 

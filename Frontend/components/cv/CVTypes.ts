@@ -19,10 +19,12 @@ export interface CVData {
   certifications: string[];
 }
 
+// Template vacío — la página mi-curriculum carga los datos reales del usuario autenticado
 export const initialCV: CVData = {
-  name: "Mariana Rodríguez",
-  title: "Ingeniera de Software",
+  name: "",
+  title: "",
   location: "San José, Costa Rica",
+<<<<<<< HEAD
   email: "Yosimarvv@gmail.com",
   phone: "+506 8888-8888",
   summary:
@@ -55,5 +57,13 @@ export const initialCV: CVData = {
       period: "2018 – 2022",
     },
   ],
+=======
+  email: "",
+  phone: "",
+  summary: "",
+  experience: [],
+  skills: [],
+  education: [],
+>>>>>>> 907fc53ecfd76e3a1553856ec28ef26b58240508
   certifications: [],
 };

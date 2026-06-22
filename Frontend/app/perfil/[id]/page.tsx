@@ -1,69 +1,61 @@
 import { auth } from "@/lib/auth";
-import { ProfileDetailsClient } from "@/components/profile/ProfileDetailsClient";
 import { notFound } from "next/navigation";
+import { getPublicProfile } from "@/actions/profile.actions";
+import { ProfileDetailsClient } from "@/components/profile/ProfileDetailsClient";
+import { DonacionesAdminPanel } from "@/components/donaciones/DonacionesAdminPanel";
 
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+interface Props {
+  params: { id: string };
+}
 
-interface ProfilePageProps {
-  params: {
-    id: string;
+export async function generateMetadata({ params }: Props) {
+  const profile = await getPublicProfile(params.id).catch(() => null);
+  if (!profile) return { title: "Perfil | Exalumnos UCR" };
+  return {
+    title: `${profile.nombre} | Perfil | Exalumnos UCR`,
+    description: profile.biografia || `Perfil de ${profile.nombre} en la red de Exalumnos UCR.`,
   };
 }
 
-export async function generateMetadata({ params }: ProfilePageProps) {
-  try {
-    const res = await fetch(`${API_URL}/exalumnos/${params.id}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return { title: "Perfil | Exalumnos UCR" };
-    const exalumno = await res.json();
-    return {
-      title: `${exalumno.User?.nombre || "Exalumno"} | Perfil Profesional`,
-      description: exalumno.biografia || `Perfil profesional de exalumno de la UCR.`,
-    };
-  } catch (error) {
-    return { title: "Perfil | Exalumnos UCR" };
-  }
-}
-
-export default async function AlumniProfilePage({ params }: ProfilePageProps) {
+export default async function PerfilPublicoPage({ params }: Props) {
   const session = await auth();
-  const accessToken = (session as any)?.user?.accessToken;
+  const profile = await getPublicProfile(params.id).catch(() => null);
 
-  let exalumno = null;
+  if (!profile) notFound();
 
-  try {
-    const headers: HeadersInit = {};
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
-    }
+  const isAdmin = (session?.user as any)?.tipo === "ADMIN";
 
-    const res = await fetch(`${API_URL}/exalumnos/${params.id}`, {
-      headers,
-      cache: "no-store",
-    });
-
-    if (res.status === 404) {
-      notFound();
-    }
-
-    if (res.ok) {
-      exalumno = await res.json();
-    }
-  } catch (error) {
-    console.error("Error fetching exalumno profile:", error);
-  }
-
-  if (!exalumno) {
-    notFound();
-  }
+  // Shape compatible con ProfileDetailsClient que espera { User, ofrece_*, ... }
+  const exalumnoShape = {
+    ...profile,
+    User: {
+      id: profile.id,
+      nombre: profile.nombre,
+      foto_url: profile.foto_url,
+      email: null,
+    },
+    connectionStatus: "none",
+    connectionId: null,
+  };
 
   return (
-    <ProfileDetailsClient 
-      exalumno={exalumno} 
-      currentUser={session?.user || null} 
-      accessToken={accessToken}
-      apiUrl={API_URL}
-    />
+    <div>
+      <ProfileDetailsClient
+        exalumno={exalumnoShape}
+        currentUser={session?.user ?? null}
+        accessToken={(session?.user as any)?.accessToken}
+        apiUrl=""
+      />
+
+      {/* Panel de donaciones — solo visible para administradores */}
+      {isAdmin && (
+        <div className="max-w-4xl mx-auto px-6 pb-12">
+          <DonacionesAdminPanel
+            userId={params.id}
+            tipoUsuario={(profile as any).tipo ?? "EXALUMNO"}
+          />
+        </div>
+      )}
+    </div>
   );
 }
