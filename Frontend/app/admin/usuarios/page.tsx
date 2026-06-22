@@ -86,7 +86,7 @@ export default function AdminUsuariosPage() {
     const nuevoStatus = u.status === "SUSPENDIDO" ? "ACTIVO" : "SUSPENDIDO";
     setWorking(u.id);
     setMsg(null);
-    const res = await fetch(`/api/admin/users/${u.id}/status`, {
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: nuevoStatus }),
@@ -96,6 +96,24 @@ export default function AdminUsuariosPage() {
       load();
     } else {
       setMsg({ type: "err", text: "Error al actualizar estado." });
+    }
+    setWorking(null);
+  }
+
+  async function cambiarRol(u: Usuario, nuevoTipo: string) {
+    if (nuevoTipo === u.tipo) return;
+    setWorking(u.id + "_rol");
+    setMsg(null);
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: nuevoTipo }),
+    });
+    if (res.ok) {
+      setMsg({ type: "ok", text: `Rol de ${u.nombre} cambiado a ${nuevoTipo}.` });
+      load();
+    } else {
+      setMsg({ type: "err", text: "Error al cambiar el rol." });
     }
     setWorking(null);
   }
@@ -281,32 +299,48 @@ export default function AdminUsuariosPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-3">
                             {isMe ? (
                               <span className="text-xs text-slate-300 italic">Tú</span>
                             ) : u.tipo === "ADMIN" ? (
                               <span className="text-xs text-slate-300">—</span>
                             ) : (
-                              <Button
-                                size="sm"
-                                disabled={working === u.id}
-                                onClick={() => toggleStatus(u)}
-                                variant="outline"
-                                className={`text-xs h-8 ${
-                                  isSuspended
-                                    ? "border-green-200 text-green-700 hover:bg-green-50"
-                                    : "border-red-200 text-red-600 hover:bg-red-50"
-                                }`}
-                              >
-                                {working === u.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : isSuspended ? (
-                                  <UserCheck className="w-3 h-3" />
-                                ) : (
-                                  <UserX className="w-3 h-3" />
-                                )}
-                                &nbsp;{isSuspended ? "Reactivar" : "Suspender"}
-                              </Button>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {/* Cambiar rol */}
+                                <select
+                                  value={u.tipo}
+                                  disabled={working === u.id + "_rol"}
+                                  onChange={(e) => cambiarRol(u, e.target.value)}
+                                  className="h-8 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-800 dark:text-slate-200 outline-none focus:border-[#0f4c81] cursor-pointer"
+                                  title="Cambiar rol"
+                                >
+                                  <option value="ESTUDIANTE">Estudiante</option>
+                                  <option value="EXALUMNO">Exalumno</option>
+                                </select>
+                                {working === u.id + "_rol" && <Loader2 className="w-3 h-3 animate-spin text-[#0f4c81]" />}
+
+                                {/* Suspender / Reactivar */}
+                                <Button
+                                  size="sm"
+                                  disabled={!!working}
+                                  onClick={() => toggleStatus(u)}
+                                  variant="outline"
+                                  className={`text-xs h-8 ${
+                                    isSuspended
+                                      ? "border-green-200 text-green-700 hover:bg-green-50"
+                                      : "border-red-200 text-red-600 hover:bg-red-50"
+                                  }`}
+                                >
+                                  {working === u.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : isSuspended ? (
+                                    <UserCheck className="w-3 h-3" />
+                                  ) : (
+                                    <UserX className="w-3 h-3" />
+                                  )}
+                                  &nbsp;{isSuspended ? "Reactivar" : "Suspender"}
+                                </Button>
+                              </div>
                             )}
                           </td>
                         </tr>

@@ -66,7 +66,8 @@ export async function GET(_request: NextRequest) {
       orderBy: { created_at: "asc" },
       include: {
         exalumno: {
-          include: {
+          select: {
+            user_id: true,
             user: { select: { id: true, nombre: true, email: true } },
           },
         },

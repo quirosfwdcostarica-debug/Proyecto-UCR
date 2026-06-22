@@ -230,19 +230,32 @@ model Donacion {
 }
 
 model Posicion {
-  id          String   @id @default(uuid()) @db.Uuid
-  exalumno_id String   @db.Uuid
-  tipo        String?
-  titulo      String?
-  modalidad   String?
-  jornada     String?
-  empresa     String?
-  fecha_limite DateTime?
-  estado      String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                  String    @id @default(uuid()) @db.Uuid
+  exalumno_id         String    @db.Uuid
+  tipo                String?
+  titulo              String?
+  modalidad           String?
+  jornada             String?
+  empresa             String?
+  fecha_limite        DateTime?
+  estado              String?
+  // Detalles del puesto (Paso 2)
+  descripcion         String?
+  responsabilidades   String?
+  horario             String?
+  beneficios          Json?
+  // Requisitos (Paso 3)
+  nivel_grado_minimo  String?
+  area_estudio        String?
+  hard_skills         Json?
+  idiomas_requeridos  Json?
+  soft_skills         Json?
+  // Matching (Paso 4)
+  matching_weights    Json?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
-  exalumno    Exalumno    @relation(fields: [exalumno_id], references: [user_id], onDelete: Cascade)
+  exalumno     Exalumno     @relation(fields: [exalumno_id], references: [user_id], onDelete: Cascade)
   aplicaciones Aplicacion[]
   versiones    CurriculumVersion[]
 

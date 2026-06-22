@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
           nivel_academico: true,
           proyecto_titulo: true,
           proyecto_tipo: true,
+          proyecto_descripcion: true,
           proyecto_porcentaje_avance: true,
           busca_financiamiento: true,
           busca_mentoria: true,
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
       avanceProyecto: est.proyecto_porcentaje_avance ?? 0,
       areaProyecto: est.proyecto_tipo ?? null,
       proyectoTitulo: est.proyecto_titulo ?? null,
-      proyectoDescripcion: null,
+      proyectoDescripcion: est.proyecto_descripcion ?? null,
       sede: est.sede ?? null,
       apoyoBuscado: [
         est.busca_mentoria ? "Mentoría" : null,

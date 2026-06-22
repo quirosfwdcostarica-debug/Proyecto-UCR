@@ -92,7 +92,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  const { titulo, tipo, modalidad, jornada, empresa, fecha_limite } = body;
+  const {
+    titulo, tipo, modalidad, jornada, empresa, fecha_limite,
+    descripcion, responsabilidades, horario, beneficios,
+    nivel_grado_minimo, area_estudio, hard_skills, idiomas_requeridos, soft_skills,
+    matching_weights,
+  } = body;
   if (!titulo) return NextResponse.json({ message: "El título es requerido" }, { status: 400 });
 
   try {
@@ -106,6 +111,16 @@ export async function POST(request: NextRequest) {
         empresa: empresa || null,
         estado: "activa",
         fecha_limite: fecha_limite ? new Date(fecha_limite) : null,
+        descripcion: descripcion || null,
+        responsabilidades: responsabilidades || null,
+        horario: horario || null,
+        beneficios: beneficios || null,
+        nivel_grado_minimo: nivel_grado_minimo || null,
+        area_estudio: area_estudio || null,
+        hard_skills: hard_skills || null,
+        idiomas_requeridos: idiomas_requeridos || null,
+        soft_skills: soft_skills || null,
+        matching_weights: matching_weights || null,
       },
     });
     return NextResponse.json(posicion, { status: 201 });

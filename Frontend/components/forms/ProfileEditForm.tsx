@@ -864,34 +864,32 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           </div>
         </div>
 
-        {/* Botón de Guardado (Barra Inferior Flotante) */}
-        <div className="sticky bottom-8 z-50 flex justify-end mt-8">
-          <div className="bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-gray-200 flex items-center justify-between w-full md:w-auto md:min-w-[400px]">
-            <p className="text-sm text-ucr-gris-2 dark:text-slate-400 font-medium px-4 hidden md:block">
-              Revisa tus cambios antes de guardar.
-            </p>
-            <Button 
-              type="submit" 
-              disabled={isPending}
-              className="w-full md:w-auto h-14 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-ucr-blanco shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all px-10 rounded-2xl font-bold text-lg group"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                  Guardar Cambios
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Espaciado para que el botón fijo no tape contenido */}
+        <div className="h-28" />
 
       </form>
     </Form>
+
+    {/* Botón fijo siempre visible en esquina inferior derecha */}
+    <div className="fixed bottom-6 right-8 z-50">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
+          Revisa tus cambios antes de guardar.
+        </p>
+        <Button
+          type="button"
+          disabled={isPending}
+          onClick={() => form.handleSubmit(onSubmit)()}
+          className="h-12 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-white shadow-lg transition-all px-8 rounded-xl font-bold text-base group"
+        >
+          {isPending ? (
+            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Guardando...</>
+          ) : (
+            <><Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Guardar Cambios</>
+          )}
+        </Button>
+      </div>
+    </div>
 
     {/* Tarjeta: Seguridad — formulario independiente para evitar form anidado */}
     <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
