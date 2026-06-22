@@ -194,9 +194,83 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // ─── Disparar análisis de IA en segundo plano (fire-and-forget) ──────────
+    triggerAiAnalysis(donacion.id, exalumnoId, proyectoEstudianteId).catch(console.error);
+
     return NextResponse.json(donacion, { status: 201 });
   } catch (error) {
     console.error("[POST /api/donaciones]", error);
     return NextResponse.json({ message: "Error al registrar la donación" }, { status: 500 });
+  }
+}
+
+// ─── Función Helper para invocar a Grok asincrónicamente ─────────────────────
+
+async function triggerAiAnalysis(donacionId: string, exalumnoId: string, estudianteId?: string | null) {
+  try {
+    const { analyzeWithGrok } = await import("@/lib/ai/aiDonationAnalysisService");
+    const { saveDonationAnalysis, saveDonationAnalysisError } = await import("@/lib/ai/saveDonationAnalysis");
+
+    const donacion = await prisma.donacion.findUnique({ where: { id: donacionId } });
+    const exalumno = await prisma.exalumno.findUnique({ where: { user_id: exalumnoId } });
+    
+    let estudiante = null;
+    if (estudianteId) {
+      estudiante = await prisma.estudiante.findUnique({ where: { user_id: estudianteId } });
+    }
+
+    if (!donacion || !exalumno) return;
+
+    const donacionData = {
+      id: donacion.id,
+      monto: Number(donacion.monto),
+      destino: donacion.destino,
+      moneda: donacion.moneda,
+      metodo_pago: donacion.metodo_pago,
+      comprobante_url: donacion.comprobante_url,
+      created_at: donacion.created_at.toISOString(),
+    };
+
+    const exalumnoData = {
+      carrera: exalumno.carrera,
+      empresa_actual: exalumno.empresa_actual,
+      sector: exalumno.sector,
+    };
+
+    const estudianteData = estudiante ? {
+      carrera: estudiante.carrera,
+      escuela_facultad: estudiante.escuela_facultad,
+      sede: estudiante.sede,
+      nivel_academico: estudiante.nivel_academico,
+      promedio_ponderado: estudiante.promedio_ponderado ? Number(estudiante.promedio_ponderado) : null,
+      nivel_beca: estudiante.nivel_beca,
+      proyecto_titulo: estudiante.proyecto_titulo,
+      proyecto_tipo: estudiante.proyecto_tipo,
+      proyecto_descripcion: estudiante.proyecto_descripcion,
+      proyecto_necesidades: estudiante.proyecto_necesidades as Record<string, unknown> | null,
+      proyecto_porcentaje_avance: estudiante.proyecto_porcentaje_avance,
+      busca_financiamiento: estudiante.busca_financiamiento ?? false,
+    } : {
+      carrera: null, escuela_facultad: null, sede: null, nivel_academico: null,
+      promedio_ponderado: null, nivel_beca: null, proyecto_titulo: null,
+      proyecto_tipo: null, proyecto_descripcion: null, proyecto_necesidades: null,
+      proyecto_porcentaje_avance: null, busca_financiamiento: false,
+    };
+
+    try {
+      const analysis = await analyzeWithGrok(donacionData, estudianteData, exalumnoData);
+      await saveDonationAnalysis({
+        donationRequestId: donacion.id,
+        analysis,
+      });
+    } catch (analysisErr: any) {
+      console.error("[AI Analysis] Error:", analysisErr);
+      await saveDonationAnalysisError({
+        donationRequestId: donacion.id,
+        errorMessage: analysisErr.message || "Unknown error during AI analysis",
+      });
+    }
+  } catch (err) {
+    console.error("[triggerAiAnalysis] Fatal error:", err);
   }
 }

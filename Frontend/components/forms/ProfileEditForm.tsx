@@ -433,15 +433,6 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
 
                 <FormField
                   control={form.control}
-<<<<<<< HEAD
-                  name="nivel_beca"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-slate-700">Nivel de Beca UCR</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. Beca 5" {...field} value={field.value || ""} className="h-12 bg-slate-50 border-transparent focus:border-[#0f4c81] focus:bg-white focus:ring-2 focus:ring-[#0f4c81]/20 transition-all shadow-sm rounded-xl" />
-                      </FormControl>
-=======
                   name={"nivel_beca" as any}
                   render={({ field }) => (
                     <FormItem>
@@ -467,7 +458,6 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                         </select>
                       </FormControl>
                       <p className="text-xs text-slate-400 mt-1">Solo tú y el equipo UCR pueden ver este dato.</p>
->>>>>>> 907fc53ecfd76e3a1553856ec28ef26b58240508
                       <FormMessage />
                     </FormItem>
                   )}
