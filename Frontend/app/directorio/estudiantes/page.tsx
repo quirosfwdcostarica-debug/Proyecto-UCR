@@ -375,7 +375,7 @@ export default function DirectorioEstudiantes() {
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Buscar por nombre de estudiante..."
-              className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
+              className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base"
             />
           </div>
           <Button
@@ -577,82 +577,9 @@ export default function DirectorioEstudiantes() {
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  {student.areaProyecto && (
-                    <div className="bg-blue-50/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81]">
-                      <p className="text-xs font-semibold text-slate-500 mb-1">
-                        Área / Escuela
-                      </p>
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug">
-                        {student.areaProyecto}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="bg-slate-50 p-3 rounded-md mb-5 border-l-2 border-slate-300">
-                    <p className="text-xs font-semibold text-slate-500 mb-1">
-                      Detalles del Proyecto
-                    </p>
-                    <p className="text-sm font-medium text-slate-800 leading-snug">
-                      {student.user.bio || "No especificado"}
-                    </p>
-                  </div>
-
-                  <div className="mb-4 mt-auto">
-                    <div className="flex justify-between text-xs font-semibold mb-1.5">
-                      <span className="text-slate-500 dark:text-slate-400">
-                        {getFaseLabel(student.avanceProyecto)}
-                      </span>
-                      <span className="text-green-600 dark:text-green-400 font-bold">
-                        {student.avanceProyecto}%
-                      </span>
-                    </div>
-                    <Progress
-                      value={student.avanceProyecto}
-                      className="h-1.5 bg-slate-100 dark:bg-slate-900"
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {student.apoyoBuscado.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 bg-ucr-celeste-tint dark:bg-green-900/40 text-ucr-celeste-medium dark:text-green-400 rounded text-[10px] font-bold tracking-wide uppercase"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {offeredMatches[student.id] ? (
-                    <Button
-                      onClick={() => handleCancelarOferta(student.id)}
-                      variant="outline"
-                      className="w-full border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 font-bold tracking-wide transition-all"
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      Cancelar Oferta
-                    </Button>
-                  ) : pendingIds.has(student.id) ? (
-                    <Button
-                      onClick={() => handleCancelarPendiente(student.id)}
-                      className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold tracking-wide transition-all shadow-md"
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      Cancelar ({countdowns[student.id] ?? 5}s)
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleOfrecerApoyo(student.id)}
-                      className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 dark:bg-ucr-celeste dark:hover:bg-ucr-celeste/90 text-white dark:text-slate-950 font-bold tracking-wide transition-all shadow-md"
-                    >
-                      <HeartIcon className="mr-2 h-4 w-4" />
-                      Ofrecer Apoyo
-                    </Button>
-                  )}
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Paginación */}
