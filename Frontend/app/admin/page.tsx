@@ -41,7 +41,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TopBar } from "@/components/layout/TopBar";
 import { DashboardImpact } from "@/components/admin/DashboardImpact";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -372,7 +371,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div ref={adminRef} className="min-h-full bg-[#f8fafc] print:bg-white">
-      <TopBar title="Admin" />
 
       <div className="p-6 max-w-7xl mx-auto space-y-8">
         {/* ---- Header ---- */}

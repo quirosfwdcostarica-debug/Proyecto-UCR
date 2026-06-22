@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./AppSidebar";
+import { TopBar } from "./TopBar";
 import { useSession } from "next-auth/react";
 
 export function SidebarWrapper({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
     <div className="relative flex min-h-screen flex-col">
       <AppSidebar />
       <main className={`flex-1 ml-20 flex flex-col ${isHome ? "bg-transparent" : "bg-[#f8fafc]"}`}>
+        <TopBar />
         {children}
       </main>
     </div>

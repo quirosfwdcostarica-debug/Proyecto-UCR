@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+<<<<<<< HEAD
 import { auth } from "@/lib/auth";
 
 const API_URL = process.env.API_URL || "http://localhost:3001/api";
+=======
+import prisma from "@/lib/prisma";
+>>>>>>> 536d699f309e5f3adcf36b069fad3bf79afbe40f
 
 export async function GET(request: NextRequest) {
 <<<<<<< HEAD
@@ -99,12 +103,22 @@ export async function GET(request: NextRequest) {
 
     // Normalize shape for frontend compatibility
     const sanitized = estudiantes.map((est) => ({
-      ...est,
       id: est.user_id,
+      carrera: est.carrera ?? "",
+      avanceProyecto: 0,
+      areaProyecto: est.proyecto_tipo ?? null,
+      apoyoBuscado: [
+        est.busca_mentoria       ? "Mentoría"       : null,
+        est.busca_empleo         ? "Empleo"         : null,
+        est.busca_pasantia       ? "Pasantía"       : null,
+        est.busca_financiamiento ? "Financiamiento" : null,
+      ].filter(Boolean) as string[],
       user: {
         id: est.user.id,
         name: est.user.nombre,
         image: est.user.foto_url,
+        bio: null,
+        proyectoFinalizado: false,
       },
     }));
 >>>>>>> 90eec3fe0d45ab796ae19a62cf4a9674f0db6290

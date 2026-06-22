@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { TopBar } from "@/components/layout/TopBar";
 import {
   Loader2,
   ArrowLeft,
@@ -91,7 +90,6 @@ export default function MatchDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-20">
-      <TopBar title="Detalle del Match" />
       
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         <Button variant="ghost" className="mb-4 pl-0 text-slate-500 hover:text-slate-800" onClick={() => router.push("/mis-matches")}>

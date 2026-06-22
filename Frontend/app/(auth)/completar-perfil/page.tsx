@@ -2,7 +2,6 @@ import { ProfileEditForm } from "@/components/forms/ProfileEditForm";
 import { getUserProfile } from "@/actions/profile.actions";
 import { Suspense } from "react";
 import { Loader2, UserCheck } from "lucide-react";
-import { TopBar } from "@/components/layout/TopBar";
 
 export const metadata = {
   title: "Completar Perfil | Exalumnos U",
@@ -20,7 +19,6 @@ export default async function CompletarPerfilPage() {
 
   return (
     <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 min-h-screen">
-      <TopBar title="Activación de Cuenta" />
       {/* Fondo Dinámico con Blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-ucr-celeste/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
