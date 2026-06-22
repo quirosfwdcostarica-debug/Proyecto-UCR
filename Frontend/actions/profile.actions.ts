@@ -16,7 +16,14 @@ export async function getUserProfile() {
   }
 
   try {
+    const token = (session?.user as any)?.accessToken;
+    const headers: HeadersInit = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${API_URL}/users/${userId}`, {
+      headers,
       cache: "no-store",
     });
 
@@ -56,6 +63,7 @@ export async function getUserProfile() {
       busca_mentoria: !!userData.Estudiante?.busca_mentoria,
       busca_empleo: !!userData.Estudiante?.busca_empleo,
       busca_pasantia: !!userData.Estudiante?.busca_pasantia,
+      nivel_beca: userData.Estudiante?.nivel_beca || "",
 
       // Exalumno fields
       anio_graduacion: userData.Exalumno?.anio_graduacion || "",
@@ -129,10 +137,16 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
   }
 
   try {
+    const token = (session?.user as any)?.accessToken;
+    const headers: HeadersInit = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     // 1. Actualizar datos en tabla USERS
     await fetch(`${API_URL}/users/${userId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         nombre: parsedData.data.name,
         foto_url: parsedData.data.image || null,
@@ -143,7 +157,7 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
     if (userRole === "ESTUDIANTE") {
       await fetch(`${API_URL}/estudiantes/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           carnet_ucr: parsedData.data.carnet_ucr || null,
           carrera: parsedData.data.carrera || null,
@@ -158,12 +172,13 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
           busca_mentoria: !!parsedData.data.busca_mentoria,
           busca_empleo: !!parsedData.data.busca_empleo,
           busca_pasantia: !!parsedData.data.busca_pasantia,
+          nivel_beca: parsedData.data.nivel_beca || null,
         }),
       });
     } else if (userRole === "EXALUMNO") {
       await fetch(`${API_URL}/exalumnos/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           carnet_ucr: parsedData.data.carnet_ucr || null,
           escuela_facultad: parsedData.data.escuela_facultad || null,

@@ -51,6 +51,7 @@ export const userProfileUpdateSchema = z.object({
   busca_mentoria: z.boolean().optional(),
   busca_empleo: z.boolean().optional(),
   busca_pasantia: z.boolean().optional(),
+  nivel_beca: z.string().optional().nullable(),
 
   // Exalumni fields
   anio_graduacion: z.coerce.number().optional().nullable(),
