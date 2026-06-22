@@ -8,8 +8,8 @@ export const metadata = {
 };
 
 export default async function EditarPerfilPage() {
-  let userData = null;
-  let errorMsg = null;
+  let userData: any = null;
+  let errorMsg: string | null = null;
   
   try {
     userData = await getUserProfile();
@@ -19,6 +19,7 @@ export default async function EditarPerfilPage() {
 
   return (
     <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 min-h-screen">
+
       {/* Fondo Dinámico con Blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-ucr-celeste/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
@@ -27,13 +28,19 @@ export default async function EditarPerfilPage() {
       </div>
       
       {/* Hero Header Estilizado */}
-      <div className="w-full bg-gradient-to-r from-[#93c5fd] to-[#60a5fa] pt-16 pb-24 px-8 relative shadow-sm overflow-hidden">
-        {/* Patrón de superposición */}
-        <div className="absolute inset-0 bg-[url('https://www.ucr.ac.cr/medios/fotos/2021/girasoles-ucr.jpg')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px]"></div>
+      <div className="w-full bg-[#e0f2fe] pt-16 pb-24 px-8 relative shadow-sm overflow-hidden">
+        {/* Imagen de fondo patrón (login-pattern.png) */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-multiply pointer-events-none select-none" 
+          style={{ backgroundImage: "url('/login-pattern.png')" }}
+        ></div>
+        
+        {/* Fondo celeste elegante para integrarlo suavemente y asegurar contraste */}
+        <div className="absolute inset-0 bg-sky-100/50 z-0"></div>
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-[0.5px] z-0"></div>
         
         <div className="max-w-5xl mx-auto relative z-10 flex items-center gap-6">
-          <div className="p-4 bg-white/60 rounded-2xl backdrop-blur-md border border-white/50 shadow-sm">
+          <div className="p-4 bg-white/70 rounded-2xl backdrop-blur-md border border-white/60 shadow-sm">
             <Settings2 className="w-10 h-10 text-[#005eb8]" />
           </div>
           <div>

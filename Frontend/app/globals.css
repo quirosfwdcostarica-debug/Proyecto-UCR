@@ -1,38 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* #f8fafc bg-slate-50 */
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 98%; /* Gris claro institucional */
+    --foreground: 0 0% 8%; /* Negro oficial #141414 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 8%;
 
-    --primary: 210 90% 30%; /* Deep Blue #0747a6 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 194 100% 19%; /* Esmeralda oficial #004C63 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 198 81% 63%; /* Celeste oficial #54BCEB */
+    --secondary-foreground: 0 0% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 194 20% 95%; /* Tint claro de esmeralda */
+    --muted-foreground: 194 15% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 33 100% 55%; /* Amarillo oficial #FF9B18 */
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 10 90% 55%; /* Naranja oficial #F34B26 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 194 15% 90%;
+    --input: 194 15% 90%;
+    --ring: 194 100% 19%;
 
     --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 8%; /* Negro oficial #141414 */
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%; /* Negro un poco más claro para tarjetas */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 198 81% 63%; /* Celeste como primario en modo oscuro */
+    --primary-foreground: 0 0% 8%;
+
+    --secondary: 194 100% 19%; /* Esmeralda como secundario en modo oscuro */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 33 100% 55%; /* Amarillo oficial #FF9B18 */
+    --accent-foreground: 0 0% 8%;
+
+    --destructive: 10 90% 55%; /* Naranja oficial #F34B26 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 198 81% 63%;
   }
 }
 
@@ -58,4 +90,114 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground));
+}
+
+/* ============================================================
+   Efectos Premium: Líneas Brillantes, Glow y Destellos
+   ============================================================ */
+
+@keyframes border-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.glowing-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.glowing-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent,
+    rgba(84, 188, 235, 0.15),
+    rgba(15, 76, 129, 0.3),
+    rgba(84, 188, 235, 0.4),
+    transparent 50%
+  );
+  animation: border-rotate 6s linear infinite;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.glowing-card:hover::before {
+  opacity: 1;
+}
+
+/* Shiny sliding sheen effect for premium buttons */
+@keyframes shiny-sheen {
+  0% {
+    left: -120%;
+  }
+  35%, 100% {
+    left: 120%;
+  }
+}
+
+.shiny-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shiny-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-25deg);
+  animation: shiny-sheen 3.5s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.shiny-button:active {
+  box-shadow: 0 0 20px rgba(84, 188, 235, 0.85), 0 0 40px rgba(84, 188, 235, 0.45) !important;
+  transform: scale(0.96) !important;
+}
+
+/* Special glow ring for inputs on focus */
+.glow-input:focus {
+  box-shadow: 0 0 12px rgba(84, 188, 235, 0.5) !important;
+  border-color: rgba(84, 188, 235, 0.8) !important;
+}
+
+/* Focus naranja para inputs del login */
+.orange-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(232, 82, 42, 0.3) !important;
+  border-color: #E8522A !important;
+}
+
+/* dark:border-slate-850 helper (Tailwind no incluye 850 por defecto) */
+.dark .border-slate-850 {
+  border-color: rgb(15 23 42 / 0.5);
+}
+
+/* =======================================================
+   Ocultar overlay de errores de Next.js en modo dev
+   (no afecta producción, solo limpia la UI durante demos)
+   ======================================================= */
+nextjs-portal {
+  display: none !important;
+}
+#__next-build-watcher,
+#nextjs__container_build_indicator {
+  display: none !important;
 }

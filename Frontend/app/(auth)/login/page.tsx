@@ -1,27 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Limpiar cookies de sesión previas al cargar la página de login
+  // para evitar el error 431 causado por cookies infladas con tokens grandes
+  useEffect(() => {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const name = cookie.split("=")[0].trim();
+      if (name.startsWith("authjs.") || name.startsWith("__Secure-authjs.") || name.startsWith("next-auth.")) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure`;
+      }
+    }
+
+    if (searchParams?.get("verified") === "1") {
+      toast({
+        title: "Correo verificado",
+        description: "Tu cuenta fue activada. Ahora puedes iniciar sesión.",
+      });
+    }
+  }, []);
   const [formData, setFormData] = useState({
-    email: "",
+    email: searchParams?.get("email") ?? "",
     password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Mapeo de códigos de error de NextAuth v5 a mensajes en español
+  const getErrorMessage = (errorCode: string): string => {
+    const messages: Record<string, string> = {
+      "CredentialsSignin": "Correo o contraseña incorrectos.",
+      "Credenciales inválidas": "Correo o contraseña incorrectos.",
+      "Configuration": "Error de configuración del servidor. Intenta de nuevo.",
+      "AccessDenied": "Acceso denegado. Tu cuenta puede estar pendiente de verificación.",
+      "Email no verificado": "Debes verificar tu correo antes de iniciar sesión.",
+    };
+    return messages[errorCode] || errorCode || "Error al iniciar sesión.";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,10 +70,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        console.log("el error es", result?.error);  
+        console.log("el error es", result?.error);
+        const errorMessage = getErrorMessage(result.error);
+        const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
+
         toast({
-          title: "Error de autenticación " + (result.error === "Email no verificado" ? "(Correo no verificado)" : ""),
-          description: result.error,
+          title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -47,7 +84,18 @@ export default function LoginPage() {
           title: "Inicio de sesión exitoso",
           description: "Redirigiendo a tu panel...",
         });
-        router.push("/");
+        const session = await getSession();
+        const tipo = ((session?.user as any)?.tipo as string | undefined)?.toUpperCase();
+        const callbackUrl = searchParams?.get("callbackUrl");
+        if (callbackUrl) {
+          router.push(callbackUrl);
+        } else if (tipo === "ADMIN") {
+          router.push("/admin");
+        } else if (tipo === "EXALUMNO") {
+          router.push("/directorio/estudiantes");
+        } else {
+          router.push("/mis-matches");
+        }
         router.refresh();
       }
     } catch (error: any) {
@@ -60,56 +108,127 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
   return (
-    <div className="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md shadow-xl border-border">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto bg-[#0f4c81] h-12 w-12 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+    <div className="min-h-screen w-full relative overflow-hidden bg-ucr-gris-fondo dark:bg-ucr-negro font-body flex flex-col md:flex-row">
+
+
+      {/* Background igual que inscribirse - imagen solo en panel izquierdo */}
+      <div className="absolute inset-y-0 left-0 w-full md:w-[50%] z-0 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-[30%_center]"
+          style={{ backgroundImage: "url('/pretilUCR.png')" }}
+        />
+        {/* Overlay de color esmeralda transparente */}
+        <div className="absolute inset-0 bg-ucr-esmeralda/20 dark:bg-ucr-esmeralda/35" />
+        {/* Fade horizontal suave hacia el panel derecho */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-ucr-gris-fondo/10 via-[60%] to-ucr-gris-fondo dark:via-ucr-negro/10 dark:via-[60%] dark:to-ucr-negro" />
+      </div>
+
+      {/* Sombra vertical suave */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/60 z-10 pointer-events-none md:hidden" />
+
+
+      {/* Lado Izquierdo: Solo Tagline (visible en md y superior) */}
+      <div className="hidden md:flex md:w-[50%] min-h-screen flex-col justify-end p-6 lg:p-8 relative z-20">
+        <div className="max-w-md mb-4">
+          <p className="text-sm lg:text-base text-white/90 font-bold leading-relaxed font-body drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+            Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
+          </p>
+        </div>
+      </div>
+
+      {/* Lado Derecho: Panel blanco igual que registro */}
+      <div 
+        className="w-full md:w-[50%] min-h-screen flex items-center justify-center p-8 sm:p-12 relative z-20 bg-ucr-gris-fondo dark:bg-ucr-negro md:bg-transparent"
+      >
+        <div className="w-full max-w-[440px]">
+          {/* Botón de volver al Dashboard */}
+          <Link 
+            href="/" 
+            className="absolute top-8 right-8 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-naranja transition-colors font-bold text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver al Dashboard</span>
+          </Link>
+
+          <div className="text-center mb-8 flex flex-col items-center">
+            {/* Logo de Alumni */}
+            <img 
+              src="/logo.png" 
+              alt="Logo Alumni UCR" 
+              className="w-16 h-16 object-contain mb-1" 
+            />
+            {/* El texto ALUMNI en mayúsculas debajo */}
+            <span className="text-[10px] font-bold tracking-[0.25em] text-slate-500 dark:text-slate-400 font-display uppercase mb-6">
+              ALUMNI
+            </span>
+            
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white font-display mb-2 uppercase">
+              BIENVENIDO DE VUELTA
+            </h2>
+            <p className="text-slate-700 dark:text-slate-300 text-sm font-semibold font-body leading-relaxed">
+              Inicia tu sesión para conectar con la comunidad.
+            </p>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-[#0f4c81]">Bienvenido de vuelta</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Ingresa a la plataforma de Exalumnos UCR
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nombre@ejemplo.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
-              />
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Correo Electrónico */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="font-semibold text-slate-700 dark:text-slate-300 text-xs tracking-wide uppercase">
+                Correo Electrónico
+              </Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="exalumno@ucr.ac.cr"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-12 rounded-[14px] border border-gray-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/30 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 orange-focus transition-all"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
+
+            {/* Contraseña */}
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Contraseña</Label>
-                <Link href="/forgot-password" className="text-xs font-medium text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
+                <Label htmlFor="password" className="font-semibold text-slate-700 dark:text-slate-300 text-xs tracking-wide uppercase">
+                  Contraseña
+                </Label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-xs font-semibold text-[#006AD3] dark:text-sky-400 hover:text-sky-500 hover:underline transition-colors font-body"
+                >
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="border-slate-300 focus:ring-[#0f4c81] focus:border-[#0f4c81]"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="pl-11 h-12 rounded-[14px] border border-gray-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/30 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 orange-focus transition-all"
+                />
+              </div>
             </div>
+
+            {/* Botón de Ingresar */}
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-2"
+              className="w-full h-12 text-sm rounded-[14px] bg-[#E8522A] hover:bg-[#d1431d] text-white font-bold shadow-[0_6px_20px_rgba(232,82,42,0.35)] hover:shadow-[0_8px_24px_rgba(232,82,42,0.45)] transition-all border-none mt-2"
             >
               {isLoading ? (
                 <>
@@ -121,16 +240,27 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4 text-center text-sm border-t border-border pt-4 text-slate-500">
-          <div>
-            ¿No tienes una cuenta?{" "}
-            <Link href="/registro" className="font-semibold text-[#0f4c81] hover:text-[#0b3a63] hover:underline">
+
+          {/* Enlace de Registro */}
+          <div className="mt-8 text-center text-slate-500 dark:text-slate-400 text-xs font-medium font-body">
+            ¿No tienes cuenta?{" "}
+            <Link 
+              href="/registro" 
+              className="font-bold text-[#006AD3] dark:text-sky-400 hover:text-sky-500 hover:underline transition-colors"
+            >
               Regístrate aquí
             </Link>
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro" />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

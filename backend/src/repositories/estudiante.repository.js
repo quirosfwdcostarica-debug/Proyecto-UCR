@@ -3,7 +3,13 @@ const Estudiante = db.Estudiante;
 
 class EstudianteRepository {
   async findAll() {
-    return await Estudiante.findAll();
+    return await Estudiante.findAll({
+      include: [{
+        model: db.User,
+        required: true,
+        where: { tipo: 'ESTUDIANTE' }
+      }]
+    });
   }
 
   async findById(id) {
@@ -15,11 +21,11 @@ class EstudianteRepository {
   }
 
   async update(id, data) {
-    return await Estudiante.update(data, { where: { id } });
+    return await Estudiante.update(data, { where: { user_id: id } });
   }
 
   async delete(id) {
-    return await Estudiante.destroy({ where: { id } });
+    return await Estudiante.destroy({ where: { user_id: id } });
   }
 }
 

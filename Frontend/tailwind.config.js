@@ -16,16 +16,44 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["'Plus Jakarta Sans'", "sans-serif"],
+        body: ["'Work Sans'", "sans-serif"],
+      },
       colors: {
         ucr: {
-          celeste: "#00C0F3",
-          azul1: "#0C344E",
-          azul2: "#02477B",
-          negro: "#000000",
+          // Colores oficiales de la web de la Fundación
+          esmeralda: "#004C63",      // Color corporativo oscuro / azul profundo
+          celeste: "#4BA5D9",        // Celeste/Azul cielo oficial del banner principal
+          "celeste-oficial": "#4BA5D9",
+          amarillo: "#FF9B18",       // Amarillo de acentos
+          naranja: "#F34B26",        // Naranja-rojo de acción de la web
+          "naranja-oficial": "#F34B26",
           blanco: "#FFFFFF",
-          gris1: "#F2F2F2",
+          negro: "#141414",
+          "gris-fondo": "#F8F8F8",   // Fondo de sección oficial
+          "footer-bg": "#272829",    // Fondo gris oscuro del footer de la web
+          "texto-oscuro": "#1A1A2E",  // Texto oscuro para secciones claras
+
+          // Tints oficiales al 20%
+          turquesa: "#004C63",
+          "celeste-medium": "#006AD3",
+          "turquesa-tint": "#CCDBE0",
+          "celeste-tint": "#CCE1F6",
+          "beige-tint": "#FFEBD1",
+          "rosa-tint": "#FDDBCF",
+
+          // Compatibilidad heredada mapeada a los colores oficiales
+          azul1: "#004C63",
+          "azul-1": "#004C63",
+          azul2: "#004C63",
+          "azul-2": "#004C63",
+          gris1: "#F8F8F8",
+          "gris-1": "#F8F8F8",
           gris2: "#666666",
+          "gris-2": "#666666",
           gris3: "#232323",
+          "gris-3": "#232323",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

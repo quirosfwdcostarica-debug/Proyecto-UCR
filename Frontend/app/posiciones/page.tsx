@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import { TopBar } from "@/components/layout/TopBar";
 import { NewJobModal } from "@/components/posiciones/NewJobModal";
 import { MyJobsList } from "@/components/posiciones/MyJobsList";
 import { AvailableJobsList } from "@/components/posiciones/AvailableJobsList";
@@ -21,9 +20,7 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
-      <TopBar title="Bolsa de Empleo" />
-      
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         
         {/* VISTA PARA EXALUMNOS */}
@@ -32,7 +29,7 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
             <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-4xl shadow-sm mb-2">
               💼
             </div>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+            <h1 className="text-4xl font-extrabold text-primary">
               Conecta con el Talento UCR
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl">

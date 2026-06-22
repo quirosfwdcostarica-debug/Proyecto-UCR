@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { Sequelize } = require('sequelize');
 const dns = require('dns');
 const { URL } = require('url');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 // Forzar IPv4
 dns.setDefaultResultOrder('ipv4first');
@@ -10,32 +10,12 @@ dns.setDefaultResultOrder('ipv4first');
 // ====================
 // DEBUG DATABASE URL
 // ====================
-console.log('\n=== DATABASE DEBUG ===');
-
-if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL no está definida');
+if (process.env.DATABASE_URL) {
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  console.log(`📦 DB → ${dbUrl.hostname}:${dbUrl.port} (usuario: ${dbUrl.username})`);
 } else {
-  try {
-    const dbUrl = new URL(process.env.DATABASE_URL);
-
-    console.log('Host:', dbUrl.hostname);
-    console.log('Puerto:', dbUrl.port);
-    console.log('Usuario:', dbUrl.username);
-    console.log('Base de datos:', dbUrl.pathname);
-
-    // Ocultar contraseña
-    const maskedUrl = process.env.DATABASE_URL.replace(
-      dbUrl.password,
-      '********'
-    );
-
-    console.log('DATABASE_URL:', maskedUrl);
-  } catch (error) {
-    console.error('❌ DATABASE_URL inválida:', error.message);
-  }
+  console.error('❌ DATABASE_URL no está definida en .env');
 }
-
-console.log('======================\n');
 
 // ====================
 // SUPABASE
@@ -67,12 +47,15 @@ if (supabaseUrl && supabaseKey) {
 // ====================
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  logging: console.log,
+  logging: false, // Silencia el SQL verboso; cambia a console.log para debug
   dialectOptions: {
     ssl: {
       require: true,
       rejectUnauthorized: false
-    }
+    },
+    // Compatibilidad con PgBouncer (Transaction Mode)
+    statement_timeout: 10000,
+    idle_in_transaction_session_timeout: 10000,
   },
   pool: {
     max: 5,

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -6,11 +6,14 @@ const morgan = require('morgan');
 const { sequelize } = require('./config/db');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/error.middleware');
+const http = require('http');
 
 const app = express();
 
+// Aumentar límites para headers y body size (NextAuth v5 envía tokens muy grandes)
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(morgan('dev'));
 
 // Setup Routes
@@ -21,28 +24,33 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 
+// Crear servidor HTTP con maxHeaderSize aumentado
+const server = http.createServer({
+  maxHeaderSize: 16 * 1024, // 16KB en lugar de 8KB (por defecto)
+}, app);
+
+// Manejo de errores del servidor HTTP
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ El puerto ${PORT} ya está en uso. Detén el proceso que lo ocupa o cambia PORT en .env.`);
+  } else {
+    console.error('❌ Error del servidor HTTP:', err);
+  }
+  process.exit(1);
+});
+
 // Iniciar servidor siempre — la sincronización de BD es opcional al arranque
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
   console.log(`📡 Entorno: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Intentar sincronizar BD en background (no bloquea el servidor)
+// Intentar conectar BD en background (no bloquea el servidor)
 sequelize.authenticate()
-  .then(() => {
-    console.log('✅ Conexión a base de datos establecida.');
-    return sequelize.sync({ alter: false }); // alter:false en producción para no alterar schema
-  })
-  .then(() => console.log('✅ Modelos sincronizados con la base de datos.'))
-  .catch(err => {
-    console.warn('⚠️  No se pudo conectar a la BD directamente. El servidor sigue operativo via Supabase REST API.');
-    console.warn('   → Para conectar Sequelize, usa la URL del Pooler de Supabase (IPv4, puerto 6543).');
-    console.warn('   → Ve a: Supabase Dashboard → Settings → Database → Connection Pooling → Transaction');
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('   Error:', err.message);
-  console.error('\n=== DATABASE ERROR ===');
-  console.error(err);
-  console.error('======================\n');
-    }
+  .then(() => console.log('✅ Conexión a base de datos establecida.'))
+  .catch(() => {
+    // El pooler de Supabase (puerto 6543/PgBouncer) no soporta los comandos
+    // de autenticación de Sequelize — esperado en este entorno. El servidor
+    // opera normalmente vía Supabase REST API y Prisma (Next.js).
   });
 

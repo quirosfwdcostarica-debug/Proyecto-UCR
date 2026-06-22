@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -9,42 +9,29 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase, Building2, CalendarDays } from "lucide-react";
 
-// Mock data (en un escenario real vendría de la base de datos)
-const mockAvailableJobs = [
-  {
-    id: "job-101",
-    title: "Ingeniero de Software Trainee",
-    company: "TechCorp Costa Rica",
-    type: "EMPLEO",
-    skills: ["React", "Node.js", "SQL"],
-    deadline: "30 Jun 2026",
-    description: "Buscamos un estudiante de últimos años o recién graduado con pasión por el desarrollo web para unirse a nuestro equipo core.",
-  },
-  {
-    id: "job-102",
-    title: "Práctica Profesional: Diseño UX/UI",
-    company: "Creative Studio",
-    type: "PASANTIA",
-    skills: ["Figma", "Design Thinking", "Prototipado"],
-    deadline: "15 Jul 2026",
-    description: "Únete a nuestro equipo creativo para diseñar interfaces intuitivas y mejorar la experiencia de usuario de nuestros productos estrella.",
-  },
-  {
-    id: "job-103",
-    title: "Asistente de Investigación de Datos",
-    company: "Instituto de Datos UCR",
-    type: "PASANTIA",
-    skills: ["Python", "Pandas", "Estadística"],
-    deadline: "10 Jun 2026",
-    description: "Participa en un proyecto de investigación enfocado en el análisis de datos climáticos de la región centroamericana.",
-  }
-];
+import { getJobPositions } from "@/actions/dashboard.actions";
 
 export function AvailableJobsList() {
   const { toast } = useToast();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadJobs() {
+      try {
+        const data = await getJobPositions();
+        setJobs(data);
+      } catch (error) {
+        console.error("Error loading jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadJobs();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -87,49 +74,55 @@ export function AvailableJobsList() {
       </div>
 
       <div className="flex flex-col gap-6">
-        {mockAvailableJobs.map((job) => (
-          <Card key={job.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg">
-            <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-primary font-bold">{job.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 font-medium">
-                    <Building2 className="w-4 h-4 text-slate-400" />
-                    {job.company}
-                  </CardDescription>
+        {loading ? (
+          <div className="text-center py-10">Cargando empleos...</div>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-10 text-slate-500">No hay vacantes disponibles en este momento.</div>
+        ) : (
+          jobs.map((job) => (
+            <Card key={job.id} className="w-full glass shadow-md border-primary/10 overflow-hidden transition-all hover:shadow-lg dark:bg-slate-900/40 dark:border-slate-800">
+              <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl text-primary dark:text-sky-400 font-bold">{job.titulo}</CardTitle>
+                    <CardDescription className="flex items-center gap-1 mt-1 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                      <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                      {job.empresa || "Empresa Confidencial"}
+                    </CardDescription>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
+                    {job.tipo === "EMPLEO" ? "Tiempo Completo" : "Pasantía"}
+                  </Badge>
                 </div>
-                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
-                  {job.type === "EMPLEO" ? "Tiempo Completo" : "Pasantía"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="py-5">
-              <p className="text-slate-700 mb-6 text-sm leading-relaxed">{job.description}</p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 mb-2">
-                <div>
-                  <span className="block font-semibold text-slate-900 mb-1">Habilidades Requeridas</span>
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill) => (
-                      <span key={skill} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">
-                        {skill}
+              </CardHeader>
+              <CardContent className="py-5">
+                <p className="text-slate-700 dark:text-slate-300 mb-6 text-sm leading-relaxed">{job.descripcion || "Descripción de la posición"}</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400 mb-2">
+                  <div>
+                    <span className="block font-semibold text-slate-900 dark:text-slate-100 mb-1">Modalidad / Jornada</span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
+                        {job.modalidad || "No especificada"}
                       </span>
-                    ))}
+                      <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-xs font-medium">
+                        {job.jornada || "No especificada"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium">
+                      <CalendarDays className="w-4 h-4" />
+                      <span>Cierra: {job.fecha_limite ? new Date(job.fecha_limite).toLocaleDateString() : "Sin fecha"}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-end justify-end">
-                  <div className="flex items-center gap-1.5 text-orange-600 font-medium">
-                    <CalendarDays className="w-4 h-4" />
-                    <span>Cierra: {job.deadline}</span>
-                  </div>
-                </div>
-              </div>
 
               {/* Formulario de Aplicación Expandible */}
               {selectedJobId === job.id ? (
-                <div className="mt-6 p-6 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in zoom-in-95">
-                  <h4 className="font-bold text-slate-800 mb-2">Aplicar a esta posición</h4>
-                  <p className="text-sm text-slate-600 mb-4">
+                <div className="mt-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2">Aplicar a esta posición</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     Sube tu Curriculum Vitae en formato PDF. Asegúrate de resaltar las habilidades requeridas.
                   </p>
                   
@@ -145,6 +138,20 @@ export function AvailableJobsList() {
                       />
                       <p className="text-xs text-muted-foreground mt-1">Máximo 5MB.</p>
                     </div>
+
+                    {file && (
+                      <div className="bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 mt-4">
+                        <h5 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-2">Resumen de Aplicación</h5>
+                        <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1 mb-3">
+                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">Posición seleccionada:</span> {job.titulo}</li>
+                          <li><span className="font-semibold text-slate-700 dark:text-slate-300">CV que será enviado:</span> {file.name}</li>
+                        </ul>
+                        <p className="text-xs text-blue-600 dark:text-blue-300 font-medium bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
+                          Una vez enviada tu aplicación, el exalumno podrá revisar tu perfil profesional y CV.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex gap-3 pt-2">
                       <Button type="button" variant="outline" onClick={() => setSelectedJobId(null)}>Cancelar</Button>
                       <Button type="submit" disabled={isApplying || !file} className="bg-primary text-white">
@@ -155,15 +162,16 @@ export function AvailableJobsList() {
                 </div>
               ) : null}
             </CardContent>
-            <CardFooter className="bg-white pt-0 pb-4 justify-end">
+            <CardFooter className="bg-white dark:bg-slate-900/40 pt-0 pb-4 justify-end">
               {selectedJobId !== job.id && (
                 <Button onClick={() => setSelectedJobId(job.id)} variant="default" className="bg-[#0f4c81] hover:bg-[#0b3a63]">
                   Aplicar Ahora
                 </Button>
               )}
             </CardFooter>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

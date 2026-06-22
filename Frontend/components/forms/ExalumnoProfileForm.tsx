@@ -42,7 +42,6 @@ export function ExalumnoProfileForm() {
   });
 
   const onSubmit = async (data: ExalumnoProfileFormValues) => {
-    // Aquí invocaremos un Server Action para guardar en Prisma
     toast({
       title: "Perfil completado",
       description: "¡Gracias por unirte a la red de Exalumnos UCR!",
@@ -64,11 +63,11 @@ export function ExalumnoProfileForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-2xl mx-auto glass p-8 rounded-2xl shadow-xl relative overflow-hidden">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-xl mx-auto bg-white/90 backdrop-blur-xl border border-slate-200/50 hover:border-[#00C0F3]/30 shadow-2xl p-8 md:p-10 rounded-3xl relative overflow-hidden font-body text-slate-800 transition-all duration-500">
         {/* Progress Bar */}
-        <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
+        <div className="absolute top-0 left-0 h-1.5 bg-transparent w-full z-10">
           <motion.div 
-            className="h-full bg-primary"
+            className="h-full bg-ucr-celeste-medium rounded-tl-3xl"
             initial={{ width: "33%" }}
             animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -76,10 +75,10 @@ export function ExalumnoProfileForm() {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+          <h2 className="text-2xl font-extrabold tracking-tight text-ucr-celeste-medium font-display">
             Perfil de Exalumno UCR
           </h2>
-          <p className="text-muted-foreground mt-2">Paso {step} de 3</p>
+          <p className="text-slate-400 mt-1 font-body text-sm font-medium">Paso {step} de 3</p>
         </div>
 
         <AnimatePresence mode="wait">
@@ -97,9 +96,13 @@ export function ExalumnoProfileForm() {
                 name="carrera"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Carrera de la que te graduaste</FormLabel>
+                    <FormLabel className="font-body font-semibold text-slate-700 text-sm block mb-2">Carrera de la que te graduaste</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Arquitectura" {...field} className="transition-all focus:scale-[1.01]" />
+                      <Input 
+                        placeholder="Ej. Arquitectura" 
+                        {...field} 
+                        className="transition-all focus:scale-[1.01] font-body text-base bg-white/80 border-gray-200 focus:border-[#00C0F3] focus:ring-[#00C0F3] transition-all shadow-sm font-body text-base h-12 rounded-xl" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,16 +114,16 @@ export function ExalumnoProfileForm() {
                 name="sector"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sector Laboral Actual</FormLabel>
+                    <FormLabel className="font-body font-semibold text-slate-700 text-sm block mb-2">Sector Laboral Actual</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="transition-all focus:scale-[1.01]">
+                        <SelectTrigger className="transition-all focus:scale-[1.01] font-body text-base bg-white/80 border-gray-200 focus:border-[#00C0F3] focus:ring-[#00C0F3] transition-all shadow-sm font-body text-base h-12 rounded-xl text-slate-700">
                           <SelectValue placeholder="Seleccioná un sector" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-slate-200 shadow-xl rounded-lg">
                         {SECTORES.map(s => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                          <SelectItem key={s} value={s} className="hover:bg-slate-50 transition-colors py-2.5 font-body">{s}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -130,9 +133,12 @@ export function ExalumnoProfileForm() {
               />
 
               <div className="flex justify-end pt-4">
-                <Button type="button" onClick={nextStep} className="group transition-all hover:pr-4">
-                  Siguiente 
-                  <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                <Button 
+                  type="button" 
+                  onClick={nextStep} 
+                  className="w-full md:w-auto md:min-w-[140px] h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide flex items-center justify-center"
+                >
+                  Siguiente
                 </Button>
               </div>
             </motion.div>
@@ -153,8 +159,8 @@ export function ExalumnoProfileForm() {
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
-                      <FormLabel className="text-base">Tus Áreas de Interés y Expertise</FormLabel>
-                      <FormDescription>
+                      <FormLabel className="text-lg font-bold font-body text-slate-800">Tus Áreas de Interés y Expertise</FormLabel>
+                      <FormDescription className="font-body text-slate-500 text-sm mt-1">
                         Seleccioná los campos en los que te desarrollás profesionalmente.
                       </FormDescription>
                     </div>
@@ -165,14 +171,19 @@ export function ExalumnoProfileForm() {
                           control={form.control}
                           name="areasInteres"
                           render={({ field }) => {
+                            const isChecked = field.value?.includes(area);
                             return (
                               <FormItem
                                 key={area}
-                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                                className={`flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 transition-all cursor-pointer ${
+                                  isChecked 
+                                    ? "border-ucr-celeste-medium bg-ucr-celeste-medium/5 shadow-sm" 
+                                    : "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
+                                }`}
                               >
                                 <FormControl>
                                   <Checkbox
-                                    checked={field.value?.includes(area)}
+                                    checked={isChecked}
                                     onCheckedChange={(checked) => {
                                       return checked
                                         ? field.onChange([...field.value, area])
@@ -182,9 +193,10 @@ export function ExalumnoProfileForm() {
                                             )
                                           )
                                     }}
+                                    className="border-slate-300 data-[state=checked]:bg-ucr-celeste-medium data-[state=checked]:border-ucr-celeste-medium"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal cursor-pointer text-sm flex-1 leading-snug">
+                                <FormLabel className="font-semibold cursor-pointer text-sm flex-1 leading-snug text-slate-700 font-body select-none">
                                   {area}
                                 </FormLabel>
                               </FormItem>
@@ -199,12 +211,20 @@ export function ExalumnoProfileForm() {
               />
 
               <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline" onClick={prevStep}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep}
+                  className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-body font-semibold px-6 h-12 rounded-xl transition-all shadow-sm"
+                >
                   ← Atrás
                 </Button>
-                <Button type="button" onClick={nextStep} className="group transition-all hover:pr-4">
-                  Siguiente 
-                  <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                <Button 
+                  type="button" 
+                  onClick={nextStep} 
+                  className="h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide px-8 flex items-center justify-center"
+                >
+                  Siguiente
                 </Button>
               </div>
             </motion.div>
@@ -225,26 +245,31 @@ export function ExalumnoProfileForm() {
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
-                      <FormLabel className="text-base">¿Cómo te gustaría apoyar?</FormLabel>
-                      <FormDescription>
+                      <FormLabel className="text-lg font-bold font-body text-slate-800">¿Cómo te gustaría apoyar?</FormLabel>
+                      <FormDescription className="font-body text-slate-500 text-sm mt-1">
                         Seleccioná las formas en las que estás dispuesto/a a ayudar a la comunidad estudiantil.
                       </FormDescription>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {TIPOS_APOYO.map((apoyo) => (
                         <FormField
                           key={apoyo}
                           control={form.control}
                           name="apoyoOfrecido"
                           render={({ field }) => {
+                            const isChecked = field.value?.includes(apoyo);
                             return (
                               <FormItem
                                 key={apoyo}
-                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors cursor-pointer"
+                                className={`flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 transition-all cursor-pointer ${
+                                  isChecked 
+                                    ? "border-ucr-celeste-medium bg-ucr-celeste-medium/5 shadow-sm" 
+                                    : "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
+                                }`}
                               >
                                 <FormControl>
                                   <Checkbox
-                                    checked={field.value?.includes(apoyo)}
+                                    checked={isChecked}
                                     onCheckedChange={(checked) => {
                                       return checked
                                         ? field.onChange([...field.value, apoyo])
@@ -254,9 +279,10 @@ export function ExalumnoProfileForm() {
                                             )
                                           )
                                     }}
+                                    className="border-slate-300 data-[state=checked]:bg-ucr-celeste-medium data-[state=checked]:border-ucr-celeste-medium"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal cursor-pointer flex-1">
+                                <FormLabel className="font-semibold cursor-pointer text-sm flex-1 leading-snug text-slate-700 font-body select-none">
                                   {apoyo}
                                 </FormLabel>
                               </FormItem>
@@ -271,10 +297,18 @@ export function ExalumnoProfileForm() {
               />
 
               <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline" onClick={prevStep}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep}
+                  className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-body font-semibold px-6 h-12 rounded-xl transition-all shadow-sm"
+                >
                   ← Atrás
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/30 transition-all">
+                <Button 
+                  type="submit" 
+                  className="h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide px-8 flex items-center justify-center"
+                >
                   Guardar Perfil
                 </Button>
               </div>

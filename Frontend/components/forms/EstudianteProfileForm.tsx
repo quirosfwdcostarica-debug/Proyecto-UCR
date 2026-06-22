@@ -35,7 +35,6 @@ export function EstudianteProfileForm() {
   });
 
   const onSubmit = async (data: EstudianteProfileFormValues) => {
-    // Aquí invocaremos un Server Action para guardar en Prisma
     toast({
       title: "Perfil completado",
       description: "Tus datos han sido guardados exitosamente.",
@@ -55,11 +54,11 @@ export function EstudianteProfileForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-2xl mx-auto glass p-8 rounded-2xl shadow-xl relative overflow-hidden">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full max-w-xl mx-auto bg-white/90 backdrop-blur-xl border border-slate-200/50 hover:border-[#00C0F3]/30 shadow-2xl p-8 md:p-10 rounded-3xl relative overflow-hidden font-body text-slate-800 transition-all duration-500">
         {/* Progress Bar */}
-        <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
+        <div className="absolute top-0 left-0 h-1.5 bg-transparent w-full z-10">
           <motion.div 
-            className="h-full bg-primary"
+            className="h-full bg-ucr-celeste-medium rounded-tl-3xl"
             initial={{ width: "50%" }}
             animate={{ width: step === 1 ? "50%" : "100%" }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -67,8 +66,10 @@ export function EstudianteProfileForm() {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">Completá tu Perfil de Estudiante</h2>
-          <p className="text-muted-foreground mt-2">Paso {step} de 2</p>
+          <h2 className="text-2xl font-extrabold tracking-tight text-ucr-celeste-medium font-display">
+            Completá tu Perfil de Estudiante
+          </h2>
+          <p className="text-slate-400 mt-1 font-body text-sm font-medium">Paso {step} de 2</p>
         </div>
 
         <AnimatePresence mode="wait">
@@ -86,9 +87,13 @@ export function EstudianteProfileForm() {
                 name="carrera"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Carrera Actual</FormLabel>
+                    <FormLabel className="font-body font-semibold text-slate-700 text-sm block mb-2">Carrera Actual</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Ingeniería en Computación" {...field} className="transition-all focus:scale-[1.01]" />
+                      <Input 
+                        placeholder="Ej. Ingeniería en Computación" 
+                        {...field} 
+                        className="transition-all focus:scale-[1.01] font-body text-base bg-white/80 border-gray-200 focus:border-[#00C0F3] focus:ring-[#00C0F3] transition-all shadow-sm font-body text-base h-12 rounded-xl" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,11 +105,18 @@ export function EstudianteProfileForm() {
                 name="avanceProyecto"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Avance del Proyecto de Graduación (%)</FormLabel>
+                    <FormLabel className="font-body font-semibold text-slate-700 text-sm block mb-2">Avance del Proyecto de Graduación (%)</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(Number(e.target.value))} className="transition-all focus:scale-[1.01]" />
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        {...field} 
+                        onChange={e => field.onChange(Number(e.target.value))} 
+                        className="transition-all focus:scale-[1.01] font-body text-base bg-white/80 border-gray-200 focus:border-[#00C0F3] focus:ring-[#00C0F3] transition-all shadow-sm font-body text-base h-12 rounded-xl" 
+                      />
                     </FormControl>
-                    <FormDescription>Si aún no has iniciado, indicá 0.</FormDescription>
+                    <FormDescription className="font-body text-xs text-slate-400 mt-1">Si aún no has iniciado, indicá 0.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -115,20 +127,27 @@ export function EstudianteProfileForm() {
                 name="nivelBeca"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nivel de Beca UCR (Opcional)</FormLabel>
+                    <FormLabel className="font-body font-semibold text-slate-700 text-sm block mb-2">Nivel de Beca UCR (Opcional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Beca 5" {...field} className="transition-all focus:scale-[1.01]" />
+                      <Input 
+                        placeholder="Ej. Beca 5" 
+                        {...field} 
+                        className="transition-all focus:scale-[1.01] font-body text-base bg-white/80 border-gray-200 focus:border-[#00C0F3] focus:ring-[#00C0F3] transition-all shadow-sm font-body text-base h-12 rounded-xl" 
+                      />
                     </FormControl>
-                    <FormDescription className="text-xs text-primary/80">Este dato es ESTRICTAMENTE PRIVADO y nunca se mostrará públicamente.</FormDescription>
+                    <FormDescription className="font-body text-xs text-emerald-600 mt-1">Este dato es ESTRICTAMENTE PRIVADO y nunca se mostrará públicamente.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="flex justify-end pt-4">
-                <Button type="button" onClick={nextStep} className="group transition-all hover:pr-4">
-                  Siguiente 
-                  <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                <Button 
+                  type="button" 
+                  onClick={nextStep} 
+                  className="w-full md:w-auto md:min-w-[140px] h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide flex items-center justify-center"
+                >
+                  Siguiente
                 </Button>
               </div>
             </motion.div>
@@ -149,26 +168,31 @@ export function EstudianteProfileForm() {
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
-                      <FormLabel className="text-base">¿Qué tipo de apoyo buscas?</FormLabel>
-                      <FormDescription>
+                      <FormLabel className="text-lg font-bold font-body text-slate-800">¿Qué tipo de apoyo buscas?</FormLabel>
+                      <FormDescription className="font-body text-slate-500 text-sm mt-1">
                         Seleccioná todas las opciones en las que necesites ayuda de un exalumno.
                       </FormDescription>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {TIPOS_APOYO.map((apoyo) => (
                         <FormField
                           key={apoyo}
                           control={form.control}
                           name="apoyoBuscado"
                           render={({ field }) => {
+                            const isChecked = field.value?.includes(apoyo);
                             return (
                               <FormItem
                                 key={apoyo}
-                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                                className={`flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 transition-all cursor-pointer ${
+                                  isChecked 
+                                    ? "border-ucr-celeste-medium bg-ucr-celeste-medium/5 shadow-sm" 
+                                    : "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
+                                }`}
                               >
                                 <FormControl>
                                   <Checkbox
-                                    checked={field.value?.includes(apoyo)}
+                                    checked={isChecked}
                                     onCheckedChange={(checked) => {
                                       return checked
                                         ? field.onChange([...field.value, apoyo])
@@ -178,9 +202,10 @@ export function EstudianteProfileForm() {
                                             )
                                           )
                                     }}
+                                    className="border-slate-300 data-[state=checked]:bg-ucr-celeste-medium data-[state=checked]:border-ucr-celeste-medium"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal cursor-pointer flex-1">
+                                <FormLabel className="font-semibold cursor-pointer text-sm flex-1 leading-snug text-slate-700 font-body select-none">
                                   {apoyo}
                                 </FormLabel>
                               </FormItem>
@@ -195,10 +220,18 @@ export function EstudianteProfileForm() {
               />
 
               <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline" onClick={prevStep}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep} 
+                  className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 font-body font-semibold px-6 h-12 rounded-xl transition-all shadow-sm"
+                >
                   ← Atrás
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/30 transition-all">
+                <Button 
+                  type="submit" 
+                  className="h-12 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white text-base font-bold shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all rounded-xl font-body tracking-wide px-8 flex items-center justify-center"
+                >
                   Completar Perfil
                 </Button>
               </div>
