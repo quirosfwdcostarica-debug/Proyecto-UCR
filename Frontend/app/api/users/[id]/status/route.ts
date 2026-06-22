@@ -27,11 +27,13 @@ export async function PATCH(
   }
 
   const { cuentaPausada } = body;
-  const updateData: Record<string, boolean> = {};
+  const updateData: Record<string, any> = {};
 
-  // cuentaPausada = true → activo = false (cuenta pausada = no activa)
+  // cuentaPausada = true → suspender (activo=false, status=SUSPENDIDO)
+  // cuentaPausada = false → reactivar (activo=true, status=ACTIVO)
   if (typeof cuentaPausada === "boolean") {
     updateData.activo = !cuentaPausada;
+    updateData.status = cuentaPausada ? "SUSPENDIDO" : "ACTIVO";
   }
 
   if (Object.keys(updateData).length === 0) {

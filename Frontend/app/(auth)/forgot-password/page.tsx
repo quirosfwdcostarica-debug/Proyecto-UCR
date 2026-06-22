@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { forgotPasswordAction } from "@/actions/auth.actions";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -18,25 +19,14 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    const result = await forgotPasswordAction(email);
+    setIsLoading(false);
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (res.ok) {
-        setIsSuccess(true);
-        toast({ title: "Enlace enviado", description: "Revisa tu bandeja de entrada." });
-      } else {
-        const data = await res.json();
-        toast({ title: "Error", description: data.message || "No se pudo procesar la solicitud.", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error de red", description: "Verifica tu conexión a internet.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      setIsSuccess(true);
+      toast({ title: "Solicitud procesada", description: result.message });
+    } else {
+      toast({ title: "Error", description: result.message, variant: "destructive" });
     }
   };
 
@@ -47,12 +37,22 @@ export default function ForgotPasswordPage() {
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-[#0f4c81]">Revisa tu correo</CardTitle>
             <CardDescription className="text-base mt-2">
-              Si existe una cuenta asociada a <strong>{email}</strong>, recibirás un enlace para restablecer tu contraseña.
+              Si existe una cuenta asociada a <strong>{email}</strong>, recibirás una contraseña temporal para ingresar.
             </CardDescription>
           </CardHeader>
-          <CardFooter className="flex justify-center border-t border-slate-100 pt-4 mt-6">
+          <CardContent>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 text-left">
+              <p className="font-semibold mb-1">Pasos a seguir:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Abre el correo y copia la contraseña temporal.</li>
+                <li>Inicia sesión con esa contraseña.</li>
+                <li>Ve a <strong>Configuración → Cambiar contraseña</strong> para elegir una nueva.</li>
+              </ol>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-center border-t border-slate-100 pt-4 mt-2">
             <Link href="/login" className="flex items-center text-sm font-semibold text-[#0f4c81] hover:underline">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Volver a inicio de sesión
+              <ArrowLeft className="mr-2 h-4 w-4" /> Ir a inicio de sesión
             </Link>
           </CardFooter>
         </Card>
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-[#0f4c81]">Recuperar Contraseña</CardTitle>
           <CardDescription>
-            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            Ingresa tu correo electrónico y te enviaremos una contraseña temporal para que puedas ingresar.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
             <Button type="submit" className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white" disabled={isLoading || !email}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</> : "Enviar enlace de recuperación"}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</> : "Enviar contraseña temporal"}
             </Button>
           </form>
         </CardContent>

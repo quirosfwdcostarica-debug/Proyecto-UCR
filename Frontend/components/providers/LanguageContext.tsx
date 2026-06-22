@@ -15,6 +15,7 @@ export type TranslationKeys =
   | "sidebar.donations"
   | "sidebar.donations.student"
   | "sidebar.donations.exalumno"
+  | "sidebar.donations.history"
   | "sidebar.profile"
   | "sidebar.profile.student"
   | "sidebar.profile.exalumno"
@@ -26,6 +27,11 @@ export type TranslationKeys =
   | "sidebar.settings"
   | "sidebar.help"
   | "sidebar.startProject"
+  | "sidebar.applications.student"
+  | "sidebar.positions.own"
+  | "sidebar.project.student"
+  | "sidebar.project.new"
+  | "sidebar.project.view"
   | "sidebar.admin"
   | "settings.title"
   | "settings.subtitle"
@@ -101,8 +107,14 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.positions.student": "Bolsa de Empleo",
     "sidebar.positions.exalumno": "Publicar Empleo",
     "sidebar.donations": "Donaciones",
-    "sidebar.donations.student": "Solicitar Apoyo",
+    "sidebar.donations.student": "Donaciones Recibidas",
     "sidebar.donations.exalumno": "Donar a Proyectos",
+    "sidebar.donations.history": "Mis Donaciones",
+    "sidebar.applications.student": "Mis Aplicaciones",
+    "sidebar.positions.own": "Mis Posiciones",
+    "sidebar.project.student": "Mi Proyecto",
+    "sidebar.project.new": "Nuevo / Editar Proyecto",
+    "sidebar.project.view": "Ver mi Proyecto",
     "sidebar.profile": "Perfil",
     "sidebar.profile.student": "Mi Perfil",
     "sidebar.profile.exalumno": "Mi Perfil",
@@ -188,8 +200,14 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.positions.student": "Job Board",
     "sidebar.positions.exalumno": "Post a Job",
     "sidebar.donations": "Donations",
-    "sidebar.donations.student": "Request Funding",
+    "sidebar.donations.student": "Received Donations",
     "sidebar.donations.exalumno": "Donate to Projects",
+    "sidebar.donations.history": "My Donations",
+    "sidebar.applications.student": "My Applications",
+    "sidebar.positions.own": "My Positions",
+    "sidebar.project.student": "My Project",
+    "sidebar.project.new": "New / Edit Project",
+    "sidebar.project.view": "View my Project",
     "sidebar.profile": "Profile",
     "sidebar.profile.student": "My Profile",
     "sidebar.profile.exalumno": "My Profile",
@@ -275,8 +293,14 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.positions.student": "Vagas de Emprego",
     "sidebar.positions.exalumno": "Publicar Vaga",
     "sidebar.donations": "Doações",
-    "sidebar.donations.student": "Solicitar Apoio",
+    "sidebar.donations.student": "Doações Recebidas",
     "sidebar.donations.exalumno": "Doar para Projetos",
+    "sidebar.donations.history": "Minhas Doações",
+    "sidebar.applications.student": "Minhas Candidaturas",
+    "sidebar.positions.own": "Minhas Vagas",
+    "sidebar.project.student": "Meu Projeto",
+    "sidebar.project.new": "Novo / Editar Projeto",
+    "sidebar.project.view": "Ver meu Projeto",
     "sidebar.profile": "Perfil",
     "sidebar.profile.student": "Meu Perfil",
     "sidebar.profile.exalumno": "Meu Perfil",
@@ -362,8 +386,14 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.positions.student": "Offres d'Emploi",
     "sidebar.positions.exalumno": "Publier un Emploi",
     "sidebar.donations": "Dons",
-    "sidebar.donations.student": "Demander un Financement",
+    "sidebar.donations.student": "Dons Reçus",
     "sidebar.donations.exalumno": "Faire un Don",
+    "sidebar.donations.history": "Mes Dons",
+    "sidebar.applications.student": "Mes Candidatures",
+    "sidebar.positions.own": "Mes Postes",
+    "sidebar.project.student": "Mon Projet",
+    "sidebar.project.new": "Nouveau / Modifier Projet",
+    "sidebar.project.view": "Voir mon Projet",
     "sidebar.profile": "Profil",
     "sidebar.profile.student": "Mon Profil",
     "sidebar.profile.exalumno": "Mon Profil",

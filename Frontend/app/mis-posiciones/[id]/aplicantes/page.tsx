@@ -1,117 +1,312 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowLeft, User, Loader2, CheckCircle2,
+  XCircle, Clock, GraduationCap,
+} from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Mail, CheckCircle2, XCircle, FileText } from "lucide-react";
+import { Card } from "@/components/ui/Card";
 
-export default function AplicantesPage({ params }: { params: { id: string } }) {
-  // Mock Data: Obtener esto vía Prisma desde el Server Component
-  const posicion = {
-    titulo: "Desarrollador Frontend Junior",
-    tipo: "EMPLEO",
-    estado: "ACTIVA"
-  };
+interface Aplicante {
+  id: string;
+  estado: "PENDIENTE" | "SELECCIONADO" | "DESCARTADO";
+  created_at: string;
+  posicion: { id: string; titulo: string; empresa: string | null } | null;
+  estudiante: {
+    nombre: string | null;
+    foto_url: string | null;
+    email: string | null;
+    carrera: string | null;
+    nivel_academico: string | null;
+  } | null;
+}
 
-  const aplicantes = [
-    {
-      id: "a1",
-      estudiante: { name: "Luis Jiménez", carrera: "Ingeniería en Computación" },
-      estado: "PENDIENTE",
-      matchScore: 92,
-      fechaAplicacion: "2026-06-04"
-    },
-    {
-      id: "a2",
-      estudiante: { name: "Valeria Guzmán", carrera: "Diseño Gráfico" },
-      estado: "SELECCIONADO",
-      matchScore: 60,
-      fechaAplicacion: "2026-06-02"
-    },
-    {
-      id: "a3",
-      estudiante: { name: "Carlos Mata", carrera: "Ingeniería de Software" },
-      estado: "DESCARTADO",
-      matchScore: 85,
-      fechaAplicacion: "2026-06-05"
+const ESTADO_CFG = {
+  PENDIENTE:    { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
+  SELECCIONADO: { label: "Seleccionado",    cls: "bg-green-50 text-green-700 border-green-200",   Icon: CheckCircle2 },
+  DESCARTADO:   { label: "No seleccionado", cls: "bg-slate-100 text-slate-500 border-slate-200",   Icon: XCircle },
+};
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+export default function AplicantesPage() {
+  const { data: session, status } = useSession();
+  const params = useParams();
+  const router = useRouter();
+  const posicionId = params?.id as string;
+
+  const [aplicantes, setAplicantes] = useState<Aplicante[]>([]);
+  const [posicionTitulo, setPosicionTitulo] = useState<string>("");
+  const [loading, setLoading]              = useState(true);
+  const [error, setError]                  = useState<string | null>(null);
+  const [actionLoading, setActionLoading]  = useState<string | null>(null);
+
+  const role = (session?.user as any)?.tipo as string | undefined;
+
+  useEffect(() => {
+    if (status === "unauthenticated") { router.replace("/login"); return; }
+    if (status !== "authenticated") return;
+    if (role && role !== "EXALUMNO" && role !== "ADMIN") { router.replace("/"); return; }
+
+    fetch(`/api/aplicaciones?posicion_id=${posicionId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const data: Aplicante[] = d.data ?? [];
+        setAplicantes(data);
+        if (data[0]?.posicion?.titulo) setPosicionTitulo(data[0].posicion.titulo);
+      })
+      .catch(() => setError("No se pudieron cargar los aplicantes."))
+      .finally(() => setLoading(false));
+  }, [status, role, posicionId]);
+
+  async function handleAction(
+    aplicanteId: string,
+    action: "seleccionar" | "descartar",
+    cerrarPosicion = false
+  ) {
+    setActionLoading(aplicanteId + action);
+    try {
+      const res = await fetch(`/api/aplicaciones/${aplicanteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, cerrarPosicion }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al actualizar");
+
+      if (action === "seleccionar") {
+        setAplicantes((prev) =>
+          prev.map((a) => {
+            if (a.id === aplicanteId) return { ...a, estado: "SELECCIONADO" };
+            if (cerrarPosicion && a.estado === "PENDIENTE") return { ...a, estado: "DESCARTADO" };
+            return a;
+          })
+        );
+      } else {
+        setAplicantes((prev) =>
+          prev.map((a) => (a.id === aplicanteId ? { ...a, estado: "DESCARTADO" } : a))
+        );
+      }
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(null);
     }
-  ];
+  }
+
+  async function seleccionarConConfirmacion(aplicanteId: string, nombre: string) {
+    const cerrar = confirm(
+      `¿Seleccionar a ${nombre}?\n\n` +
+      `Presiona OK para seleccionar y CERRAR la posición (notifica a los demás aplicantes).\n` +
+      `Presiona Cancelar para solo seleccionar (la posición sigue abierta).`
+    );
+    await handleAction(aplicanteId, "seleccionar", cerrar);
+  }
+
+  const pendientes = aplicantes.filter((a) => a.estado === "PENDIENTE");
+  const procesados = aplicantes.filter((a) => a.estado !== "PENDIENTE");
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-full bg-[#f8fafc] flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 text-[#005da4] animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-10 px-4 min-h-screen">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-primary">
-            Candidatos: {posicion.titulo}
-          </h1>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline">{posicion.tipo}</Badge>
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
-              {posicion.estado}
-            </Badge>
-          </div>
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Mail className="w-4 h-4" />
-          Contactar Seleccionados
-        </Button>
-      </div>
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <Link
+          href="/mis-posiciones"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#005da4] mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Mis posiciones
+        </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {aplicantes.map(aplicante => (
-          <Card key={aplicante.id} className="glass flex flex-col border-primary/10 transition-all hover:shadow-md">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl">{aplicante.estudiante.name}</CardTitle>
-                  <CardDescription>{aplicante.estudiante.carrera}</CardDescription>
+        <div className="mb-8">
+          <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Gestión de aplicantes</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {posicionTitulo || "Aplicantes"}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {aplicantes.length} aplicante{aplicantes.length !== 1 ? "s" : ""} en total
+            {pendientes.length > 0
+              ? ` · ${pendientes.length} pendiente${pendientes.length !== 1 ? "s" : ""}`
+              : ""}
+          </p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
+            {error}
+          </div>
+        )}
+
+        {aplicantes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-3xl mb-4">📋</div>
+            <h3 className="text-lg font-bold text-slate-700 mb-2">Sin aplicantes aún</h3>
+            <p className="text-slate-500 text-sm max-w-xs">
+              Cuando los estudiantes apliquen a esta posición, aparecerán aquí.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* PENDIENTES */}
+            {pendientes.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                  Pendientes de revisión ({pendientes.length})
+                </h2>
+                <div className="space-y-3">
+                  {pendientes.map((a) => (
+                    <AplicanteCard
+                      key={a.id}
+                      a={a}
+                      actionLoading={actionLoading}
+                      onSeleccionar={(nombre) => seleccionarConConfirmacion(a.id, nombre)}
+                      onDescartar={() => {
+                        if (confirm("¿Descartar esta aplicación? Se notificará al estudiante.")) {
+                          handleAction(a.id, "descartar");
+                        }
+                      }}
+                    />
+                  ))}
                 </div>
-                {/* Affinity Badge */}
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20">
-                  {aplicante.matchScore}
+              </div>
+            )}
+
+            {/* PROCESADOS */}
+            {procesados.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-3">
+                  <span className="flex-1 h-px bg-slate-200" />
+                  Procesados ({procesados.length})
+                  <span className="flex-1 h-px bg-slate-200" />
+                </h2>
+                <div className="space-y-3 opacity-70">
+                  {procesados.map((a) => (
+                    <AplicanteCard
+                      key={a.id}
+                      a={a}
+                      actionLoading={actionLoading}
+                    />
+                  ))}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Fecha:</span>
-                <span>{aplicante.fechaAplicacion}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Estado:</span>
-                <Badge variant={
-                  aplicante.estado === 'SELECCIONADO' ? 'default' : 
-                  aplicante.estado === 'DESCARTADO' ? 'destructive' : 'secondary'
-                }>
-                  {aplicante.estado}
-                </Badge>
-              </div>
-              
-              <Button variant="outline" className="w-full gap-2 mt-4">
-                <FileText className="w-4 h-4" /> Ver CV Adaptado
-              </Button>
-            </CardContent>
-            
-            <CardFooter className="bg-muted/20 border-t p-4 flex gap-2">
-              {aplicante.estado === "PENDIENTE" && (
-                <>
-                  {/* Acciones del ATS */}
-                  <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> Seleccionar
-                  </Button>
-                  <Button variant="destructive" className="flex-1 gap-2">
-                    <XCircle className="w-4 h-4" /> Descartar
-                  </Button>
-                </>
-              )}
-              {aplicante.estado === "SELECCIONADO" && (
-                <p className="text-sm text-green-600 w-full text-center font-medium">✓ En proceso de contacto</p>
-              )}
-              {aplicante.estado === "DESCARTADO" && (
-                <p className="text-sm text-muted-foreground w-full text-center">Correo de feedback anónimo enviado.</p>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+            )}
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+function AplicanteCard({
+  a,
+  actionLoading,
+  onSeleccionar,
+  onDescartar,
+}: {
+  a: Aplicante;
+  actionLoading: string | null;
+  onSeleccionar?: (nombre: string) => void;
+  onDescartar?: () => void;
+}) {
+  const cfg    = ESTADO_CFG[a.estado];
+  const { Icon } = cfg;
+  const nombre    = a.estudiante?.nombre ?? "Estudiante";
+  const isPending = a.estado === "PENDIENTE";
+  const anyLoading = !!actionLoading?.startsWith(a.id);
+
+  return (
+    <Card className="p-4 border-slate-200 bg-white dark:bg-slate-900 shadow-sm">
+      <div className="flex items-start gap-4">
+        {/* Avatar */}
+        <div className="w-10 h-10 rounded-full bg-[#005da4]/10 flex items-center justify-center shrink-0 overflow-hidden">
+          {a.estudiante?.foto_url ? (
+            <img src={a.estudiante.foto_url} alt={nombre} className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-5 h-5 text-[#005da4]" />
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{nombre}</p>
+            <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${cfg.cls}`}>
+              <Icon className="w-3 h-3" /> {cfg.label}
+            </Badge>
+          </div>
+
+          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+            {a.estudiante?.carrera && (
+              <span className="flex items-center gap-1">
+                <GraduationCap className="w-3 h-3" /> {a.estudiante.carrera}
+              </span>
+            )}
+            {a.estudiante?.nivel_academico && (
+              <span className="capitalize">{a.estudiante.nivel_academico}</span>
+            )}
+            <span>Aplicó el {formatDate(a.created_at)}</span>
+          </div>
+
+          {/* Email only visible for SELECCIONADO */}
+          {a.estado === "SELECCIONADO" && a.estudiante?.email && (
+            <div className="mt-2 flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-md px-2.5 py-1.5 text-xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+              <a
+                href={`mailto:${a.estudiante.email}`}
+                className="text-green-700 font-medium hover:underline truncate"
+              >
+                {a.estudiante.email}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Actions (only for PENDIENTE) */}
+        {isPending && onSeleccionar && onDescartar && (
+          <div className="flex gap-2 shrink-0">
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white text-xs"
+              disabled={anyLoading}
+              onClick={() => onSeleccionar(nombre)}
+            >
+              {actionLoading === a.id + "seleccionar" ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <><CheckCircle2 className="w-3 h-3 mr-1" />Seleccionar</>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-slate-200 text-slate-600 hover:bg-slate-50 text-xs"
+              disabled={anyLoading}
+              onClick={onDescartar}
+            >
+              {actionLoading === a.id + "descartar" ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <><XCircle className="w-3 h-3 mr-1" />Descartar</>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
