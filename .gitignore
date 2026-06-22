@@ -3,4 +3,6 @@ node_modules/
 .env
 .env.*
 backend/.env
-Frontend/.env*
+backend/.env.example
+Frontend/.env
+Frontend/.env.local
