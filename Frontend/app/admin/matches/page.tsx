@@ -1,5 +1,225 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Download, RefreshCw, AlertTriangle, CheckCircle, Clock, Search, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+
+interface MatchData {
+  id: string;
+  score_match: number;
+  estado: string;
+  created_at: string;
+  tipo_apoyo: string;
+  estudiante: {
+    user: { name: string; email: string };
+    carrera: string;
+  } | null;
+  exalumno: {
+    user: { name: string; email: string };
+    carrera: string;
+  } | null;
+}
+
+const ESTADO_BADGE: Record<string, { cls: string; icon: any }> = {
+  SUGERIDO: { cls: "bg-gray-100 text-gray-700", icon: Clock },
+  CONTACTADO: { cls: "bg-blue-100 text-blue-700", icon: Clock },
+  ACTIVO: { cls: "bg-green-100 text-green-700", icon: CheckCircle },
+  CERRADO: { cls: "bg-slate-100 text-slate-700", icon: CheckCircle },
+  RECHAZADO: { cls: "bg-red-100 text-red-700", icon: XCircle }
+};
 
 export default function AdminMatchesPage() {
-  redirect("/admin");
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [matches, setMatches] = useState<MatchData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterEstado, setFilterEstado] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login");
+    if (status === "authenticated") {
+      if ((session?.user as any)?.tipo !== "ADMIN") router.replace("/");
+      else loadMatches();
+    }
+  }, [status, session]);
+
+  async function loadMatches() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/matches");
+      const data = await res.json();
+      if (Array.isArray(data)) setMatches(data);
+    } catch (error) {
+      console.error("Error loading matches:", error);
+    }
+    setLoading(false);
+  }
+
+  const exportCSV = () => {
+    const headers = ["ID", "Exalumno", "Estudiante", "Tipo de Apoyo", "Afinidad (%)", "Estado", "Fecha Creación", "Alerta 6 Meses"];
+    const rows = matches.map(m => {
+      const is6MonthsOld = isSixMonthsOld(m.created_at) && m.estado === "ACTIVO";
+      return [
+        m.id,
+        m.exalumno?.user?.name || "N/A",
+        m.estudiante?.user?.name || "N/A",
+        m.tipo_apoyo || "General",
+        m.score_match || 0,
+        m.estado,
+        new Date(m.created_at).toLocaleDateString(),
+        is6MonthsOld ? "SI" : "NO"
+      ];
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `matches_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const isSixMonthsOld = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const diffTime = Math.abs(new Date().getTime() - d.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    return diffDays > 180;
+  };
+
+  const filteredMatches = matches.filter(m => {
+    if (filterEstado && m.estado !== filterEstado) return false;
+    if (search) {
+      const query = search.toLowerCase();
+      const stName = m.estudiante?.user?.name?.toLowerCase() || "";
+      const exName = m.exalumno?.user?.name?.toLowerCase() || "";
+      if (!stName.includes(query) && !exName.includes(query)) return false;
+    }
+    return true;
+  });
+
+  if (status === "loading" || loading) {
+    return <div className="flex h-screen items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-[#0f4c81]" /></div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81]">
+          <ArrowLeft className="w-4 h-4" /> Volver al panel
+        </Link>
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Gestión de Matches</h1>
+            <p className="text-slate-500">Administra y da seguimiento a las conexiones activas.</p>
+          </div>
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#0f4c81] text-white rounded-lg hover:bg-[#0f4c81]/90 shadow-sm transition-colors font-medium text-sm">
+            <Download className="w-4 h-4" /> Exportar CSV
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Buscar por nombre..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20"
+            />
+          </div>
+          <select 
+            value={filterEstado}
+            onChange={e => setFilterEstado(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white"
+          >
+            <option value="">Todos los Estados</option>
+            <option value="SUGERIDO">Sugerido</option>
+            <option value="CONTACTADO">Contactado</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="CERRADO">Cerrado</option>
+          </select>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-600">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-semibold">
+                <tr>
+                  <th className="px-6 py-4">Exalumno</th>
+                  <th className="px-6 py-4">Estudiante</th>
+                  <th className="px-6 py-4">Tipo Apoyo</th>
+                  <th className="px-6 py-4">Afinidad</th>
+                  <th className="px-6 py-4">Estado</th>
+                  <th className="px-6 py-4">Fecha</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredMatches.length === 0 ? (
+                  <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">No se encontraron matches.</td></tr>
+                ) : (
+                  filteredMatches.map(m => {
+                    const cfg = ESTADO_BADGE[m.estado] || { cls: "bg-slate-100 text-slate-700", icon: Clock };
+                    const Icon = cfg.icon;
+                    const alert = m.estado === "ACTIVO" && isSixMonthsOld(m.created_at);
+
+                    return (
+                      <tr key={m.id} className={`hover:bg-slate-50 ${alert ? 'bg-red-50/30' : ''}`}>
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-slate-900">{m.exalumno?.user?.name}</p>
+                          <p className="text-xs text-slate-500">{m.exalumno?.carrera}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-semibold text-slate-900">{m.estudiante?.user?.name}</p>
+                          <p className="text-xs text-slate-500">{m.estudiante?.carrera}</p>
+                        </td>
+                        <td className="px-6 py-4 font-medium">{m.tipo_apoyo || "General"}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#0f4c81]" style={{ width: `${m.score_match || 0}%` }} />
+                            </div>
+                            <span className="font-medium">{m.score_match || 0}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={`${cfg.cls} border-0 flex items-center gap-1.5`}>
+                              <Icon className="w-3 h-3" />
+                              {m.estado}
+                            </Badge>
+                            {alert && (
+                              <div title="Match activo por más de 6 meses. Requiere seguimiento." className="text-red-500 flex items-center gap-1 text-xs font-bold animate-pulse">
+                                <AlertTriangle className="w-4 h-4" /> +6m
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {new Date(m.created_at).toLocaleDateString("es-CR")}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
 }

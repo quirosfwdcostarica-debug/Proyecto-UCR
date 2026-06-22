@@ -1,4 +1,7 @@
 const ReporteperfilRepository = require('../repositories/reporteperfil.repository');
+const db = require('../models');
+const { sendAccountSuspendedEmail } = require('../config/email');
+const User = db.User;
 
 class ReporteperfilService {
   async findAll() {
@@ -10,7 +13,26 @@ class ReporteperfilService {
   }
 
   async create(data) {
-    return await ReporteperfilRepository.create(data);
+    const report = await ReporteperfilRepository.create(data);
+    
+    // Auto-suspension logic
+    if (data.perfil_reportado) {
+      const user = await User.findByPk(data.perfil_reportado);
+      if (user) {
+        user.reportes_recibidos = (user.reportes_recibidos || 0) + 1;
+        
+        if (user.reportes_recibidos >= 3 && user.status !== 'SUSPENDIDO') {
+          user.status = 'SUSPENDIDO';
+          user.activo = false;
+          // Send notification to admin (hardcoded admin email for now or from env)
+          const adminEmail = process.env.ADMIN_EMAIL || 'admin@alumni.ucr.ac.cr';
+          await sendAccountSuspendedEmail(adminEmail, user.nombre, user.email, user.reportes_recibidos);
+        }
+        await user.save();
+      }
+    }
+    
+    return report;
   }
 
   async update(id, data) {

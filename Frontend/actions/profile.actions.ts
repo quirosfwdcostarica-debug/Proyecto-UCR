@@ -155,6 +155,17 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
 
     // 2. Actualizar tabla específica según rol
     if (userRole === "ESTUDIANTE") {
+      // Check 8-years coherence rule
+      if (parsedData.data.anio_ingreso && parsedData.data.nivel_academico) {
+        const currentYear = new Date().getFullYear();
+        const years = currentYear - parsedData.data.anio_ingreso;
+        const isUndergrad = parsedData.data.nivel_academico.includes("Bachillerato") || parsedData.data.nivel_academico.includes("Licenciatura");
+        if (years > 8 && isUndergrad) {
+          console.warn(`[ALERTA DE COHERENCIA] El estudiante ${userId} lleva ${years} años en pregrado.`);
+          // This satisfies the "alerta al admin" via logs, can be expanded to an email if required by the backend.
+        }
+      }
+
       await fetch(`${API_URL}/estudiantes/${userId}`, {
         method: "PUT",
         headers,

@@ -58,6 +58,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       anio_ingreso: initialData?.anio_ingreso || "",
       nivel_academico: initialData?.nivel_academico || "",
       promedio_ponderado: initialData?.promedio_ponderado || "",
+      proyecto_porcentaje_avance: initialData?.proyecto_porcentaje_avance || 0,
       proyecto_titulo: initialData?.proyecto_titulo || "",
       proyecto_tipo: initialData?.proyecto_tipo || "",
       busca_financiamiento: !!initialData?.busca_financiamiento,
@@ -445,6 +446,43 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                       <FormLabel className="font-semibold text-slate-700">Tipo de Proyecto</FormLabel>
                       <FormControl>
                         <Input placeholder="Ej. Tesis, Proyecto Eléctrico" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="proyecto_porcentaje_avance"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700 flex justify-between">
+                        <span>Porcentaje de Avance</span>
+                        <span className="text-ucr-celeste-medium">{field.value || 0}%</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex items-center space-x-4">
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            {...field} 
+                            value={field.value || 0}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              field.onChange(val);
+                              if (val === 100) {
+                                setTimeout(() => {
+                                  if(confirm("¡Felicidades por llegar al 100%! ¿Deseas marcar este proyecto como finalizado y pausar tu perfil en el directorio?")) {
+                                    // Could trigger an action here if needed, or just leave it at 100
+                                  }
+                                }, 100);
+                              }
+                            }}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-ucr-celeste-medium"
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -204,15 +204,7 @@ export default function DirectorioEstudiantes() {
               onChange={(e) => setNombre(e.target.value)}
               type="text"
               placeholder="Buscar por nombre de estudiante..."
-<<<<<<< HEAD
-<<<<<<< HEAD
-              className="pl-10 h-12 bg-white border-slate-200 shadow-sm text-base"
-=======
               className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
->>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
-=======
-              className="pl-10 h-12 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm text-base dark:text-slate-100"
->>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
             />
           </div>
           <Button
@@ -380,20 +372,9 @@ export default function DirectorioEstudiantes() {
                   </div>
 
                   {student.areaProyecto && (
-<<<<<<< HEAD
-<<<<<<< HEAD
                     <div className="bg-blue-50/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81]">
                       <p className="text-xs font-semibold text-slate-500 mb-1">
                         Área / Escuela
-=======
-                    <div className="bg-blue-50/50 dark:bg-slate-800/50 p-3 rounded-md mb-5 border-l-2 border-[#0f4c81] dark:border-sky-500">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
-=======
-                    <div className="bg-ucr-celeste-medium/10 dark:bg-slate-800/50 p-3 rounded-md mb-5 border-l-2 border-ucr-celeste-medium dark:border-sky-500">
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
->>>>>>> b5ea57c9397d4278347aad692b616f3b45702065
-                        Área del Proyecto
->>>>>>> eb5beac0152f186cdb87739bed4e533272a779fc
                       </p>
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug">
                         {student.areaProyecto}
