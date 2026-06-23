@@ -123,14 +123,10 @@ export async function DELETE() {
       data: {
         proyecto_titulo: null,
         proyecto_tipo: null,
-        proyecto_descripcion: null,
-        proyecto_necesidades: null,
-        proyecto_porcentaje_avance: null,
         busca_financiamiento: false,
         busca_mentoria: false,
         busca_empleo: false,
         busca_pasantia: false,
-        visible_en_directorio: false,
       },
       select: { user_id: true },
     });

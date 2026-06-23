@@ -294,7 +294,7 @@ export default function DirectorioEstudiantes() {
 
   const handleOfrecerApoyo = (studentId: string) => {
     if (pendingIds.has(studentId) || offeredMatches[studentId]) return;
-    setPendingIds(prev => new Set([...prev, studentId]));
+    setPendingIds(prev => new Set(Array.from(prev).concat(studentId)));
     setCountdowns(prev => ({ ...prev, [studentId]: 5 }));
 
     intervalsRef.current[studentId] = setInterval(() => {

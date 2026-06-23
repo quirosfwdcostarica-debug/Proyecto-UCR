@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, Users, Briefcase, Heart, UserCircle,
-  Settings, HelpCircle, ShieldAlert, FolderOpen, ChevronDown, Handshake,
-  FileBarChart2,
+  Settings, HelpCircle, FolderOpen, ChevronDown, Handshake,
+  FileBarChart2, Receipt, ClipboardList, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
@@ -69,7 +69,7 @@ export function AppSidebar() {
     { labelKey: "sidebar.directory.student",  href: "/directorio/estudiantes", icon: Users },
     { labelKey: "sidebar.positions.own",      href: "/mis-posiciones",          icon: Briefcase },
     { labelKey: "sidebar.donations.exalumno", href: "/donaciones",              icon: Heart },
-    { labelKey: "sidebar.donations.history",  href: "/mis-donaciones",          icon: Heart },
+    { labelKey: "sidebar.donations.history",  href: "/mis-donaciones",          icon: Receipt },
     { labelKey: "sidebar.matches",            href: "/mis-matches",             icon: Handshake },
     { labelKey: "sidebar.profile.exalumno",   href: "/perfil/editar",           icon: UserCircle },
   ];
@@ -78,7 +78,7 @@ export function AppSidebar() {
     { labelKey: "sidebar.dashboard",            href: "/",                     icon: LayoutDashboard },
     { labelKey: "sidebar.directory.exalumno",   href: "/directorio/exalumnos", icon: Users },
     { labelKey: "sidebar.positions.student",    href: "/posiciones",            icon: Briefcase },
-    { labelKey: "sidebar.applications.student", href: "/mis-aplicaciones",      icon: Briefcase },
+    { labelKey: "sidebar.applications.student", href: "/mis-aplicaciones",      icon: ClipboardList },
     { labelKey: "sidebar.donations.student",    href: "/mis-donaciones",        icon: Heart },
     { labelKey: "sidebar.matches",              href: "/mis-matches",           icon: Handshake },
     {
@@ -89,7 +89,7 @@ export function AppSidebar() {
         { labelKey: "sidebar.project.view", href: "/proyectos/ver" },
       ],
     },
-    { labelKey: "sidebar.cv",              href: "/mi-curriculum",             icon: Briefcase },
+    { labelKey: "sidebar.cv",              href: "/mi-curriculum",             icon: FileText },
     { labelKey: "sidebar.profile.student", href: "/perfil/editar",             icon: UserCircle },
   ];
 

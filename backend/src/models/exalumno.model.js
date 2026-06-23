@@ -25,7 +25,12 @@ module.exports = (sequelize) => {
     ofrece_guest_speaking: { type: DataTypes.BOOLEAN, defaultValue: false },
     ofrece_volunteering: { type: DataTypes.BOOLEAN, defaultValue: false },
     ofrece_career_advice: { type: DataTypes.BOOLEAN, defaultValue: false },
-    ofrece_networking: { type: DataTypes.BOOLEAN, defaultValue: false }
+    ofrece_networking:    { type: DataTypes.BOOLEAN, defaultValue: false },
+    carrera:              { type: DataTypes.TEXT },
+    sector:               { type: DataTypes.TEXT },
+    areas_interes:        { type: DataTypes.JSONB },
+    perfil_completo:      { type: DataTypes.BOOLEAN, defaultValue: false },
+    visible_en_directorio: { type: DataTypes.BOOLEAN, defaultValue: false }
   }, {
     tableName: 'EXALUMNOS',
     timestamps: false,

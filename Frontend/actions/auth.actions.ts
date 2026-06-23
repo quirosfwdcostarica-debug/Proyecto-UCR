@@ -62,7 +62,14 @@ export async function registerStudentAction(data: {
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
   if (existing) {
-    return { success: false, message: "Ya existe una cuenta con este correo." };
+    return { success: false, message: "Ya existe una cuenta con este correo electrónico." };
+  }
+
+  if (data.cedula) {
+    const existingCedula = await prisma.user.findFirst({ where: { cedula: data.cedula } });
+    if (existingCedula) {
+      return { success: false, message: "Ya existe una cuenta registrada con esta cédula." };
+    }
   }
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -151,7 +158,14 @@ export async function registerAlumniAction(data: {
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
   if (existing) {
-    return { success: false, message: "Ya existe una cuenta con este correo." };
+    return { success: false, message: "Ya existe una cuenta registrada con este correo electrónico." };
+  }
+
+  if (data.cedula) {
+    const existingCedula = await prisma.user.findFirst({ where: { cedula: data.cedula } });
+    if (existingCedula) {
+      return { success: false, message: "Ya existe una cuenta registrada con esta cédula." };
+    }
   }
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

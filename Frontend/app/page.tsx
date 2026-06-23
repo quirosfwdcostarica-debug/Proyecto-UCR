@@ -281,8 +281,8 @@ function Dashboard() {
                     <Link href="/directorio/estudiantes">
                       <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white border-0">Ver Estudiantes</Button>
                     </Link>
-                    <Link href="/posiciones">
-                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Publicar Empleo</Button>
+                    <Link href="/mis-posiciones">
+                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Mis Posiciones</Button>
                     </Link>
                   </div>
                 </div>

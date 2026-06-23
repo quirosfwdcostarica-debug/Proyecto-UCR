@@ -4,6 +4,13 @@ import prisma from "@/lib/prisma";
 
 const PAGE_SIZE = 12;
 
+// Columnas que EXISTEN en la BD (confirmado via BD_CONTEXT.MD):
+// user_id, carnet_ucr, escuela_facultad, anio_graduacion, empresa_actual, cargo_actual,
+// pais_ciudad, anios_experiencia, linkedin_url, biografia, github_url, website_url,
+// habilidades, certificaciones, experiencia_laboral, ofrece_*
+//
+// NO existen aún: carrera, sector, areas_interes, perfil_completo, visible_en_directorio
+
 export async function GET(request: NextRequest) {
   const token = await getToken({
     req: request,
@@ -19,9 +26,8 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const nombre      = searchParams.get("nombre")      || undefined;
-  // "carrera" del UI → escuela_facultad en BD (única columna disponible)
+  // carrera y sector del UI → escuela_facultad (única columna disponible en BD)
   const carrera     = searchParams.get("carrera")     || undefined;
-  // "empresa" del UI → empresa_actual en BD
   const empresa     = searchParams.get("empresa")     || undefined;
   const pais_ciudad = searchParams.get("pais_ciudad") || undefined;
   const tipo_apoyo  = searchParams.get("tipo_apoyo")  || undefined;
@@ -29,22 +35,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const apoyoFilter: Record<string, boolean> = {};
-    if (tipo_apoyo === "mentoria")      apoyoFilter.ofrece_mentoria       = true;
-    else if (tipo_apoyo === "empleo")   apoyoFilter.ofrece_empleo         = true;
-    else if (tipo_apoyo === "pasantia") apoyoFilter.ofrece_pasantia       = true;
-    else if (tipo_apoyo === "guest_speaking") apoyoFilter.ofrece_guest_speaking = true;
-    else if (tipo_apoyo === "career_advice")  apoyoFilter.ofrece_career_advice  = true;
-    else if (tipo_apoyo === "networking")     apoyoFilter.ofrece_networking     = true;
-    else if (tipo_apoyo === "volunteering")   apoyoFilter.ofrece_volunteering   = true;
-    else if (tipo_apoyo === "financiamiento") apoyoFilter.ofrece_donacion_dinero = true;
+    if (tipo_apoyo === "mentoria")            apoyoFilter.ofrece_mentoria        = true;
+    else if (tipo_apoyo === "empleo")         apoyoFilter.ofrece_empleo          = true;
+    else if (tipo_apoyo === "pasantia")       apoyoFilter.ofrece_pasantia        = true;
+    else if (tipo_apoyo === "proyecto")       apoyoFilter.ofrece_proyecto        = true;
+    else if (tipo_apoyo === "donacion")       apoyoFilter.ofrece_donacion_dinero = true;
+    else if (tipo_apoyo === "guest_speaking") apoyoFilter.ofrece_guest_speaking  = true;
+    else if (tipo_apoyo === "career_advice")  apoyoFilter.ofrece_career_advice   = true;
+    else if (tipo_apoyo === "networking")     apoyoFilter.ofrece_networking      = true;
+    else if (tipo_apoyo === "volunteering")   apoyoFilter.ofrece_volunteering    = true;
 
     const where = {
-      // Filtros opcionales — no excluir exalumnos por campos vacíos
-      ...(carrera   && { escuela_facultad: { contains: carrera,   mode: "insensitive" as const } }),
-      ...(empresa   && { empresa_actual:   { contains: empresa,   mode: "insensitive" as const } }),
+      // visible_en_directorio no existe en BD → proxy: usuario activo y no suspendido
+      ...(carrera   && { escuela_facultad: { contains: carrera,    mode: "insensitive" as const } }),
+      ...(empresa   && { empresa_actual:   { contains: empresa,    mode: "insensitive" as const } }),
       ...(pais_ciudad && { pais_ciudad:    { contains: pais_ciudad, mode: "insensitive" as const } }),
       ...apoyoFilter,
       user: {
+        activo: true,
         status: { not: "SUSPENDIDO" as const },
         ...(nombre && { nombre: { contains: nombre, mode: "insensitive" as const } }),
       },
@@ -78,7 +86,7 @@ export async function GET(request: NextRequest) {
           ofrece_networking: true,
           user: { select: { id: true, nombre: true, foto_url: true } },
         },
-        orderBy: { anio_graduacion: "desc" },
+        orderBy: { user: { created_at: "desc" } },
         skip: (page - 1) * PAGE_SIZE,
         take: PAGE_SIZE,
       }),
@@ -86,8 +94,9 @@ export async function GET(request: NextRequest) {
 
     const data = rows.map((ex) => ({
       user_id: ex.user_id,
-      carrera: ex.escuela_facultad ?? "",
+      carrera: ex.escuela_facultad ?? "",        // escuela_facultad expuesto como carrera
       escuela_facultad: ex.escuela_facultad ?? "",
+      sector: null,                               // pendiente de migración BD
       anio_graduacion: ex.anio_graduacion ?? null,
       empresa_actual: ex.empresa_actual ?? "",
       cargo_actual: ex.cargo_actual ?? "",
@@ -98,6 +107,7 @@ export async function GET(request: NextRequest) {
       github_url: ex.github_url ?? null,
       website_url: ex.website_url ?? null,
       habilidades: ex.habilidades ?? [],
+      areas_interes: [],                          // pendiente de migración BD
       ofrece_mentoria: !!ex.ofrece_mentoria,
       ofrece_empleo: !!ex.ofrece_empleo,
       ofrece_pasantia: !!ex.ofrece_pasantia,

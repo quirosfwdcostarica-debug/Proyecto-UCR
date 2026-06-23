@@ -76,7 +76,9 @@ export const userProfileUpdateSchema = z.object({
   ofrece_guest_speaking: z.boolean().optional(),
   ofrece_volunteering: z.boolean().optional(),
   ofrece_career_advice: z.boolean().optional(),
-  ofrece_networking: z.boolean().optional()
+  ofrece_networking: z.boolean().optional(),
+  // Pausar perfil (estudiante) — activo = !perfil_pausado
+  perfil_pausado: z.boolean().optional(),
 });
 
 export type UserProfileUpdateValues = z.infer<typeof userProfileUpdateSchema>;

@@ -19,22 +19,26 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const nombre = searchParams.get("nombre") || undefined;
-  const carrera = searchParams.get("carrera") || undefined;
-  const tipo_apoyo = searchParams.get("tipo_apoyo") || undefined;
-  const sede = searchParams.get("sede") || undefined;
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const nombre     = searchParams.get("nombre")      || undefined;
+  const carrera    = searchParams.get("carrera")     || undefined;
+  const tipo_apoyo = searchParams.get("tipo_apoyo")  || undefined;
+  const sede       = searchParams.get("sede")        || undefined;
+  const area       = searchParams.get("area_tematica") || undefined;
+  const page       = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
   try {
     const apoyo: Record<string, boolean> = {};
-    if (tipo_apoyo === "mentoria") apoyo.busca_mentoria = true;
-    else if (tipo_apoyo === "empleo") apoyo.busca_empleo = true;
-    else if (tipo_apoyo === "pasantia") apoyo.busca_pasantia = true;
+    if (tipo_apoyo === "mentoria")           apoyo.busca_mentoria      = true;
+    else if (tipo_apoyo === "empleo")        apoyo.busca_empleo        = true;
+    else if (tipo_apoyo === "pasantia")      apoyo.busca_pasantia      = true;
     else if (tipo_apoyo === "financiamiento") apoyo.busca_financiamiento = true;
 
     const where = {
-      ...(carrera && { carrera: { contains: carrera, mode: "insensitive" as const } }),
-      ...(sede && { sede: { contains: sede, mode: "insensitive" as const } }),
+      visible_en_directorio: true,
+      activo: true,
+      ...(carrera && { carrera:      { contains: carrera, mode: "insensitive" as const } }),
+      ...(sede    && { sede:         { contains: sede,    mode: "insensitive" as const } }),
+      ...(area    && { area_tematica: { contains: area,   mode: "insensitive" as const } }),
       ...apoyo,
       user: {
         activo: true,
@@ -53,6 +57,7 @@ export async function GET(request: NextRequest) {
           escuela_facultad: true,
           sede: true,
           nivel_academico: true,
+          area_tematica: true,
           proyecto_titulo: true,
           proyecto_tipo: true,
           proyecto_descripcion: true,
@@ -73,7 +78,7 @@ export async function GET(request: NextRequest) {
       id: est.user_id,
       carrera: est.carrera ?? "",
       avanceProyecto: est.proyecto_porcentaje_avance ?? 0,
-      areaProyecto: est.proyecto_tipo ?? null,
+      areaProyecto: est.area_tematica ?? est.proyecto_tipo ?? null,
       proyectoTitulo: est.proyecto_titulo ?? null,
       proyectoDescripcion: est.proyecto_descripcion ?? null,
       sede: est.sede ?? null,
@@ -88,7 +93,7 @@ export async function GET(request: NextRequest) {
         name: est.user.nombre,
         image: est.user.foto_url,
         bio: null,
-        proyectoFinalizado: false,
+        proyectoFinalizado: (est.proyecto_porcentaje_avance ?? 0) === 100,
       },
     }));
 

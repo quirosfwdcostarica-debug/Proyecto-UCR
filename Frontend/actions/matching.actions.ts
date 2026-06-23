@@ -258,19 +258,19 @@ export async function ofrecerApoyo(estudianteId: string) {
   }
   // CERRADO match exists → will re-open via upsert below (fall through)
 
-  // Compute affinity score using only existing DB columns
+  // Compute affinity score con los 4 criterios completos (T-18)
   const [estudianteData, exalumnoData] = await Promise.all([
     prisma.estudiante.findUnique({
       where: { user_id: estudianteId },
       select: {
-        carrera: true, proyecto_tipo: true,
+        carrera: true, area_tematica: true, areas_interes: true, proyecto_tipo: true,
         busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
       },
     }),
     prisma.exalumno.findUnique({
       where: { user_id: exalumnoId },
       select: {
-        escuela_facultad: true,
+        carrera: true, escuela_facultad: true, sector: true, areas_interes: true,
         ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
         ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
         ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
@@ -282,14 +282,14 @@ export async function ofrecerApoyo(estudianteId: string) {
     {
       carrera: estudianteData?.carrera,
       apoyoBuscado: toApoyoBuscado(estudianteData ?? {}),
-      areaProyecto: estudianteData?.proyecto_tipo ?? null,
-      areasInteres: [],
+      areaProyecto: estudianteData?.area_tematica ?? estudianteData?.proyecto_tipo ?? null,
+      areasInteres: parseJsonArray(estudianteData?.areas_interes),
     },
     {
-      carrera: exalumnoData?.escuela_facultad ?? null,
-      sector: null,
+      carrera: exalumnoData?.carrera ?? exalumnoData?.escuela_facultad ?? null,
+      sector: exalumnoData?.sector ?? null,
       apoyoOfrecido: toApoyoOfrecido(exalumnoData ?? {}),
-      areasInteres: [],
+      areasInteres: parseJsonArray(exalumnoData?.areas_interes),
     }
   );
 
@@ -339,22 +339,21 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
   const estudianteData = await prisma.estudiante.findUnique({
     where: { user_id: estudianteId },
     select: {
-      carrera: true, proyecto_tipo: true,
+      carrera: true, area_tematica: true, areas_interes: true, proyecto_tipo: true,
       busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
     },
   });
   if (!estudianteData) return [];
 
-  // Solo columnas existentes en BD (sin visible_en_directorio, status)
+  // Solo exalumnos visibles en el directorio (perfil completo) y no suspendidos
   const exalumnos = await prisma.exalumno.findMany({
     where: {
-      escuela_facultad: { not: null },
-      empresa_actual: { not: null },
-      user: { status: { not: "SUSPENDIDO" as const } },
+      visible_en_directorio: true,
+      user: { activo: true, status: { not: "SUSPENDIDO" as const } },
     },
     select: {
       user_id: true,
-      escuela_facultad: true,
+      carrera: true, escuela_facultad: true, sector: true, areas_interes: true,
       ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
       ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
       ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
@@ -364,8 +363,8 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
   const estCompat = {
     carrera: estudianteData.carrera,
     apoyoBuscado: toApoyoBuscado(estudianteData),
-    areaProyecto: estudianteData.proyecto_tipo ?? null,
-    areasInteres: [],
+    areaProyecto: estudianteData.area_tematica ?? estudianteData.proyecto_tipo ?? null,
+    areasInteres: parseJsonArray(estudianteData.areas_interes),
   };
 
   const results = await Promise.allSettled(
@@ -377,10 +376,10 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
       if (rejected) return null;
 
       const { score, reasons, breakdown } = calcularAfinidad(estCompat, {
-        carrera: exa.escuela_facultad ?? null,
-        sector: null,
+        carrera: exa.carrera ?? exa.escuela_facultad ?? null,
+        sector: exa.sector ?? null,
         apoyoOfrecido: toApoyoOfrecido(exa),
-        areasInteres: [],
+        areasInteres: parseJsonArray(exa.areas_interes),
       });
 
       if (score === 0) return null;

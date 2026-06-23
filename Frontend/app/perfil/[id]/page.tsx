@@ -44,7 +44,7 @@ export default async function PerfilPublicoPage({ params }: Props) {
         exalumno={exalumnoShape}
         currentUser={session?.user ?? null}
         accessToken={(session?.user as any)?.accessToken}
-        apiUrl=""
+        apiUrl="/api"
       />
 
       {/* Panel de donaciones — solo visible para administradores */}
