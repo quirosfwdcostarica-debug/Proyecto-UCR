@@ -46,12 +46,15 @@ interface SupportType {
 
 // Map offers of support to tags
 const supportTypes: SupportType[] = [];
-if (exalumno.ofrece_mentoria) supportTypes.push({ label: "Mentorship", color: "bg-blue-50 text-blue-700 border-blue-200" });
-if (exalumno.ofrece_empleo) supportTypes.push({ label: "Hiring", color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
-  if (exalumno.ofrece_guest_speaking) supportTypes.push({ label: "Guest Speaking", color: "bg-purple-50 text-purple-700 border-purple-200" });
-  if (exalumno.ofrece_volunteering) supportTypes.push({ label: "Volunteering", color: "bg-amber-50 text-amber-700 border-amber-200" });
-  if (exalumno.ofrece_career_advice) supportTypes.push({ label: "Career Advice", color: "bg-indigo-50 text-indigo-700 border-indigo-200" });
-  if (exalumno.ofrece_networking) supportTypes.push({ label: "Networking", color: "bg-rose-50 text-rose-700 border-rose-200" });
+if (exalumno.ofrece_mentoria)       supportTypes.push({ label: "Mentoría",          color: "bg-blue-50 text-blue-700 border-blue-200" });
+if (exalumno.ofrece_empleo)         supportTypes.push({ label: "Empleo",             color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
+if (exalumno.ofrece_pasantia)       supportTypes.push({ label: "Pasantía",           color: "bg-sky-50 text-sky-700 border-sky-200" });
+if (exalumno.ofrece_proyecto)       supportTypes.push({ label: "Proyecto Empresarial", color: "bg-teal-50 text-teal-700 border-teal-200" });
+if (exalumno.ofrece_donacion_dinero) supportTypes.push({ label: "Donación Económica", color: "bg-green-50 text-green-700 border-green-200" });
+if (exalumno.ofrece_guest_speaking) supportTypes.push({ label: "Charla / Conferencia", color: "bg-purple-50 text-purple-700 border-purple-200" });
+if (exalumno.ofrece_volunteering)   supportTypes.push({ label: "Voluntariado",       color: "bg-amber-50 text-amber-700 border-amber-200" });
+if (exalumno.ofrece_career_advice)  supportTypes.push({ label: "Orientación Profesional", color: "bg-indigo-50 text-indigo-700 border-indigo-200" });
+if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",         color: "bg-rose-50 text-rose-700 border-rose-200" });
 
   // Parse structured data safely
   const parseJsonData = (data: any) => {

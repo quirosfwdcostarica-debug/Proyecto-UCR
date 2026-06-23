@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
+import { generarSugerenciasParaEstudiante } from "@/actions/matching.actions";
 import { Decimal } from "@prisma/client/runtime/library";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,6 +26,9 @@ function calcEstudianteVisible(u: any, est: any): boolean {
     u?.nombre &&
     est?.carnet_ucr &&
     est?.carrera &&
+    est?.sede &&
+    est?.proyecto_titulo &&
+    est?.area_tematica &&
     (est?.busca_financiamiento || est?.busca_mentoria || est?.busca_empleo || est?.busca_pasantia)
   );
 }
@@ -113,6 +117,8 @@ export async function getUserProfile() {
     busca_mentoria: !!est?.busca_mentoria,
     busca_empleo: !!est?.busca_empleo,
     busca_pasantia: !!est?.busca_pasantia,
+    perfil_pausado: est?.activo === false,
+    visible_en_directorio: !!est?.visible_en_directorio,
 
     // Exalumno
     anio_graduacion: ex?.anio_graduacion ?? "",
@@ -203,6 +209,9 @@ export async function getPublicProfile(userId: string) {
 
 // ─── UPDATE perfil del usuario autenticado ────────────────────────────────────
 
+// Formato carné UCR: letra opcional + 5-9 dígitos (ej. A12345, B123456, 12345678)
+const CARNE_UCR_REGEX = /^[A-Za-z]?\d{5,9}$/;
+
 export async function updateUserProfile(data: UserProfileUpdateValues) {
   const parsed = userProfileUpdateSchema.safeParse(data);
   if (!parsed.success) throw new Error("Datos de perfil inválidos.");
@@ -213,6 +222,11 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
   const userId = session.user.id;
   const tipo = ((session.user as any).tipo as string)?.toUpperCase();
   const d = parsed.data;
+
+  // Validar formato de carné UCR (T-11)
+  if (d.carnet_ucr && !CARNE_UCR_REGEX.test(d.carnet_ucr.trim())) {
+    throw new Error("El carné UCR tiene un formato inválido. Ejemplo válido: A12345 o 123456.");
+  }
 
   // 1. Actualizar tabla USERS
   await prisma.user.update({
@@ -225,68 +239,73 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
     },
   });
 
+  let proyectoCompleto = false;
+
   if (tipo === "EXALUMNO") {
-    // Solo columnas que existen en la BD (según modelo Sequelize de EXALUMNOS).
-    // PENDIENTE de prisma db push: carrera, sector, areas_interes, perfil_completo, visible_en_directorio
-    const exUpdate = {
-      carnet_ucr: d.carnet_ucr || null,
-      // "carrera" no existe en EXALUMNOS — se guarda en escuela_facultad
-      escuela_facultad: d.escuela_facultad || (d as any).carrera || null,
-      anio_graduacion: d.anio_graduacion ? Number(d.anio_graduacion) : null,
-      empresa_actual: d.empresa_actual || null,
-      cargo_actual: d.cargo_actual || null,
-      pais_ciudad: d.pais_ciudad || null,
-      anios_experiencia: d.anios_experiencia ? Number(d.anios_experiencia) : null,
-      linkedin_url: d.linkedin_url || d.socialLinks?.linkedin || null,
-      github_url: d.socialLinks?.github || null,
-      website_url: d.socialLinks?.website || null,
-      biografia: (d as any).biografia || d.bio || null,
-      ofrece_mentoria: !!d.ofrece_mentoria,
-      ofrece_empleo: !!d.ofrece_empleo,
-      ofrece_pasantia: !!d.ofrece_pasantia,
-      ofrece_proyecto: !!d.ofrece_proyecto,
+    const exBase = {
+      carnet_ucr:           d.carnet_ucr || null,
+      escuela_facultad:     d.escuela_facultad || null,
+      anio_graduacion:      d.anio_graduacion ? Number(d.anio_graduacion) : null,
+      empresa_actual:       d.empresa_actual || null,
+      cargo_actual:         d.cargo_actual || null,
+      pais_ciudad:          d.pais_ciudad || null,
+      anios_experiencia:    d.anios_experiencia ? Number(d.anios_experiencia) : null,
+      linkedin_url:         d.linkedin_url || d.socialLinks?.linkedin || null,
+      github_url:           d.socialLinks?.github || null,
+      website_url:          d.socialLinks?.website || null,
+      biografia:            (d as any).biografia || d.bio || null,
+      ofrece_mentoria:      !!d.ofrece_mentoria,
+      ofrece_empleo:        !!d.ofrece_empleo,
+      ofrece_pasantia:      !!d.ofrece_pasantia,
+      ofrece_proyecto:      !!d.ofrece_proyecto,
       ofrece_donacion_dinero: !!d.ofrece_donacion_dinero,
-      ofrece_guest_speaking: !!(d as any).ofrece_guest_speaking,
-      ofrece_volunteering: !!(d as any).ofrece_volunteering,
-      ofrece_career_advice: !!(d as any).ofrece_career_advice,
-      ofrece_networking: !!(d as any).ofrece_networking,
+      ofrece_guest_speaking:  !!d.ofrece_guest_speaking,
+      ofrece_volunteering:    !!d.ofrece_volunteering,
+      ofrece_career_advice:   !!d.ofrece_career_advice,
+      ofrece_networking:      !!d.ofrece_networking,
     };
 
     await prisma.exalumno.upsert({
-      where: { user_id: userId },
-      create: { user_id: userId, ...exUpdate },
-      update: exUpdate,
+      where:  { user_id: userId },
+      create: { user_id: userId, ...exBase },
+      update: exBase,
     });
   }
 
   if (tipo === "ESTUDIANTE") {
-    const estUpdate = {
-      nivel_beca: (d as any).nivel_beca || null,
-      carnet_ucr: d.carnet_ucr || null,
-      carrera: (d as any).carrera || null,
-      escuela_facultad: d.escuela_facultad || null,
-      sede: d.sede || null,
-      anio_ingreso: d.anio_ingreso ? Number(d.anio_ingreso) : null,
-      nivel_academico: d.nivel_academico || null,
-      promedio_ponderado: d.promedio_ponderado ? new Decimal(d.promedio_ponderado) : null,
-      proyecto_titulo: d.proyecto_titulo || null,
-      proyecto_tipo: d.proyecto_tipo || null,
+    const estBase = {
+      nivel_beca:           (d as any).nivel_beca || null,
+      carnet_ucr:           d.carnet_ucr?.trim() || null,
+      carrera:              (d as any).carrera || null,
+      escuela_facultad:     d.escuela_facultad || null,
+      sede:                 d.sede || null,
+      anio_ingreso:         d.anio_ingreso ? Number(d.anio_ingreso) : null,
+      nivel_academico:      d.nivel_academico || null,
+      promedio_ponderado:   d.promedio_ponderado ? new Decimal(d.promedio_ponderado) : null,
+      proyecto_titulo:      d.proyecto_titulo || null,
+      proyecto_tipo:        d.proyecto_tipo || null,
       busca_financiamiento: !!d.busca_financiamiento,
-      busca_mentoria: !!d.busca_mentoria,
-      busca_empleo: !!d.busca_empleo,
-      busca_pasantia: !!d.busca_pasantia,
+      busca_mentoria:       !!d.busca_mentoria,
+      busca_empleo:         !!d.busca_empleo,
+      busca_pasantia:       !!d.busca_pasantia,
     };
 
     await prisma.estudiante.upsert({
-      where: { user_id: userId },
-      create: { user_id: userId, ...estUpdate },
-      update: estUpdate,
+      where:  { user_id: userId },
+      create: { user_id: userId, ...estBase },
+      update: estBase,
     });
+
+    try {
+      await generarSugerenciasParaEstudiante(userId);
+    } catch (e) {
+      console.error("[updateUserProfile] Falló la generación de sugerencias de match:", e);
+    }
   }
 
   revalidatePath("/perfil/editar");
   revalidatePath("/directorio/estudiantes");
   revalidatePath("/directorio/exalumnos");
 
-  return { success: true };
+  return { success: true, proyectoCompleto: false };
 }

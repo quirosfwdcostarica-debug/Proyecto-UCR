@@ -619,7 +619,7 @@ export default function NuevaPosicionPage() {
                       <input type="range" min={0} max={100} step={5} value={weights[key]}
                         onChange={(e) => adjustWeight(key, Number(e.target.value))}
                         className="w-full h-2 rounded-full cursor-pointer mb-2"
-                        style={{ accentColor: color }} step={1} />
+                        style={{ accentColor: color }} />
                       <p className="text-xs text-slate-400">{desc}</p>
                     </div>
                   ))}
@@ -673,8 +673,7 @@ export default function NuevaPosicionPage() {
                 ) : (
                   <button type="button" onClick={publish} disabled={loading || totalWeights !== 100}
                     className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: `linear-gradient(135deg, ${UCR.blue}, ${UCR.sky}, ${UCR.orange})` }}
-                    disabled={loading}>
+                    style={{ background: `linear-gradient(135deg, ${UCR.blue}, ${UCR.sky}, ${UCR.orange})` }}>
                     {loading
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Publicando...</>
                       : <><CheckCircle2 className="w-4 h-4" /> Finalizar y Publicar</>}

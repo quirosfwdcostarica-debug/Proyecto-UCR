@@ -9,14 +9,18 @@ import { Input } from "@/components/ui/input";
 
 interface AlumniItem {
   user_id: string;
-  carrera: string;          // escuela_facultad
+  carrera: string;
   escuela_facultad: string;
+  sector: string | null;
   empresa_actual: string;
   cargo_actual: string;
   pais_ciudad: string | null;
   anio_graduacion: number | null;
   ofrece_mentoria: boolean;
   ofrece_empleo: boolean;
+  ofrece_pasantia: boolean;
+  ofrece_proyecto: boolean;
+  ofrece_donacion_dinero: boolean;
   ofrece_guest_speaking: boolean;
   ofrece_volunteering: boolean;
   ofrece_career_advice: boolean;
@@ -25,25 +29,31 @@ interface AlumniItem {
 }
 
 const SUPPORT_CATEGORIES = [
-  { key: "mentoria", label: "Mentorship" },
-  { key: "empleo", label: "Hiring" },
-  { key: "guest_speaking", label: "Guest Speaking" },
-  { key: "volunteering", label: "Volunteering" },
-  { key: "career_advice", label: "Career Advice" },
-  { key: "networking", label: "Networking" },
+  { key: "mentoria",       label: "Mentoría" },
+  { key: "empleo",         label: "Empleo" },
+  { key: "pasantia",       label: "Pasantía" },
+  { key: "guest_speaking", label: "Charla / Conferencia" },
+  { key: "career_advice",  label: "Orientación Profesional" },
+  { key: "networking",     label: "Networking" },
+  { key: "volunteering",   label: "Voluntariado" },
+  { key: "proyecto",       label: "Proyecto Empresarial" },
+  { key: "donacion",       label: "Donación Económica" },
 ];
 
 const BG_COLORS = ["bg-ucr-celeste-medium", "bg-ucr-celeste", "bg-ucr-amarillo", "bg-ucr-naranja", "bg-slate-900"];
 
 function getSupportTags(al: AlumniItem): string[] {
   const tags: string[] = [];
-  if (al.ofrece_mentoria) tags.push("MENTORSHIP");
-  if (al.ofrece_empleo) tags.push("HIRING");
-  if (al.ofrece_guest_speaking) tags.push("GUEST SPEAKING");
-  if (al.ofrece_volunteering) tags.push("VOLUNTEERING");
-  if (al.ofrece_career_advice) tags.push("CAREER ADVICE");
-  if (al.ofrece_networking) tags.push("NETWORKING");
-  if (tags.length === 0) tags.push("NETWORKING");
+  if (al.ofrece_mentoria)        tags.push("MENTORÍA");
+  if (al.ofrece_empleo)          tags.push("EMPLEO");
+  if (al.ofrece_pasantia)        tags.push("PASANTÍA");
+  if (al.ofrece_guest_speaking)  tags.push("CHARLA");
+  if (al.ofrece_career_advice)   tags.push("ORIENTACIÓN");
+  if (al.ofrece_networking)      tags.push("NETWORKING");
+  if (al.ofrece_volunteering)    tags.push("VOLUNTARIADO");
+  if (al.ofrece_proyecto)        tags.push("PROYECTO");
+  if (al.ofrece_donacion_dinero) tags.push("DONACIÓN");
+  if (tags.length === 0)         tags.push("NETWORKING");
   return tags;
 }
 

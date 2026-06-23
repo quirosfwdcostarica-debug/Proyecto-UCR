@@ -81,7 +81,7 @@ export function AvailableJobsList() {
       });
       const data = await res.json();
       if (res.ok) {
-        setAppliedIds((prev) => new Set([...prev, jobId]));
+        setAppliedIds((prev) => new Set(Array.from(prev).concat(jobId)));
         setAppIdMap((prev) => ({ ...prev, [jobId]: data.id }));
         setSelectedJobId(null);
         toast({
@@ -91,7 +91,7 @@ export function AvailableJobsList() {
       } else {
         // Si ya aplicó antes (race condition), actualizar estado local
         if (res.status === 409) {
-          setAppliedIds((prev) => new Set([...prev, jobId]));
+          setAppliedIds((prev) => new Set(Array.from(prev).concat(jobId)));
         }
         toast({
           title: "Error",

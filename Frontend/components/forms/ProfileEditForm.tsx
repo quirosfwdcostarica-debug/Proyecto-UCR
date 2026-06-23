@@ -72,6 +72,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       busca_mentoria: !!initialData?.busca_mentoria,
       busca_empleo: !!initialData?.busca_empleo,
       busca_pasantia: !!initialData?.busca_pasantia,
+      perfil_pausado: !!initialData?.perfil_pausado,
 
       // Exalumno fields
       anio_graduacion: initialData?.anio_graduacion || "",
@@ -107,6 +108,23 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             description: "Tus datos se han guardado correctamente.",
             className: "bg-ucr-azul-1 text-white border-none",
           });
+          // T-13: si el avance llegó al 100%, preguntar si el proyecto finalizó
+          if ((result as any).proyectoCompleto) {
+            const { isConfirmed } = await import("sweetalert2").then(m =>
+              m.default.fire({
+                title: "¿Tu proyecto está finalizado?",
+                text: "El avance llegó al 100%. ¿Deseas marcar el proyecto como finalizado? Esto lo retirará del directorio activo.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, finalizar",
+                cancelButtonText: "No, mantener activo",
+                confirmButtonColor: "#005da4",
+              })
+            );
+            if (isConfirmed) {
+              await updateUserProfile({ ...data, proyecto_tipo: `${data.proyecto_tipo ?? ""}__finalizado` });
+            }
+          }
         }
       } catch (error: any) {
         toast({
@@ -588,6 +606,42 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Pausar perfil (T-12) */}
+            <div className="bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-amber-200/50 dark:border-amber-800 transition-all hover:shadow-2xl">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-amber-100 dark:border-amber-800">
+                <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Visibilidad del Perfil</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Controla si apareces en el directorio y recibes solicitudes de contacto.</p>
+                </div>
+              </div>
+              <FormField
+                control={form.control}
+                name="perfil_pausado"
+                render={({ field }) => (
+                  <FormItem className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-1 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                      />
+                    </FormControl>
+                    <div>
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        Pausar mi perfil temporalmente
+                      </FormLabel>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Tu perfil no aparecerá en el directorio y no recibirás nuevas solicitudes de contacto. Puedes reactivarlo en cualquier momento.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
           </>
         ) : (

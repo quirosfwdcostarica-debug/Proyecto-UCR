@@ -117,7 +117,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         await sendMatchAceptado(emisorEmailOriginal, emisorNombre || "", receptorNombre || "");
       }
       await sendAdminNewActiveMatch(
-        "admin@alumni.ucr.ac.cr",
+        process.env.ADMIN_EMAIL || "admin@alumni.ucr.ac.cr",
         match.estudiante?.user.nombre || "",
         match.exalumno?.user.nombre || ""
       );

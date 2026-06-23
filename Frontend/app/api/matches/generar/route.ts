@@ -11,7 +11,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // Only existing DB columns
+    const parseArr = (v: any): string[] =>
+      Array.isArray(v) ? (v as string[]) : (() => { try { return JSON.parse(v) as string[]; } catch { return []; } })();
+
     const estudiantes = await prisma.estudiante.findMany({
       select: {
         user_id: true, carrera: true, proyecto_tipo: true,
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
       },
     });
     const exalumnos = await prisma.exalumno.findMany({
-      where: { escuela_facultad: { not: null }, empresa_actual: { not: null }, user: { status: { not: "SUSPENDIDO" } } },
+      where: { user: { activo: true, status: { not: "SUSPENDIDO" } } },
       select: {
         user_id: true, escuela_facultad: true,
         ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
