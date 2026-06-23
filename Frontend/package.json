@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.39",
     "@auth/prisma-adapter": "^2.11.2",

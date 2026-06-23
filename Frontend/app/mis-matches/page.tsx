@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
   Card,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, MessageSquare } from "lucide-react";
 
 interface MatchItem {
   id: string;
@@ -404,21 +405,31 @@ function MatchCard({
           </Button>
         )}
 
-        {/* ACTIVO — close button */}
+        {/* ACTIVO — conversations + close */}
         {match.status === "ACTIVO" && (
-          <Button
-            variant="outline"
-            className="w-full border-slate-200 text-slate-600 hover:bg-slate-100 text-sm mt-2"
-            disabled={anyLoading}
-            onClick={() => {
-              if (confirm("¿Cerrar esta conexión? Esta acción no se puede deshacer.")) {
-                handleAction(match.id, "CERRAR");
-              }
-            }}
-          >
-            {isLoading("CERRAR") && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
-            Cerrar Conexión
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Link href={`/mensajes?matchId=${match.id}`} className="w-full">
+              <Button
+                className="w-full bg-[#005da4] hover:bg-[#005da4]/90 text-white text-sm"
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                Ver Conversación
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              className="w-full border-slate-200 text-slate-600 hover:bg-slate-100 text-sm"
+              disabled={anyLoading}
+              onClick={() => {
+                if (confirm("¿Cerrar esta conexión? Esta acción no se puede deshacer.")) {
+                  handleAction(match.id, "CERRAR");
+                }
+              }}
+            >
+              {isLoading("CERRAR") && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+              Cerrar Conexión
+            </Button>
+          </div>
         )}
 
         {/* CERRADO — history only */}
