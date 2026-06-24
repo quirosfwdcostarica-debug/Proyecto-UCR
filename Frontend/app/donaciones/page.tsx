@@ -86,6 +86,7 @@ function DonacionModal({
   onSuccess: () => void;
 }) {
   const [monto, setMonto] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [metodo, setMetodo] = useState<MetodoPago>("SINPE");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -131,7 +132,7 @@ function DonacionModal({
           exalumnoId,
           monto: montoNum,
           comprobanteUrl: publicUrl,
-          destino: proyecto.nombre,
+          destino: `${proyecto.nombre}${motivo.trim() ? ` - Motivo: ${motivo.trim()}` : ""}`,
           metodoPago: "",
         }),
       });
@@ -154,21 +155,21 @@ function DonacionModal({
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">¡Solicitud enviada!</h3>
-          <p className="text-slate-500 text-sm mb-6">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">¡Solicitud enviada!</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
             Tu solicitud de donación ha sido enviada al administrador para su revisión y aprobación. Pronto recibirás las instrucciones de pago.
           </p>
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-sm px-4 py-2">
+          <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/50 text-sm px-4 py-2">
             <Clock className="w-4 h-4 mr-1.5" />
             Estado: En revisión
           </Badge>
-          <Button onClick={onClose} className="w-full mt-6 bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+          <Button onClick={onClose} className="w-full mt-6 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white">
             Cerrar
           </Button>
         </div>
@@ -179,45 +180,59 @@ function DonacionModal({
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Solicitar Donación</h3>
-            <p className="text-sm text-slate-500 mt-0.5">Proyecto: {proyecto.nombre}</p>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Solicitar Donación</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Proyecto: {proyecto.nombre}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Monto */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               Monto a donar (₡)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-slate-400 font-semibold text-sm">₡</span>
+              <span className="absolute left-3 top-3 text-slate-400 dark:text-slate-500 font-semibold text-sm">₡</span>
               <Input
                 type="number"
                 min="1"
                 value={monto}
                 onChange={(e) => setMonto(e.target.value)}
                 placeholder="0"
-                className="pl-8 h-11 text-lg font-semibold"
+                className="pl-8 h-11 text-lg font-semibold bg-white dark:bg-slate-950 dark:border-slate-800"
                 required
               />
             </div>
+          </div>
+
+          {/* Motivo */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              ¿Por qué te gustaría donar a este proyecto? (Opcional)
+            </label>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ej. Me parece una excelente iniciativa y quiero apoyar..."
+              className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
+              rows={3}
+            />
           </div>
 
           {/* El usuario solo solicita el monto. El método de pago y comprobante se pedirán después de la aprobación. */}
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
             </div>
@@ -226,7 +241,7 @@ function DonacionModal({
           <Button
             type="submit"
             disabled={uploading}
-            className="w-full h-12 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-semibold text-base"
+            className="w-full h-12 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white font-semibold text-base"
           >
             {uploading ? (
               <>

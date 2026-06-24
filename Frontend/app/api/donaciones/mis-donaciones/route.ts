@@ -19,27 +19,23 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    const donaciones = await prisma.donacion.findMany({
-      where: {
-        exalumno_id: userId,
-      },
-      orderBy: {
-        created_at: "desc",
-      },
-      select: {
-        id: true,
-        monto: true,
-        estado: true,
-        destino: true,
-        metodo_pago: true,
-        moneda: true,
-        created_at: true,
-        updated_at: true,
-      },
-    });
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
 
-    // Normalize field names for frontend compatibility
-    const normalized = donaciones.map((d) => ({
+    const { data: donaciones, error } = await supabaseAdmin
+      .from('DONACIONES')
+      .select('id, monto, estado, destino, metodo_pago, moneda, created_at, updated_at')
+      .eq('exalumno_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const normalized = (donaciones || []).map((d: any) => ({
       ...d,
       status: d.estado,
       createdAt: d.created_at,

@@ -30,25 +30,28 @@ export async function getJobPositions() {
 
 export async function getStudentProjects() {
   try {
-    const estudiantes = await prisma.estudiante.findMany({
-      where: {
-        visible_en_directorio: true,
-        busca_financiamiento: true,
-        proyecto_titulo: { not: null },
-        user: { activo: true },
-      },
-      select: {
-        user_id: true,
-        carrera: true,
-        proyecto_titulo: true,
-        proyecto_tipo: true,
-        proyecto_descripcion: true,
-        proyecto_porcentaje_avance: true,
-        user: { select: { nombre: true, foto_url: true } },
-      },
-    });
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
 
-    return estudiantes.map((e) => ({
+    const { data: estudiantes, error } = await supabaseAdmin
+      .from('ESTUDIANTES')
+      .select('user_id, carrera, proyecto_titulo, proyecto_tipo, proyecto_descripcion, proyecto_porcentaje_avance, user:USERS(nombre, foto_url, activo)')
+      .eq('visible_en_directorio', true)
+      .eq('busca_financiamiento', true)
+      .not('proyecto_titulo', 'is', null);
+
+    if (error || !estudiantes) {
+      console.error("Supabase error fetching student projects:", error);
+      return [];
+    }
+
+    // Filtramos manualmente por activo == true ya que Supabase no soporta filtro anidado fácil sin inner join en rpc
+    const activeEstudiantes = estudiantes.filter((e: any) => e.user?.activo === true);
+
+    return activeEstudiantes.map((e: any) => ({
       id: e.user_id,
       nombre: e.proyecto_titulo ?? "Sin título",
       carrera: e.carrera ?? "Carrera no especificada",
