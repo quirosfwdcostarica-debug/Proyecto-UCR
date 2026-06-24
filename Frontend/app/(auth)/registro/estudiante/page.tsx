@@ -13,9 +13,7 @@ export default function RegistroEstudiantePage() {
           className="absolute inset-0 bg-cover bg-center z-0"
           style={{ backgroundImage: "url('/pretilUCR.png')" }}
         />
-        {/* Naranja transparente en toda la imagen */}
-        <div className="absolute inset-0 bg-ucr-naranja/50 mix-blend-multiply z-0" />
-        <div className="absolute inset-0 bg-ucr-naranja/30 z-0" />
+
         
         <div className="relative z-10">
           <h1 className="text-4xl md:text-5xl font-display font-medium text-white drop-shadow-md leading-[1.2] uppercase">
