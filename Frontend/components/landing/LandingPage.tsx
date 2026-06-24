@@ -179,7 +179,7 @@ export default function LandingPage() {
             </a>
             <div className="flex items-center gap-4 border-l border-white/20 pl-8">
               <Link href="/registro">
-                <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-extrabold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none transition-all shadow-md">
+                <Button className="bg-[#F34B26] hover:bg-[#d73b1d] text-white font-extrabold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none transition-all shadow-md">
                   Inscribirse
                 </Button>
               </Link>
@@ -189,7 +189,7 @@ export default function LandingPage() {
           {/* Mobile Right: Register Link */}
           <div className="md:hidden flex items-center">
             <Link href="/registro">
-              <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-bold text-[10px] uppercase tracking-wider rounded-[6px] h-8 px-3 border-none shadow-sm">
+              <Button className="bg-[#F34B26] hover:bg-[#d73b1d] text-white font-bold text-[10px] uppercase tracking-wider rounded-[6px] h-8 px-3 border-none shadow-sm">
                 Registro
               </Button>
             </Link>
@@ -250,7 +250,7 @@ export default function LandingPage() {
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight font-display leading-[1.2] text-white max-w-4xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] text-center uppercase">
               Fundación <br/>
-              <span className="font-light">Exalumnos de la U</span>
+              <span className="text-ucr-celeste">Exalumnos de la U</span>
             </h1>
             
             {/* Sub-info details */}
@@ -272,15 +272,15 @@ export default function LandingPage() {
 
 
       {/* Roles Selection Section (Floating entry points moved below Hero to maintain design cleanliness) */}
-      <section id="roles" className="py-20 bg-ucr-gris-fondo dark:bg-ucr-negro relative z-20 border-none overflow-hidden">
+      <section id="roles" className="py-20 bg-[#006AD3] dark:bg-slate-950 relative z-20 border-none overflow-hidden">
         <div className="max-w-5xl mx-auto px-6 relative z-10">
           <div className="text-center mb-12 space-y-3 relative">
             {/* Centered background watermark */}
-            <UCRUElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-50 pointer-events-none z-0 rotate-12" />
+            <UCRUElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-60 pointer-events-none z-0 rotate-12" />
             <div className="relative z-10 space-y-3">
-              <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO DESEAS PARTICIPAR?</h2>
-              <h3 className="text-3xl font-medium font-display text-ucr-texto-oscuro dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">
+              <h2 className="text-xs font-bold text-sky-200 dark:text-sky-300 uppercase tracking-widest font-body">¿CÓMO DESEAS PARTICIPAR?</h2>
+              <h3 className="text-3xl font-medium font-display text-white dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
+              <p className="text-sm text-blue-100 dark:text-slate-300 font-medium max-w-xl mx-auto">
                 Únete a la plataforma oficial de vinculación de la Universidad según tu perfil.
               </p>
             </div>
@@ -330,8 +330,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-        {/* Bottom Solid Divider to Pillars */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-white dark:bg-ucr-negro z-10 pointer-events-none opacity-90" />
+
       </section>
 
       {/* Pillars Section */}
