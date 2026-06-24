@@ -158,7 +158,9 @@ export default function LoginPage() {
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: "url('/pretilUCR.png')" }}
           />
-
+          {/* Naranja transparente en toda la imagen */}
+          <div className="absolute inset-0 bg-ucr-naranja/50 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-ucr-naranja/30" />
         </div>
 
         {/* Fondo completo naranja en mobile */}
