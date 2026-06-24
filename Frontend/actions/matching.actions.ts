@@ -102,34 +102,37 @@ export async function contactarMatch(matchId: string) {
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado === "CERRADO") throw new Error("Esta conexión fue cerrada previamente. No puede reactivarse.");
   if (match.estado !== "SUGERIDO") throw new Error("El match ya no está en estado sugerido");
   if (match.estudiante_id !== userId) throw new Error("Solo el estudiante puede contactar");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CONTACTADO", initiated_by: userId },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "CONTACTADO", initiated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+  
+  if (updateError) throw updateError;
 
-  const receptorEmail = match.exalumno.user.email;
-  const receptorNombre = match.exalumno.user.nombre || "Exalumno";
-  const emisorNombre = match.estudiante.user.nombre || "Estudiante";
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
+
+  const receptorEmail = exaUser?.email;
+  const receptorNombre = exaUser?.nombre || "Exalumno";
+  const emisorNombre = estUser?.nombre || "Estudiante";
 
   if (receptorEmail) {
     await sendMatchConnectionRequest(receptorEmail, receptorNombre, emisorNombre);
   }
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CONTACTADO" };
 }
 
 export async function aceptarMatch(matchId: string) {
@@ -137,26 +140,29 @@ export async function aceptarMatch(matchId: string) {
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "CONTACTADO") throw new Error("El match no está en estado contactado");
   if (match.initiated_by === userId) throw new Error("No puedes aceptar tu propia solicitud");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "ACTIVO", accepted_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "ACTIVO", accepted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+    
+  if (updateError) throw updateError;
 
-  const estudianteEmail = match.estudiante.user.email;
-  const estudianteNombre = match.estudiante.user.nombre || "Estudiante";
-  const exalumnoNombre = match.exalumno.user.nombre || "Exalumno";
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
+
+  const estudianteEmail = estUser?.email;
+  const estudianteNombre = estUser?.nombre || "Estudiante";
+  const exalumnoNombre = exaUser?.nombre || "Exalumno";
 
   if (estudianteEmail) {
     await sendMatchAceptado(estudianteEmail, estudianteNombre, exalumnoNombre);
@@ -164,7 +170,7 @@ export async function aceptarMatch(matchId: string) {
   await sendAdminNewActiveMatch(ADMIN_EMAIL, estudianteNombre, exalumnoNombre);
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "ACTIVO" };
 }
 
 export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | "exalumno") {
@@ -172,58 +178,64 @@ export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | 
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "CONTACTADO") throw new Error("El match no está en estado contactado");
   if (match.initiated_by === userId) throw new Error("No puedes rechazar tu propia solicitud");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CERRADO", rejected_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "CERRADO", rejected_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+
+  if (updateError) throw updateError;
+
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
 
   const initiatorId = match.initiated_by;
   const isStudentInitiated = initiatorId === match.estudiante_id;
-  const emisorEmail = isStudentInitiated
-    ? match.estudiante.user.email
-    : match.exalumno.user.email;
-  const emisorNombre = isStudentInitiated
-    ? match.estudiante.user.nombre || "Estudiante"
-    : match.exalumno.user.nombre || "Exalumno";
+  const emisorEmail = isStudentInitiated ? estUser?.email : exaUser?.email;
+  const emisorNombre = isStudentInitiated ? (estUser?.nombre || "Estudiante") : (exaUser?.nombre || "Exalumno");
 
   if (emisorEmail) {
     await sendMatchRechazado(emisorEmail, emisorNombre);
   }
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CERRADO" };
 }
 
 export async function cerrarMatch(matchId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("No autenticado");
 
-  const match = await prisma.match.findUnique({ where: { id: matchId } });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "ACTIVO") throw new Error("Solo puedes cerrar matches activos");
   if (match.estudiante_id !== session.user.id && match.exalumno_id !== session.user.id) {
     throw new Error("No autorizado");
   }
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CERRADO", closed_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "CERRADO", closed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+
+  if (updateError) throw updateError;
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CERRADO" };
 }
 
 /**

@@ -38,31 +38,49 @@ export async function GET(req: Request) {
 
     let matches: any[] = [];
 
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
     if (role === "ESTUDIANTE") {
-      matches = await prisma.match.findMany({
-        where: { estudiante_id: userId },
-        orderBy: { score_match: "desc" },
-        select: {
-          id: true, exalumno_id: true, estudiante_id: true,
-          tipo_apoyo: true, score_match: true, estado: true, resultado: true,
-          initiated_by: true, match_reasons: true,
-          accepted_at: true, rejected_at: true, closed_at: true,
-          created_at: true, updated_at: true,
-          exalumno: { select: EXALUMNO_SELECT },
-        },
+      const { data: rawMatches } = await supabaseAdmin
+        .from('MATCHES')
+        .select('*')
+        .eq('estudiante_id', userId)
+        .order('created_at', { ascending: false });
+
+      const exalumnoIds = rawMatches?.map((m: any) => m.exalumno_id) || [];
+      const { data: exalumnos } = await supabaseAdmin.from('EXALUMNOS').select('*').in('user_id', exalumnoIds);
+      const { data: users } = await supabaseAdmin.from('USERS').select('id, nombre, foto_url, email').in('id', exalumnoIds);
+
+      matches = (rawMatches || []).map((m: any) => {
+        const exa = exalumnos?.find((e: any) => e.user_id === m.exalumno_id);
+        const usr = users?.find((u: any) => u.id === m.exalumno_id);
+        return {
+          ...m,
+          exalumno: exa ? { ...exa, user: usr } : null
+        };
       });
     } else if (role === "EXALUMNO") {
-      matches = await prisma.match.findMany({
-        where: { exalumno_id: userId },
-        orderBy: { score_match: "desc" },
-        select: {
-          id: true, exalumno_id: true, estudiante_id: true,
-          tipo_apoyo: true, score_match: true, estado: true, resultado: true,
-          initiated_by: true, match_reasons: true,
-          accepted_at: true, rejected_at: true, closed_at: true,
-          created_at: true, updated_at: true,
-          estudiante: { select: ESTUDIANTE_SELECT },
-        },
+      const { data: rawMatches } = await supabaseAdmin
+        .from('MATCHES')
+        .select('*')
+        .eq('exalumno_id', userId)
+        .order('created_at', { ascending: false });
+
+      const estudianteIds = rawMatches?.map((m: any) => m.estudiante_id) || [];
+      const { data: estudiantes } = await supabaseAdmin.from('ESTUDIANTES').select('*').in('user_id', estudianteIds);
+      const { data: users } = await supabaseAdmin.from('USERS').select('id, nombre, foto_url, email').in('id', estudianteIds);
+
+      matches = (rawMatches || []).map((m: any) => {
+        const est = estudiantes?.find((e: any) => e.user_id === m.estudiante_id);
+        const usr = users?.find((u: any) => u.id === m.estudiante_id);
+        return {
+          ...m,
+          estudiante: est ? { ...est, user: usr } : null
+        };
       });
     }
 

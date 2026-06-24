@@ -92,6 +92,25 @@ export async function GET(_request: NextRequest) {
         : null,
     }));
 
+    // Distribución de estudiantes por sede
+    const estudiantesSedes = await prisma.$queryRaw<{ sede: string; count: number }[]>`
+      SELECT sede, COUNT(*) as count
+      FROM "ESTUDIANTES"
+      WHERE sede IS NOT NULL
+      GROUP BY sede
+    `;
+    const graficoSedes = estudiantesSedes.map(r => ({ name: r.sede || 'Desconocida', value: Number(r.count) }));
+
+    // Distribución de matches por carrera (usando la carrera del estudiante como base)
+    const matchesPorCarrera = await prisma.$queryRaw<{ carrera: string; count: number }[]>`
+      SELECT e.carrera, COUNT(*) as count
+      FROM "MATCHES" m
+      JOIN "ESTUDIANTES" e ON m.estudiante_id = e.user_id
+      WHERE m.estado = 'ACTIVO' AND e.carrera IS NOT NULL
+      GROUP BY e.carrera
+    `;
+    const graficoMatchesCarrera = matchesPorCarrera.map(r => ({ name: r.carrera || 'Desconocida', value: Number(r.count) }));
+
     const totales = totalDonadoResult[0];
 
     return NextResponse.json({
@@ -103,6 +122,8 @@ export async function GET(_request: NextRequest) {
         exalumnosActivos,
       },
       graficoDonaciones,
+      graficoSedes,
+      graficoMatchesCarrera,
       donacionesPendientes: pendientesNormalized,
     });
   } catch (error) {

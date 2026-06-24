@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
+import { MAPA_AREAS_KEYWORDS } from "@/lib/constants";
 
 const PAGE_SIZE = 12;
 
@@ -38,7 +39,14 @@ export async function GET(request: NextRequest) {
       activo: true,
       ...(carrera && { carrera:      { contains: carrera, mode: "insensitive" as const } }),
       ...(sede    && { sede:         { contains: sede,    mode: "insensitive" as const } }),
-      ...(area    && { area_tematica: { contains: area,   mode: "insensitive" as const } }),
+      ...(area && { 
+        OR: [
+          { area_tematica: { contains: area, mode: "insensitive" as const } },
+          ...(MAPA_AREAS_KEYWORDS[area] ? MAPA_AREAS_KEYWORDS[area].map(kw => ({
+            carrera: { contains: kw, mode: "insensitive" as const }
+          })) : [])
+        ]
+      }),
       ...apoyo,
       user: {
         activo: true,
@@ -78,7 +86,8 @@ export async function GET(request: NextRequest) {
       id: est.user_id,
       carrera: est.carrera ?? "",
       avanceProyecto: est.proyecto_porcentaje_avance ?? 0,
-      areaProyecto: est.area_tematica ?? est.proyecto_tipo ?? null,
+      areaProyecto: est.area_tematica ?? null,
+      proyectoTipo: est.proyecto_tipo ?? null,
       proyectoTitulo: est.proyecto_titulo ?? null,
       proyectoDescripcion: est.proyecto_descripcion ?? null,
       sede: est.sede ?? null,

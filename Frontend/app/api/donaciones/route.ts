@@ -139,9 +139,9 @@ export async function POST(request: NextRequest) {
 
   const { exalumnoId, monto, comprobanteUrl, destino, metodoPago, proyectoEstudianteId } = body;
 
-  if (!exalumnoId || !monto || !comprobanteUrl || !destino) {
+  if (!exalumnoId || !monto || !destino) {
     return NextResponse.json(
-      { message: "Faltan campos requeridos: exalumnoId, monto, comprobanteUrl, destino" },
+      { message: "Faltan campos requeridos: exalumnoId, monto, destino" },
       { status: 400 }
     );
   }
@@ -154,45 +154,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  const userExists = await prisma.user.findUnique({ where: { id: exalumnoId } });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: userExists } = await supabaseAdmin.from('USERS').select('id').eq('id', exalumnoId).maybeSingle();
   if (!userExists) {
     try {
-      await prisma.user.create({
-        data: {
-          id: exalumnoId,
-          nombre: session.user?.name || "Usuario Restaurado",
-          email: session.user?.email || `user_${exalumnoId}@example.com`,
-          tipo: "EXALUMNO" as any,
-          activo: true,
-          email_verified: true,
-        },
+      await supabaseAdmin.from('USERS').insert({
+        id: exalumnoId,
+        nombre: session.user?.name || "Usuario Restaurado",
+        email: session.user?.email || `user_${exalumnoId}@example.com`,
+        tipo: "EXALUMNO",
+        activo: true,
+        email_verified: true,
       });
     } catch (e) {
       console.error("Fallo auto-creando usuario:", e);
     }
   }
 
-  let exalumno = await prisma.exalumno.findUnique({ where: { user_id: exalumnoId } });
+  let { data: exalumno } = await supabaseAdmin.from('EXALUMNOS').select('user_id').eq('user_id', exalumnoId).maybeSingle();
   if (!exalumno) {
     try {
-      exalumno = await prisma.exalumno.create({ data: { user_id: exalumnoId } });
+      await supabaseAdmin.from('EXALUMNOS').insert({ user_id: exalumnoId });
     } catch (err: any) {
       return NextResponse.json({ message: "Error interno creando perfil: " + err.message }, { status: 500 });
     }
   }
 
   try {
-    const donacion = await (prisma.donacion.create as any)({
-      data: {
-        exalumno_id: exalumnoId,
-        monto,
-        destino,
-        estado: "PENDIENTE",
-        comprobante_url: comprobanteUrl || null,
-        ...(metodoPago ? { metodo_pago: metodoPago } : {}),
-        ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
-      },
-    });
+    const { data: donacion, error } = await supabaseAdmin.from('DONACIONES').insert({
+      id: crypto.randomUUID(),
+      exalumno_id: exalumnoId,
+      monto,
+      destino,
+      estado: "PENDIENTE",
+      comprobante_url: comprobanteUrl || null,
+      ...(metodoPago ? { metodo_pago: metodoPago } : {}),
+      ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
+    }).select('*').single();
+
+    if (error) throw error;
 
     return NextResponse.json(donacion, { status: 201 });
   } catch (error) {

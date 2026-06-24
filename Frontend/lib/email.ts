@@ -176,6 +176,24 @@ export async function sendDonacionAprobada(
   });
 }
 
+export async function sendDonacionRecibidaStudent(
+  toEmail: string,
+  estudianteNombre: string,
+  proyectoTitulo: string,
+  monto: number
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: estudianteNombre,
+    title: "¡Has recibido una donación!",
+    message:
+      `¡Felicidades! Un exalumno ha realizado una donación de ₡${monto.toLocaleString("es-CR")} ` +
+      `para apoyar tu proyecto "${proyectoTitulo}". ` +
+      "La Fundación UCR se pondrá en contacto pronto para gestionar la entrega de estos fondos.",
+    action_url: `${BASE_URL}/mis-donaciones`,
+    action_text: "Ver mis donaciones",
+  });
+}
+
 // ─── Aplicaciones ─────────────────────────────────────────────────────────────
 
 async function sendApplicantEmailJS(

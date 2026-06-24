@@ -6,6 +6,7 @@ import { useTransition, useState } from "react";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
 import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
+import { CATALOGO_AREAS, CATALOGO_CARRERAS } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -425,7 +426,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carrera</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione una carrera</option>
+                          {CATALOGO_CARRERAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -584,7 +592,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Área Temática</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Energías renovables, IA, Salud" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione un área</option>
+                          {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

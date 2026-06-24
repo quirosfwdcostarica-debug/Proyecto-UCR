@@ -2,8 +2,8 @@ import { BookLoader } from "@/components/ui/BookLoader";
 
 export default function LoadingEstudiantes() {
   return (
-    <div className="min-h-full bg-[#f8fafc] flex flex-col">
-      <div className="h-16 border-b border-border bg-white flex items-center px-8">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex flex-col">
+      <div className="h-16 border-b border-border bg-white dark:bg-slate-900 flex items-center px-8">
         <div className="h-5 w-48 bg-slate-200 rounded animate-pulse" />
       </div>
 

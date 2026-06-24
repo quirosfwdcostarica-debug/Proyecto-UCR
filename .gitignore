@@ -5,3 +5,14 @@ node_modules/
 .env.local
 backend/.env
 Frontend/.env.local
+
+# Scripts de prueba / depuración (no versionar — pueden contener credenciales)
+scratch/
+Frontend/test-*.js
+backend/add_nivel_beca.js
+backend/check_tables.js
+backend/count_rows.js
+backend/test_db_passwords.js
+
+# Caché de build de TypeScript (generado)
+Frontend/tsconfig.tsbuildinfo

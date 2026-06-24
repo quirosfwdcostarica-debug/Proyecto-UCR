@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import prisma from "@/lib/prisma";
+import { createClient } from "@supabase/supabase-js";
+import { MAPA_AREAS_KEYWORDS } from "@/lib/constants";
 
 const PAGE_SIZE = 12;
-
-// Columnas que EXISTEN en la BD (confirmado via BD_CONTEXT.MD):
-// user_id, carnet_ucr, escuela_facultad, anio_graduacion, empresa_actual, cargo_actual,
-// pais_ciudad, anios_experiencia, linkedin_url, biografia, github_url, website_url,
-// habilidades, certificaciones, experiencia_laboral, ofrece_*
-//
-// NO existen aún: carrera, sector, areas_interes, perfil_completo, visible_en_directorio
 
 export async function GET(request: NextRequest) {
   const token = await getToken({
@@ -26,7 +20,6 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const nombre      = searchParams.get("nombre")      || undefined;
-  // carrera y sector del UI → escuela_facultad (única columna disponible en BD)
   const carrera     = searchParams.get("carrera")     || undefined;
   const empresa     = searchParams.get("empresa")     || undefined;
   const pais_ciudad = searchParams.get("pais_ciudad") || undefined;
@@ -34,69 +27,57 @@ export async function GET(request: NextRequest) {
   const page        = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
   try {
-    const apoyoFilter: Record<string, boolean> = {};
-    if (tipo_apoyo === "mentoria")            apoyoFilter.ofrece_mentoria        = true;
-    else if (tipo_apoyo === "empleo")         apoyoFilter.ofrece_empleo          = true;
-    else if (tipo_apoyo === "pasantia")       apoyoFilter.ofrece_pasantia        = true;
-    else if (tipo_apoyo === "proyecto")       apoyoFilter.ofrece_proyecto        = true;
-    else if (tipo_apoyo === "donacion")       apoyoFilter.ofrece_donacion_dinero = true;
-    else if (tipo_apoyo === "guest_speaking") apoyoFilter.ofrece_guest_speaking  = true;
-    else if (tipo_apoyo === "career_advice")  apoyoFilter.ofrece_career_advice   = true;
-    else if (tipo_apoyo === "networking")     apoyoFilter.ofrece_networking      = true;
-    else if (tipo_apoyo === "volunteering")   apoyoFilter.ofrece_volunteering    = true;
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
 
-    const where = {
-      // visible_en_directorio no existe en BD → proxy: usuario activo y no suspendido
-      ...(carrera   && { escuela_facultad: { contains: carrera,    mode: "insensitive" as const } }),
-      ...(empresa   && { empresa_actual:   { contains: empresa,    mode: "insensitive" as const } }),
-      ...(pais_ciudad && { pais_ciudad:    { contains: pais_ciudad, mode: "insensitive" as const } }),
-      ...apoyoFilter,
-      user: {
-        activo: true,
-        status: { not: "SUSPENDIDO" as const },
-        ...(nombre && { nombre: { contains: nombre, mode: "insensitive" as const } }),
-      },
-    };
+    let query = supabase
+      .from('EXALUMNOS')
+      .select('*, user:USERS!inner(id, nombre, foto_url, activo, status)', { count: 'exact' })
+      .eq('user.activo', true)
+      .neq('user.status', 'SUSPENDIDO');
 
-    const [total, rows] = await Promise.all([
-      prisma.exalumno.count({ where }),
-      prisma.exalumno.findMany({
-        where,
-        select: {
-          user_id: true,
-          escuela_facultad: true,
-          anio_graduacion: true,
-          empresa_actual: true,
-          cargo_actual: true,
-          pais_ciudad: true,
-          anios_experiencia: true,
-          linkedin_url: true,
-          biografia: true,
-          github_url: true,
-          website_url: true,
-          habilidades: true,
-          ofrece_mentoria: true,
-          ofrece_empleo: true,
-          ofrece_pasantia: true,
-          ofrece_proyecto: true,
-          ofrece_donacion_dinero: true,
-          ofrece_guest_speaking: true,
-          ofrece_volunteering: true,
-          ofrece_career_advice: true,
-          ofrece_networking: true,
-          user: { select: { id: true, nombre: true, foto_url: true } },
-        },
-        orderBy: { user: { created_at: "desc" } },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-      }),
-    ]);
+    if (nombre) query = query.ilike('user.nombre', `%${nombre}%`);
+    if (empresa) query = query.ilike('empresa_actual', `%${empresa}%`);
+    if (pais_ciudad) query = query.ilike('pais_ciudad', `%${pais_ciudad}%`);
 
-    const data = rows.map((ex) => ({
+    if (carrera) {
+      const keywords = MAPA_AREAS_KEYWORDS[carrera] || [];
+      const orFilters = [
+        `escuela_facultad.ilike.%${carrera}%`,
+        ...keywords.map(kw => `escuela_facultad.ilike.%${kw}%`)
+      ];
+      query = query.or(orFilters.join(','));
+    }
+
+    if (tipo_apoyo === "mentoria")            query = query.eq('ofrece_mentoria', true);
+    else if (tipo_apoyo === "empleo")         query = query.eq('ofrece_empleo', true);
+    else if (tipo_apoyo === "pasantia")       query = query.eq('ofrece_pasantia', true);
+    else if (tipo_apoyo === "proyecto")       query = query.eq('ofrece_proyecto', true);
+    else if (tipo_apoyo === "donacion")       query = query.eq('ofrece_donacion_dinero', true);
+    else if (tipo_apoyo === "guest_speaking") query = query.eq('ofrece_guest_speaking', true);
+    else if (tipo_apoyo === "career_advice")  query = query.eq('ofrece_career_advice', true);
+    else if (tipo_apoyo === "networking")     query = query.eq('ofrece_networking', true);
+    else if (tipo_apoyo === "volunteering")   query = query.eq('ofrece_volunteering', true);
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    
+    query = query.order('created_at', { foreignTable: 'user', ascending: false }).range(from, to);
+
+    const { data: rows, count, error } = await query;
+
+    if (error) {
+      console.error("[Supabase Error]", error);
+      throw error;
+    }
+
+    const data = (rows || []).map((ex: any) => ({
       user_id: ex.user_id,
-      carrera: ex.escuela_facultad ?? "",        // escuela_facultad expuesto como carrera
+      carrera: ex.escuela_facultad ?? "",
       escuela_facultad: ex.escuela_facultad ?? "",
-      sector: null,                               // pendiente de migración BD
+      sector: null,
       anio_graduacion: ex.anio_graduacion ?? null,
       empresa_actual: ex.empresa_actual ?? "",
       cargo_actual: ex.cargo_actual ?? "",
@@ -107,7 +88,7 @@ export async function GET(request: NextRequest) {
       github_url: ex.github_url ?? null,
       website_url: ex.website_url ?? null,
       habilidades: ex.habilidades ?? [],
-      areas_interes: [],                          // pendiente de migración BD
+      areas_interes: [],
       ofrece_mentoria: !!ex.ofrece_mentoria,
       ofrece_empleo: !!ex.ofrece_empleo,
       ofrece_pasantia: !!ex.ofrece_pasantia,
@@ -118,14 +99,19 @@ export async function GET(request: NextRequest) {
       ofrece_career_advice: !!ex.ofrece_career_advice,
       ofrece_networking: !!ex.ofrece_networking,
       User: {
-        id: ex.user.id,
-        nombre: ex.user.nombre,
-        foto_url: ex.user.foto_url,
+        id: ex.user?.id || ex.user_id,
+        nombre: ex.user?.nombre || "Exalumno",
+        foto_url: ex.user?.foto_url || null,
         email: null,
       },
     }));
 
-    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / PAGE_SIZE) });
+    return NextResponse.json({ 
+      data, 
+      total: count || 0, 
+      page, 
+      totalPages: Math.ceil((count || 0) / PAGE_SIZE) 
+    });
   } catch (error) {
     console.error("[GET /api/exalumnos]", error);
     return NextResponse.json({ message: "Error al obtener el directorio" }, { status: 500 });

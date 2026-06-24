@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function DirectorioExalumnosPage() {
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <AlumniDirectoryClient />
     </div>
   );

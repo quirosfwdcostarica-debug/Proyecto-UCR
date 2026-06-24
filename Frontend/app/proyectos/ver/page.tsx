@@ -85,7 +85,7 @@ export default function MiProyectoVerPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full flex items-center justify-center py-24">
+      <div className="min-h-screen flex-1 flex items-center justify-center py-24 bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: UCR.blue }} />
       </div>
     );
@@ -93,7 +93,7 @@ export default function MiProyectoVerPage() {
 
   if (deleted || !proyecto?.proyecto_titulo) {
     return (
-      <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 flex flex-col items-center justify-center py-24 text-center px-4">
+      <div className="min-h-screen flex-1 bg-[#f8fafc] dark:bg-slate-950 flex flex-col items-center justify-center py-24 text-center px-4 transition-colors duration-300">
         <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: `${UCR.blue}15` }}>
           <FolderOpen className="w-10 h-10" style={{ color: UCR.blue }} />
         </div>
@@ -119,7 +119,7 @@ export default function MiProyectoVerPage() {
   const initials = nombre.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10">
+    <div className="min-h-screen flex-1 bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10 transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">

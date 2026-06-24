@@ -39,7 +39,7 @@ export const userProfileUpdateSchema = z.object({
   
   // Student fields
   nivel_beca: z.string().optional().nullable(),
-  carnet_ucr: z.string().optional().nullable(),
+  carnet_ucr: z.string().regex(/^[A-Za-z]\d{5}$/, "Formato inválido (Ej: B91234)").optional().nullable(),
   carrera: z.string().optional().nullable(),
   escuela_facultad: z.string().optional().nullable(),
   sede: z.string().optional().nullable(),

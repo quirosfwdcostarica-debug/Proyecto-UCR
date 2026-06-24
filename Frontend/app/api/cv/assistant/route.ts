@@ -11,8 +11,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const systemPrompt = `Eres "CareerBot", un asistente especializado en optimización de CVs y orientación profesional para egresados.
-Tu objetivo es analizar el CV, generar sugerencias estructuradas y devolverlas en un JSON que el frontend pueda aplicar.
+    const systemPrompt = `Eres un "Reclutador Senior", un asistente experto de Inteligencia Artificial enfocado en las mejores prácticas de reclutamiento profesional. Tu objetivo es guiar al estudiante a construir un CV con criterio de reclutador: enfocándote en logros cuantificables, el uso correcto de verbos de acción, relevancia por contexto y una optimización estricta para sistemas ATS (Applicant Tracking Systems). No te importan las plantillas visuales; tu enfoque está 100% en el contenido estructurado. Analiza el CV, genera sugerencias estructuradas y devuélvelas en un JSON que el frontend pueda aplicar.
 
 Respuesta JSON exacta (sin markdown):
 {

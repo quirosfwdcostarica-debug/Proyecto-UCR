@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { sendDonacionAprobada } from "@/lib/email";
+import { sendDonacionAprobada, sendDonacionRecibidaStudent } from "@/lib/email";
 
 export async function PATCH(
   request: NextRequest,
@@ -9,6 +9,7 @@ export async function PATCH(
 ) {
   const session = await auth();
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
+  const adminId = session?.user?.id;
 
   if (!session?.user || role !== "ADMIN") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -47,6 +48,11 @@ export async function PATCH(
             user: { select: { nombre: true, email: true } },
           },
         },
+        estudiante: {
+          include: {
+            user: { select: { nombre: true, email: true } },
+          }
+        }
       },
     });
 
@@ -56,17 +62,34 @@ export async function PATCH(
 
     const updated = await prisma.donacion.update({
       where: { id: params.id },
-      data: { estado },
+      data: { 
+        estado,
+        confirmado_por: adminId // Auditoría (RNF-08)
+      },
     });
 
-    // Si se aprueba/confirma, enviar email al exalumno
-    if (estado === "CONFIRMADA" && donacion.exalumno.user.email) {
-      await sendDonacionAprobada(
-        donacion.exalumno.user.email,
-        donacion.exalumno.user.nombre || "Exalumno",
-        Number(donacion.monto),
-        donacion.destino || "Fondo General"
-      );
+    console.log(`[AUDITORIA] Donación ${params.id} ha sido ${estado} por el admin ${adminId}.`);
+
+    // Si se aprueba/confirma, enviar emails
+    if (estado === "CONFIRMADA") {
+      if (donacion.exalumno?.user?.email) {
+        await sendDonacionAprobada(
+          donacion.exalumno.user.email,
+          donacion.exalumno.user.nombre || "Exalumno",
+          Number(donacion.monto),
+          donacion.destino || "Fondo General"
+        );
+      }
+      
+      // Notificar al estudiante si es un proyecto específico
+      if (donacion.estudiante?.user?.email) {
+        await sendDonacionRecibidaStudent(
+          donacion.estudiante.user.email,
+          donacion.estudiante.user.nombre || "Estudiante",
+          donacion.estudiante.proyecto_titulo || "Proyecto UCR",
+          Number(donacion.monto)
+        );
+      }
     }
 
     return NextResponse.json({ ...updated, status: updated.estado });

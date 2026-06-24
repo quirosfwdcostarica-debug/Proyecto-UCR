@@ -6,6 +6,7 @@ import { GraduationCap, UserPlus, Search, LayoutGrid, List, Loader2, ChevronLeft
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { CATALOGO_AREAS } from "@/lib/constants";
 
 interface AlumniItem {
   user_id: string;
@@ -132,13 +133,15 @@ export function AlumniDirectoryClient() {
 
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Carrera</label>
-              <Input
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Área de Especialidad</label>
+              <select
                 value={selectedCarrera}
                 onChange={(e) => setSelectedCarrera(e.target.value)}
-                placeholder="Ej. Ingeniería Eléctrica"
-                className="h-9 text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-              />
+                className="w-full h-9 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-md px-3 text-sm focus:outline-none focus:border-ucr-celeste-medium"
+              >
+                <option value="">Todas las áreas</option>
+                {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
             </div>
 
             <div>
@@ -182,11 +185,11 @@ export function AlumniDirectoryClient() {
           </div>
         </div>
 
-        <div className="bg-ucr-celeste-medium text-white p-5 rounded-xl shadow-sm">
+        <div className="bg-ucr-celeste-medium dark:bg-slate-800/80 text-white p-5 rounded-xl shadow-sm border border-transparent dark:border-slate-700">
           <h4 className="font-bold mb-2">Sé un Mentor</h4>
           <p className="text-sm text-blue-100 mb-4">Comparte tu experiencia con las nuevas generaciones.</p>
           <Link href="/perfil/editar">
-            <Button className="w-full bg-white text-ucr-celeste-medium hover:bg-slate-100 border-0">Actualizar Perfil</Button>
+            <Button className="w-full bg-white dark:bg-slate-900 text-ucr-celeste-medium dark:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 border-0">Actualizar Perfil</Button>
           </Link>
         </div>
       </div>
@@ -222,7 +225,7 @@ export function AlumniDirectoryClient() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm mb-4">
             {error} — <button onClick={() => fetchAlumni(page)} className="underline font-medium">Reintentar</button>
           </div>
         )}
@@ -232,7 +235,7 @@ export function AlumniDirectoryClient() {
             <Loader2 className="w-8 h-8 text-ucr-celeste-medium animate-spin" />
           </div>
         ) : alumni.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center shadow-sm">
             <p className="text-slate-500 text-lg">No se encontraron exalumnos con los filtros seleccionados.</p>
             {hasFilters && (
               <Button onClick={handleClearFilters} className="mt-4 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white">

@@ -100,7 +100,8 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 min-h-screen">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950">
+      <div className="container mx-auto py-12 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
           Mis Matches
@@ -309,6 +310,7 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

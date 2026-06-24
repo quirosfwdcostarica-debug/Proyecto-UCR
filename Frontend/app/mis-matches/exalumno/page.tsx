@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -23,19 +24,35 @@ export default async function MatchesExalumnoPage() {
     if (session?.user?.id) {
       const userId = session.user.id;
 
-      const rawMatches = await prisma.match.findMany({
-        where: { exalumno_id: userId },
-        orderBy: { score_match: "desc" },
-        include: {
+      const { createClient } = require("@supabase/supabase-js");
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_KEY!
+      );
+
+      const { data: rawMatches } = await supabaseAdmin
+        .from('MATCHES')
+        .select('*')
+        .eq('exalumno_id', userId)
+        .order('score_match', { ascending: false });
+
+      const estudianteIds = rawMatches?.map((m: any) => m.estudiante_id) || [];
+      const { data: estudiantes } = await supabaseAdmin.from('ESTUDIANTES').select('*').in('user_id', estudianteIds);
+      const { data: users } = await supabaseAdmin.from('USERS').select('id, nombre, foto_url').in('id', estudianteIds);
+
+      const combinedMatches = (rawMatches || []).map((m: any) => {
+        const est = estudiantes?.find((e: any) => e.user_id === m.estudiante_id);
+        const usr = users?.find((u: any) => u.id === m.estudiante_id);
+        return {
+          ...m,
           estudiante: {
-            include: {
-              user: { select: { nombre: true, foto_url: true } },
-            },
-          },
-        },
+            ...est,
+            user: usr
+          }
+        };
       });
 
-      matches = rawMatches.map((m) => ({
+      matches = combinedMatches.map((m: any) => ({
         id: m.id,
         afinidad: m.score_match ?? 0,
         desglose: parseDesglose(m.tipo_apoyo),

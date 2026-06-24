@@ -144,14 +144,14 @@ export default function MisPosicionesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
         <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 flex items-start justify-between">
           <div>

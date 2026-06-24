@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, User, MessageCircle, X, Pencil, Trash2, Check } from "lucide-react";
+import { Send, User, MessageCircle, X } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useDialog } from "@/hooks/useDialog";
 
 type Message = {
   id: string;
@@ -81,9 +80,6 @@ export default function MensajesPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingConvs, setLoadingConvs]   = useState(true);
   const [sending, setSending]             = useState(false);
-  const [editingMsgId, setEditingMsgId]   = useState<string | null>(null);
-  const [editText, setEditText]           = useState("");
-  const { showConfirm } = useDialog();
 
   const [showWAModal, setShowWAModal] = useState(false);
   const [waPhone, setWaPhone]         = useState("");
@@ -91,6 +87,7 @@ export default function MensajesPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevMessagesLength = useRef(0);
 
   useEffect(() => {
     async function load() {
@@ -156,7 +153,10 @@ export default function MensajesPage() {
   }, [activeMatchId, loadMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessagesLength.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMessagesLength.current = messages.length;
   }, [messages]);
 
   useEffect(() => {
@@ -212,53 +212,6 @@ export default function MensajesPage() {
     }
   }
 
-  function startEdit(msg: Message) {
-    setEditingMsgId(msg.id);
-    setEditText(msg.content);
-  }
-
-  function cancelEdit() {
-    setEditingMsgId(null);
-    setEditText("");
-  }
-
-  async function handleEditSubmit(msgId: string) {
-    if (!editText.trim() || !activeMatchId) return;
-    try {
-      const res = await fetch(`/api/messages/${activeMatchId}/${msgId}`, {
-        method:  "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ content: editText.trim() }),
-      });
-      if (res.ok) {
-        setMessages(prev =>
-          prev.map(m => m.id === msgId ? { ...m, content: editText.trim() } : m)
-        );
-      }
-    } catch (err) {
-      console.error("Error editando mensaje:", err);
-    } finally {
-      cancelEdit();
-    }
-  }
-
-  async function handleDeleteMsg(msgId: string) {
-    if (!activeMatchId) return;
-    const ok = await showConfirm("¿Seguro que deseas eliminar este mensaje?", {
-      title: "Eliminar mensaje",
-      confirmLabel: "Eliminar",
-      variant: "error",
-    });
-    if (!ok) return;
-    setMessages(prev => prev.filter(m => m.id !== msgId));
-    try {
-      await fetch(`/api/messages/${activeMatchId}/${msgId}`, { method: "DELETE" });
-    } catch (err) {
-      console.error("Error eliminando mensaje:", err);
-      await loadMessages(activeMatchId);
-    }
-  }
-
   function selectConv(matchId: string) {
     setActiveMatchId(matchId);
     router.replace(`/mensajes?matchId=${matchId}`, { scroll: false });
@@ -310,30 +263,30 @@ export default function MensajesPage() {
       {/* WhatsApp Modal */}
       {showWAModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) { setShowWAModal(false); setWaPhone(""); } }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#25D366] flex items-center justify-center shadow">
                   <WhatsAppIcon className="h-5 w-5" fill="white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-800 text-base">Compartir WhatsApp</h3>
-                  <p className="text-xs text-slate-400">Se enviará como mensaje al chat</p>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">Compartir WhatsApp</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Se enviará como mensaje al chat</p>
                 </div>
               </div>
               <button
                 onClick={() => { setShowWAModal(false); setWaPhone(""); }}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400"
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="mb-5">
-              <label className="block text-xs font-semibold text-slate-600 mb-2">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
                 Número de teléfono
               </label>
               <input
@@ -343,9 +296,9 @@ export default function MensajesPage() {
                 onChange={e => setWaPhone(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") handleSendWhatsApp(); }}
                 placeholder="+506 8888-8888"
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:border-transparent transition-all"
               />
-              <p className="text-xs text-slate-400 mt-1.5">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
                 Incluye el código de país (ej: <strong>+506</strong> para Costa Rica)
               </p>
             </div>
@@ -353,7 +306,7 @@ export default function MensajesPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowWAModal(false); setWaPhone(""); }}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors font-medium"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium"
               >
                 Cancelar
               </button>
@@ -370,26 +323,26 @@ export default function MensajesPage() {
         </div>
       )}
 
-      <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col p-4 md:p-8">
+      <div className="min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 transition-colors duration-300 flex flex-col p-4 md:p-8">
         <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#0f4c81]">Mensajes</h1>
-            <p className="text-slate-500 mt-1">Chat con tus matches activos</p>
+            <h1 className="text-3xl font-bold text-[#0f4c81] dark:text-sky-400">Mensajes</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Chat con tus matches activos</p>
           </div>
 
-          <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex-1 min-h-[600px] max-h-[800px]">
+          <div className="flex flex-col md:flex-row bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 min-h-[600px] max-h-[800px] transition-colors duration-300">
 
             {/* Sidebar */}
-            <div className="w-full md:w-80 border-r border-slate-200 flex flex-col bg-slate-50/50">
-              <div className="p-4 border-b border-slate-200 bg-white">
-                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Conversaciones activas</p>
+            <div className="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-800/50">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">Conversaciones activas</p>
               </div>
               <div className="flex-1 overflow-y-auto">
                 {loadingConvs ? (
-                  <div className="p-6 text-center text-slate-400 text-sm">Cargando...</div>
+                  <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">Cargando...</div>
                 ) : conversations.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 text-sm flex flex-col items-center gap-3">
-                    <MessageCircle className="h-10 w-10 text-slate-300" />
+                  <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-sm flex flex-col items-center gap-3">
+                    <MessageCircle className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                     <p>No tienes conversaciones activas.</p>
                     <p className="text-xs">Acepta un match para chatear.</p>
                   </div>
@@ -400,22 +353,22 @@ export default function MensajesPage() {
                       <div
                         key={conv.matchId}
                         onClick={() => selectConv(conv.matchId)}
-                        className={`p-4 border-b border-slate-100 cursor-pointer transition-colors flex gap-3 items-center
+                        className={`p-4 border-b border-slate-100 dark:border-slate-800/50 cursor-pointer transition-colors flex gap-3 items-center
                           ${isSelected
-                            ? "bg-blue-50/60 border-l-4 border-l-[#0f4c81]"
-                            : "hover:bg-slate-100 border-l-4 border-l-transparent bg-white"}
+                            ? "bg-blue-50/60 dark:bg-sky-900/30 border-l-4 border-l-[#0f4c81] dark:border-l-sky-500"
+                            : "hover:bg-slate-100 dark:hover:bg-slate-800 border-l-4 border-l-transparent bg-white dark:bg-slate-900"}
                         `}
                       >
                         <div className={`h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold border shadow-sm shrink-0
-                          ${isSelected ? "bg-[#0f4c81] text-white border-[#0f4c81]" : "bg-blue-50 text-[#0f4c81] border-blue-100"}
+                          ${isSelected ? "bg-[#0f4c81] dark:bg-sky-600 text-white border-[#0f4c81] dark:border-sky-600" : "bg-blue-50 dark:bg-slate-800 text-[#0f4c81] dark:text-sky-400 border-blue-100 dark:border-slate-700"}
                         `}>
                           {conv.avatarLetter}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className={`text-sm truncate ${isSelected ? "font-bold text-[#0f4c81]" : "font-semibold text-slate-800"}`}>
+                          <h3 className={`text-sm truncate ${isSelected ? "font-bold text-[#0f4c81] dark:text-sky-400" : "font-semibold text-slate-800 dark:text-slate-100"}`}>
                             {conv.contactName}
                           </h3>
-                          <p className="text-xs text-slate-400">{conv.contactRole}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{conv.contactRole}</p>
                         </div>
                       </div>
                     );
@@ -425,111 +378,56 @@ export default function MensajesPage() {
             </div>
 
             {/* Chat */}
-            <div className="flex-1 flex flex-col bg-slate-50/30 relative">
+            <div className="flex-1 flex flex-col bg-slate-50/30 dark:bg-slate-950/50 relative">
               {activeConv ? (
                 <>
                   {/* Header */}
-                  <div className="p-4 border-b border-slate-200 bg-white flex items-center gap-3 shadow-sm z-10">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-[#0f4c81] font-bold border shadow-sm">
+                  <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shadow-sm z-10 transition-colors">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-800 flex items-center justify-center text-[#0f4c81] dark:text-sky-400 font-bold border dark:border-slate-700 shadow-sm">
                       {activeConv.avatarLetter}
                     </div>
                     <div>
-                      <h2 className="text-base font-bold text-slate-800">{activeConv.contactName}</h2>
-                      <p className="text-xs text-slate-400">{activeConv.contactRole}</p>
+                      <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{activeConv.contactName}</h2>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{activeConv.contactRole}</p>
                     </div>
                   </div>
 
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
                     {messages.length === 0 && (
-                      <div className="text-center text-slate-400 text-sm mt-12">
+                      <div className="text-center text-slate-400 dark:text-slate-500 text-sm mt-12">
                         ¡Saluda a {activeConv.contactName}!
                       </div>
                     )}
                     {messages.map((msg, idx) => {
-                      const isMe      = msg.sender_id === currentUserId;
-                      const isWA      = msg.content.startsWith(WA_PREFIX);
-                      const isEditing = editingMsgId === msg.id;
-                      const ts        = msg.createdAt ?? msg.created_at ?? "";
-                      const prev      = idx > 0 ? (messages[idx - 1].createdAt ?? messages[idx - 1].created_at ?? "") : null;
+                      const isMe  = msg.sender_id === currentUserId;
+                      const isWA  = msg.content.startsWith(WA_PREFIX);
+                      const ts    = msg.createdAt ?? msg.created_at ?? "";
+                      const prev  = idx > 0 ? (messages[idx - 1].createdAt ?? messages[idx - 1].created_at ?? "") : null;
                       const showDivider = ts && (!prev || !isSameDay(prev, ts));
                       return (
                         <React.Fragment key={msg.id}>
                           {showDivider && ts && (
                             <div className="flex items-center gap-3 my-1">
-                              <span className="flex-1 h-px bg-slate-200" />
-                              <span className="text-[11px] text-slate-400 font-medium px-1 capitalize">
+                              <span className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium px-1 capitalize">
                                 {formatDay(ts)}
                               </span>
-                              <span className="flex-1 h-px bg-slate-200" />
+                              <span className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
                             </div>
                           )}
-                          <div className={`group flex items-end gap-1.5 ${isMe ? "justify-end" : "justify-start"}`}>
-                            {/* Botones de acción — solo propios, no WhatsApp, no en modo edición */}
-                            {isMe && !isWA && !isEditing && (
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity order-first">
-                                <button
-                                  onClick={() => startEdit(msg)}
-                                  className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-[#0f4c81] transition-colors"
-                                  title="Editar"
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteMsg(msg.id)}
-                                  className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 transition-colors"
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
-                              </div>
-                            )}
-
+                          <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-4 shadow-sm
                               ${isMe
-                                ? "bg-[#0f4c81] text-white rounded-tr-sm"
-                                : "bg-white border border-slate-200 text-slate-700 rounded-tl-sm"}
+                                ? "bg-[#0f4c81] dark:bg-sky-600 text-white rounded-tr-sm"
+                                : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-sm"}
                               ${isWA ? "min-w-[200px]" : ""}
-                              ${isEditing ? "w-full max-w-[85%] md:max-w-[70%]" : ""}
                             `}>
                               {!isMe && msg.sender && (
-                                <p className="text-[10px] font-semibold text-[#0f4c81] mb-1">{msg.sender.nombre}</p>
+                                <p className="text-[10px] font-semibold text-[#0f4c81] dark:text-sky-400 mb-1">{msg.sender.nombre}</p>
                               )}
-
-                              {isEditing ? (
-                                <div className="flex flex-col gap-2">
-                                  <textarea
-                                    value={editText}
-                                    onChange={e => setEditText(e.target.value)}
-                                    onKeyDown={e => {
-                                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSubmit(msg.id); }
-                                      if (e.key === "Escape") cancelEdit();
-                                    }}
-                                    rows={2}
-                                    autoFocus
-                                    className="w-full rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 px-2 py-1 text-sm resize-none focus:outline-none focus:border-white/60"
-                                  />
-                                  <div className="flex gap-1.5 justify-end">
-                                    <button
-                                      onClick={cancelEdit}
-                                      className="text-[11px] px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
-                                    >
-                                      Cancelar
-                                    </button>
-                                    <button
-                                      onClick={() => handleEditSubmit(msg.id)}
-                                      disabled={!editText.trim()}
-                                      className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-white text-[#0f4c81] hover:bg-blue-50 font-semibold transition-colors disabled:opacity-40"
-                                    >
-                                      <Check className="h-3 w-3" /> Guardar
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                renderContent(msg.content, isMe)
-                              )}
-
-                              <div className={`text-[10px] mt-2 font-medium text-right ${isMe ? "text-blue-200" : "text-slate-400"}`}>
+                              {renderContent(msg.content, isMe)}
+                              <div className={`text-[10px] mt-2 font-medium text-right ${isMe ? "text-blue-200 dark:text-sky-200" : "text-slate-400 dark:text-slate-500"}`}>
                                 {formatTime(ts)}
                               </div>
                             </div>
@@ -541,14 +439,14 @@ export default function MensajesPage() {
                   </div>
 
                   {/* Input */}
-                  <div className="p-4 border-t border-slate-200 bg-white">
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
                     <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                       <input
                         type="text"
                         value={inputText}
                         onChange={e => setInputText(e.target.value)}
                         placeholder="Escribe tu mensaje..."
-                        className="flex-1 rounded-full border border-slate-300 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0f4c81] focus:border-transparent transition-all bg-slate-50 focus:bg-white shadow-inner"
+                        className="flex-1 rounded-full border border-slate-300 dark:border-slate-700 px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0f4c81] dark:focus:ring-sky-500 focus:border-transparent transition-all bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 shadow-inner"
                       />
                       {/* WhatsApp button */}
                       <button
@@ -564,7 +462,7 @@ export default function MensajesPage() {
                       <button
                         type="submit"
                         disabled={!inputText.trim() || sending}
-                        className="bg-[#0f4c81] text-white h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        className="bg-[#0f4c81] dark:bg-sky-600 text-white h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-800 dark:hover:bg-sky-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                         aria-label="Enviar"
                       >
                         <Send className="h-5 w-5 ml-0.5" />
@@ -573,9 +471,9 @@ export default function MensajesPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-slate-400 flex-col gap-4">
-                  <div className="h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="h-10 w-10 text-slate-300" />
+                <div className="flex-1 flex items-center justify-center text-slate-400 dark:text-slate-500 flex-col gap-4">
+                  <div className="h-24 w-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors">
+                    <User className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                   </div>
                   <p>Selecciona una conversación para chatear</p>
                 </div>
