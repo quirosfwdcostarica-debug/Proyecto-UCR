@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { randomUUID } from "crypto";
 
 function getToken_(req: NextRequest) {
   return getToken({
@@ -18,24 +19,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!token) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   try {
-
-    const { createClient } = require("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
-    const { error } = await supabase
-      .from('MATCHES')
-      .update({ estado: 'RECHAZADO', rejected_at: new Date().toISOString() })
-      .eq('id', params.id);
+    const { error } = await supabaseAdmin
+      .from("MATCHES")
+      .update({ estado: "CERRADO", rejected_at: new Date().toISOString() })
+      .eq("id", params.id);
 
     if (error) throw error;
 
-    const { data: match } = await supabase.from('MATCHES').select('*').eq('id', params.id).maybeSingle();
-    if (match && match.initiated_by) {
-      await supabase.from('NOTIFICATIONS').insert({
-        id: require('crypto').randomUUID(),
+    const { data: match } = await supabaseAdmin.from("MATCHES").select("initiated_by").eq("id", params.id).maybeSingle();
+    if (match?.initiated_by) {
+      await supabaseAdmin.from("NOTIFICATIONS").insert({
+        id: randomUUID(),
         user_id: match.initiated_by,
         title: "Solicitud Rechazada",
         message: "No fue posible aceptar tu solicitud en este momento.",
@@ -43,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         read: false,
         reference_id: params.id,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       });
     }
 

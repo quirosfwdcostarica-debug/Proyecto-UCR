@@ -1,19 +1,27 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { randomUUID } from "crypto";
 
-// Asegura que exista el Curriculum del estudiante y devuelve su id.
 async function ensureCurriculumId(estudianteId: string): Promise<string> {
-  const cur = await prisma.curriculum.upsert({
-    where: { estudiante_id: estudianteId },
-    create: { estudiante_id: estudianteId },
-    update: {},
-    select: { id: true },
+  const { data: cur } = await supabaseAdmin
+    .from("CURRICULUMS")
+    .select("id")
+    .eq("estudiante_id", estudianteId)
+    .maybeSingle();
+
+  if (cur) return cur.id;
+
+  const newId = randomUUID();
+  await supabaseAdmin.from("CURRICULUMS").insert({
+    id: newId,
+    estudiante_id: estudianteId,
+    cv_data: {},
+    habilidades_tecnicas: [],
   });
-  return cur.id;
+  return newId;
 }
 
-// GET /api/curriculum/versiones — lista las versiones adaptadas del estudiante (T-49)
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -24,29 +32,34 @@ export async function GET() {
   }
 
   try {
-    const curriculum = await prisma.curriculum.findUnique({
-      where: { estudiante_id: session.user.id },
-      select: {
-        versiones: {
-          orderBy: { created_at: "desc" },
-          select: {
-            id: true, nombre_version: true, posicion_id: true,
-            ats_score: true, created_at: true,
-            posicion: { select: { titulo: true, empresa: true } },
-          },
-        },
-      },
-    });
+    const { data: curriculum } = await supabaseAdmin
+      .from("CURRICULUMS")
+      .select(`
+        id,
+        versiones:CURRICULUM_VERSIONES!CURRICULUM_VERSIONES_curriculum_id_fkey(
+          id, nombre_version, posicion_id, ats_score, created_at,
+          posicion:POSICIONES!CURRICULUM_VERSIONES_posicion_id_fkey(titulo, empresa)
+        )
+      `)
+      .eq("estudiante_id", session.user.id)
+      .maybeSingle();
 
-    const data = (curriculum?.versiones ?? []).map((v) => ({
-      id: v.id,
-      nombre_version: v.nombre_version,
-      posicion_id: v.posicion_id,
-      posicion_titulo: v.posicion?.titulo ?? null,
-      posicion_empresa: v.posicion?.empresa ?? null,
-      ats_score: v.ats_score,
-      created_at: v.created_at.toISOString(),
-    }));
+    const curArr = curriculum?.versiones;
+    const versiones = Array.isArray(curArr) ? curArr : [];
+
+    const data = versiones.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((v: any) => {
+      const posArr = v.posicion;
+      const pos = Array.isArray(posArr) ? posArr[0] : posArr;
+      return {
+        id: v.id,
+        nombre_version: v.nombre_version,
+        posicion_id: v.posicion_id,
+        posicion_titulo: pos?.titulo ?? null,
+        posicion_empresa: pos?.empresa ?? null,
+        ats_score: v.ats_score,
+        created_at: v.created_at,
+      };
+    });
 
     return NextResponse.json({ data });
   } catch (error) {
@@ -55,7 +68,6 @@ export async function GET() {
   }
 }
 
-// POST /api/curriculum/versiones — guarda una versión adaptada del CV (T-49 / T-50)
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -79,17 +91,22 @@ export async function POST(request: Request) {
 
   try {
     const curriculumId = await ensureCurriculumId(session.user.id);
+    const newId = randomUUID();
 
-    const version = await prisma.curriculumVersion.create({
-      data: {
+    const { data: version, error } = await supabaseAdmin
+      .from("CURRICULUM_VERSIONES")
+      .insert({
+        id: newId,
         curriculum_id: curriculumId,
         posicion_id: posicion_id || null,
         nombre_version: nombre_version || "Versión adaptada",
         contenido,
         ats_score: typeof ats_score === "number" ? Math.max(0, Math.min(100, Math.round(ats_score))) : null,
-      },
-      select: { id: true, nombre_version: true, created_at: true },
-    });
+      })
+      .select("id, nombre_version, created_at")
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, version });
   } catch (error) {

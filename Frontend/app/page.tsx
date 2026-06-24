@@ -253,6 +253,57 @@ function Dashboard() {
                   </Button>
                 </Card>
               </div>
+
+              {/* Recommended Opportunities / Next Steps */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-foreground">Oportunidades Recomendadas</h3>
+                  <Link href="/posiciones" className="text-xs text-[#0f4c81] dark:text-sky-400 font-bold hover:underline">Ver todas</Link>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Opportunity 1 */}
+                  <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                    <div className="flex gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                        <Briefcase className="h-6 w-6 text-[#0f4c81] dark:text-sky-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#0f4c81] dark:group-hover:text-sky-400 transition-colors">Pasantía en Análisis de Datos</h4>
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-2 py-0 border-0">NUEVO</Badge>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-3">Ofrecida por <span className="font-semibold text-slate-700 dark:text-slate-300">Intel Costa Rica</span> (Red de Exalumnos)</p>
+                        <div className="flex gap-2">
+                          <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200 dark:border-slate-700">Medio Tiempo</Badge>
+                          <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200 dark:border-slate-700">Remoto</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Opportunity 2 */}
+                  <Card className="p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                    <div className="flex gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/30">
+                        <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Mentoría: Preparación para Entrevistas</h4>
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0 border-0">SUGERIDO</Badge>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-3">Mentor: <span className="font-semibold text-slate-700 dark:text-slate-300">Carlos Méndez</span> (Ingeniería UCR)</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] px-3 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20" onClick={() => setIsCoffeeOpen(true)}>
+                            Agendar Café
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
             </div>
 
 
@@ -263,67 +314,98 @@ function Dashboard() {
             {/* Top Section - Tarjetas Exalumno */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
               
-              {/* Welcome Exalumno Card */}
-              <Card className="lg:col-span-2 p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex relative overflow-hidden">
-                <div className="w-full relative z-10 text-foreground flex flex-col justify-center min-h-[200px]">
-                  <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Tablero del Exalumno</p>
-                  <h1 className="text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 leading-tight">
+              {/* Welcome Exalumno Card - Premium Redesign */}
+              <Card className="lg:col-span-2 p-8 border-0 bg-gradient-to-br from-[#0f4c81] to-[#003b6d] dark:from-slate-900 dark:to-slate-950 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out group flex relative overflow-hidden">
+                {/* Background decorative elements */}
+                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity duration-500 transform group-hover:scale-110 group-hover:rotate-6">
+                  <Sparkles className="w-48 h-48 text-white" />
+                </div>
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+                <div className="absolute top-10 right-20 w-32 h-32 bg-sky-400/10 rounded-full blur-2xl"></div>
+
+                <div className="w-full relative z-10 text-white flex flex-col justify-center min-h-[200px]">
+                  <div className="inline-flex items-center gap-2 mb-3">
+                    <Badge className="bg-white/20 hover:bg-white/30 text-white border-0 px-3 py-1 backdrop-blur-md">
+                      Tablero del Exalumno
+                    </Badge>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight tracking-tight">
                     Hola de nuevo, {session?.user?.name || "Graduado"}. <br/>
-                    <span className="text-[#0f4c81] dark:text-sky-400">Tu red está activa.</span>
+                    <span className="text-sky-300 drop-shadow-[0_0_15px_rgba(125,211,252,0.3)]">Tu red está activa.</span>
                   </h1>
-                  <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
+                  <p className="text-sky-100/90 mb-8 text-sm md:text-base leading-relaxed max-w-lg font-medium">
                     Gracias por apoyar al talento de la UCR.{" "}
                     {profile?.matchesContactados > 0
                       ? `Tienes ${profile.matchesContactados} solicitud${profile.matchesContactados !== 1 ? "es" : ""} de estudiantes esperando tu respuesta.`
-                      : "Sigue conectando con estudiantes de la red UCR."}
+                      : "Sigue conectando con estudiantes de la red UCR y deja tu legado."}
                   </p>
                   <div className="flex gap-4">
                     <Link href="/directorio/estudiantes">
-                      <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white border-0">Ver Estudiantes</Button>
+                      <Button className="bg-white text-[#0f4c81] hover:bg-slate-100 font-bold border-0 shadow-[0_4px_14px_0_rgba(255,255,255,0.2)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5">
+                        Ver Estudiantes
+                      </Button>
                     </Link>
                     <Link href="/mis-posiciones">
-                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Mis Posiciones</Button>
+                      <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5">
+                        Mis Posiciones
+                      </Button>
                     </Link>
                   </div>
                 </div>
               </Card>
 
-              {/* Impact Card */}
-              <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-foreground">Tu Impacto</h3>
-                    <Badge className="bg-[#dcfce7] text-[#166534] hover:bg-[#dcfce7] border-0">FILÁNTROPO UCR</Badge>
+              {/* Impact Card - Premium Redesign */}
+              <Card className="p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+                {/* Subtle background glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/5 rounded-full blur-3xl group-hover:bg-emerald-400/10 transition-colors duration-500"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                        <Heart className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">Tu Impacto</h3>
+                    </div>
+                    <Badge className="bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold px-3 py-1">
+                      FILÁNTROPO UCR
+                    </Badge>
                   </div>
                   
-                  <div className="space-y-6">
-                    <div>
-                      <span className="text-sm text-slate-500 block mb-1">Donación Total Confirmada</span>
-                      <span className="text-3xl font-extrabold text-[#0f4c81] dark:text-sky-400">
+                  <div className="space-y-8">
+                    <div className="bg-slate-50 dark:bg-slate-950/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">Donación Total Confirmada</span>
+                      <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#005da4] to-[#00a3e0] dark:from-sky-400 dark:to-emerald-400 drop-shadow-sm">
                         {profile?.donacionTotalConfirmada != null
                           ? `₡${Number(profile.donacionTotalConfirmada).toLocaleString("es-CR")}`
                           : "₡0"}
                       </span>
                     </div>
 
-                    <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Proyectos Patrocinados</span>
+                    <div className="pt-2">
+                      <div className="flex items-center gap-2 mb-4">
+                        <DollarSign className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Proyectos Patrocinados</span>
+                      </div>
                       {Array.isArray(profile?.proyectosPatrocinados) && profile.proyectosPatrocinados.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {profile.proyectosPatrocinados.map((p: any, i: number) => (
-                            <div key={i}>
-                              <div className="flex justify-between text-xs mb-1">
-                                <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
-                                  {p.proyecto_titulo} ({p.nombre_estudiante})
+                            <div key={i} className="group/item">
+                              <div className="flex justify-between text-sm mb-1.5">
+                                <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[170px] group-hover/item:text-[#005da4] dark:group-hover/item:text-sky-400 transition-colors">
+                                  {p.proyecto_titulo} <span className="text-xs text-slate-400 font-normal">({p.nombre_estudiante})</span>
                                 </span>
-                                <span className="font-bold text-[#0f4c81] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
+                                <span className="font-extrabold text-[#005da4] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
                               </div>
-                              <Progress value={p.avance ?? 0} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+                              <Progress value={p.avance ?? 0} className="h-2 bg-slate-100 dark:bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-[#005da4] [&>div]:to-[#00a3e0]" />
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 italic">Sin proyectos patrocinados aún.</p>
+                        <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-center">
+                          <p className="text-sm text-slate-500 font-medium mb-1">Sin proyectos patrocinados aún.</p>
+                          <Link href="/donaciones" className="text-xs text-[#0f4c81] dark:text-sky-400 font-bold hover:underline">Explorar proyectos para donar</Link>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -332,10 +414,83 @@ function Dashboard() {
             </div>
 
             {/* Middle Section - Exalumno */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
               
+              {/* Quick Actions Card */}
+              <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow group">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-[#005da4]/10 dark:bg-sky-900/30 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-[#005da4] dark:text-sky-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Oportunidades y Acción</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Link href="/directorio/estudiantes" className="block">
+                    <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 hover:bg-[#005da4]/5 dark:hover:bg-sky-900/20 hover:border-[#005da4]/30 dark:hover:border-sky-700 transition-all cursor-pointer h-full flex flex-col items-center text-center gap-3 group/btn">
+                      <div className="p-3 bg-white dark:bg-slate-900 rounded-full shadow-sm group-hover/btn:scale-110 transition-transform">
+                        <Users className="h-6 w-6 text-[#005da4] dark:text-sky-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Buscar Talento</h4>
+                        <p className="text-xs text-slate-500">Mentorea a estudiantes de la UCR o recluta perfiles.</p>
+                      </div>
+                    </div>
+                  </Link>
 
+                  <Link href="/mis-posiciones" className="block">
+                    <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 hover:bg-[#005da4]/5 dark:hover:bg-sky-900/20 hover:border-[#005da4]/30 dark:hover:border-sky-700 transition-all cursor-pointer h-full flex flex-col items-center text-center gap-3 group/btn">
+                      <div className="p-3 bg-white dark:bg-slate-900 rounded-full shadow-sm group-hover/btn:scale-110 transition-transform">
+                        <Briefcase className="h-6 w-6 text-[#005da4] dark:text-sky-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-1">Publicar Vacante</h4>
+                        <p className="text-xs text-slate-500">Ofrece empleos o pasantías a la comunidad.</p>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </Card>
 
+              {/* Network Status Card */}
+              <Card className="p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                    <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Estado de tu Red</h3>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">Perfil de Mentor Activo</h4>
+                      <p className="text-xs text-slate-500 mt-1">Los estudiantes pueden encontrarte en el directorio y solicitar mentorías.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                        {profile?.matchesContactados > 0 ? `${profile.matchesContactados} Solicitudes Pendientes` : "Sin solicitudes nuevas"}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {profile?.matchesContactados > 0 
+                          ? "Tienes estudiantes esperando conectar contigo. ¡Revisa tus matches!" 
+                          : "Tu bandeja de solicitudes de mentoría está al día."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Link href="/mis-matches/exalumno" className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1">
+                      Ir a Mis Matches <Send className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </Card>
 
             </div>
 

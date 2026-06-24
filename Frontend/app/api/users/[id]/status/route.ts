@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +14,6 @@ export async function PATCH(
   const userId = (session.user as any).id as string;
   const role = (session.user as any).tipo || (session.user as any).role;
 
-  // Solo el propio usuario o ADMIN puede modificar
   if (userId !== params.id && role !== "ADMIN") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
@@ -29,8 +28,6 @@ export async function PATCH(
   const { cuentaPausada } = body;
   const updateData: Record<string, any> = {};
 
-  // cuentaPausada = true → suspender (activo=false, status=SUSPENDIDO)
-  // cuentaPausada = false → reactivar (activo=true, status=ACTIVO)
   if (typeof cuentaPausada === "boolean") {
     updateData.activo = !cuentaPausada;
     updateData.status = cuentaPausada ? "SUSPENDIDO" : "ACTIVO";
@@ -41,26 +38,19 @@ export async function PATCH(
   }
 
   try {
-    const updated = await prisma.user.update({
-      where: { id: params.id },
-      data: updateData,
-      select: {
-        id: true,
-        activo: true,
-        status: true,
-      },
-    });
+    const { data: updated, error } = await supabaseAdmin
+      .from("USERS")
+      .update(updateData)
+      .eq("id", params.id)
+      .select("id, activo, status")
+      .single();
 
-    return NextResponse.json({
-      ...updated,
-      cuentaPausada: !updated.activo,
-    });
+    if (error) throw error;
+
+    return NextResponse.json({ ...updated, cuentaPausada: !updated.activo });
   } catch (error) {
     console.error("[PATCH /api/users/[id]/status]", error);
-    return NextResponse.json(
-      { message: "Error al actualizar el estado" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Error al actualizar el estado" }, { status: 500 });
   }
 }
 
@@ -81,21 +71,16 @@ export async function GET(
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: params.id },
-      select: {
-        id: true,
-        activo: true,
-        status: true,
-      },
-    });
+    const { data: user, error } = await supabaseAdmin
+      .from("USERS")
+      .select("id, activo, status")
+      .eq("id", params.id)
+      .maybeSingle();
 
+    if (error) throw error;
     if (!user) return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
 
-    return NextResponse.json({
-      ...user,
-      cuentaPausada: !user.activo,
-    });
+    return NextResponse.json({ ...user, cuentaPausada: !user.activo });
   } catch (error) {
     console.error("[GET /api/users/[id]/status]", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });

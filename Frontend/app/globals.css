@@ -35,6 +35,12 @@
     --ring: 194 100% 19%;
 
     --radius: 0.5rem;
+
+    /* FWD Costa Rica accent colors */
+    --fwd-cyan:   #00AEEF;
+    --fwd-purple: #6B2D8B;
+    --fwd-yellow: #F5C400;
+    --fwd-green:  #00A651;
   }
 
   .dark {
@@ -200,4 +206,71 @@ nextjs-portal {
 #__next-build-watcher,
 #nextjs__container_build_indicator {
   display: none !important;
+}
+
+/* =======================================================
+   FWD Costa Rica — Detalles de color sutiles
+   ======================================================= */
+
+/* Barra decorativa delgada con los 4 colores FWD */
+.fwd-accent-bar {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    #00AEEF 0%,
+    #00AEEF 25%,
+    #F5C400 25%,
+    #F5C400 50%,
+    #00A651 50%,
+    #00A651 75%,
+    #6B2D8B 75%,
+    #6B2D8B 100%
+  );
+  border-radius: 0 0 2px 2px;
+}
+
+/* Punto decorativo con color FWD para elementos activos */
+.fwd-dot-cyan::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00AEEF;
+  margin-right: 6px;
+  vertical-align: middle;
+  box-shadow: 0 0 6px rgba(0, 174, 239, 0.6);
+}
+
+/* Línea izquierda activa con cyan FWD */
+.fwd-active-left {
+  border-left: 3px solid #00AEEF !important;
+  background: linear-gradient(
+    to right,
+    rgba(0, 174, 239, 0.08),
+    transparent
+  ) !important;
+}
+
+/* Glow sutil FWD cyan */
+.fwd-glow-cyan {
+  box-shadow: 0 0 16px rgba(0, 174, 239, 0.2);
+}
+
+/* Badge mini de colores FWD para etiquetas de estado */
+.fwd-badge-purple {
+  background: rgba(107, 45, 139, 0.12);
+  color: #6B2D8B;
+  border: 1px solid rgba(107, 45, 139, 0.25);
+}
+.fwd-badge-green {
+  background: rgba(0, 166, 81, 0.12);
+  color: #00A651;
+  border: 1px solid rgba(0, 166, 81, 0.25);
+}
+.fwd-badge-yellow {
+  background: rgba(245, 196, 0, 0.12);
+  color: #b38c00;
+  border: 1px solid rgba(245, 196, 0, 0.3);
 }

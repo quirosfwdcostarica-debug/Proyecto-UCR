@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { generarSugerenciasParaEstudiante } from "@/actions/matching.actions";
 import { Decimal } from "@prisma/client/runtime/library";
@@ -63,34 +64,59 @@ export async function getUserProfile() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("No estás autenticado.");
 
-  const rawUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true, email: true, nombre: true, tipo: true, email_verified: true,
-      foto_url: true, activo: true, reportes_recibidos: true,
-      cedula: true, fecha_nacimiento: true, genero: true,
-      exalumno: { select: EXALUMNO_DB_SELECT },
-      estudiante: { select: ESTUDIANTE_DB_SELECT },
-    },
-  });
-  const user = rawUser as any;
+  const userId = session.user.id;
 
+  // Usar Supabase directamente para evitar el ECIRCUITBREAKER de Prisma
+  const { data: user, error: userError } = await supabaseAdmin
+    .from("USERS")
+    .select("id, email, nombre, tipo, email_verified, foto_url, activo, reportes_recibidos, cedula, fecha_nacimiento, genero, status")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (userError) throw new Error(userError.message);
   if (!user) throw new Error("Usuario no encontrado.");
 
-  const ex = user.exalumno;
-  const est = user.estudiante;
+  const tipo = user.tipo as string;
+
+  let real_genero = user.genero ?? "";
+  let real_phone = "";
+  if (real_genero.includes("||PHONE:")) {
+    const parts = real_genero.split("||PHONE:");
+    real_genero = parts[0];
+    real_phone = parts[1];
+  }
+
+  let ex: any = null;
+  let est: any = null;
+
+  if (tipo === "EXALUMNO") {
+    const { data } = await supabaseAdmin
+      .from("EXALUMNOS")
+      .select("user_id, carnet_ucr, carrera, escuela_facultad, anio_graduacion, empresa_actual, cargo_actual, pais_ciudad, anios_experiencia, linkedin_url, biografia, github_url, website_url, habilidades, certificaciones, experiencia_laboral, ofrece_mentoria, ofrece_empleo, ofrece_pasantia, ofrece_proyecto, ofrece_donacion_dinero, ofrece_guest_speaking, ofrece_volunteering, ofrece_career_advice, ofrece_networking, perfil_completo, visible_en_directorio, sector, areas_interes")
+      .eq("user_id", userId)
+      .maybeSingle();
+    ex = data;
+  } else if (tipo === "ESTUDIANTE") {
+    const { data } = await supabaseAdmin
+      .from("ESTUDIANTES")
+      .select("user_id, carnet_ucr, carrera, escuela_facultad, sede, anio_ingreso, nivel_academico, promedio_ponderado, nivel_beca, proyecto_titulo, proyecto_tipo, proyecto_descripcion, proyecto_porcentaje_avance, area_tematica, areas_interes, habilidades, soft_skills, idiomas, busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia, activo, visible_en_directorio")
+      .eq("user_id", userId)
+      .maybeSingle();
+    est = data;
+  }
 
   return {
     id: user.id,
     name: user.nombre,
     email: user.email,
+    phone: real_phone,
     image: user.foto_url ?? "",
     tipo: user.tipo,
-    bio: ex?.biografia ?? est ? "" : "",
+    bio: ex?.biografia ?? "",
     fecha_nacimiento: user.fecha_nacimiento
-      ? user.fecha_nacimiento.toISOString().split("T")[0]
+      ? (user.fecha_nacimiento as string).split("T")[0]
       : "",
-    genero: user.genero ?? "",
+    genero: real_genero,
     socialLinks: {
       linkedin: ex?.linkedin_url ?? "",
       github: ex?.github_url ?? "",
@@ -98,9 +124,9 @@ export async function getUserProfile() {
       website: ex?.website_url ?? "",
     },
 
-    // Estudiante (nivel_beca es privado: solo el propio estudiante lo ve)
+    // Estudiante
     nivel_beca: est?.nivel_beca ?? "",
-    carnet_ucr: est?.carnet_ucr ?? "",
+    carnet_ucr: est?.carnet_ucr ?? ex?.carnet_ucr ?? "",
     carrera: est?.carrera ?? ex?.carrera ?? "",
     escuela_facultad: est?.escuela_facultad ?? ex?.escuela_facultad ?? "",
     sede: est?.sede ?? "",
@@ -109,20 +135,20 @@ export async function getUserProfile() {
     promedio_ponderado: est?.promedio_ponderado ? Number(est.promedio_ponderado) : "",
     proyecto_titulo: est?.proyecto_titulo ?? "",
     proyecto_tipo: est?.proyecto_tipo ?? "",
-    proyecto_descripcion: (est as any)?.proyecto_descripcion ?? "",
+    proyecto_descripcion: est?.proyecto_descripcion ?? "",
     proyecto_necesidades: est?.proyecto_necesidades ?? [],
-    proyecto_porcentaje_avance: (est as any)?.proyecto_porcentaje_avance ?? 0,
-    area_tematica: (est as any)?.area_tematica ?? "",
-    areas_interes: (est as any)?.areas_interes ?? [],
-    habilidades: (est as any)?.habilidades ?? (ex as any)?.habilidades ?? [],
-    soft_skills: (est as any)?.soft_skills ?? [],
-    idiomas: (est as any)?.idiomas ?? [],
+    proyecto_porcentaje_avance: est?.proyecto_porcentaje_avance ?? 0,
+    area_tematica: est?.area_tematica ?? "",
+    areas_interes: est?.areas_interes ?? [],
+    habilidades: est?.habilidades ?? ex?.habilidades ?? [],
+    soft_skills: est?.soft_skills ?? [],
+    idiomas: est?.idiomas ?? [],
     busca_financiamiento: !!est?.busca_financiamiento,
     busca_mentoria: !!est?.busca_mentoria,
     busca_empleo: !!est?.busca_empleo,
     busca_pasantia: !!est?.busca_pasantia,
     perfil_pausado: est?.activo === false,
-    visible_en_directorio: !!est?.visible_en_directorio,
+    visible_en_directorio: !!(ex?.visible_en_directorio ?? est?.visible_en_directorio),
 
     // Exalumno
     anio_graduacion: ex?.anio_graduacion ?? "",
@@ -149,21 +175,33 @@ export async function getUserProfile() {
 // ─── GET perfil público por ID ────────────────────────────────────────────────
 
 export async function getPublicProfile(userId: string) {
-  const rawUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true, nombre: true, foto_url: true, tipo: true, activo: true,
-      status: true,
-      exalumno: { select: EXALUMNO_DB_SELECT },
-      estudiante: { select: ESTUDIANTE_DB_SELECT },
-    },
-  });
-  const user = rawUser as any;
+  const { data: user, error } = await supabaseAdmin
+    .from("USERS")
+    .select("id, nombre, foto_url, tipo, activo, status")
+    .eq("id", userId)
+    .maybeSingle();
 
-  if (!user || user.status === "SUSPENDIDO") return null;
+  if (error || !user || user.status === "SUSPENDIDO") return null;
 
-  const ex = user.exalumno;
-  const est = user.estudiante;
+  const tipo = user.tipo as string;
+  let ex: any = null;
+  let est: any = null;
+
+  if (tipo === "EXALUMNO") {
+    const { data } = await supabaseAdmin
+      .from("EXALUMNOS")
+      .select("carrera, empresa_actual, cargo_actual, sector, pais_ciudad, anios_experiencia, anio_graduacion, escuela_facultad, linkedin_url, github_url, website_url, biografia, habilidades, certificaciones, experiencia_laboral, areas_interes, ofrece_mentoria, ofrece_empleo, ofrece_pasantia, ofrece_proyecto, ofrece_donacion_dinero, ofrece_guest_speaking, ofrece_volunteering, ofrece_career_advice, ofrece_networking, visible_en_directorio")
+      .eq("user_id", userId)
+      .maybeSingle();
+    ex = data;
+  } else if (tipo === "ESTUDIANTE") {
+    const { data } = await supabaseAdmin
+      .from("ESTUDIANTES")
+      .select("carrera, escuela_facultad, area_tematica, areas_interes, habilidades, proyecto_titulo, proyecto_tipo, proyecto_descripcion, proyecto_porcentaje_avance, busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia, visible_en_directorio")
+      .eq("user_id", userId)
+      .maybeSingle();
+    est = data;
+  }
 
   // Solo exponer datos públicos
   return {
@@ -232,21 +270,24 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
     throw new Error("El carné UCR tiene un formato inválido. Ejemplo válido: A12345 o 123456.");
   }
 
+  const genero_y_telefono = d.phone ? `${d.genero || ""}||PHONE:${d.phone}` : d.genero || null;
+
   // 1. Actualizar tabla USERS
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
+  const { error: userError } = await supabaseAdmin
+    .from("USERS")
+    .update({
       nombre: d.name,
       foto_url: d.image || null,
-      fecha_nacimiento: d.fecha_nacimiento ? new Date(d.fecha_nacimiento) : null,
-      genero: d.genero || null,
-    },
-  });
+      fecha_nacimiento: d.fecha_nacimiento ? d.fecha_nacimiento : null,
+      genero: genero_y_telefono,
+    })
+    .eq("id", userId);
 
-  let proyectoCompleto = false;
+  if (userError) throw new Error(`Error actualizando usuario: ${userError.message}`);
 
   if (tipo === "EXALUMNO") {
     const exBase = {
+      user_id:              userId,
       carnet_ucr:           d.carnet_ucr || null,
       escuela_facultad:     d.escuela_facultad || null,
       anio_graduacion:      d.anio_graduacion ? Number(d.anio_graduacion) : null,
@@ -269,15 +310,16 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
       ofrece_networking:      !!d.ofrece_networking,
     };
 
-    await prisma.exalumno.upsert({
-      where:  { user_id: userId },
-      create: { user_id: userId, ...exBase },
-      update: exBase,
-    });
+    const { error: exError } = await supabaseAdmin
+      .from("EXALUMNOS")
+      .upsert(exBase, { onConflict: "user_id" });
+
+    if (exError) throw new Error(`Error actualizando exalumno: ${exError.message}`);
   }
 
   if (tipo === "ESTUDIANTE") {
     const estBase = {
+      user_id:              userId,
       nivel_beca:           (d as any).nivel_beca || null,
       carnet_ucr:           d.carnet_ucr?.trim() || null,
       carrera:              (d as any).carrera || null,
@@ -285,7 +327,7 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
       sede:                 d.sede || null,
       anio_ingreso:         d.anio_ingreso ? Number(d.anio_ingreso) : null,
       nivel_academico:      d.nivel_academico || null,
-      promedio_ponderado:   d.promedio_ponderado ? new Decimal(d.promedio_ponderado) : null,
+      promedio_ponderado:   d.promedio_ponderado ? Number(d.promedio_ponderado) : null,
       proyecto_titulo:      d.proyecto_titulo || null,
       proyecto_tipo:        d.proyecto_tipo || null,
       habilidades:          (d as any).habilidades ?? null,
@@ -297,11 +339,11 @@ export async function updateUserProfile(data: UserProfileUpdateValues) {
       busca_pasantia:       !!d.busca_pasantia,
     };
 
-    await prisma.estudiante.upsert({
-      where:  { user_id: userId },
-      create: { user_id: userId, ...estBase },
-      update: estBase,
-    });
+    const { error: estError } = await supabaseAdmin
+      .from("ESTUDIANTES")
+      .upsert(estBase, { onConflict: "user_id" });
+
+    if (estError) throw new Error(`Error actualizando estudiante: ${estError.message}`);
 
     try {
       await generarSugerenciasParaEstudiante(userId);

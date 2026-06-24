@@ -129,9 +129,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body transition-colors duration-300 relative overflow-hidden flex flex-col">
       {/* Intro Video (plays once per session) */}
       <IntroVideo />
-      {/* Background Decorative Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-ucr-celeste/10 dark:bg-ucr-celeste/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-ucr-esmeralda/10 dark:bg-ucr-esmeralda/5 rounded-full blur-[140px] pointer-events-none" />
+      {/* Background Decorative Glows — FWD brand colors */}
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#00AEEF]/10 dark:bg-[#00AEEF]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[#6B2D8B]/10 dark:bg-[#6B2D8B]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[15%] w-[300px] h-[300px] bg-[#00A651]/6 dark:bg-[#00A651]/4 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header/Navbar (Absolute overlay) */}
       <header className="absolute top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent border-none">

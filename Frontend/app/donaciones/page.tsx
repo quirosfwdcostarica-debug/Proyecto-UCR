@@ -87,6 +87,9 @@ function DonacionModal({
 }) {
   const [monto, setMonto] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [frecuencia, setFrecuencia] = useState("Única");
+  const [contacto, setContacto] = useState("");
+  const [condiciones, setCondiciones] = useState("");
   const [metodo, setMetodo] = useState<MetodoPago>("SINPE");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -119,10 +122,20 @@ function DonacionModal({
       setError("Ingresa un monto válido mayor a ₡0.");
       return;
     }
+    if (!motivo.trim()) {
+      setError("Por favor detalla por qué te gustaría donar (para que la fundación lo apruebe).");
+      return;
+    }
     setUploading(true);
     try {
       // Registrar la solicitud de donación en la API
       const publicUrl = ""; // Sin comprobante inicialmente
+
+      const destinoFormat = `Proyecto: ${proyecto.nombre}
+Frecuencia: ${frecuencia}
+Contacto preferido: ${contacto || 'No especificado'}
+Motivo: ${motivo.trim()}
+Condiciones: ${condiciones.trim() || 'Ninguna'}`;
 
       // 2. Registrar la donación en la API
       const res = await fetch("/api/donaciones", {
@@ -132,7 +145,7 @@ function DonacionModal({
           exalumnoId,
           monto: montoNum,
           comprobanteUrl: publicUrl,
-          destino: `${proyecto.nombre}${motivo.trim() ? ` - Motivo: ${motivo.trim()}` : ""}`,
+          destino: destinoFormat,
           metodoPago: "",
         }),
       });
@@ -214,17 +227,68 @@ function DonacionModal({
             </div>
           </div>
 
+          {/* Frecuencia */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Tipo de donación
+            </label>
+            <div className="flex gap-4">
+              {["Única", "Mensual", "Anual"].map((tipo) => (
+                <label key={tipo} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="frecuencia"
+                    value={tipo}
+                    checked={frecuencia === tipo}
+                    onChange={(e) => setFrecuencia(e.target.value)}
+                    className="text-ucr-celeste focus:ring-ucr-celeste"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">{tipo}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Motivo */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              ¿Por qué te gustaría donar a este proyecto? (Opcional)
+              ¿Por qué te gustaría donar a este proyecto? <span className="text-red-500">*</span>
             </label>
             <textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ej. Me parece una excelente iniciativa y quiero apoyar..."
+              placeholder="Ej. Me parece una excelente iniciativa de impacto social..."
               className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
-              rows={3}
+              rows={2}
+              required
+            />
+          </div>
+
+          {/* Contacto */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Medio de contacto preferido (Opcional)
+            </label>
+            <Input
+              value={contacto}
+              onChange={(e) => setContacto(e.target.value)}
+              placeholder="Ej. mi.correo@ejemplo.com o +506 8888-8888"
+              className="h-11 bg-white dark:bg-slate-950 dark:border-slate-800"
+            />
+            <p className="text-xs text-slate-500 mt-1">Para que el estudiante o administrador te contacte y finalice la transacción.</p>
+          </div>
+
+          {/* Condiciones */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Condiciones o comentarios adicionales (Opcional)
+            </label>
+            <textarea
+              value={condiciones}
+              onChange={(e) => setCondiciones(e.target.value)}
+              placeholder="Ej. Quiero donar equipo en lugar de dinero, solicito anonimato, etc."
+              className="w-full flex min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
+              rows={2}
             />
           </div>
 
