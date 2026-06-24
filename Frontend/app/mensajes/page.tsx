@@ -260,6 +260,19 @@ export default function MensajesPage() {
 
   return (
     <>
+      <style>{`
+        .chat-custom-bg {
+          background-image: url('/Gemini_Generated_Image_3swc4f3swc4f3swc.png');
+          background-repeat: repeat;
+          background-size: 340px;
+          background-color: #e0f2fe; /* Celeste claro */
+          background-blend-mode: multiply;
+        }
+        .dark .chat-custom-bg {
+          background-color: #0c4a6e; /* Celeste oscuro / azul profundo */
+          background-blend-mode: multiply;
+        }
+      `}</style>
       {/* WhatsApp Modal */}
       {showWAModal && (
         <div
@@ -379,7 +392,7 @@ export default function MensajesPage() {
             </div>
 
             {/* Chat */}
-            <div className="flex-1 flex flex-col bg-slate-50/30 dark:bg-slate-950/50 relative">
+            <div className="flex-1 flex flex-col chat-custom-bg relative">
               {activeConv ? (
                 <>
                   {/* Header */}

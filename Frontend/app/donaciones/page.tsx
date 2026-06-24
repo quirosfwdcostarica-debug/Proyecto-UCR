@@ -38,7 +38,7 @@ interface Donacion {
   id: string;
   monto: number;
   destino: string;
-  status: "PENDIENTE" | "APROBADA" | "RECHAZADA";
+  status: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
   comprobanteUrl: string;
   createdAt: string;
 }
@@ -61,6 +61,11 @@ const BADGE_STATUS: Record<string, { label: string; className: string; icon: Rea
   },
   APROBADA: {
     label: "Aprobada",
+    className: "bg-green-100 text-green-700 border-green-200",
+    icon: <CheckCircle2 className="w-3 h-3" />,
+  },
+  CONFIRMADA: {
+    label: "Confirmada",
     className: "bg-green-100 text-green-700 border-green-200",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },

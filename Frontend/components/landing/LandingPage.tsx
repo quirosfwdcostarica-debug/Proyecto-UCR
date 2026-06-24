@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { WelcomeCarousel, LANDING_CAROUSEL_IMAGES } from "@/components/layout/WelcomeCarousel";
 import { IntroVideo } from "@/components/layout/IntroVideo";
 
 const FAQS = [
@@ -87,16 +86,7 @@ const UCRSlantedBarElement = ({ className = "", color = "#006AD3" }: { className
 );
 
 export default function LandingPage() {
-  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-
-  // Auto-slide effect for the carousel (6 seconds)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentCarouselIndex((prev) => (prev + 1) % LANDING_CAROUSEL_IMAGES.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
 
 
 
@@ -210,11 +200,15 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative h-screen min-h-[680px] flex items-center pb-44 text-white overflow-hidden bg-ucr-negro w-full">
-        <WelcomeCarousel 
-          className="absolute inset-0 w-full h-full z-0 bg-ucr-negro" 
-          currentIndex={currentCarouselIndex} 
-          images={LANDING_CAROUSEL_IMAGES}
-        />
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/hero-video-landing.mp4" type="video/mp4" />
+        </video>
         
         {/* Overlays: solid mask for readability */}
         <div className="absolute inset-0 bg-ucr-negro/70 z-10 pointer-events-none" />

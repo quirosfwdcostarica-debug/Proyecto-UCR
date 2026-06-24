@@ -41,9 +41,9 @@ export function AppSidebar() {
 
   if (status === "loading" || role === null) {
     return (
-      <aside className="fixed top-0 left-0 h-screen w-20 bg-white dark:bg-slate-950 border-r border-border dark:border-slate-800 flex flex-col z-30 shadow-lg">
-        <div className="px-4 pt-5 pb-4 flex items-center justify-center border-b border-slate-50 dark:border-slate-900/50">
-          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+      <aside className="fixed top-0 left-0 h-screen w-20 bg-[#005da4] dark:bg-slate-950 border-none flex flex-col z-30 shadow-2xl">
+        <div className="px-4 pt-5 pb-4 flex items-center justify-center border-b border-white/10">
+          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain brightness-0 invert" />
         </div>
         <nav className="flex-1 px-3 mt-6 space-y-2">
           {[...Array(6)].map((_, i) => (
@@ -122,18 +122,18 @@ export function AppSidebar() {
         <img
           src="/logo.png"
           alt="Logo U"
-          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 dark:brightness-110"
+          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 brightness-0 invert"
         />
         <div className="mt-0 group-hover:mt-2 text-center group-hover:text-left transition-all duration-300 w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap">
           {role === "ADMIN" ? (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-red-600 dark:text-red-400">ADMIN UCR</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-red-600/70 dark:text-red-400/70">Panel Administrativo</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-red-400">ADMIN UCR</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70 dark:text-red-400/70">Panel Administrativo</p>
             </>
           ) : (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-[#1a75d2] dark:text-sky-400">EXALUMNOS U</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-[#1a75d2]/80 dark:text-sky-400/80">Impacto y Legado</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-sky-400">EXALUMNOS U</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-sky-100 dark:text-sky-400/80">Impacto y Legado</p>
             </>
           )}
         </div>
@@ -167,16 +167,18 @@ export function AppSidebar() {
                   />
                 </button>
                 {isSubmenuOpen && (
-                  <div className="opacity-0 group-hover:opacity-100 h-0 group-hover:h-auto overflow-hidden transition-all duration-300 ml-4 mt-1 space-y-1 border-l-2 border-[#005da4]/20 pl-3">
+                  <div className="opacity-0 group-hover:opacity-100 h-0 group-hover:h-auto overflow-hidden transition-all duration-300 ml-4 mt-1 space-y-1 border-l-2 border-white/20 pl-3">
                     {item.children.map((child) => {
                       const childLabel = child.label ?? t(child.labelKey!);
                       return (
                         <Link
                           key={child.href}
                           href={child.href}
-                          className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors ${pathname === child.href ? "bg-[#005da4]/10 text-[#005da4] dark:bg-sky-900/30 dark:text-sky-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                          className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors group/subitem ${pathname === child.href ? "bg-white shadow-md" : "text-sky-100 hover:bg-white hover:shadow-md dark:hover:bg-slate-800"}`}
                         >
-                          {childLabel}
+                          <span className={pathname === child.href ? colorfulTextBase : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-500 group-hover/subitem:via-purple-500 group-hover/subitem:to-pink-500 group-hover/subitem:font-extrabold"}>
+                            {childLabel}
+                          </span>
                         </Link>
                       );
                     })}

@@ -30,7 +30,7 @@ export function TopBar({ title, titleKey }: TopBarProps) {
   const displayTitle = mounted && titleKey ? t(titleKey) : title;
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className={`sticky top-0 z-50 transition-all duration-300 ${isHome ? '-mb-16' : ''}`}>
       {/* Decorative gradient line */}
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#005da4] via-sky-400 to-emerald-400 opacity-90 z-10" />
       
