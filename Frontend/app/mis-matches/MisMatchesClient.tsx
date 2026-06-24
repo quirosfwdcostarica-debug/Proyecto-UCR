@@ -41,7 +41,7 @@ const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
   { key: "CERRADO",    label: "Cerrados"   },
 ];
 
-export default function MisMatchesClient({ matches: initial }: { matches: Match[] }) {
+export default function MisMatchesClient({ matches: initial, currentUserId }: { matches: Match[], currentUserId: string }) {
   const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
   const [filter, setFilter]     = useState<MatchStatus | "TODOS">("TODOS");
@@ -151,7 +151,7 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
             const isClosed  = match.status === "CERRADO";
             // El exalumno ofreció ayuda: el estudiante debe aceptar/rechazar
             const exalumnoOfrece =
-              match.status === "CONTACTADO" && match.initiated_by === "exalumno";
+              match.status === "CONTACTADO" && match.initiated_by === currentUserId;
 
             return (
               <Card

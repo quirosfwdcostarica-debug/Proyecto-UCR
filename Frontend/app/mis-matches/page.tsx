@@ -77,5 +77,16 @@ export default async function MisMatchesPage() {
     console.error("Error fetching matches:", error);
   }
 
-  return <MisMatchesClient matches={matches} />;
+  return (
+    <div className="container mx-auto p-4 md:p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Mis Matches</h1>
+        <p className="text-slate-600 dark:text-slate-400">
+          Gestiona tus conexiones con la red de exalumnos UCR.
+        </p>
+      </div>
+
+      <MisMatchesClient matches={matches} currentUserId={userId} />
+    </div>
+  );
 }

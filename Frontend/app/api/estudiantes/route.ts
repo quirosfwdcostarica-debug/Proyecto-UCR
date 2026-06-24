@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
         { count: "exact" }
       )
       .eq("visible_en_directorio", true)
-      .eq("activo", true)
       .eq("USERS.activo", true)
       .neq("USERS.status", "SUSPENDIDO")
       .order("user_id", { ascending: false })
