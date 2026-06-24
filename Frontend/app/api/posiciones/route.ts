@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getToken } from "next-auth/jwt";
-import prisma from "@/lib/prisma";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { MAPA_AREAS_KEYWORDS } from "@/lib/constants";
 
 const PAGE_SIZE = 12;
@@ -28,20 +27,15 @@ export async function GET(request: NextRequest) {
   const page      = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
+    let query = supabaseAdmin
+      .from("POSICIONES")
+      .select("*, APLICACIONES(count), exalumno:EXALUMNOS!inner(user:USERS!inner(id, nombre, foto_url))", { count: "exact" })
+      .eq("estado", "activa");
 
-    let query = supabase
-      .from('POSICIONES')
-      .select('*, APLICACIONES(count), exalumno:EXALUMNOS!inner(user:USERS!inner(id, nombre, foto_url))', { count: 'exact' })
-      .eq('estado', 'activa');
-
-    if (tipo) query = query.ilike('tipo', `%${tipo}%`);
-    if (modalidad) query = query.ilike('modalidad', `%${modalidad}%`);
-    if (empresa) query = query.ilike('empresa', `%${empresa}%`);
-    if (titulo) query = query.ilike('titulo', `%${titulo}%`);
+    if (tipo) query = query.ilike("tipo", `%${tipo}%`);
+    if (modalidad) query = query.ilike("modalidad", `%${modalidad}%`);
+    if (empresa) query = query.ilike("empresa", `%${empresa}%`);
+    if (titulo) query = query.ilike("titulo", `%${titulo}%`);
     
     if (area) {
       const keywords = MAPA_AREAS_KEYWORDS[area] || [];
@@ -55,7 +49,7 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
     
-    query = query.order('created_at', { ascending: false }).range(from, to);
+    query = query.order("created_at", { ascending: false }).range(from, to);
 
     const { data: rows, count, error } = await query;
 
@@ -64,23 +58,29 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    const data = (rows || []).map((p: any) => ({
-      id: p.id,
-      titulo: p.titulo,
-      tipo: p.tipo,
-      modalidad: p.modalidad,
-      jornada: p.jornada,
-      empresa: p.empresa,
-      estado: p.estado,
-      fecha_limite: p.fecha_limite ? new Date(p.fecha_limite).toISOString() : null,
-      created_at: new Date(p.created_at).toISOString(),
-      aplicantes: p.APLICACIONES?.[0]?.count || 0,
-      exalumno: {
-        id: p.exalumno?.user?.id ?? null,
-        nombre: p.exalumno?.user?.nombre ?? null,
-        foto_url: p.exalumno?.user?.foto_url ?? null,
-      },
-    }));
+    const data = (rows || []).map((p: any) => {
+      const exaArr = p.exalumno;
+      const exa = Array.isArray(exaArr) ? exaArr[0] : exaArr;
+      const uArr = exa?.user;
+      const u = Array.isArray(uArr) ? uArr[0] : uArr;
+      return {
+        id: p.id,
+        titulo: p.titulo,
+        tipo: p.tipo,
+        modalidad: p.modalidad,
+        jornada: p.jornada,
+        empresa: p.empresa,
+        estado: p.estado,
+        fecha_limite: p.fecha_limite ? new Date(p.fecha_limite).toISOString() : null,
+        created_at: new Date(p.created_at).toISOString(),
+        aplicantes: p.APLICACIONES?.[0]?.count || 0,
+        exalumno: {
+          id: u?.id ?? null,
+          nombre: u?.nombre ?? null,
+          foto_url: u?.foto_url ?? null,
+        },
+      };
+    });
 
     return NextResponse.json({ data, total: count || 0, page, totalPages: Math.ceil((count || 0) / PAGE_SIZE) });
   } catch (error) {
@@ -117,13 +117,8 @@ export async function POST(request: NextRequest) {
   if (!titulo) return NextResponse.json({ message: "El título es requerido" }, { status: 400 });
 
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
-    const { data: posicion, error } = await supabase
-      .from('POSICIONES')
+    const { data: posicion, error } = await supabaseAdmin
+      .from("POSICIONES")
       .insert({
         id: randomUUID(),
         exalumno_id: token.id as string,

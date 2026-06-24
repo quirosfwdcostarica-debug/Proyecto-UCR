@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 
-import { Bell, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
-import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { UserDropdown } from "./UserDropdown";
 import { useSession } from "next-auth/react";
@@ -32,42 +30,39 @@ export function TopBar({ title, titleKey }: TopBarProps) {
   const displayTitle = mounted && titleKey ? t(titleKey) : title;
 
   return (
-    <header className={`h-16 flex items-center justify-between px-8 sticky top-0 z-10 transition-colors duration-300 ${
-      isHome 
-        ? "border-none bg-transparent" 
-        : "border-b border-border dark:border-slate-800 bg-white dark:bg-slate-950"
-    }`}>
-      <div className="flex items-center gap-4">
-        {!isHome && displayTitle && (
-          <h2 className="text-xl font-bold text-ucr-celeste-medium dark:text-sky-400">{displayTitle}</h2>
-        )}
-      </div>
+    <div className={`sticky top-0 z-50 transition-all duration-300 ${isHome ? '-mb-16' : ''}`}>
+      {/* Decorative gradient line */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#005da4] via-sky-400 to-emerald-400 opacity-90 z-10" />
       
-      <div className="flex items-center gap-6">
-        <div className="relative w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Buscar oportunidades..." 
-            className="pl-8 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-full h-9 text-slate-800 dark:text-slate-100"
-          />
+      <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative bg-transparent">
+        <div className="flex items-center gap-4">
+          {displayTitle && (
+            <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-500">
+              <div className="h-6 w-1.5 rounded-full bg-gradient-to-b from-[#005da4] to-sky-400 shadow-sm"></div>
+              <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">{displayTitle}</h2>
+            </div>
+          )}
         </div>
-
-        {!session && (
-          <Link href="/login">
-            <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
-              {mounted && t("topbar.login" as any) !== "topbar.login" ? t("topbar.login" as any) : "Iniciar Sesión"}
-            </Button>
-          </Link>
-        )}
         
-        {session && (
-          <>
-            <NotificationsDropdown />
-            <UserDropdown />
-          </>
-        )}
-      </div>
-    </header>
+        <div className="flex items-center gap-4">
+          {!session && (
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
+                {mounted && t("topbar.login" as any) !== "topbar.login" ? t("topbar.login" as any) : "Iniciar Sesión"}
+              </Button>
+            </Link>
+          )}
+          
+          {session && (
+            <>
+              <NotificationsDropdown />
+              <UserDropdown />
+            </>
+          )}
+        </div>
+      </header>
+      {/* FWD accent bar — only on inner pages, not home */}
+      {!isHome && <div className="fwd-accent-bar" />}
+    </div>
   );
 }

@@ -6,7 +6,12 @@ import { useTransition, useState } from "react";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
 import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
-import { CATALOGO_AREAS, CATALOGO_CARRERAS } from "@/lib/constants";
+import {
+  CATALOGO_CARRERAS,
+  CATALOGO_AREAS,
+  SEDES_UCR,
+  NIVELES_ACADEMICOS
+} from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -248,8 +253,6 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             />
 
-
-
             <FormField
               control={form.control}
               name="phone"
@@ -267,55 +270,71 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             />
 
+
+
             <FormField
               control={form.control}
               name="image"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-1 md:col-span-2">
                   <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Foto de Perfil</FormLabel>
                   <FormControl>
-                    <div className="relative group">
-                      <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
-                      <Input 
-                        type="file"
-                        accept="image/*"
-                        disabled={isUploading}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            try {
-                              setIsUploading(true);
-                              const formData = new FormData();
-                              formData.append("file", file);
-                              formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
-                              const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
-                              
-                              const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                                method: "POST",
-                                body: formData,
-                              });
-                              if (!res.ok) throw new Error("Error subiendo imagen");
-                              const data = await res.json();
-                              field.onChange(data.secure_url);
-                              toast({ title: "Imagen subida", description: "Tu foto de perfil ha sido actualizada." });
-                            } catch (error) {
-                              toast({ title: "Error", description: "No se pudo subir la imagen", variant: "destructive" });
-                            } finally {
-                              setIsUploading(false);
+                    <div className="flex items-center gap-6">
+                      <div className="shrink-0 w-20 h-20 rounded-full border-4 border-ucr-celeste/20 overflow-hidden bg-ucr-gris-1 dark:bg-slate-800 flex items-center justify-center relative">
+                        {field.value ? (
+                          <img src={field.value} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-ucr-gris-2 dark:text-slate-500" />
+                        )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative group flex-1">
+                        <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
+                        <Input 
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                setIsUploading(true);
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+                                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
+                                
+                                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                  method: "POST",
+                                  body: formData,
+                                });
+                                if (!res.ok) throw new Error("Error subiendo imagen");
+                                const data = await res.json();
+                                field.onChange(data.secure_url);
+                                toast({ title: "Imagen subida", description: "La imagen está lista. Recuerda presionar 'Guardar Cambios' al final." });
+                              } catch (error) {
+                                toast({ title: "Error", description: "No se pudo subir la imagen", variant: "destructive" });
+                              } finally {
+                                setIsUploading(false);
+                              }
                             }
-                          }
-                        }}
-                        ref={field.ref}
-                        name={field.name}
-                        onBlur={field.onBlur}
-                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer" 
-                      />
+                          }}
+                          className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer" 
+                        />
+                      </div>
                     </div>
                   </FormControl>
+                  <p className="text-xs text-ucr-gris-2 mt-2">Formatos recomendados: JPG, PNG. Recuerda guardar los cambios al final de la página.</p>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+
 
             <FormField
               control={form.control}
@@ -461,7 +480,16 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Sede</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Sede Rodrigo Facio" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="w-full h-12 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 rounded-xl text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm"
+                        >
+                          <option value="">Seleccione una Sede...</option>
+                          {SEDES_UCR.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -489,7 +517,16 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Nivel Académico</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Bachillerato" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="w-full h-12 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 rounded-xl text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm"
+                        >
+                          <option value="">Seleccione un Grado...</option>
+                          {NIVELES_ACADEMICOS.map((n) => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

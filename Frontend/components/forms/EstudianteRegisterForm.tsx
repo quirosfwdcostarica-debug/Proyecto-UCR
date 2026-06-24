@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { registerStudentAction } from "@/actions/auth.actions";
+import { CATALOGO_CARRERAS, SEDES_UCR, NIVELES_ACADEMICOS } from "@/lib/constants";
 
 const registerSchema = z.object({
   tipo_identificacion: z.string().min(1, "Seleccione un tipo de identificación"),
@@ -342,9 +343,18 @@ export function EstudianteRegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sede</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej. Sede Rodrigo Facio" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione una Sede" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SEDES_UCR.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -370,9 +380,18 @@ export function EstudianteRegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nivel Académico</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej. Bachillerato" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione un Grado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {NIVELES_ACADEMICOS.map((n) => (
+                        <SelectItem key={n} value={n}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

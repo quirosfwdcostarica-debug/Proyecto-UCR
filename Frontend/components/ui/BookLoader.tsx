@@ -1,10 +1,28 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 interface BookLoaderProps {
   message?: string;
 }
 
 export function BookLoader({ message = "Cargando..." }: BookLoaderProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "24px", opacity: 0.8 }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.17em", color: "#02477B", textTransform: "uppercase" }}>
+          {message}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{`

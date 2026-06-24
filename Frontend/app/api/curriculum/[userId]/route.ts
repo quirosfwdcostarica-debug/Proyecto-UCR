@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function parseSkills(raw: any): string[] {
   if (!raw) return [];
@@ -37,42 +37,44 @@ export async function GET(
     return NextResponse.json({ message: "No autenticado" }, { status: 401 });
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: params.userId },
-      select: {
-        id: true, nombre: true, email: true, foto_url: true, tipo: true, status: true,
-        exalumno: {
-          select: {
-            cargo_actual: true, empresa_actual: true, pais_ciudad: true,
-            escuela_facultad: true, anio_graduacion: true, biografia: true,
-            habilidades: true, certificaciones: true, experiencia_laboral: true,
-          },
-        },
-        estudiante: {
-          select: {
-            carrera: true, escuela_facultad: true, sede: true,
-            anio_ingreso: true, nivel_academico: true, habilidades: true,
-            area_tematica: true, areas_interes: true, promedio_ponderado: true,
-            proyecto_titulo: true, proyecto_tipo: true, proyecto_descripcion: true,
-            busca_financiamiento: true, busca_mentoria: true,
-            busca_empleo: true, busca_pasantia: true,
-            curriculum: {
-              select: {
-                habilidades_tecnicas: true,
-                experiencias: { select: { id: true, titulo: true, organizacion: true, tipo: true } },
-                certificaciones: { select: { id: true, nombre: true, institucion: true } },
-              },
-            },
-          },
-        },
-      },
-    });
+    const { data: user } = await supabaseAdmin
+      .from("USERS")
+      .select(`
+        id, nombre, email, foto_url, tipo, status,
+        exalumno:EXALUMNOS!EXALUMNOS_user_id_fkey(
+          cargo_actual, empresa_actual, pais_ciudad,
+          escuela_facultad, anio_graduacion, biografia,
+          habilidades, certificaciones, experiencia_laboral
+        ),
+        estudiante:ESTUDIANTES!ESTUDIANTES_user_id_fkey(
+          carrera, escuela_facultad, sede,
+          anio_ingreso, nivel_academico, habilidades,
+          area_tematica, areas_interes, promedio_ponderado,
+          proyecto_titulo, proyecto_tipo, proyecto_descripcion,
+          busca_financiamiento, busca_mentoria,
+          busca_empleo, busca_pasantia,
+          curriculum:CURRICULUMS!CURRICULUMS_estudiante_id_fkey(
+            habilidades_tecnicas,
+            experiencias:EXPERIENCIAS_CV!EXPERIENCIAS_CV_curriculum_id_fkey(id, titulo, organizacion, tipo),
+            certificaciones:CERTIFICACIONES_CV!CERTIFICACIONES_CV_curriculum_id_fkey(id, nombre, institucion)
+          )
+        )
+      `)
+      .eq("id", params.userId)
+      .maybeSingle();
 
     if (!user || user.status === "SUSPENDIDO")
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
 
-    const ex  = user.exalumno;
-    const est = user.estudiante;
+    const exArr = user.exalumno;
+    const ex = Array.isArray(exArr) ? exArr[0] : exArr;
+    
+    const estArr = user.estudiante;
+    const est = Array.isArray(estArr) ? estArr[0] : estArr;
+    
+    const curArr = est?.curriculum;
+    const cur = Array.isArray(curArr) ? curArr[0] : curArr;
+
     const tipo = user.tipo;
 
     let title = "", location = "San José, Costa Rica", summary = "";
@@ -104,18 +106,18 @@ export async function GET(
       summary  = (est as any).area_tematica || "";
 
       // Merge habilidades + areas_interes
-      const baseSkills   = parseSkills((est as any).habilidades ?? (est as any).curriculum?.habilidades_tecnicas);
+      const baseSkills   = parseSkills((est as any).habilidades ?? cur?.habilidades_tecnicas);
       const interesSkills: string[] = Array.isArray((est as any).areas_interes)
         ? (est as any).areas_interes.filter((s: any) => typeof s === "string")
         : [];
       const merged = [...baseSkills, ...interesSkills];
       skills = merged.filter((s, i) => merged.indexOf(s) === i);
 
-      certifications = ((est as any).curriculum?.certificaciones ?? [])
+      certifications = (cur?.certificaciones ?? [])
         .map((c: any) => [c.nombre, c.institucion].filter(Boolean).join(" – "))
         .filter(Boolean);
 
-      experience = ((est as any).curriculum?.experiencias ?? []).map((e: any) => ({
+      experience = (cur?.experiencias ?? []).map((e: any) => ({
         id: e.id, role: e.titulo || "", company: e.organizacion || "",
         period: e.tipo || "", bullets: [],
       }));

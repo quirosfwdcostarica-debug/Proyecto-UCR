@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PATCH(
   request: NextRequest,
@@ -30,19 +30,15 @@ export async function PATCH(
   }
 
   try {
-    const updated = await prisma.user.update({
-      where: { id: params.id },
-      data: { status },
-      select: {
-        id: true,
-        nombre: true,
-        email: true,
-        status: true,
-        tipo: true,
-      },
-    });
+    const { data: updated, error } = await supabaseAdmin
+      .from("USERS")
+      .update({ status })
+      .eq("id", params.id)
+      .select("id, nombre, email, status, tipo")
+      .single();
 
-    // Normalize for frontend
+    if (error) throw error;
+
     return NextResponse.json({
       ...updated,
       name: updated.nombre,

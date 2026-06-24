@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(_request: NextRequest) {
   const session = await auth();
@@ -19,21 +19,13 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    const { createClient } = require("@supabase/supabase-js");
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
     const { data: donaciones, error } = await supabaseAdmin
-      .from('DONACIONES')
-      .select('id, monto, estado, destino, metodo_pago, moneda, created_at, updated_at')
-      .eq('exalumno_id', userId)
-      .order('created_at', { ascending: false });
+      .from("DONACIONES")
+      .select("id, monto, estado, destino, metodo_pago, moneda, created_at, updated_at")
+      .eq("exalumno_id", userId)
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const normalized = (donaciones || []).map((d: any) => ({
       ...d,

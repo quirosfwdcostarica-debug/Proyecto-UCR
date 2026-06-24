@@ -80,3 +80,25 @@ export const SECTORES = [
   "Emprendimiento / Startup",
   "Trabajador Independiente / Freelance",
 ] as const;
+
+export const SEDES_UCR = [
+  "Sede Rodrigo Facio",
+  "Sede de Occidente",
+  "Sede del Atlántico",
+  "Sede de Guanacaste",
+  "Sede del Pacífico",
+  "Sede del Caribe",
+  "Sede Interuniversitaria de Alajuela",
+  "Sede del Sur",
+  "Recinto de Paraíso",
+  "Recinto de Guápiles",
+  "Recinto de Santa Cruz"
+] as const;
+
+export const NIVELES_ACADEMICOS = [
+  "Bachillerato",
+  "Licenciatura",
+  "Maestría",
+  "Doctorado",
+  "Especialidad"
+] as const;

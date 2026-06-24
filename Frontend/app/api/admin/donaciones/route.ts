@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // GET — todas las donaciones para el panel admin
 export async function GET(request: NextRequest) {
@@ -13,48 +13,58 @@ export async function GET(request: NextRequest) {
   const estado = searchParams.get("estado") || undefined;
   const page   = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const PAGE_SIZE = 20;
-
-  const where: any = {
-    ...(estado && { estado }),
-  };
+  const offset = (page - 1) * PAGE_SIZE;
 
   try {
-    const [total, rows] = await Promise.all([
-      prisma.donacion.count({ where }),
-      (prisma.donacion.findMany as any)({
-        where,
-        select: {
-          id: true, monto: true, destino: true, moneda: true,
-          metodo_pago: true, estado: true, comprobante_url: true,
-          motivo_rechazo: true, created_at: true, updated_at: true,
-          exalumno: { select: { user: { select: { id: true, nombre: true, email: true } } } },
-          estudiante: { select: { proyecto_titulo: true, user: { select: { nombre: true } } } },
-        },
-        orderBy: { created_at: "desc" },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-      }) as Promise<any[]>,
-    ]);
+    let query = supabaseAdmin
+      .from("DONACIONES")
+      .select(`
+        id, monto, destino, moneda, metodo_pago, estado,
+        comprobante_url, motivo_rechazo, created_at, updated_at,
+        exalumno:EXALUMNOS!DONACIONES_exalumno_id_fkey(user:USERS!EXALUMNOS_user_id_fkey(id, nombre, email)),
+        estudiante:ESTUDIANTES!DONACIONES_proyecto_estudiante_id_fkey(proyecto_titulo, user:USERS!ESTUDIANTES_user_id_fkey(nombre))
+      `, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
 
-    const data = rows.map((d: any) => ({
-      id: d.id,
-      monto: Number(d.monto),
-      destino: d.destino,
-      moneda: d.moneda ?? "CRC",
-      metodo_pago: d.metodo_pago,
-      estado: d.estado,
-      comprobante_url: d.comprobante_url ?? null,
-      motivo_rechazo: d.motivo_rechazo ?? null,
-      created_at: d.created_at.toISOString(),
-      updated_at: d.updated_at.toISOString(),
-      exalumno_nombre: d.exalumno?.user?.nombre ?? null,
-      exalumno_email: d.exalumno?.user?.email ?? null,
-      exalumno_id: d.exalumno?.user?.id ?? null,
-      proyecto_titulo: d.estudiante?.proyecto_titulo ?? d.destino ?? "Donación general",
-      estudiante_nombre: d.estudiante?.user?.nombre ?? null,
-    }));
+    if (estado) {
+      query = query.eq("estado", estado);
+    }
 
-    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / PAGE_SIZE) });
+    const { data: rows, count, error } = await query;
+    if (error) throw error;
+
+    const data = (rows ?? []).map((d: any) => {
+      const exaArr = d.exalumno;
+      const exa = Array.isArray(exaArr) ? exaArr[0] : exaArr;
+      const uArr = exa?.user;
+      const u = Array.isArray(uArr) ? uArr[0] : uArr;
+      
+      const estArr = d.estudiante;
+      const est = Array.isArray(estArr) ? estArr[0] : estArr;
+      const uEstArr = est?.user;
+      const uEst = Array.isArray(uEstArr) ? uEstArr[0] : uEstArr;
+
+      return {
+        id: d.id,
+        monto: Number(d.monto),
+        destino: d.destino,
+        moneda: d.moneda ?? "CRC",
+        metodo_pago: d.metodo_pago,
+        estado: d.estado,
+        comprobante_url: d.comprobante_url ?? null,
+        motivo_rechazo: d.motivo_rechazo ?? null,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+        exalumno_nombre: u?.nombre ?? null,
+        exalumno_email: u?.email ?? null,
+        exalumno_id: u?.id ?? null,
+        proyecto_titulo: est?.proyecto_titulo ?? d.destino ?? "Donación general",
+        estudiante_nombre: uEst?.nombre ?? null,
+      };
+    });
+
+    return NextResponse.json({ data, total: count ?? 0, page, totalPages: Math.ceil((count ?? 0) / PAGE_SIZE) });
   } catch (error) {
     console.error("[GET /api/admin/donaciones]", error);
     return NextResponse.json({ message: "Error al obtener donaciones" }, { status: 500 });

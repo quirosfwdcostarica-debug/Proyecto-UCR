@@ -22,12 +22,18 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <AppSidebar />
-      <main className={`flex-1 ml-20 flex flex-col ${isHome ? "bg-transparent" : "bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300"}`}>
-        <TopBar />
-        {children}
-      </main>
+    <div className="relative flex min-h-screen flex-col bg-transparent">
+      {/* Global Background Image for Authenticated Pages */}
+      <div 
+        className="fixed inset-0 z-[0] bg-[url('/Gemini_Generated_Image_3swc4f3swc4f3swc.png')] bg-repeat opacity-[0.04] pointer-events-none" 
+      />
+      <div className="relative z-10 flex w-full flex-1">
+        <AppSidebar />
+        <main className={`flex-1 ml-20 flex flex-col relative z-10 ${isHome ? "bg-transparent" : "bg-white/40 dark:bg-slate-950/40 backdrop-blur-[2px] transition-colors duration-300 min-h-screen"}`}>
+          <TopBar />
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

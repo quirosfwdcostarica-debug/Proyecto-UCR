@@ -2,23 +2,30 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowLeft, GraduationCap, Briefcase, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Determinar vista inicial según parámetro de URL
+  const initialView = searchParams?.get("view") === "registro" ? "registro" : "login";
+  const [activeView, setActiveView] = useState<"login" | "registro">(initialView);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animDirection, setAnimDirection] = useState<"to-registro" | "to-login" | null>(null);
+  const [mounted, setMounted] = useState(false);
+
   // Limpiar cookies de sesión previas al cargar la página de login
-  // para evitar el error 431 causado por cookies infladas con tokens grandes
   useEffect(() => {
+    setMounted(true);
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
       const name = cookie.split("=")[0].trim();
@@ -29,16 +36,12 @@ export default function LoginPage() {
     }
   }, []);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Mapeo de códigos de error de NextAuth v5 a mensajes en español
   const getErrorMessage = (errorCode: string): string => {
     const messages: Record<string, string> = {
       "CredentialsSignin": "Correo o contraseña incorrectos.",
@@ -53,163 +56,347 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const result = await signIn("credentials", {
         redirect: false,
         email: formData.email,
         password: formData.password,
       });
-
       if (result?.error) {
-        console.log("el error es", result?.error);
         const errorMessage = getErrorMessage(result.error);
         const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
-
         toast({
           title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
           description: errorMessage,
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Inicio de sesión exitoso",
-          description: "Redirigiendo a tu panel...",
-        });
+        toast({ title: "Inicio de sesión exitoso", description: "Redirigiendo a tu panel..." });
         router.push("/");
         router.refresh();
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error inesperado.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Ocurrió un error inesperado.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="flex min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body relative overflow-hidden">
-      {/* Background (Left panel with image and right-edge gradient fade) */}
-      <div className="absolute inset-y-0 left-0 w-full lg:w-[50%] z-0 overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-[30%_center]"
-          style={{ backgroundImage: "url('/pretilUCR.png')" }}
-        />
-        {/* Transparent esmeralda color overlay over the image */}
-        <div className="absolute inset-0 bg-ucr-esmeralda/20 dark:bg-ucr-esmeralda/35" />
-        {/* Smooth horizontal gradient fade: Blends the image's right edge into the solid gris-fondo background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-ucr-gris-fondo/10 via-[60%] to-ucr-gris-fondo dark:via-ucr-negro/10 dark:via-[60%] dark:to-ucr-negro" />
-      </div>
+  // Cambiar entre login y registro con animación
+  const switchToRegistro = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setAnimDirection("to-registro");
+    
+    // Cambiar la vista activa a la mitad de la transición (350ms)
+    setTimeout(() => {
+      setActiveView("registro");
+      window.history.replaceState(null, "", "/registro");
+    }, 350);
 
-      {/* Content wrapper */}
-      <div className="relative z-10 flex flex-col lg:flex-row w-full min-h-screen">
-        {/* Panel Izquierdo Content (Text floating over left side) */}
-        <div className="hidden lg:flex lg:w-[50%] flex-col justify-between px-16 py-20 text-white min-h-screen">
-          <div className="pt-8">
-            <h1 className="text-4xl md:text-5xl font-medium text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] font-display leading-[1.1] uppercase">
-              Fundación Exalumnos<br/>UCR
+    // Finalizar la animación a los 750ms
+    setTimeout(() => {
+      setAnimDirection(null);
+      setIsAnimating(false);
+    }, 750);
+  };
+
+  const switchToLogin = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setAnimDirection("to-login");
+    
+    setTimeout(() => {
+      setActiveView("login");
+      window.history.replaceState(null, "", "/login");
+    }, 350);
+
+    setTimeout(() => {
+      setAnimDirection(null);
+      setIsAnimating(false);
+    }, 750);
+  };
+
+  // Determine panel positions based on active view and animation state
+  const isLogin = activeView === "login";
+  const goingToRegistro = animDirection === "to-registro";
+  const goingToLogin = animDirection === "to-login";
+
+  const showLogin = activeView === "login" && animDirection !== "to-registro";
+  const showRegistro = activeView === "registro" && animDirection !== "to-login";
+
+  return (
+    <>
+      <style>{`
+        .panel-slide {
+          transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .panel-slide-fast {
+          transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+                      opacity 0.35s ease;
+        }
+        @keyframes contentFadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        .animate-content-in {
+          animation: contentFadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+        }
+      `}</style>
+
+      <div className="relative w-full min-h-screen overflow-hidden bg-ucr-naranja font-body">
+        
+        {/* ===== IMAGEN DE FONDO (se mueve entre izquierda y derecha) ===== */}
+        <div
+          className={`absolute inset-y-0 left-0 w-1/2 z-0 overflow-hidden hidden lg:block ${mounted ? "transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)]" : ""} ${
+            (isLogin && !goingToRegistro) || goingToLogin
+              ? "translate-x-0"
+              : "translate-x-full"
+          }`}
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/pretilUCR.png')" }}
+          />
+
+        </div>
+
+        {/* Fondo completo naranja en mobile */}
+        <div className="absolute inset-0 bg-ucr-naranja lg:hidden z-0" />
+
+
+
+        {/* ===== PANEL CON TEXTO DESCRIPTIVO (se mueve opuesto a la imagen) ===== */}
+        <div
+          className={`absolute inset-y-0 left-0 w-1/2 z-10 hidden lg:flex flex-col justify-between px-12 pt-8 pb-12 text-white ${mounted ? "transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)]" : ""} ${
+            (isLogin && !goingToRegistro) || goingToLogin
+              ? "translate-x-0"
+              : "translate-x-full"
+          }`}
+        >
+          <div>
+            <h1 className="text-4xl md:text-5xl font-display font-medium text-white drop-shadow-md leading-[1.2] uppercase">
+              Fundación<br />Exalumnos
             </h1>
           </div>
-          <div className="pb-8">
-            <p className="text-lg md:text-xl text-sky-100 max-w-lg font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
+          <div>
+            <p className="text-lg text-sky-100 max-w-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
               Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
             </p>
           </div>
         </div>
 
-        {/* Panel Derecho (Forms sitting over the blended background with watermark) */}
-        <div className="w-full lg:w-[50%] flex items-center justify-center p-8 sm:p-12 min-h-screen relative bg-ucr-gris-fondo dark:bg-ucr-negro lg:bg-transparent">
-          <Link href="/" className="absolute top-8 right-8 sm:top-10 sm:right-10 lg:right-16 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-naranja transition-colors font-bold">
+        {/* ===== PANEL NARANJA CON FORMULARIO (se mueve opuesto a la imagen) ===== */}
+        <div
+          className={`absolute inset-y-0 left-0 w-full lg:w-1/2 z-20 flex items-center justify-center ${mounted ? "transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)]" : ""} ${
+            (isLogin && !goingToRegistro) || goingToLogin
+              ? "translate-x-0 lg:translate-x-full"
+              : "translate-x-0"
+          }`}
+        >
+          <div className="absolute inset-0 bg-ucr-naranja" />
+          
+          {/* Isotipo decorativo */}
+          <img
+            src="/logo-isotipo.png"
+            alt=""
+            aria-hidden="true"
+            className={`absolute w-[620px] h-[620px] object-contain opacity-25 pointer-events-none z-0 panel-slide ${
+              (isLogin && !goingToRegistro) || goingToLogin
+                ? "-bottom-24 -right-24"
+                : "-bottom-24 -left-24"
+            }`}
+            style={{ 
+              filter: "brightness(0) invert(1)", 
+              transform: (isLogin && !goingToRegistro) || goingToLogin ? "rotate(-20deg)" : "rotate(20deg)"
+            }}
+          />
+
+          <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.08] bg-cover bg-bottom mix-blend-overlay pointer-events-none z-0" />
+
+          {/* Volver al Dashboard */}
+          <Link
+            href="/"
+            className="absolute top-8 right-8 sm:top-10 sm:right-10 lg:right-16 z-50 flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold"
+          >
             <ArrowLeft className="w-5 h-5" />
             <span className="hidden sm:inline">Volver al Dashboard</span>
           </Link>
-          
-          {/* Watermark pattern overlay */}
-          <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.12] dark:opacity-[0.05] bg-cover bg-bottom mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"></div>
-          
-          <div className="w-full max-w-md relative z-10 py-12">
-            <div className="text-center mb-10">
-              <img src="/logo.png" alt="Logo Alumni U" className="w-24 h-24 mx-auto mb-6 object-contain" />
-              <h2 className="text-3xl font-medium tracking-tight text-[#333333] dark:text-white font-display mb-3 uppercase">
-                Bienvenido de vuelta
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium font-body">
-                Ingresa a la plataforma de Exalumnos UCR
-              </p>
+
+          {/* ===== CONTENIDO: LOGIN ===== */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${
+              showLogin
+                ? "opacity-100 scale-100 pointer-events-auto"
+                : "opacity-0 scale-95 pointer-events-none"
+            }`}
+          >
+            <div className="w-full max-w-md py-12 px-8 sm:px-12">
+              <div className="text-center mb-10">
+                <div 
+                  className="w-24 h-24 mx-auto mb-6 bg-sky-100" 
+                  style={{ WebkitMaskImage: "url('/logo.png')", WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center", maskImage: "url('/logo.png')", maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center" }}
+                  aria-label="Logo Alumni U"
+                  role="img"
+                />
+                <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
+                  Bienvenido de vuelta
+                </h2>
+                <p className="text-orange-100 font-medium font-body">
+                  Ingresa a la plataforma de Exalumnos UCR
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="font-bold text-white">Correo Electrónico</Label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="juan.perez@ucr.ac.cr"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="pl-11 h-14 rounded-[10px] border-slate-200 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white text-base text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="font-bold text-white">Contraseña</Label>
+                    <Link href="/forgot-password" className="text-sm font-semibold text-white/80 hover:text-white hover:underline transition-colors font-body">
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      className="pl-11 h-14 rounded-[10px] border-slate-200 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white text-base text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-14 text-base rounded-[10px] bg-white hover:bg-orange-50 text-ucr-naranja font-bold shadow-lg transition-all border-none"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Iniciando sesión...
+                    </>
+                  ) : (
+                    "Iniciar sesión"
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-10 text-center text-white/80 font-medium font-body">
+                ¿No tienes cuenta?{" "}
+                <button
+                  onClick={switchToRegistro}
+                  className="font-bold text-white hover:text-orange-100 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0"
+                >
+                  Regístrate aquí
+                </button>
+              </div>
             </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="font-bold text-slate-800 dark:text-slate-200">Correo Electrónico</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="juan.perez@ucr.ac.cr"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="pl-11 h-14 rounded-[10px] border-slate-200 dark:border-slate-800 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white dark:bg-slate-900 text-base text-slate-900 dark:text-slate-100"
-                  />
-                </div>
+          {/* ===== CONTENIDO: REGISTRO ===== */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${
+              showRegistro
+                ? "opacity-100 scale-100 pointer-events-auto"
+                : "opacity-0 scale-95 pointer-events-none"
+            }`}
+          >
+            <div className="w-full max-w-xl py-8 px-8 sm:px-12">
+              <div className="text-center mb-6">
+                <div 
+                  className="w-24 h-24 mx-auto mb-6 bg-sky-100" 
+                  style={{ WebkitMaskImage: "url('/logo.png')", WebkitMaskSize: "contain", WebkitMaskRepeat: "no-repeat", WebkitMaskPosition: "center", maskImage: "url('/logo.png')", maskSize: "contain", maskRepeat: "no-repeat", maskPosition: "center" }}
+                  aria-label="Logo Alumni U"
+                  role="img"
+                />
+                <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
+                  Únete a la Comunidad
+                </h2>
+                <p className="text-orange-100 font-medium font-body">
+                  Selecciona cómo deseas participar en la plataforma.
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="font-bold text-slate-800 dark:text-slate-200">Contraseña</Label>
-                  <Link href="/forgot-password" className="text-sm font-semibold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors font-body">
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-slate-400" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                {/* Estudiante Card */}
+                <Link href="/registro/estudiante" className="group">
+                  <div className="h-full bg-white/95 backdrop-blur-sm rounded-[2rem] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.15)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:scale-[1.03] transition-all duration-300 overflow-hidden flex flex-col relative">
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-ucr-celeste transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                    <div className="p-8 text-center flex-1 flex flex-col items-center justify-center">
+                      <div className="bg-ucr-celeste-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
+                        <GraduationCap className="h-10 w-10 text-ucr-esmeralda" />
+                      </div>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Estudiante</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
+                        Busco mentoría, pasantías o apoyo para mi proyecto de graduación.
+                      </p>
+                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-esmeralda font-body">
+                        Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
                   </div>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className="pl-11 h-14 rounded-[10px] border-slate-200 dark:border-slate-800 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white dark:bg-slate-900 text-base text-slate-900 dark:text-slate-100"
-                  />
-                </div>
+                </Link>
+
+                {/* Exalumno Card */}
+                <Link href="/registro/exalumno" className="group">
+                  <div className="h-full bg-white/95 backdrop-blur-sm rounded-[2rem] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.15)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.25)] hover:scale-[1.03] transition-all duration-300 overflow-hidden flex flex-col relative">
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-ucr-amarillo transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                    <div className="p-8 text-center flex-1 flex flex-col items-center justify-center">
+                      <div className="bg-ucr-beige-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
+                        <Briefcase className="h-10 w-10 text-ucr-amarillo" />
+                      </div>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Exalumno</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
+                        Deseo ofrecer mentoría, empleo o apoyar proyectos de nuevos talentos.
+                      </p>
+                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-amarillo font-body">
+                        Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-14 text-base rounded-[10px] bg-ucr-naranja hover:bg-[#d73b1d] text-white font-bold shadow-lg transition-all border-none"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : (
-                  "Iniciar sesión"
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-10 text-center text-slate-500 font-medium font-body">
-              ¿No tienes cuenta?{" "}
-              <Link href="/registro" className="font-bold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors">
-                Regístrate aquí
-              </Link>
+              <div className="mt-6 text-center text-white/80 font-medium font-body">
+                ¿Ya tienes una cuenta?{" "}
+                <button
+                  onClick={switchToLogin}
+                  className="font-bold text-white hover:text-orange-100 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0"
+                >
+                  Inicia sesión aquí
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
-    </div>
+    </>
   );
 }

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendNuevaAplicacion } from "@/lib/email";
 
 // GET — aplicaciones del usuario
-// ESTUDIANTE: las que él envió
-// EXALUMNO/ADMIN: recibidas en sus posiciones
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
@@ -13,74 +11,108 @@ export async function GET(request: NextRequest) {
   const userId = (session.user as any).id as string;
   const tipo   = (session.user as any).tipo as string;
   const { searchParams } = new URL(request.url);
-  const posicionId = searchParams.get("posicion_id") || undefined;
+  const posicionId = searchParams.get("posicion_id") || null;
 
   try {
-    let aplicaciones: any[];
+    let data: any[] = [];
 
     if (tipo === "ESTUDIANTE") {
-      aplicaciones = await prisma.aplicacion.findMany({
-        where: { estudiante_id: userId },
-        select: {
-          id: true, estado: true, created_at: true, updated_at: true,
-          posicion: {
-            select: {
-              id: true, titulo: true, tipo: true, modalidad: true,
-              empresa: true, estado: true, fecha_limite: true,
-              exalumno: { select: { user: { select: { nombre: true, foto_url: true } } } },
-            },
-          },
-        },
-        orderBy: { created_at: "desc" },
-      });
-    } else if (tipo === "EXALUMNO" || tipo === "ADMIN") {
-      const posWhere: any = tipo === "ADMIN" ? {} : { exalumno_id: userId };
-      if (posicionId) posWhere.id = posicionId;
+      const { data: rows, error } = await supabaseAdmin
+        .from("APLICACIONES")
+        .select(`
+          id, estado, created_at, updated_at,
+          posicion:POSICIONES!APLICACIONES_posicion_id_fkey(
+            id, titulo, tipo, modalidad, empresa, estado, fecha_limite,
+            exalumno:EXALUMNOS!POSICIONES_exalumno_id_fkey(
+              user:USERS!EXALUMNOS_user_id_fkey(nombre, foto_url)
+            )
+          )
+        `)
+        .eq("estudiante_id", userId)
+        .order("created_at", { ascending: false });
 
-      aplicaciones = await prisma.aplicacion.findMany({
-        where: { posicion: posWhere },
-        select: {
-          id: true, estado: true, created_at: true, updated_at: true,
-          estudiante_id: true,
-          posicion: { select: { id: true, titulo: true, empresa: true } },
-          estudiante: {
-            select: {
-              carrera: true, nivel_academico: true,
-              user: { select: { nombre: true, foto_url: true, email: true } },
-            },
-          },
-        },
-        orderBy: { created_at: "desc" },
+      if (error) throw error;
+
+      data = (rows ?? []).map((a: any) => {
+        const pos = Array.isArray(a.posicion) ? a.posicion[0] : a.posicion;
+        const exaArr = pos?.exalumno;
+        const exa = Array.isArray(exaArr) ? exaArr[0] : exaArr;
+        const exaUser = Array.isArray(exa?.user) ? exa.user[0] : exa?.user;
+        return {
+          id: a.id,
+          estado: a.estado,
+          created_at: a.created_at,
+          updated_at: a.updated_at,
+          estudiante_id: null,
+          posicion: pos ? {
+            id: pos.id,
+            titulo: pos.titulo,
+            tipo: pos.tipo ?? null,
+            modalidad: pos.modalidad ?? null,
+            empresa: pos.empresa ?? null,
+            estado: pos.estado ?? null,
+            fecha_limite: pos.fecha_limite ?? null,
+            exalumno_nombre: exaUser?.nombre ?? null,
+            exalumno_foto: exaUser?.foto_url ?? null,
+          } : null,
+          estudiante: null,
+        };
+      });
+
+    } else if (tipo === "EXALUMNO" || tipo === "ADMIN") {
+      let posQuery = supabaseAdmin
+        .from("APLICACIONES")
+        .select(`
+          id, estado, created_at, updated_at, estudiante_id,
+          posicion:POSICIONES!APLICACIONES_posicion_id_fkey(id, titulo, empresa, exalumno_id),
+          estudiante:ESTUDIANTES!APLICACIONES_estudiante_id_fkey(
+            carrera, nivel_academico,
+            user:USERS!ESTUDIANTES_user_id_fkey(nombre, foto_url, email)
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (tipo === "EXALUMNO") {
+        // Filter to only aplicaciones for this exalumno's positions
+        // We need to filter via posicion.exalumno_id - use inner join approach
+        const { data: misPos } = await supabaseAdmin
+          .from("POSICIONES")
+          .select("id")
+          .eq("exalumno_id", userId);
+        const misIds = (misPos ?? []).map((p: any) => p.id);
+        if (misIds.length === 0) return NextResponse.json({ data: [], total: 0 });
+        posQuery = posQuery.in("posicion_id", misIds);
+      }
+
+      if (posicionId) posQuery = posQuery.eq("posicion_id", posicionId);
+
+      const { data: rows, error } = await posQuery;
+      if (error) throw error;
+
+      data = (rows ?? []).map((a: any) => {
+        const pos = Array.isArray(a.posicion) ? a.posicion[0] : a.posicion;
+        const estArr = a.estudiante;
+        const est = Array.isArray(estArr) ? estArr[0] : estArr;
+        const estUser = Array.isArray(est?.user) ? est.user[0] : est?.user;
+        return {
+          id: a.id,
+          estado: a.estado,
+          created_at: a.created_at,
+          updated_at: a.updated_at,
+          estudiante_id: a.estudiante_id ?? null,
+          posicion: pos ? { id: pos.id, titulo: pos.titulo, empresa: pos.empresa ?? null } : null,
+          estudiante: est ? {
+            nombre: estUser?.nombre ?? null,
+            foto_url: estUser?.foto_url ?? null,
+            email: estUser?.email ?? null,
+            carrera: est.carrera ?? null,
+            nivel_academico: est.nivel_academico ?? null,
+          } : null,
+        };
       });
     } else {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
-
-    const data = aplicaciones.map((a: any) => ({
-      id: a.id,
-      estado: a.estado,
-      created_at: a.created_at.toISOString(),
-      updated_at: a.updated_at.toISOString(),
-      estudiante_id: a.estudiante_id ?? null,
-      posicion: a.posicion ? {
-        id: a.posicion.id,
-        titulo: a.posicion.titulo,
-        tipo: a.posicion.tipo ?? null,
-        modalidad: a.posicion.modalidad ?? null,
-        empresa: a.posicion.empresa ?? null,
-        estado: a.posicion.estado ?? null,
-        fecha_limite: a.posicion.fecha_limite ? a.posicion.fecha_limite.toISOString() : null,
-        exalumno_nombre: a.posicion.exalumno?.user?.nombre ?? null,
-        exalumno_foto: a.posicion.exalumno?.user?.foto_url ?? null,
-      } : null,
-      estudiante: a.estudiante ? {
-        nombre: a.estudiante.user?.nombre ?? null,
-        foto_url: a.estudiante.user?.foto_url ?? null,
-        email: a.estudiante.user?.email ?? null,
-        carrera: a.estudiante.carrera ?? null,
-        nivel_academico: a.estudiante.nivel_academico ?? null,
-      } : null,
-    }));
 
     return NextResponse.json({ data, total: data.length });
   } catch (error) {
@@ -109,51 +141,67 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "posicion_id es requerido" }, { status: 400 });
 
   // Verificar que la posición existe y está activa
-  const posicion = await prisma.posicion.findUnique({ where: { id: body.posicion_id } });
-  if (!posicion) return NextResponse.json({ message: "Posición no encontrada" }, { status: 404 });
+  const { data: posicion, error: posErr } = await supabaseAdmin
+    .from("POSICIONES")
+    .select("id, estado, titulo, exalumno_id")
+    .eq("id", body.posicion_id)
+    .maybeSingle();
+
+  if (posErr || !posicion) return NextResponse.json({ message: "Posición no encontrada" }, { status: 404 });
   if (posicion.estado !== "activa")
     return NextResponse.json({ message: "Esta posición ya no está activa" }, { status: 400 });
 
   // Verificar que no haya aplicado ya
-  const existing = await prisma.aplicacion.findFirst({
-    where: { posicion_id: body.posicion_id, estudiante_id: userId },
-  });
+  const { data: existing } = await supabaseAdmin
+    .from("APLICACIONES")
+    .select("id")
+    .eq("posicion_id", body.posicion_id)
+    .eq("estudiante_id", userId)
+    .maybeSingle();
+
   if (existing)
     return NextResponse.json({ message: "Ya aplicaste a esta posición" }, { status: 409 });
 
-  // Asegurarse que el estudiante tiene perfil
-  const estPerfil = await prisma.estudiante.findUnique({ where: { user_id: userId } });
+  // Verificar que el estudiante tiene perfil
+  const { data: estPerfil } = await supabaseAdmin
+    .from("ESTUDIANTES")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   if (!estPerfil)
     return NextResponse.json({ message: "Debes completar tu perfil de estudiante primero" }, { status: 400 });
 
   try {
-    const aplicacion = await prisma.aplicacion.create({
-      data: {
+    const { data: aplicacion, error } = await supabaseAdmin
+      .from("APLICACIONES")
+      .insert({
+        id: crypto.randomUUID(),
         posicion_id: body.posicion_id,
         estudiante_id: userId,
         estado: "PENDIENTE",
-      },
-    });
+      })
+      .select("*")
+      .single();
 
-    // Notify the exalumno who owns the position
-    const [posicionData, estudianteData] = await Promise.all([
-      prisma.posicion.findUnique({
-        where: { id: body.posicion_id },
-        select: {
-          titulo: true,
-          exalumno: { select: { user: { select: { email: true, nombre: true } } } },
-        },
-      }),
-      prisma.user.findUnique({ where: { id: userId }, select: { nombre: true } }),
-    ]);
+    if (error) throw error;
 
-    const exalumnoEmail  = posicionData?.exalumno?.user?.email;
-    const exalumnoNombre = posicionData?.exalumno?.user?.nombre ?? "Exalumno";
-    const posicionTitulo = posicionData?.titulo ?? "la posición";
-    const estudianteNombre = estudianteData?.nombre ?? "Estudiante";
-
-    if (exalumnoEmail) {
-      await sendNuevaAplicacion(exalumnoEmail, exalumnoNombre, posicionTitulo, estudianteNombre);
+    // Notificar al exalumno dueño de la posición
+    try {
+      const [{ data: exaUser }, { data: estUser }] = await Promise.all([
+        supabaseAdmin.from("USERS").select("nombre, email").eq("id", posicion.exalumno_id).maybeSingle(),
+        supabaseAdmin.from("USERS").select("nombre").eq("id", userId).maybeSingle(),
+      ]);
+      if (exaUser?.email) {
+        await sendNuevaAplicacion(
+          exaUser.email,
+          exaUser.nombre ?? "Exalumno",
+          posicion.titulo ?? "la posición",
+          estUser?.nombre ?? "Estudiante"
+        );
+      }
+    } catch (emailErr) {
+      console.error("[POST /api/aplicaciones] Email error:", emailErr);
     }
 
     return NextResponse.json(aplicacion, { status: 201 });
