@@ -10,6 +10,7 @@ import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
 import { OptimizePanel } from "@/components/cv/OptimizePanel";
 import { ChatBot } from "@/components/cv/ChatBot";
+import Swal from "sweetalert2";
 
 type AISection = "profile" | "experience";
 
@@ -58,7 +59,12 @@ export default function CVPage() {
       pdf.save(`Mi_CV_${cv.name.replace(/\s+/g, "_")}.pdf`);
     } catch (err) {
       console.error("Error al exportar PDF:", err);
-      alert("Hubo un error al generar el PDF.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Hubo un error al generar el PDF.",
+        confirmButtonColor: "#0f4c81"
+      });
     } finally {
       setDownloadingPDF(false);
     }
@@ -121,10 +127,20 @@ export default function CVPage() {
       if (!res.ok) throw new Error("Error extrayendo texto");
       const data = await res.json();
       setCV(c => ({ ...c, summary: data.text }));
-      alert("CV cargado y texto extraído al perfil.");
-    } catch (error) {
+      Swal.fire({
+        icon: "success",
+        title: "CV Cargado",
+        text: "El texto se ha extraído exitosamente a tu perfil.",
+        confirmButtonColor: "#0f4c81"
+      });
+    } catch (error: any) {
       console.error(error);
-      alert("Error procesando el archivo");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Error procesando el archivo. Por favor intenta de nuevo.",
+        confirmButtonColor: "#0f4c81"
+      });
     } finally {
       setUploadingCV(false);
       e.target.value = ''; // reset input
@@ -158,7 +174,7 @@ export default function CVPage() {
 
   if (cvLoading) {
     return (
-      <div className="min-h-full bg-[#f0f4f8] dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen flex-1 bg-[#f0f4f8] dark:bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
           <p className="text-sm text-slate-500">Cargando tu curriculum...</p>
@@ -168,7 +184,7 @@ export default function CVPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f0f4f8] dark:bg-slate-950 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen flex-1 bg-[#f0f4f8] dark:bg-slate-950 flex flex-col transition-colors duration-300">
 
       {deleteExpId && (
         <ConfirmModal
@@ -201,7 +217,7 @@ export default function CVPage() {
               {downloadingPDF ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} 
               {downloadingPDF ? "Generando..." : "Descargar PDF"}
             </Button>
-            <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
+            <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => Swal.fire({ icon: "success", title: "¡Éxito!", text: "Aplicación enviada correctamente.", confirmButtonColor: "#0f4c81" })}>
               Finalizar y Aplicar
             </Button>
           </div>
@@ -253,23 +269,23 @@ export default function CVPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-white/70 text-xs font-semibold block mb-1">Nombre completo</label>
-                      <input className="w-full text-sm bg-white text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.name} onChange={e => setHeaderDraft(d => ({ ...d, name: e.target.value }))} />
+                      <input className="w-full text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.name} onChange={e => setHeaderDraft(d => ({ ...d, name: e.target.value }))} />
                     </div>
                     <div>
                       <label className="text-white/70 text-xs font-semibold block mb-1">Título / Cargo</label>
-                      <input className="w-full text-sm bg-white text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.title} onChange={e => setHeaderDraft(d => ({ ...d, title: e.target.value }))} />
+                      <input className="w-full text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.title} onChange={e => setHeaderDraft(d => ({ ...d, title: e.target.value }))} />
                     </div>
                     <div>
                       <label className="text-white/70 text-xs font-semibold block mb-1">Ubicación</label>
-                      <input className="w-full text-sm bg-white text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.location} onChange={e => setHeaderDraft(d => ({ ...d, location: e.target.value }))} />
+                      <input className="w-full text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.location} onChange={e => setHeaderDraft(d => ({ ...d, location: e.target.value }))} />
                     </div>
                     <div>
                       <label className="text-white/70 text-xs font-semibold block mb-1">Email</label>
-                      <input className="w-full text-sm bg-white text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.email} onChange={e => setHeaderDraft(d => ({ ...d, email: e.target.value }))} />
+                      <input className="w-full text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.email} onChange={e => setHeaderDraft(d => ({ ...d, email: e.target.value }))} />
                     </div>
                     <div className="col-span-2">
                       <label className="text-white/70 text-xs font-semibold block mb-1">Teléfono</label>
-                      <input className="w-full text-sm bg-white text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.phone} onChange={e => setHeaderDraft(d => ({ ...d, phone: e.target.value }))} />
+                      <input className="w-full text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={headerDraft.phone} onChange={e => setHeaderDraft(d => ({ ...d, phone: e.target.value }))} />
                     </div>
                   </div>
                   <div className="flex gap-2 justify-end pt-1">
@@ -299,14 +315,14 @@ export default function CVPage() {
                 </div>
                 {editingSummary ? (
                   <div className="space-y-2">
-                    <textarea className="w-full text-sm text-slate-700 p-3 border border-blue-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-200" rows={4} value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} />
+                    <textarea className="w-full text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-800 p-3 border border-blue-300 dark:border-slate-700 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-200" rows={4} value={summaryDraft} onChange={(e) => setSummaryDraft(e.target.value)} />
                     <div className="flex gap-2 justify-end">
                       <Button size="sm" variant="outline" onClick={() => setEditingSummary(false)}><X className="w-3.5 h-3.5 mr-1" />Cancelar</Button>
                       <Button size="sm" className="bg-[#0f4c81] text-white hover:bg-[#0b3a63]" onClick={() => { setCV(c => ({ ...c, summary: summaryDraft })); setEditingSummary(false); }}><Save className="w-3.5 h-3.5 mr-1" />Guardar</Button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600 leading-relaxed">{cv.summary}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{cv.summary}</p>
                 )}
               </div>
 
@@ -332,22 +348,22 @@ export default function CVPage() {
                       {editingExpId === exp.id ? (
                         <ExperienceForm initial={exp} onSave={saveExp} onCancel={() => setEditingExpId(null)} />
                       ) : (
-                        <div className="relative pl-4 border-l-2 border-slate-200 hover:border-[#1a6db5] transition-colors group/exp">
-                          <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-slate-300 group-hover/exp:bg-[#1a6db5] transition-colors" />
+                        <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 hover:border-[#1a6db5] transition-colors group/exp">
+                          <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600 group-hover/exp:bg-[#1a6db5] transition-colors" />
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-bold text-slate-800 text-sm">{exp.role}</h4>
-                              <p className="text-xs text-[#1a6db5] font-medium">{exp.company} · {exp.period}</p>
+                              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{exp.role}</h4>
+                              <p className="text-xs text-[#1a6db5] dark:text-sky-400 font-medium">{exp.company} · {exp.period}</p>
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover/exp:opacity-100 transition-opacity">
-                              <button onClick={() => { setEditingExpId(exp.id); setAddingExp(false); }} className="p-1 hover:bg-blue-50 rounded-md"><Edit2 className="w-3 h-3 text-slate-400 hover:text-blue-600" /></button>
-                              <button onClick={() => setDeleteExpId(exp.id)} className="p-1 hover:bg-red-50 rounded-md"><Trash2 className="w-3 h-3 text-slate-400 hover:text-red-500" /></button>
+                              <button onClick={() => { setEditingExpId(exp.id); setAddingExp(false); }} className="p-1 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md"><Edit2 className="w-3 h-3 text-slate-400 hover:text-blue-600 dark:hover:text-sky-400" /></button>
+                              <button onClick={() => setDeleteExpId(exp.id)} className="p-1 hover:bg-red-50 dark:hover:bg-slate-800 rounded-md"><Trash2 className="w-3 h-3 text-slate-400 hover:text-red-500" /></button>
                             </div>
                           </div>
                           {exp.bullets.length > 0 && (
                             <ul className="mt-2 space-y-1">
                               {exp.bullets.map((b, i) => (
-                                <li key={i} className="text-xs text-slate-600 flex items-start gap-2">
+                                <li key={i} className="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2">
                                   <span className="mt-1.5 w-1 h-1 rounded-full bg-slate-400 shrink-0" />{b}
                                 </li>
                               ))}
@@ -384,12 +400,12 @@ export default function CVPage() {
                   </button>
                 </div>
                 {cv.education.map((e, i) => (
-                  <div key={i} className="flex items-start justify-between pl-4 border-l-2 border-slate-200 group/edu mb-3">
+                  <div key={i} className="flex items-start justify-between pl-4 border-l-2 border-slate-200 dark:border-slate-700 group/edu mb-3">
                     <div>
-                      <h4 className="font-bold text-slate-800 text-sm">{e.institution}</h4>
-                      <p className="text-xs text-emerald-600 font-medium">{e.degree} · {e.period}</p>
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{e.institution}</h4>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{e.degree} · {e.period}</p>
                     </div>
-                    <button onClick={() => setCV((c) => ({ ...c, education: c.education.filter((_, j) => j !== i) }))} className="opacity-0 group-hover/edu:opacity-100 p-1 hover:bg-red-50 rounded-md transition-opacity">
+                    <button onClick={() => setCV((c) => ({ ...c, education: c.education.filter((_, j) => j !== i) }))} className="opacity-0 group-hover/edu:opacity-100 p-1 hover:bg-red-50 dark:hover:bg-slate-800 rounded-md transition-opacity">
                       <Trash2 className="w-3 h-3 text-slate-400 hover:text-red-500" />
                     </button>
                   </div>
@@ -408,9 +424,9 @@ export default function CVPage() {
                 </div>
                 <div className="space-y-2 mb-3">
                   {cv.certifications.map((cert, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm text-slate-700 bg-amber-50 px-3 py-2 rounded-lg group/cert">
+                    <div key={i} className="flex items-center justify-between text-sm text-slate-700 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg group/cert">
                       <span>🏅 {cert}</span>
-                      <button onClick={() => setCV((c) => ({ ...c, certifications: c.certifications.filter((_, j) => j !== i) }))} className="opacity-0 group-hover/cert:opacity-100 text-red-400 hover:text-red-600 transition-opacity">
+                      <button onClick={() => setCV((c) => ({ ...c, certifications: c.certifications.filter((_, j) => j !== i) }))} className="opacity-0 group-hover/cert:opacity-100 text-red-400 hover:text-red-500 transition-opacity">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>

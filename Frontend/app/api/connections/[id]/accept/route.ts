@@ -18,10 +18,34 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!token) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   try {
-    await prisma.match.update({
-      where: { id: params.id },
-      data:  { estado: "ACTIVO", accepted_at: new Date() },
-    });
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    const { error } = await supabase
+      .from('MATCHES')
+      .update({ estado: 'ACTIVO', accepted_at: new Date().toISOString() })
+      .eq('id', params.id);
+
+    if (error) throw error;
+
+    const { data: match } = await supabase.from('MATCHES').select('*').eq('id', params.id).maybeSingle();
+    if (match && match.initiated_by) {
+      await supabase.from('NOTIFICATIONS').insert({
+        id: require('crypto').randomUUID(),
+        user_id: match.initiated_by,
+        title: "Solicitud Aceptada",
+        message: "Aceptaron tu solicitud de conexión. ¡Ya pueden chatear!",
+        type: "match_accepted",
+        read: false,
+        reference_id: params.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[PUT /api/connections/:id/accept]", error);

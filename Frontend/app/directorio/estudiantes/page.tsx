@@ -12,7 +12,7 @@ import {
   BookOpen, Lightbulb, Globe, ExternalLink, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { CATALOGO_AREAS, TIPOS_APOYO } from "@/lib/constants";
+import { CATALOGO_AREAS, TIPOS_APOYO, CATALOGO_CARRERAS } from "@/lib/constants";
 import { ofrecerApoyo, getMatchesForExalumno, rechazarMatch } from "@/actions/matching.actions";
 
 interface EstudianteItem {
@@ -20,6 +20,7 @@ interface EstudianteItem {
   carrera: string;
   avanceProyecto: number;
   areaProyecto: string | null;
+  proyectoTipo: string | null;
   proyectoTitulo: string | null;
   proyectoDescripcion: string | null;
   sede: string | null;
@@ -339,7 +340,7 @@ export default function DirectorioEstudiantes() {
   const hasFilters = nombre || carrera || areaProyecto || apoyoBuscado;
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950">
       {/* Modal */}
       {modalStudent && (
         <ProyectoModal
@@ -402,7 +403,7 @@ export default function DirectorioEstudiantes() {
                 <select value={carrera} onChange={(e) => setCarrera(e.target.value)}
                   className="w-full h-10 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-[#005da4]">
                   <option value="">Todas las carreras</option>
-                  {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                  {CATALOGO_CARRERAS.map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
               </div>
               <div>
@@ -418,7 +419,10 @@ export default function DirectorioEstudiantes() {
                 <select value={apoyoBuscado} onChange={(e) => setApoyoBuscado(e.target.value)}
                   className="w-full h-10 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-[#005da4]">
                   <option value="">Todos los tipos</option>
-                  {TIPOS_APOYO.map((t) => <option key={t} value={t}>{t}</option>)}
+                  <option value="financiamiento">Financiamiento / Apoyo Económico</option>
+                  <option value="mentoria">Mentoría Profesional / Guía</option>
+                  <option value="empleo">Oportunidades de Empleo</option>
+                  <option value="pasantia">Pasantías / Prácticas</option>
                 </select>
               </div>
             </div>
@@ -475,10 +479,10 @@ export default function DirectorioEstudiantes() {
                       </div>
                       <Icon className="w-14 h-14 text-white/40 absolute" />
 
-                      {/* Badge área */}
-                      {student.areaProyecto && (
+                      {/* Badge área o tipo */}
+                      {(student.areaProyecto || student.proyectoTipo) && (
                         <span className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                          {student.areaProyecto}
+                          {student.areaProyecto || student.proyectoTipo}
                         </span>
                       )}
 
@@ -510,9 +514,15 @@ export default function DirectorioEstudiantes() {
                       </div>
 
                       {/* Título del proyecto */}
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug mb-2 line-clamp-2">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug mb-1 line-clamp-2">
                         {student.proyectoTitulo || "Proyecto de Graduación"}
                       </h3>
+
+                      {/* Área explícita */}
+                      <p className="text-xs text-[#005da4] dark:text-sky-400 font-semibold mb-2 flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" />
+                        {student.areaProyecto || "Área no especificada"}
+                      </p>
 
                       {/* Descripción */}
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 mb-4 flex-1">

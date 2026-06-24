@@ -4,6 +4,11 @@
 //   TEMPLATE_NOTIF  (template_hih689c) → {{recipient_name}}, {{title}}, {{message}}, {{action_url}}, {{action_text}}
 //   TEMPLATE_AUTH   (template_zfbvncq) → {{recipient_name}}, {{title}}, {{verification_url}}
 
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.FROM_EMAIL || "no-reply@alumni.ucr.ac.cr";
+
 const BASE_URL      = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 const TEMPLATE_NOTIF = process.env.EMAILJS_NOTIFICATION_TEMPLATE_ID ?? "template_hih689c";
 const TEMPLATE_AUTH  = process.env.EMAILJS_AUTH_TEMPLATE_ID          ?? "template_zfbvncq";

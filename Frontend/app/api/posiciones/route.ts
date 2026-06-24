@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
+import { createClient } from "@supabase/supabase-js";
+import { MAPA_AREAS_KEYWORDS } from "@/lib/constants";
 
 const PAGE_SIZE = 12;
 
@@ -21,34 +23,47 @@ export async function GET(request: NextRequest) {
   const modalidad = searchParams.get("modalidad") || undefined;
   const empresa   = searchParams.get("empresa")   || undefined;
   const titulo    = searchParams.get("titulo")    || undefined;
+  const area      = searchParams.get("area_estudio") || undefined;
   const page      = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
   try {
-    const where: any = {
-      estado: "activa",
-      ...(tipo      && { tipo:      { contains: tipo,      mode: "insensitive" } }),
-      ...(modalidad && { modalidad: { contains: modalidad, mode: "insensitive" } }),
-      ...(empresa   && { empresa:   { contains: empresa,   mode: "insensitive" } }),
-      ...(titulo    && { titulo:    { contains: titulo,    mode: "insensitive" } }),
-    };
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
 
-    const [total, rows] = await Promise.all([
-      prisma.posicion.count({ where }),
-      prisma.posicion.findMany({
-        where,
-        select: {
-          id: true, titulo: true, tipo: true, modalidad: true,
-          jornada: true, empresa: true, estado: true, fecha_limite: true, created_at: true,
-          _count: { select: { aplicaciones: true } },
-          exalumno: { select: { user: { select: { id: true, nombre: true, foto_url: true } } } },
-        },
-        orderBy: { created_at: "desc" },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-      }),
-    ]);
+    let query = supabase
+      .from('POSICIONES')
+      .select('*, APLICACIONES(count), exalumno:EXALUMNOS!inner(user:USERS!inner(id, nombre, foto_url))', { count: 'exact' })
+      .eq('estado', 'activa');
 
-    const data = rows.map((p) => ({
+    if (tipo) query = query.ilike('tipo', `%${tipo}%`);
+    if (modalidad) query = query.ilike('modalidad', `%${modalidad}%`);
+    if (empresa) query = query.ilike('empresa', `%${empresa}%`);
+    if (titulo) query = query.ilike('titulo', `%${titulo}%`);
+    
+    if (area) {
+      const keywords = MAPA_AREAS_KEYWORDS[area] || [];
+      const orFilters = [
+        `area_estudio.ilike.%${area}%`,
+        ...keywords.map(kw => `area_estudio.ilike.%${kw}%`)
+      ];
+      query = query.or(orFilters.join(','));
+    }
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    
+    query = query.order('created_at', { ascending: false }).range(from, to);
+
+    const { data: rows, count, error } = await query;
+
+    if (error) {
+      console.error("[Supabase Error Posiciones]", error);
+      throw error;
+    }
+
+    const data = (rows || []).map((p: any) => ({
       id: p.id,
       titulo: p.titulo,
       tipo: p.tipo,
@@ -56,9 +71,9 @@ export async function GET(request: NextRequest) {
       jornada: p.jornada,
       empresa: p.empresa,
       estado: p.estado,
-      fecha_limite: p.fecha_limite ? p.fecha_limite.toISOString() : null,
-      created_at: p.created_at.toISOString(),
-      aplicantes: p._count.aplicaciones,
+      fecha_limite: p.fecha_limite ? new Date(p.fecha_limite).toISOString() : null,
+      created_at: new Date(p.created_at).toISOString(),
+      aplicantes: p.APLICACIONES?.[0]?.count || 0,
       exalumno: {
         id: p.exalumno?.user?.id ?? null,
         nombre: p.exalumno?.user?.nombre ?? null,
@@ -66,7 +81,7 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / PAGE_SIZE) });
+    return NextResponse.json({ data, total: count || 0, page, totalPages: Math.ceil((count || 0) / PAGE_SIZE) });
   } catch (error) {
     console.error("[GET /api/posiciones]", error);
     return NextResponse.json({ message: "Error al obtener posiciones" }, { status: 500 });
@@ -101,8 +116,14 @@ export async function POST(request: NextRequest) {
   if (!titulo) return NextResponse.json({ message: "El título es requerido" }, { status: 400 });
 
   try {
-    const posicion = await prisma.posicion.create({
-      data: {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    const { data: posicion, error } = await supabase
+      .from('POSICIONES')
+      .insert({
         exalumno_id: token.id as string,
         titulo,
         tipo: tipo || null,
@@ -110,7 +131,7 @@ export async function POST(request: NextRequest) {
         jornada: jornada || null,
         empresa: empresa || null,
         estado: "activa",
-        fecha_limite: fecha_limite ? new Date(fecha_limite) : null,
+        fecha_limite: fecha_limite ? new Date(fecha_limite).toISOString() : null,
         descripcion: descripcion || null,
         responsabilidades: responsabilidades || null,
         horario: horario || null,
@@ -121,8 +142,12 @@ export async function POST(request: NextRequest) {
         idiomas_requeridos: idiomas_requeridos || null,
         soft_skills: soft_skills || null,
         matching_weights: matching_weights || null,
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    
     return NextResponse.json(posicion, { status: 201 });
   } catch (error) {
     console.error("[POST /api/posiciones]", error);

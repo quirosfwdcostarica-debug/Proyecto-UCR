@@ -5,9 +5,11 @@ import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { useTheme } from "@/components/providers/ThemeContext";
-import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, PauseCircle, CheckCircle2, Loader2, Bell, BellRing, BellOff } from "lucide-react";
+import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, PauseCircle, CheckCircle2, Loader2, Bell, BellRing, BellOff, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
+import { useToast } from "@/hooks/use-toast";
 
 type Tab = "general" | "terms" | "help";
 
@@ -23,6 +25,11 @@ function AjustesContent() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [notifications, setNotifications] = useState(true);
+  const { toast } = useToast();
+
+  // Password state
+  const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Estado de la cuenta
   const [cuentaPausada, setCuentaPausada] = useState(false);
@@ -93,6 +100,24 @@ function AjustesContent() {
       setMessage("");
       setTimeout(() => setSubmitSuccess(false), 5000);
     }, 1500);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPass !== passwordForm.confirm) {
+      toast({ title: "Error", description: "Las contraseñas no coinciden.", variant: "destructive" });
+      return;
+    }
+    if (!userId) return;
+    setIsChangingPassword(true);
+    const result = await changePasswordWithVerificationAction(userId, passwordForm.current, passwordForm.newPass);
+    setIsChangingPassword(false);
+    if (result.success) {
+      toast({ title: "Éxito", description: "Contraseña actualizada correctamente." });
+      setPasswordForm({ current: "", newPass: "", confirm: "" });
+    } else {
+      toast({ title: "Error", description: result.message || "Error al actualizar la contraseña", variant: "destructive" });
+    }
   };
 
   const faqs = [
@@ -495,6 +520,85 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                       </div>
                     </div>
                   </div>
+                  )}
+
+                  {/* Password Change Card */}
+                  {userId && (
+                    <div className="md:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
+                        <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
+                          <Lock className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400 font-display">
+                            {language === "es" ? "Cambiar contraseña" : language === "en" ? "Change password" : language === "pt" ? "Alterar a senha" : "Changer le mot de passe"}
+                          </h2>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 font-body">
+                            {language === "es" ? "Actualiza la contraseña de tu cuenta de forma segura." : language === "en" ? "Update your account password securely." : language === "pt" ? "Atualize a senha da sua conta de forma segura." : "Mettez à jour le mot de passe de votre compte en toute sécurité."}
+                          </p>
+                        </div>
+                      </div>
+                      <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Contraseña actual</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <input
+                              type="password"
+                              placeholder="Tu contraseña actual"
+                              value={passwordForm.current}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                              required
+                              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-10 pr-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-ucr-celeste"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Nueva contraseña</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <input
+                              type="password"
+                              placeholder="Mínimo 8 caracteres"
+                              value={passwordForm.newPass}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, newPass: e.target.value })}
+                              required
+                              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-10 pr-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-ucr-celeste"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Confirmar nueva contraseña</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <input
+                              type="password"
+                              placeholder="Repite la contraseña"
+                              value={passwordForm.confirm}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                              required
+                              className="flex h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-10 pr-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-ucr-celeste"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-3 flex justify-end">
+                          <Button
+                            type="submit"
+                            disabled={isChangingPassword || !passwordForm.current || !passwordForm.newPass || !passwordForm.confirm}
+                            className="h-11 bg-gradient-to-r from-[#02477B] to-[#005eb8] hover:brightness-110 text-white font-bold px-8 rounded-xl transition-all"
+                          >
+                            {isChangingPassword ? (
+                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Actualizando...</>
+                            ) : (
+                              <><ShieldCheck className="mr-2 h-4 w-4" /> Cambiar contraseña</>
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
                   )}
 
                 </div>

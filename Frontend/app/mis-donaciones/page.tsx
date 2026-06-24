@@ -349,14 +349,14 @@ export default function DonacionesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
         <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 p-8">
       <div className="max-w-4xl mx-auto">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">

@@ -101,8 +101,8 @@ export function AppSidebar() {
   // ── CLASSES ──────────────────────────────────────────────────────────────────
 
   const linkCls =
-    "flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-muted-foreground dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-foreground dark:hover:text-slate-100 transition-all duration-300 w-full";
-  const activeCls = "bg-slate-100 dark:bg-slate-800 text-foreground dark:text-slate-100";
+    "flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-300 w-full";
+  const activeCls = "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100";
 
   // Admin accent color
   const accentCls = role === "ADMIN"
@@ -165,7 +165,7 @@ export function AppSidebar() {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors ${pathname === child.href ? "bg-[#005da4]/10 text-[#005da4]" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                          className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors ${pathname === child.href ? "bg-[#005da4]/10 text-[#005da4] dark:bg-sky-900/30 dark:text-sky-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
                         >
                           {childLabel}
                         </Link>
@@ -195,7 +195,7 @@ export function AppSidebar() {
       {/* Bottom links */}
       <div className="p-3 group-hover:p-4 space-y-2 border-t border-border dark:border-slate-800 mt-auto transition-all duration-300">
         <Link href="/ajustes" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-muted-foreground dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-foreground dark:hover:text-slate-100 px-2 group-hover:px-3">
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3">
             <Settings className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110" />
             <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-2.5 transition-all duration-300 whitespace-nowrap overflow-hidden">
               {t("sidebar.settings")}
@@ -203,7 +203,7 @@ export function AppSidebar() {
           </Button>
         </Link>
         <Link href="/ajustes?tab=help" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-muted-foreground dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-foreground dark:hover:text-slate-100 px-2 group-hover:px-3">
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3">
             <HelpCircle className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110" />
             <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-2.5 transition-all duration-300 whitespace-nowrap overflow-hidden">
               {t("sidebar.help")}

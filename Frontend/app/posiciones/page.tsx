@@ -20,7 +20,7 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <div className="p-8 max-w-7xl mx-auto space-y-6">
         
         {/* VISTA PARA EXALUMNOS */}

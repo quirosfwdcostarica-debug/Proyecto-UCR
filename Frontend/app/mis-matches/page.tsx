@@ -12,7 +12,7 @@ export default async function MisMatchesPage() {
   const role = (session.user as any).tipo || (session.user as any).role;
   const userId = session.user.id;
 
-  let matches = [];
+  let matches: any[] = [];
 
   try {
     if (role === "ESTUDIANTE") {
@@ -21,7 +21,7 @@ export default async function MisMatchesPage() {
         include: {
           exalumno: {
             include: {
-              user: { select: { nombre: true, image: true, email: true, bio: true } }
+              user: { select: { nombre: true, foto_url: true, email: true } }
             }
           }
         },
@@ -33,7 +33,7 @@ export default async function MisMatchesPage() {
         include: {
           estudiante: {
             include: {
-              user: { select: { nombre: true, image: true, email: true, proyectoFinalizado: true } }
+              user: { select: { nombre: true, foto_url: true, email: true } }
             }
           }
         },
@@ -52,14 +52,14 @@ export default async function MisMatchesPage() {
         carrera: m.exalumno.carrera,
         sector: m.exalumno.sector,
         apoyoOfrecido: m.exalumno.apoyo_ofrecido || [],
-        user: { name: m.exalumno.user.nombre, image: m.exalumno.user.image }
+        user: { name: m.exalumno.user.nombre, image: m.exalumno.user.foto_url }
       } : null,
       estudiante: m.estudiante ? {
         carrera: m.estudiante.carrera,
         avanceProyecto: m.estudiante.proyecto_porcentaje_avance || 0,
         areaProyecto: m.estudiante.area_proyecto,
         apoyoBuscado: m.estudiante.apoyo_buscado || [],
-        user: { name: m.estudiante.user.nombre, image: m.estudiante.user.image }
+        user: { name: m.estudiante.user.nombre, image: m.estudiante.user.foto_url }
       } : null,
     }));
   } catch (error) {

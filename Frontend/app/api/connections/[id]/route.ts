@@ -18,10 +18,19 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   if (!token) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   try {
-    await prisma.match.update({
-      where: { id: params.id },
-      data:  { estado: "CERRADO", closed_at: new Date() },
-    });
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    const { error } = await supabase
+      .from('MATCHES')
+      .update({ estado: 'CERRADO', closed_at: new Date().toISOString() })
+      .eq('id', params.id);
+
+    if (error) throw error;
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[DELETE /api/connections/:id]", error);

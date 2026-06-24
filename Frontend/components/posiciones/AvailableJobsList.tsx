@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Building2, CalendarDays, CheckCircle2, Loader2, Users } from "lucide-react";
+import { Briefcase, Building2, CalendarDays, CheckCircle2, Loader2, Users, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
-
-import { getJobPositions } from "@/actions/dashboard.actions";
+import { CATALOGO_AREAS } from "@/lib/constants";
 
 export function AvailableJobsList() {
   const { toast } = useToast();
@@ -23,13 +22,19 @@ export function AvailableJobsList() {
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [appIdMap, setAppIdMap] = useState<Record<string, string>>({});
   const [loadingApplied, setLoadingApplied] = useState(true);
+  const [selectedArea, setSelectedArea] = useState<string>("");
 
   // Cargar lista de posiciones activas
   useEffect(() => {
     async function loadJobs() {
+      setLoading(true);
       try {
-        const data = await getJobPositions();
-        setJobs(data);
+        const url = selectedArea ? `/api/posiciones?area_estudio=${encodeURIComponent(selectedArea)}` : "/api/posiciones";
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setJobs(data.data || []);
+        }
       } catch {
         // ignore
       } finally {
@@ -37,7 +42,7 @@ export function AvailableJobsList() {
       }
     }
     loadJobs();
-  }, []);
+  }, [selectedArea]);
 
   // Cargar aplicaciones existentes del estudiante
   useEffect(() => {
@@ -117,9 +122,23 @@ export function AvailableJobsList() {
     <div className="space-y-8 max-w-4xl mx-auto py-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-extrabold text-primary mb-2">Bolsa de Empleo</h2>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-muted-foreground mb-6">
           Explora oportunidades laborales y de pasantía publicadas por la red de exalumnos UCR.
         </p>
+
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex items-center gap-3">
+          <Search className="w-5 h-5 text-slate-400" />
+          <div className="flex-1">
+            <select
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+              className="w-full bg-transparent border-none text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-0 text-sm"
+            >
+              <option value="">Todas las Áreas de Estudio</option>
+              {CATALOGO_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -208,7 +227,7 @@ export function AvailableJobsList() {
                         encargado de esta vacante.
                       </p>
 
-                      <div className="bg-[#005da4]/5 border border-[#005da4]/20 rounded-lg p-4 mb-5 text-sm space-y-1.5">
+                      <div className="bg-[#005da4]/5 dark:bg-[#005da4]/20 border border-[#005da4]/20 dark:border-[#005da4]/40 rounded-lg p-4 mb-5 text-sm space-y-1.5">
                         <p>
                           <span className="font-semibold text-slate-700 dark:text-slate-300">Posición: </span>
                           <span className="text-slate-600 dark:text-slate-400">{job.titulo}</span>
@@ -245,7 +264,7 @@ export function AvailableJobsList() {
                         <Button
                           onClick={() => handleApply(job.id)}
                           disabled={isApplying}
-                          className="bg-[#005da4] hover:bg-[#004a85] text-white"
+                          className="bg-[#005da4] hover:bg-[#004a85] dark:bg-sky-600 dark:hover:bg-sky-700 text-white"
                         >
                           {isApplying ? (
                             <>
@@ -275,7 +294,7 @@ export function AvailableJobsList() {
                     <Button
                       onClick={() => setSelectedJobId(job.id)}
                       variant="default"
-                      className="bg-[#005da4] hover:bg-[#004a85]"
+                      className="bg-[#005da4] hover:bg-[#004a85] dark:bg-sky-600 dark:hover:bg-sky-700 text-white"
                     >
                       Aplicar Ahora
                     </Button>

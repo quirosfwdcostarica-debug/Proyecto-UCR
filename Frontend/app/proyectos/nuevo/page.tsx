@@ -107,7 +107,7 @@ const STEPS = [
 function StepSidebar({ current, completed }: { current: number; completed: boolean[] }) {
   return (
     <aside className="w-60 shrink-0 hidden md:flex flex-col gap-2">
-      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200" style={{ background: "#fff" }}>
+      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="px-5 py-4" style={{ background: UCR.blue }}>
           <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Publicación de Proyecto</p>
           <p className="text-lg font-extrabold text-white mt-0.5">Nueva Posición</p>
@@ -315,14 +315,14 @@ export default function PublicarProyectoPage() {
   function prevStep() { setStep((s) => Math.max(s - 1, 0)); }
 
   if (status === "loading" || loadingInfo) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <Loader2 className="w-8 h-8 animate-spin" style={{ color: UCR.blue }} />
     </div>
   );
 
   if (published) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
-      <div className="bg-white rounded-3xl shadow-lg p-12 text-center max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg p-12 text-center max-w-md">
         <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-6"
           style={{ background: UCR.softYellow }}>
           <Rocket className="w-10 h-10" style={{ color: UCR.blue }} />
@@ -343,9 +343,9 @@ export default function PublicarProyectoPage() {
   const infoNombreCorto = info?.user?.nombre?.split(" ")[0] ?? "Estudiante";
 
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc" }}>
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       {/* Mobile step indicator */}
-      <div className="md:hidden flex items-center gap-2 px-4 pt-4 pb-2 bg-white border-b border-slate-100">
+      <div className="md:hidden flex items-center gap-2 px-4 pt-4 pb-2 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
         {STEPS.map((_, i) => (
           <div key={i} className="flex-1 h-1.5 rounded-full transition-all"
             style={{ background: i <= step ? UCR.blue : "#e2e8f0" }} />
@@ -373,7 +373,7 @@ export default function PublicarProyectoPage() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                   Paso 1: Información Académica
                 </h2>
@@ -382,7 +382,7 @@ export default function PublicarProyectoPage() {
                 </p>
 
                 {/* Student card */}
-                <div className="rounded-xl border border-slate-200 p-5 mb-6 flex flex-col sm:flex-row gap-5">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-6 flex flex-col sm:flex-row gap-5">
                   {info?.user?.foto_url ? (
                     <Image src={info.user.foto_url} alt={info.user.nombre} width={72} height={72}
                       className="rounded-full object-cover shrink-0" />
@@ -449,7 +449,7 @@ export default function PublicarProyectoPage() {
           {/* ── STEP 2: Detalles del Proyecto ─────────────── */}
           {step === 1 && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                   Paso 2: Detalles del Proyecto
                 </h2>
@@ -589,7 +589,7 @@ export default function PublicarProyectoPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-8">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-8">
                 <div>
                   <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                     Paso 3: Detalles del Apoyo Necesitado
@@ -749,7 +749,7 @@ export default function PublicarProyectoPage() {
               </div>
 
               {/* Preview card — internal */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-xl font-extrabold" style={{ color: UCR.blue }}>Vista Previa del Proyecto</h2>
                   <button type="button" onClick={() => setStep(1)}
@@ -761,7 +761,7 @@ export default function PublicarProyectoPage() {
 
                 <div className="grid md:grid-cols-3 gap-5">
                   {/* Left - project info */}
-                  <div className="md:col-span-2 rounded-xl border border-slate-200 p-5">
+                  <div className="md:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Título del Proyecto</p>
                     <h3 className="text-xl font-extrabold leading-snug mb-3" style={{ color: UCR.blue }}>
                       {titulo || "Sin título aún"}
