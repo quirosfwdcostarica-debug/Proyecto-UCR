@@ -22,8 +22,6 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
 // ============================================================
 // Constantes de pago (configurables)
 // ============================================================
@@ -339,7 +337,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
 
 
 export default function DonacionesPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
   const userId = (session?.user as any)?.id as string | undefined;
   const userName = session?.user?.name || "Usuario";
@@ -380,6 +378,14 @@ export default function DonacionesPage() {
     }
     loadProyectos();
   }, [userId, role]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">

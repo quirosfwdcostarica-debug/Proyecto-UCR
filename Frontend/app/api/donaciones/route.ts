@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         tipo: "EXALUMNO",
         activo: true,
         email_verified: true,
+        updated_at: new Date().toISOString(),
       });
     } catch (e: any) {
       console.error("Fallo auto-creando usuario:", e);
@@ -150,25 +151,25 @@ export async function POST(request: NextRequest) {
 
   const { data: exalumno } = await supabaseAdmin.from("EXALUMNOS").select("user_id").eq("user_id", exalumnoId).maybeSingle();
   if (!exalumno) {
-    const { error: exErr } = await supabaseAdmin.from("EXALUMNOS").insert({ user_id: exalumnoId });
-    if (exErr) return NextResponse.json({ message: "Error interno creando perfil: " + exErr.message }, { status: 500 });
+    try {
+      await supabaseAdmin.from('EXALUMNOS').insert({ user_id: exalumnoId, updated_at: new Date().toISOString() });
+    } catch (err: any) {
+      return NextResponse.json({ message: "Error interno creando perfil: " + err.message }, { status: 500 });
+    }
   }
 
   try {
-    const { data: donacion, error } = await supabaseAdmin
-      .from("DONACIONES")
-      .insert({
-        id: crypto.randomUUID(),
-        exalumno_id: exalumnoId,
-        monto,
-        destino,
-        estado: "PENDIENTE",
-        comprobante_url: comprobanteUrl || null,
-        ...(metodoPago ? { metodo_pago: metodoPago } : {}),
-        ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
-      })
-      .select("*")
-      .single();
+    const { data: donacion, error } = await supabaseAdmin.from('DONACIONES').insert({
+      id: crypto.randomUUID(),
+      exalumno_id: exalumnoId,
+      monto,
+      destino,
+      estado: "PENDIENTE",
+      comprobante_url: comprobanteUrl || null,
+      updated_at: new Date().toISOString(),
+      ...(metodoPago ? { metodo_pago: metodoPago } : {}),
+      ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
+    }).select('*').single();
 
     if (error) throw error;
     return NextResponse.json(donacion, { status: 201 });
