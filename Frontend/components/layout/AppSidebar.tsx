@@ -176,7 +176,7 @@ export function AppSidebar() {
                           href={child.href}
                           className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors group/subitem ${pathname === child.href ? "bg-white shadow-md" : "text-sky-100 hover:bg-white hover:shadow-md dark:hover:bg-slate-800"}`}
                         >
-                          <span className={pathname === child.href ? colorfulTextBase : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-500 group-hover/subitem:via-purple-500 group-hover/subitem:to-pink-500 group-hover/subitem:font-extrabold"}>
+                          <span className={pathname === child.href ? "bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 font-extrabold" : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-500 group-hover/subitem:via-purple-500 group-hover/subitem:to-pink-500 group-hover/subitem:font-extrabold"}>
                             {childLabel}
                           </span>
                         </Link>
