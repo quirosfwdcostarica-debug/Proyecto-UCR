@@ -34,7 +34,7 @@ export function TopBar({ title, titleKey }: TopBarProps) {
       {/* Decorative gradient line */}
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#005da4] via-sky-400 to-emerald-400 opacity-90 z-10" />
       
-      <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative border-b border-slate-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl shadow-sm">
+      <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative bg-transparent">
         <div className="flex items-center gap-4">
           {displayTitle && (
             <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-500">

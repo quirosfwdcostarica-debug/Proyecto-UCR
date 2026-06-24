@@ -104,36 +104,36 @@ export function AppSidebar() {
   
   // A much more obvious active state so the user can tell it changed
   const activeCls = isAdmin 
-    ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-md font-bold scale-[1.02]" 
-    : "bg-gradient-to-r from-[#005da4] to-[#007cc0] text-white shadow-md font-bold scale-[1.02]";
+    ? "bg-white text-red-600 shadow-md font-bold scale-[1.02]" 
+    : "bg-white text-[#003b73] shadow-md font-bold scale-[1.02]";
 
   const linkCls =
-    "relative flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-300 w-full group/link hover:translate-x-2";
+    "relative flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold text-white/70 hover:bg-white/10 transition-all duration-300 w-full group/link hover:translate-x-2";
 
   // Admin accent color
   const accentCls = isAdmin
-    ? "bg-red-50 dark:bg-red-900/10 border-b-2 border-red-200 dark:border-red-900/30"
-    : "bg-slate-50/80 dark:bg-slate-900/20 border-b-2 border-slate-200/60 dark:border-slate-800/50";
+    ? "bg-red-900/40 border-b-2 border-red-500/30"
+    : "bg-transparent border-b-2 border-white/10";
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border-r-2 border-slate-200 dark:border-slate-800 flex flex-col z-30 transition-all duration-500 ease-out group shadow-[8px_0_30px_rgba(0,0,0,0.05)] hover:shadow-[16px_0_40px_rgba(0,0,0,0.1)] overflow-hidden">
+    <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-[#003b73] dark:bg-slate-950 backdrop-blur-2xl flex flex-col z-30 transition-all duration-500 ease-out group shadow-[8px_0_30px_rgba(0,0,0,0.15)] hover:shadow-[16px_0_40px_rgba(0,0,0,0.2)] overflow-hidden">
       {/* Logo */}
       <div className={`px-4 group-hover:px-6 pt-6 pb-5 flex flex-col items-center group-hover:items-start gap-2 group-hover:gap-0 transition-all duration-300 ${accentCls}`}>
         <img
           src="/logo.png"
           alt="Logo U"
-          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 dark:brightness-0 dark:invert"
+          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 brightness-0 invert"
         />
         <div className="mt-0 group-hover:mt-2 text-center group-hover:text-left transition-all duration-300 w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap">
           {role === "ADMIN" ? (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-red-600 dark:text-red-400">ADMIN UCR</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-red-600/70 dark:text-red-400/70">Panel Administrativo</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white">ADMIN UCR</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70">Panel Administrativo</p>
             </>
           ) : (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-[#005da4] dark:text-sky-400">EXALUMNOS U</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-[#005da4]/70 dark:text-sky-400/80">Impacto y Legado</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white">EXALUMNOS U</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70">Impacto y Legado</p>
             </>
           )}
         </div>
@@ -158,8 +158,8 @@ export function AppSidebar() {
                   onClick={() => toggleSubmenu(itemKey)}
                   className={`${linkCls} ${anyChildActive || isSubmenuOpen ? activeCls : ""}`}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? "text-white dark:text-white drop-shadow-md" : "text-slate-400 dark:text-slate-500 group-hover/link:text-[#005da4] dark:group-hover/link:text-sky-300"}`} />
-                  <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left">
+                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? (isAdmin ? "text-red-600" : "text-[#003b73]") : "text-white/70 group-hover/link:text-white"}`} />
+                  <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left ${isActive ? "" : "group-hover/link:bg-clip-text group-hover/link:text-transparent group-hover/link:bg-gradient-to-r group-hover/link:from-cyan-400 group-hover/link:via-yellow-400 group-hover/link:to-pink-400 group-hover/link:font-extrabold"}`}>
                     {displayLabel}
                   </span>
                   <ChevronDown
@@ -176,7 +176,7 @@ export function AppSidebar() {
                           href={child.href}
                           className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors group/subitem ${pathname === child.href ? "bg-white shadow-md" : "text-sky-100 hover:bg-white hover:shadow-md dark:hover:bg-slate-800"}`}
                         >
-                          <span className={pathname === child.href ? colorfulTextBase : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-500 group-hover/subitem:via-purple-500 group-hover/subitem:to-pink-500 group-hover/subitem:font-extrabold"}>
+                          <span className={pathname === child.href ? "font-bold text-[#003b73]" : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-400 group-hover/subitem:via-yellow-400 group-hover/subitem:to-pink-400 group-hover/subitem:font-extrabold"}>
                             {childLabel}
                           </span>
                         </Link>
@@ -194,8 +194,8 @@ export function AppSidebar() {
               href={item.href!}
               className={`${linkCls} ${isActive ? activeCls : ""}`}
             >
-              <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? "text-white dark:text-white drop-shadow-md" : "text-slate-400 dark:text-slate-500 group-hover/link:text-[#005da4] dark:group-hover/link:text-sky-300"}`} />
-              <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden">
+              <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? (isAdmin ? "text-red-600" : "text-[#003b73]") : "text-white/70 group-hover/link:text-white"}`} />
+              <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden ${isActive ? "" : "group-hover/link:bg-clip-text group-hover/link:text-transparent group-hover/link:bg-gradient-to-r group-hover/link:from-cyan-400 group-hover/link:via-yellow-400 group-hover/link:to-pink-400 group-hover/link:font-extrabold"}`}>
                 {displayLabel}
               </span>
             </Link>
@@ -204,19 +204,19 @@ export function AppSidebar() {
       </nav>
 
       {/* Bottom links */}
-      <div className="p-3 group-hover:p-4 space-y-2 border-t border-slate-200/50 dark:border-slate-800/50 mt-auto transition-all duration-300 bg-slate-50/30 dark:bg-slate-900/30">
+      <div className="p-3 group-hover:p-4 space-y-2 border-t border-white/10 mt-auto transition-all duration-300 bg-transparent">
         <Link href="/ajustes" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11">
-            <Settings className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:rotate-45" />
-            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold">
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-white/70 hover:bg-white/10 hover:text-white px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11 group/btn">
+            <Settings className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover/btn:rotate-45 group-hover/btn:text-white" />
+            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold group-hover/btn:bg-clip-text group-hover/btn:text-transparent group-hover/btn:bg-gradient-to-r group-hover/btn:from-cyan-400 group-hover/btn:via-yellow-400 group-hover/btn:to-pink-400">
               {t("sidebar.settings")}
             </span>
           </Button>
         </Link>
         <Link href="/ajustes?tab=help" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11">
-            <HelpCircle className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:-rotate-12" />
-            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold">
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-white/70 hover:bg-white/10 hover:text-white px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11 group/btn">
+            <HelpCircle className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover/btn:-rotate-12 group-hover/btn:text-white" />
+            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold group-hover/btn:bg-clip-text group-hover/btn:text-transparent group-hover/btn:bg-gradient-to-r group-hover/btn:from-cyan-400 group-hover/btn:via-yellow-400 group-hover/btn:to-pink-400">
               {t("sidebar.help")}
             </span>
           </Button>
