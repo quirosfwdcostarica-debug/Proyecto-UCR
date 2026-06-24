@@ -7,7 +7,9 @@ import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, Briefcase, Loader2, CheckCircle2,
   Info, GraduationCap, Cpu, Languages, Users, BarChart3, X, Plus,
+  Globe2, Code2, Star, Search,
 } from "lucide-react";
+import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
 
 // ── Paleta UCR ────────────────────────────────────────────────────────────────
 const UCR = {
@@ -50,10 +52,6 @@ const AREAS_ESTUDIO = [
   "Química", "Física", "Matemáticas", "Educación", "Comunicación",
   "Artes", "Ciencias Políticas", "Sociología", "Otra",
 ];
-const IDIOMAS_OPTS   = ["Español", "Inglés", "Francés", "Alemán", "Portugués", "Mandarín", "Japonés"];
-const NIVELES_IDIOMA = ["A1 - Básico", "A2 - Elemental", "B1 - Intermedio", "B2 - Intermedio Alto", "C1 - Avanzado", "C2 - Dominio"];
-const SOFT_SKILLS_OPTS = ["Liderazgo", "Trabajo en Equipo", "Comunicación", "Adaptabilidad", "Pensamiento Crítico", "Resolución de Problemas", "Creatividad", "Gestión del Tiempo", "Empatía"];
-const SKILL_LEVELS   = ["Básico", "Intermedio", "Avanzado"];
 
 const STEPS = [
   { num: 1, label: "Información General",  icon: Info,          color: UCR.blue,   gradient: `linear-gradient(135deg, ${UCR.blue}, #0077cc)` },
@@ -91,9 +89,11 @@ export default function NuevaPosicionPage() {
   const [areaEstudio,      setAreaEstudio]      = useState("");
   const [hardSkills,       setHardSkills]       = useState<HardSkill[]>([]);
   const [skillInput,       setSkillInput]       = useState("");
+  const [skillFilter,      setSkillFilter]      = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(SKILLS_BANK[0].categoria);
   const [idiomas,          setIdiomas]          = useState<Idioma[]>([]);
   const [idiomaInput,      setIdiomaInput]      = useState("Inglés");
-  const [nivelIdiomaInput, setNivelIdiomaInput] = useState("B1 - Intermedio");
+  const [nivelIdiomaInput, setNivelIdiomaInput] = useState("B1 – Intermedio");
   const [softSkills,       setSoftSkills]       = useState<string[]>([]);
 
   // Step 4
@@ -120,11 +120,15 @@ export default function NuevaPosicionPage() {
   function toggleBeneficio(id: string) {
     setBeneficios((p) => p.includes(id) ? p.filter((b) => b !== id) : [...p, id]);
   }
-  function addHardSkill() {
-    if (!skillInput.trim()) return;
-    setHardSkills((p) => [...p, { skill: skillInput.trim(), level: "Intermedio" }]);
+  function addHardSkill(skillName?: string) {
+    const name = (skillName ?? skillInput).trim();
+    if (!name || hardSkills.find((s) => s.skill.toLowerCase() === name.toLowerCase())) return;
+    setHardSkills((p) => [...p, { skill: name, level: "Intermedio" }]);
     setSkillInput("");
   }
+  const filteredSkills = SKILLS_BANK.find((c) => c.categoria === selectedCategory)?.skills.filter(
+    (s) => !skillFilter || s.toLowerCase().includes(skillFilter.toLowerCase())
+  ) ?? [];
   function updateSkillLevel(i: number, level: string) {
     setHardSkills((p) => p.map((s, idx) => idx === i ? { ...s, level } : s));
   }
@@ -444,64 +448,153 @@ export default function NuevaPosicionPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md overflow-hidden border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ borderBottom: `3px solid ${UCR.sky}`, background: `${UCR.sky}12` }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: currentStep.gradient }}>
-                      <Cpu className="w-4 h-4 text-white" />
+                      <Code2 className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="font-extrabold text-slate-800 dark:text-slate-100">Competencias Técnicas (Hard Skills)</h3>
+                    <div>
+                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100">Competencias Técnicas (Hard Skills)</h3>
+                      <p className="text-xs text-slate-500">Selecciona del banco predefinido o escribe una propia. Indica el nivel esperado.</p>
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <div className="flex gap-2 mb-4">
-                      <input value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
+                  <div className="p-5 space-y-4">
+
+                    {/* Banco de habilidades */}
+                    <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banco de habilidades</p>
+
+                      {/* Categorías */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {SKILLS_BANK.map((cat) => (
+                          <button
+                            key={cat.categoria}
+                            type="button"
+                            onClick={() => { setSelectedCategory(cat.categoria); setSkillFilter(""); }}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                              selectedCategory === cat.categoria
+                                ? "text-white border-transparent shadow"
+                                : "bg-white text-slate-600 border-slate-200 hover:text-white hover:border-transparent"
+                            }`}
+                            style={selectedCategory === cat.categoria
+                              ? { background: UCR.sky }
+                              : undefined}
+                            onMouseEnter={(e) => {
+                              if (selectedCategory !== cat.categoria) {
+                                (e.currentTarget as HTMLElement).style.background = UCR.sky;
+                                (e.currentTarget as HTMLElement).style.color = "#fff";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (selectedCategory !== cat.categoria) {
+                                (e.currentTarget as HTMLElement).style.background = "";
+                                (e.currentTarget as HTMLElement).style.color = "";
+                              }
+                            }}
+                          >
+                            {cat.icon} {cat.categoria}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Filtro */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Filtrar en esta categoría..."
+                          value={skillFilter}
+                          onChange={(e) => setSkillFilter(e.target.value)}
+                          className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white border border-slate-200 outline-none"
+                          onFocus={(e) => { e.target.style.borderColor = UCR.sky; e.target.style.boxShadow = `0 0 0 2px ${UCR.sky}30`; }}
+                          onBlur={(e)  => { e.target.style.borderColor = ""; e.target.style.boxShadow = ""; }}
+                        />
+                      </div>
+
+                      {/* Grilla de skills */}
+                      <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+                        {filteredSkills.map((skill) => {
+                          const already = hardSkills.some((s) => s.skill.toLowerCase() === skill.toLowerCase());
+                          return (
+                            <button
+                              key={skill}
+                              type="button"
+                              disabled={already}
+                              onClick={() => addHardSkill(skill)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                                already
+                                  ? "text-white border-transparent cursor-default"
+                                  : "bg-white text-slate-600 border-slate-200 hover:border-transparent hover:text-white"
+                              }`}
+                              style={already ? { background: UCR.sky, borderColor: UCR.sky } : undefined}
+                              onMouseEnter={(e) => {
+                                if (!already) {
+                                  (e.currentTarget as HTMLElement).style.background = UCR.sky;
+                                  (e.currentTarget as HTMLElement).style.color = "#fff";
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!already) {
+                                  (e.currentTarget as HTMLElement).style.background = "";
+                                  (e.currentTarget as HTMLElement).style.color = "";
+                                }
+                              }}
+                            >
+                              {already ? "✓ " : "+ "}{skill}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Input manual */}
+                    <div className="flex gap-2">
+                      <input
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(); } }}
-                        placeholder="Escribe una habilidad y presiona Enter..."
-                        className="flex-1 h-10 px-4 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 dark:text-slate-200 outline-none transition-all"
+                        placeholder="O escribe una habilidad propia..."
+                        className="flex-1 h-11 px-4 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-800 dark:text-slate-200 outline-none transition-all"
                         onFocus={(e) => { e.target.style.borderColor = UCR.sky; e.target.style.boxShadow = `0 0 0 3px ${UCR.sky}25`; }}
-                        onBlur={(e)  => { e.target.style.borderColor = ""; e.target.style.boxShadow = ""; }} />
-                      <button type="button" onClick={addHardSkill}
-                        className="h-10 px-4 rounded-lg text-white font-bold flex items-center gap-1 transition-opacity hover:opacity-85"
+                        onBlur={(e)  => { e.target.style.borderColor = ""; e.target.style.boxShadow = ""; }}
+                      />
+                      <button type="button" onClick={() => addHardSkill()}
+                        className="h-11 px-5 rounded-xl text-white font-semibold flex items-center gap-1.5 transition-opacity hover:opacity-85"
                         style={{ background: currentStep.gradient }}>
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" /> Agregar
                       </button>
                     </div>
 
-                    {hardSkills.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {hardSkills.map((s, i) => (
-                          <span key={i} className="flex items-center gap-1.5 text-white text-xs font-bold px-3 py-1.5 rounded-full"
-                            style={{ background: UCR.sky }}>
-                            {s.skill}
-                            <button onClick={() => removeHardSkill(i)} className="opacity-80 hover:opacity-100">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {hardSkills.length > 0 && (
-                      <div className="rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-                        <p className="text-xs font-bold text-slate-500 px-4 py-2 uppercase tracking-wide"
-                          style={{ background: `${UCR.sky}10` }}>
-                          Nivel de dominio esperado:
-                        </p>
-                        {hardSkills.map((s, i) => (
-                          <div key={i} className="flex items-center gap-4 px-4 py-3 border-t border-slate-100 dark:border-slate-800">
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 w-28 shrink-0">{s.skill}</span>
-                            <div className="flex gap-2 flex-wrap">
-                              {SKILL_LEVELS.map((lvl) => (
-                                <button key={lvl} type="button" onClick={() => updateSkillLevel(i, lvl)}
-                                  className="px-3 py-1 rounded-lg text-xs font-bold border-2 transition-all"
-                                  style={{
-                                    borderColor: s.level === lvl ? UCR.sky : "#e2e8f0",
-                                    background:  s.level === lvl ? UCR.sky : "transparent",
-                                    color:       s.level === lvl ? "#fff" : "#64748b",
-                                  }}>
-                                  {lvl}
-                                </button>
-                              ))}
+                    {/* Habilidades seleccionadas + nivel */}
+                    {hardSkills.length > 0 ? (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Habilidades requeridas ({hardSkills.length})</p>
+                        <div className="space-y-2">
+                          {hardSkills.map((s, i) => (
+                            <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                              <span className="flex-1 text-sm font-semibold text-slate-800 min-w-0 truncate">{s.skill}</span>
+                              <div className="flex gap-1 shrink-0">
+                                {SKILL_LEVELS.map((lv) => (
+                                  <button
+                                    key={lv}
+                                    type="button"
+                                    onClick={() => updateSkillLevel(i, lv)}
+                                    className="px-2.5 py-1 rounded-lg text-xs font-semibold border-2 transition-all"
+                                    style={{
+                                      borderColor: s.level === lv ? UCR.sky : "#e2e8f0",
+                                      background:  s.level === lv ? UCR.sky : "transparent",
+                                      color:       s.level === lv ? "#fff" : "#64748b",
+                                    }}>
+                                    {lv}
+                                  </button>
+                                ))}
+                              </div>
+                              <button type="button" onClick={() => removeHardSkill(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                                <X className="w-4 h-4" />
+                              </button>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Selecciona del banco o escribe las competencias técnicas requeridas.</p>
                     )}
                   </div>
                 </div>
@@ -510,75 +603,105 @@ export default function NuevaPosicionPage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md overflow-hidden border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ borderBottom: `3px solid ${UCR.sky}`, background: `${UCR.sky}12` }}>
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: currentStep.gradient }}>
-                      <Languages className="w-4 h-4 text-white" />
+                      <Globe2 className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="font-extrabold text-slate-800 dark:text-slate-100">Idiomas</h3>
                   </div>
-                  <div className="p-5">
-                    <div className="flex gap-2 flex-wrap mb-3">
-                      {[
-                        { val: idiomaInput, set: setIdiomaInput, opts: IDIOMAS_OPTS },
-                        { val: nivelIdiomaInput, set: setNivelIdiomaInput, opts: NIVELES_IDIOMA },
-                      ].map(({ val, set, opts }, idx) => (
-                        <select key={idx} value={val} onChange={(e) => set(e.target.value)}
-                          className="h-11 border border-slate-200 dark:border-slate-700 rounded-xl text-sm px-3 bg-white dark:bg-slate-800 dark:text-slate-200 outline-none transition-all flex-1 min-w-0"
-                          onFocus={(e) => { e.target.style.borderColor = UCR.sky; e.target.style.boxShadow = `0 0 0 3px ${UCR.sky}25`; }}
+                  <div className="p-5 space-y-3">
+                    <div className="flex flex-wrap gap-3 items-end">
+                      <div className="flex-1 min-w-[160px]">
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Idioma</label>
+                        <select value={idiomaInput} onChange={(e) => setIdiomaInput(e.target.value)}
+                          className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent text-sm text-slate-700 outline-none transition-all"
+                          onFocus={(e) => { e.target.style.borderColor = UCR.sky; e.target.style.boxShadow = `0 0 0 2px ${UCR.sky}30`; }}
                           onBlur={(e)  => { e.target.style.borderColor = ""; e.target.style.boxShadow = ""; }}>
-                          {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+                          {IDIOMAS_OPTS.map((o) => <option key={o}>{o}</option>)}
                         </select>
-                      ))}
+                      </div>
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Nivel</label>
+                        <select value={nivelIdiomaInput} onChange={(e) => setNivelIdiomaInput(e.target.value)}
+                          className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent text-sm text-slate-700 outline-none transition-all"
+                          onFocus={(e) => { e.target.style.borderColor = UCR.sky; e.target.style.boxShadow = `0 0 0 2px ${UCR.sky}30`; }}
+                          onBlur={(e)  => { e.target.style.borderColor = ""; e.target.style.boxShadow = ""; }}>
+                          {NIVELES_IDIOMA.map((n) => <option key={n}>{n}</option>)}
+                        </select>
+                      </div>
                       <button type="button" onClick={addIdioma}
-                        className="h-11 px-4 rounded-xl text-white font-bold flex items-center gap-1 transition-opacity hover:opacity-85"
+                        className="h-11 px-5 rounded-xl text-white font-semibold flex items-center gap-1.5 transition-opacity hover:opacity-85"
                         style={{ background: currentStep.gradient }}>
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" /> Agregar
                       </button>
                     </div>
-                    {idiomas.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                    {idiomas.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 pt-1">
                         {idiomas.map((id, i) => (
-                          <span key={i} className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full border-2"
-                            style={{ borderColor: `${UCR.sky}50`, color: UCR.sky, background: `${UCR.sky}10` }}>
-                            {id.idioma} · {id.nivel}
-                            <button onClick={() => setIdiomas((p) => p.filter((_, idx) => idx !== i))} className="opacity-70 hover:opacity-100">
-                              <X className="w-3 h-3" />
+                          <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-sm font-medium text-sky-800">
+                            <Globe2 className="w-3.5 h-3.5 text-sky-500" />
+                            {id.idioma}
+                            <span className="text-sky-500 text-xs ml-1">{id.nivel}</span>
+                            <button onClick={() => setIdiomas((p) => p.filter((_, idx) => idx !== i))} className="ml-1 text-sky-400 hover:text-red-500 transition-colors">
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </span>
                         ))}
                       </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Aún no has agregado idiomas requeridos.</p>
                     )}
                   </div>
                 </div>
 
                 {/* Soft Skills */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md overflow-hidden border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: `3px solid ${UCR.sky}`, background: `${UCR.sky}12` }}>
+                  <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: `3px solid ${UCR.gold}`, background: `${UCR.gold}12` }}>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: currentStep.gradient }}>
-                        <Users className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${UCR.gold}, ${UCR.amber})` }}>
+                        <Star className="w-4 h-4 text-white" />
                       </div>
-                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100">Habilidades Blandas</h3>
+                      <div>
+                        <h3 className="font-extrabold text-slate-800 dark:text-slate-100">Habilidades Blandas</h3>
+                        <p className="text-xs text-slate-500">Selecciona las competencias interpersonales requeridas.</p>
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-400 hidden sm:block">Selecciona las más relevantes</span>
+                    {softSkills.length > 0 && (
+                      <span className="text-xs font-semibold hidden sm:block" style={{ color: UCR.amber }}>
+                        {softSkills.length} seleccionada{softSkills.length !== 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
-                  <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {SOFT_SKILLS_OPTS.map((s) => {
-                      const checked = softSkills.includes(s);
-                      return (
-                        <button key={s} type="button" onClick={() => toggleSoftSkill(s)}
-                          className="flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all text-left"
-                          style={{
-                            borderColor: checked ? UCR.orange : "#e2e8f0",
-                            background:  checked ? `${UCR.orange}10` : "#fff",
-                            color:       checked ? UCR.orange : "#64748b",
-                          }}>
-                          <div className="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all"
-                            style={{ borderColor: checked ? UCR.orange : "#cbd5e1", background: checked ? UCR.orange : "transparent" }}>
-                            {checked && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
-                          </div>
-                          {s}
-                        </button>
-                      );
-                    })}
+                  <div className="p-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {SOFT_SKILLS_BANK.map((s) => {
+                        const active = softSkills.includes(s);
+                        return (
+                          <button key={s} type="button" onClick={() => toggleSoftSkill(s)}
+                            className={`px-3 py-2.5 rounded-xl text-sm font-medium border text-left transition-all ${
+                              active
+                                ? "text-white border-transparent shadow-sm"
+                                : "bg-slate-50 text-slate-600 border-slate-200"
+                            }`}
+                            style={active ? { background: UCR.amber, borderColor: UCR.amber } : undefined}
+                            onMouseEnter={(e) => {
+                              if (!active) {
+                                (e.currentTarget as HTMLElement).style.background = `${UCR.gold}20`;
+                                (e.currentTarget as HTMLElement).style.borderColor = `${UCR.gold}80`;
+                                (e.currentTarget as HTMLElement).style.color = "#92400e";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!active) {
+                                (e.currentTarget as HTMLElement).style.background = "";
+                                (e.currentTarget as HTMLElement).style.borderColor = "";
+                                (e.currentTarget as HTMLElement).style.color = "";
+                              }
+                            }}
+                          >
+                            {active ? "✓ " : ""}{s}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

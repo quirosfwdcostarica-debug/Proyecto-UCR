@@ -11,6 +11,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useDialog } from "@/hooks/useDialog";
 
 interface Posicion {
   id: string;
@@ -66,6 +67,7 @@ export default function MisPosicionesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ titulo: "", tipo: "", modalidad: "", jornada: "", empresa: "", estado: "", fecha_limite: "" });
   const [saving, setSaving] = useState(false);
+  const { showAlert } = useDialog();
 
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export default function MisPosicionesPage() {
       } : p));
       setEditingId(null);
     } catch {
-      alert("Error al guardar cambios.");
+      await showAlert("Error al guardar cambios.", { title: "Error", variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -134,7 +136,7 @@ export default function MisPosicionesPage() {
       setPosiciones((prev) => prev.filter((p) => p.id !== id));
       setConfirmDeleteId(null);
     } catch {
-      alert("Error al eliminar la posición.");
+      await showAlert("Error al eliminar la posición.", { title: "Error", variant: "error" });
     } finally {
       setDeletingId(null);
     }

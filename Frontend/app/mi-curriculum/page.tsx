@@ -10,6 +10,7 @@ import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes
 import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
 import { OptimizePanel } from "@/components/cv/OptimizePanel";
 import { ChatBot } from "@/components/cv/ChatBot";
+import { useDialog } from "@/hooks/useDialog";
 
 type AISection = "profile" | "experience";
 
@@ -18,6 +19,7 @@ export default function CVPage() {
   const [cvLoading, setCvLoading] = useState(true);
   const cvRef = useRef<HTMLDivElement>(null);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const { showAlert } = useDialog();
 
   // Cargar datos reales del usuario autenticado al montar
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function CVPage() {
       pdf.save(`Mi_CV_${cv.name.replace(/\s+/g, "_")}.pdf`);
     } catch (err) {
       console.error("Error al exportar PDF:", err);
-      alert("Hubo un error al generar el PDF.");
+      await showAlert("Hubo un error al generar el PDF.", { title: "Error al exportar", variant: "error" });
     } finally {
       setDownloadingPDF(false);
     }
@@ -121,10 +123,10 @@ export default function CVPage() {
       if (!res.ok) throw new Error("Error extrayendo texto");
       const data = await res.json();
       setCV(c => ({ ...c, summary: data.text }));
-      alert("CV cargado y texto extraído al perfil.");
+      await showAlert("CV cargado y texto extraído al perfil.", { title: "¡Listo!", variant: "success", buttonLabel: "Entendido" });
     } catch (error) {
       console.error(error);
-      alert("Error procesando el archivo");
+      await showAlert("Error procesando el archivo.", { title: "Error", variant: "error" });
     } finally {
       setUploadingCV(false);
       e.target.value = ''; // reset input
@@ -201,7 +203,7 @@ export default function CVPage() {
               {downloadingPDF ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} 
               {downloadingPDF ? "Generando..." : "Descargar PDF"}
             </Button>
-            <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => alert("Aplicación enviada correctamente.")}>
+            <Button className="bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-500 text-white" onClick={() => showAlert("Aplicación enviada correctamente.", { title: "¡Enviado!", variant: "success" })}>
               Finalizar y Aplicar
             </Button>
           </div>

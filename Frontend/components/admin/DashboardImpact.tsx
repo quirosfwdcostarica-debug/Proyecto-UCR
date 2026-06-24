@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useDialog } from "@/hooks/useDialog";
 import {
   Users,
   Briefcase,
@@ -42,6 +43,7 @@ export function DashboardImpact() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const { showAlert } = useDialog();
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export function DashboardImpact() {
       pdf.save(`dashboard_impacto_${new Date().getTime()}.pdf`);
     } catch (err) {
       console.error("Error al exportar PDF:", err);
-      alert("Hubo un error al generar el PDF.");
+      await showAlert("Hubo un error al generar el PDF.", { title: "Error al exportar", variant: "error" });
     } finally {
       setExporting(false);
     }

@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 // Convierte el campo habilidades (Json) a string[]
 function parseSkills(raw: any): string[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter((s: any) => typeof s === "string");
+  if (Array.isArray(raw)) return raw.map((s: any) => typeof s === "string" ? s : (s?.skill ?? "")).filter(Boolean);
   if (typeof raw === "string") {
     try { return JSON.parse(raw); } catch { return []; }
   }
@@ -71,6 +71,8 @@ export async function GET() {
             anio_ingreso: true,
             nivel_academico: true,
             habilidades: true,
+            soft_skills: true,
+            idiomas: true,
             curriculum: {
               select: {
                 habilidades_tecnicas: true,

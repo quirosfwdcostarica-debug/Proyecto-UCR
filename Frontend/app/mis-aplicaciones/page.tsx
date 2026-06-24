@@ -8,6 +8,7 @@ import {
   Clock, Calendar, CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { useDialog } from "@/hooks/useDialog";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -45,6 +46,7 @@ export default function MisAplicacionesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const { showAlert, showConfirm } = useDialog();
 
   const role = (session?.user as any)?.tipo;
 
@@ -60,14 +62,21 @@ export default function MisAplicacionesPage() {
   }, [status, role]);
 
   async function retirarAplicacion(id: string) {
-    if (!confirm("¿Retirar esta aplicación? Esta acción no se puede deshacer.")) return;
+    const ok = await showConfirm("¿Retirar esta aplicación? Esta acción no se puede deshacer.", {
+      title: "Retirar aplicación",
+      confirmLabel: "Retirar",
+      variant: "warning",
+    });
+    if (!ok) return;
     setWithdrawingId(id);
     try {
       const res = await fetch(`/api/aplicaciones/${id}`, { method: "DELETE" });
       if (!res.ok) { const d = await res.json(); throw new Error(d.message); }
       setAplicaciones((prev) => prev.filter((a) => a.id !== id));
     } catch (err: any) {
-      alert(err.message || "Error al retirar la aplicación.");
+      await showAlert(err.message || "Error al retirar la aplicación.", {
+        title: "Error", variant: "error",
+      });
     } finally {
       setWithdrawingId(null);
     }

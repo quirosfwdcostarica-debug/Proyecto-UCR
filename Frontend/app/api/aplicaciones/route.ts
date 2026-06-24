@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         where: { posicion: posWhere },
         select: {
           id: true, estado: true, created_at: true, updated_at: true,
+          estudiante_id: true,
           posicion: { select: { id: true, titulo: true, empresa: true } },
           estudiante: {
             select: {
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
       estado: a.estado,
       created_at: a.created_at.toISOString(),
       updated_at: a.updated_at.toISOString(),
+      estudiante_id: a.estudiante_id ?? null,
       posicion: a.posicion ? {
         id: a.posicion.id,
         titulo: a.posicion.titulo,

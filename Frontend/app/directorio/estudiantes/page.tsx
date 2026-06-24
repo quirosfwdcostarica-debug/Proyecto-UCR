@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useDialog } from "@/hooks/useDialog";
 import { Progress } from "@/components/ui/Progress";
 import { Input } from "@/components/ui/input";
 import {
@@ -230,6 +231,7 @@ export default function DirectorioEstudiantes() {
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage]         = useState(1);
   const [loading, setLoading]   = useState(true);
+  const { showAlert } = useDialog();
   const [error, setError]       = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [modalStudent, setModalStudent] = useState<EstudianteItem | null>(null);
@@ -310,7 +312,7 @@ export default function DirectorioEstudiantes() {
       try {
         const result = await ofrecerApoyo(studentId);
         if (result.success) setOfferedMatches(prev => ({ ...prev, [studentId]: result.matchId }));
-      } catch (err: any) { alert(err.message || "Error al ofrecer apoyo"); }
+      } catch (err: any) { showAlert(err.message || "Error al ofrecer apoyo", { title: "Error", variant: "error" }); }
       finally {
         setPendingIds(prev => { const s = new Set(prev); s.delete(studentId); return s; });
         setCountdowns(prev => { const { [studentId]: _, ...rest } = prev; return rest; });
@@ -333,7 +335,7 @@ export default function DirectorioEstudiantes() {
     try {
       await rechazarMatch(matchId, "exalumno");
       setOfferedMatches(prev => { const { [studentId]: _, ...rest } = prev; return rest; });
-    } catch (err: any) { alert(err.message || "Error al cancelar oferta"); }
+    } catch (err: any) { showAlert(err.message || "Error al cancelar oferta", { title: "Error", variant: "error" }); }
   };
 
   const hasFilters = nombre || carrera || areaProyecto || apoyoBuscado;

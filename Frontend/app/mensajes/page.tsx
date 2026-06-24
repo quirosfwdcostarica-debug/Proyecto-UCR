@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, User, MessageCircle, X } from "lucide-react";
+import { Send, User, MessageCircle, X, Pencil, Trash2, Check } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDialog } from "@/hooks/useDialog";
 
 type Message = {
   id: string;
@@ -80,6 +81,9 @@ export default function MensajesPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingConvs, setLoadingConvs]   = useState(true);
   const [sending, setSending]             = useState(false);
+  const [editingMsgId, setEditingMsgId]   = useState<string | null>(null);
+  const [editText, setEditText]           = useState("");
+  const { showConfirm } = useDialog();
 
   const [showWAModal, setShowWAModal] = useState(false);
   const [waPhone, setWaPhone]         = useState("");
@@ -205,6 +209,53 @@ export default function MensajesPage() {
       console.error("Error enviando número WhatsApp:", err);
     } finally {
       setSending(false);
+    }
+  }
+
+  function startEdit(msg: Message) {
+    setEditingMsgId(msg.id);
+    setEditText(msg.content);
+  }
+
+  function cancelEdit() {
+    setEditingMsgId(null);
+    setEditText("");
+  }
+
+  async function handleEditSubmit(msgId: string) {
+    if (!editText.trim() || !activeMatchId) return;
+    try {
+      const res = await fetch(`/api/messages/${activeMatchId}/${msgId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ content: editText.trim() }),
+      });
+      if (res.ok) {
+        setMessages(prev =>
+          prev.map(m => m.id === msgId ? { ...m, content: editText.trim() } : m)
+        );
+      }
+    } catch (err) {
+      console.error("Error editando mensaje:", err);
+    } finally {
+      cancelEdit();
+    }
+  }
+
+  async function handleDeleteMsg(msgId: string) {
+    if (!activeMatchId) return;
+    const ok = await showConfirm("¿Seguro que deseas eliminar este mensaje?", {
+      title: "Eliminar mensaje",
+      confirmLabel: "Eliminar",
+      variant: "error",
+    });
+    if (!ok) return;
+    setMessages(prev => prev.filter(m => m.id !== msgId));
+    try {
+      await fetch(`/api/messages/${activeMatchId}/${msgId}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Error eliminando mensaje:", err);
+      await loadMessages(activeMatchId);
     }
   }
 
@@ -396,10 +447,11 @@ export default function MensajesPage() {
                       </div>
                     )}
                     {messages.map((msg, idx) => {
-                      const isMe  = msg.sender_id === currentUserId;
-                      const isWA  = msg.content.startsWith(WA_PREFIX);
-                      const ts    = msg.createdAt ?? msg.created_at ?? "";
-                      const prev  = idx > 0 ? (messages[idx - 1].createdAt ?? messages[idx - 1].created_at ?? "") : null;
+                      const isMe      = msg.sender_id === currentUserId;
+                      const isWA      = msg.content.startsWith(WA_PREFIX);
+                      const isEditing = editingMsgId === msg.id;
+                      const ts        = msg.createdAt ?? msg.created_at ?? "";
+                      const prev      = idx > 0 ? (messages[idx - 1].createdAt ?? messages[idx - 1].created_at ?? "") : null;
                       const showDivider = ts && (!prev || !isSameDay(prev, ts));
                       return (
                         <React.Fragment key={msg.id}>
@@ -412,17 +464,71 @@ export default function MensajesPage() {
                               <span className="flex-1 h-px bg-slate-200" />
                             </div>
                           )}
-                          <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                          <div className={`group flex items-end gap-1.5 ${isMe ? "justify-end" : "justify-start"}`}>
+                            {/* Botones de acción — solo propios, no WhatsApp, no en modo edición */}
+                            {isMe && !isWA && !isEditing && (
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity order-first">
+                                <button
+                                  onClick={() => startEdit(msg)}
+                                  className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-[#0f4c81] transition-colors"
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMsg(msg.id)}
+                                  className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 transition-colors"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
+
                             <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-4 shadow-sm
                               ${isMe
                                 ? "bg-[#0f4c81] text-white rounded-tr-sm"
                                 : "bg-white border border-slate-200 text-slate-700 rounded-tl-sm"}
                               ${isWA ? "min-w-[200px]" : ""}
+                              ${isEditing ? "w-full max-w-[85%] md:max-w-[70%]" : ""}
                             `}>
                               {!isMe && msg.sender && (
                                 <p className="text-[10px] font-semibold text-[#0f4c81] mb-1">{msg.sender.nombre}</p>
                               )}
-                              {renderContent(msg.content, isMe)}
+
+                              {isEditing ? (
+                                <div className="flex flex-col gap-2">
+                                  <textarea
+                                    value={editText}
+                                    onChange={e => setEditText(e.target.value)}
+                                    onKeyDown={e => {
+                                      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSubmit(msg.id); }
+                                      if (e.key === "Escape") cancelEdit();
+                                    }}
+                                    rows={2}
+                                    autoFocus
+                                    className="w-full rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 px-2 py-1 text-sm resize-none focus:outline-none focus:border-white/60"
+                                  />
+                                  <div className="flex gap-1.5 justify-end">
+                                    <button
+                                      onClick={cancelEdit}
+                                      className="text-[11px] px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                                    >
+                                      Cancelar
+                                    </button>
+                                    <button
+                                      onClick={() => handleEditSubmit(msg.id)}
+                                      disabled={!editText.trim()}
+                                      className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-white text-[#0f4c81] hover:bg-blue-50 font-semibold transition-colors disabled:opacity-40"
+                                    >
+                                      <Check className="h-3 w-3" /> Guardar
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                renderContent(msg.content, isMe)
+                              )}
+
                               <div className={`text-[10px] mt-2 font-medium text-right ${isMe ? "text-blue-200" : "text-slate-400"}`}>
                                 {formatTime(ts)}
                               </div>

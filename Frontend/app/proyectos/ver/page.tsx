@@ -9,6 +9,7 @@ import {
   DollarSign, Lightbulb, Briefcase, Users, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useDialog } from "@/hooks/useDialog";
 
 interface Proyecto {
   carnet_ucr?: string;
@@ -49,6 +50,7 @@ export default function MiProyectoVerPage() {
   const router = useRouter();
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [loading, setLoading] = useState(true);
+  const { showAlert } = useDialog();
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -75,7 +77,7 @@ export default function MiProyectoVerPage() {
       setProyecto(null);
       setConfirmDelete(false);
     } catch {
-      alert("Error al eliminar el proyecto.");
+      await showAlert("Error al eliminar el proyecto.", { title: "Error", variant: "error" });
     } finally {
       setDeleting(false);
     }

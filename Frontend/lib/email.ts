@@ -4,9 +4,9 @@
 //   TEMPLATE_NOTIF  (template_hih689c) → {{recipient_name}}, {{title}}, {{message}}, {{action_url}}, {{action_text}}
 //   TEMPLATE_AUTH   (template_zfbvncq) → {{recipient_name}}, {{title}}, {{verification_url}}
 
-const BASE_URL      = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 const TEMPLATE_NOTIF = process.env.EMAILJS_NOTIFICATION_TEMPLATE_ID ?? "template_hih689c";
-const TEMPLATE_AUTH  = process.env.EMAILJS_AUTH_TEMPLATE_ID          ?? "template_zfbvncq";
+const TEMPLATE_AUTH = process.env.EMAILJS_AUTH_TEMPLATE_ID ?? "template_zfbvncq";
 
 function devLog(to: string, extra?: string) {
   if (process.env.NODE_ENV !== "production") {
@@ -21,8 +21,8 @@ async function sendEmailJS(
 ): Promise<void> {
   devLog(toEmail, templateParams.verification_url ?? templateParams.action_url);
 
-  const serviceId  = process.env.EMAILJS_SERVICE_ID;
-  const publicKey  = process.env.EMAILJS_PUBLIC_KEY;
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
   const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
   if (!serviceId || !publicKey || !privateKey) {
@@ -32,12 +32,12 @@ async function sendEmailJS(
 
   try {
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method:  "POST",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        service_id:  serviceId,
+        service_id: serviceId,
         template_id: templateId,
-        user_id:     publicKey,
+        user_id: publicKey,
         accessToken: privateKey,
         template_params: { to_email: toEmail, ...templateParams },
       }),
@@ -60,8 +60,8 @@ export async function sendMagicLinkEmail(
   nombre: string
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_AUTH, {
-    recipient_name:   nombre,
-    title:            "Verifica tu cuenta",
+    recipient_name: nombre,
+    title: "Verifica tu cuenta",
     verification_url: link,
   });
 }
@@ -72,11 +72,11 @@ export async function sendAlumniPendingEmail(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: nombre,
-    title:          "Tu perfil está en revisión",
+    title: "Tu perfil está en revisión",
     message:
       "Tu perfil de exalumno ha sido creado exitosamente y está siendo revisado por el equipo de la Fundación UCR. " +
       "Recibirás una notificación en máximo 48 horas cuando sea aprobado.",
-    action_url:  `${BASE_URL}/login`,
+    action_url: `${BASE_URL}/login`,
     action_text: "Ir al inicio",
   });
 }
@@ -86,8 +86,8 @@ export async function sendAlumniApprovedEmail(
   nombre: string
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_AUTH, {
-    recipient_name:   nombre,
-    title:            "¡Tu perfil fue aprobado!",
+    recipient_name: nombre,
+    title: "¡Tu perfil fue aprobado!",
     verification_url: `${BASE_URL}/login`,
   });
 }
@@ -101,11 +101,11 @@ export async function sendMatchAceptado(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: estudianteNombre,
-    title:          `¡${exalumnoNombre} aceptó conectar contigo!`,
+    title: `¡${exalumnoNombre} aceptó conectar contigo!`,
     message:
       `${exalumnoNombre} ha aceptado tu solicitud de conexión en la plataforma. ` +
       "¡Es momento de iniciar una conversación y aprovechar esta oportunidad!",
-    action_url:  `${BASE_URL}/mis-matches`,
+    action_url: `${BASE_URL}/mis-matches`,
     action_text: "Ver mis Matches",
   });
 }
@@ -116,11 +116,11 @@ export async function sendMatchRechazado(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: estudianteNombre,
-    title:          "Actualización sobre tu solicitud de match",
+    title: "Actualización sobre tu solicitud de match",
     message:
       "La solicitud de conexión enviada no pudo concretarse en esta ocasión. " +
       "No te desanimes — completa tu perfil para mejorar tus próximos matches.",
-    action_url:  `${BASE_URL}/mis-matches`,
+    action_url: `${BASE_URL}/mis-matches`,
     action_text: "Ver más matches",
   });
 }
@@ -132,11 +132,11 @@ export async function sendMatchConnectionRequest(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: receptorNombre,
-    title:          `${emisorNombre} quiere conectar contigo`,
+    title: `${emisorNombre} quiere conectar contigo`,
     message:
       `${emisorNombre} quiere conectar contigo en la plataforma. ` +
       "Ingresa para revisar su perfil y decidir si deseas aceptar.",
-    action_url:  `${BASE_URL}/mis-matches`,
+    action_url: `${BASE_URL}/mis-matches`,
     action_text: "Ver solicitud",
   });
 }
@@ -148,11 +148,11 @@ export async function sendAdminNewActiveMatch(
 ): Promise<void> {
   await sendEmailJS(adminEmail, TEMPLATE_NOTIF, {
     recipient_name: "Administrador",
-    title:          `Nuevo match activo: ${estudianteNombre} ↔ ${exalumnoNombre}`,
+    title: `Nuevo match activo: ${estudianteNombre} ↔ ${exalumnoNombre}`,
     message:
       `El match entre el estudiante ${estudianteNombre} y el exalumno ${exalumnoNombre} ` +
       "ha sido aceptado y está activo.",
-    action_url:  `${BASE_URL}/admin/matches`,
+    action_url: `${BASE_URL}/admin/matches`,
     action_text: "Ver matches",
   });
 }
@@ -167,16 +167,56 @@ export async function sendDonacionAprobada(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: exalumnoNombre,
-    title:          "¡Tu donación fue aprobada!",
+    title: "¡Tu donación fue aprobada!",
     message:
       `Tu donación de ₡${monto.toLocaleString("es-CR")} destinada a ${destino} ` +
       "ha sido verificada y aprobada. ¡Gracias por apoyar el talento de la UCR!",
-    action_url:  `${BASE_URL}/mis-donaciones`,
+    action_url: `${BASE_URL}/mis-donaciones`,
     action_text: "Ver mis donaciones",
   });
 }
 
 // ─── Aplicaciones ─────────────────────────────────────────────────────────────
+
+async function sendApplicantEmailJS(
+  toEmail: string,
+  templateId: string,
+  templateParams: Record<string, string>
+): Promise<void> {
+  devLog(toEmail);
+
+  const serviceId  = process.env.EMAILJS_APPLICANT_SERVICE_ID;
+  const publicKey  = process.env.EMAILJS_APPLICANT_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_APPLICANT_PRIVATE_KEY;
+
+  if (!serviceId || !publicKey || !privateKey) {
+    console.error("[sendApplicantEmailJS] Faltan EMAILJS_APPLICANT_* en .env.local");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        accessToken: privateKey,
+        template_params: { to_email: toEmail, ...templateParams },
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error(`[sendApplicantEmailJS:${templateId}] Rechazado (${res.status}):`, txt);
+    } else {
+      console.log(`[sendApplicantEmailJS:${templateId}] ✓ aceptado por EmailJS → ${toEmail}`);
+    }
+  } catch (e: any) {
+    console.error(`[sendApplicantEmailJS:${templateId}] Excepción:`, e?.message ?? e);
+  }
+}
 
 export async function sendNuevaAplicacion(
   toEmail: string,
@@ -186,10 +226,10 @@ export async function sendNuevaAplicacion(
 ): Promise<void> {
   await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
     recipient_name: exalumnoNombre,
-    title:          "¡Nueva aplicación recibida!",
-    message:        `${estudianteNombre} acaba de aplicar a tu posición "${posicionTitulo}". Revisa su perfil en tu panel.`,
-    action_url:     `${BASE_URL}/mis-posiciones`,
-    action_text:    "Ver mis posiciones",
+    title: "¡Nueva aplicación recibida!",
+    message: `${estudianteNombre} acaba de aplicar a tu posición "${posicionTitulo}". Revisa su perfil en tu panel.`,
+    action_url: `${BASE_URL}/mis-posiciones`,
+    action_text: "Ver mis posiciones",
   });
 }
 
@@ -197,17 +237,17 @@ export async function sendAplicacionSeleccionada(
   toEmail: string,
   estudianteNombre: string,
   posicionTitulo: string,
-  empresa?: string
+  vacancyOwnerName: string,
+  vacancyOwnerEmail: string
 ): Promise<void> {
-  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
-    recipient_name: estudianteNombre,
-    title:          "¡Fuiste seleccionado!",
-    message:
-      `Fuiste seleccionado para la posición "${posicionTitulo}"` +
-      (empresa ? ` en ${empresa}` : "") +
-      ". El exalumno se pondrá en contacto contigo para los próximos pasos.",
-    action_url:  `${BASE_URL}/mis-aplicaciones`,
-    action_text: "Ver mis aplicaciones",
+  const templateId = process.env.EMAILJS_APPLICANT_ACCEPTED_TEMPLATE ?? "template_7e3p7jr";
+  await sendApplicantEmailJS(toEmail, templateId, {
+    applicant_name: estudianteNombre,
+    name: estudianteNombre,
+    vacancy_name: posicionTitulo,
+    vacancy_owner_name: vacancyOwnerName,
+    vacancy_owner_email: vacancyOwnerEmail,
+    email: toEmail,
   });
 }
 
@@ -216,12 +256,11 @@ export async function sendAplicacionDescartada(
   estudianteNombre: string,
   posicionTitulo: string
 ): Promise<void> {
-  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
-    recipient_name: estudianteNombre,
-    title:          "Actualización sobre tu aplicación",
-    message:        `La posición "${posicionTitulo}" ya fue cubierta por otro candidato. Te animamos a explorar otras oportunidades.`,
-    action_url:     `${BASE_URL}/posiciones`,
-    action_text:    "Ver otras posiciones",
+  const templateId = process.env.EMAILJS_APPLICANT_REJECTED_TEMPLATE ?? "template_5dkl7bw";
+  await sendApplicantEmailJS(toEmail, templateId, {
+    applicant_name: estudianteNombre,
+    vacancy_name: posicionTitulo,
+    email: toEmail,
   });
 }
 
@@ -232,8 +271,8 @@ export async function sendPasswordResetEmailJS(
   nombre: string,
   tempPassword: string
 ): Promise<boolean> {
-  const serviceId  = process.env.EMAILJS_SERVICE_ID;
-  const publicKey  = process.env.EMAILJS_PUBLIC_KEY;
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
   const privateKey = process.env.EMAILJS_PRIVATE_KEY;
 
   if (!serviceId || !publicKey || !privateKey) {
@@ -245,20 +284,20 @@ export async function sendPasswordResetEmailJS(
 
   try {
     const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method:  "POST",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        service_id:  serviceId,
-        template_id: TEMPLATE_AUTH,
-        user_id:     publicKey,
+        service_id: serviceId,
+        template_id: "template_zfbvncq",
+        user_id: publicKey,
         accessToken: privateKey,
         template_params: {
-          to_email:       toEmail,
-          email:          toEmail,
+          to_email: toEmail,
+          email: toEmail,
           recipient_name: nombre,
           nombre,
-          title:          "Recuperación de contraseña",
-          password:       tempPassword,
+          title: "Recuperación de contraseña",
+          password: tempPassword,
           verification_url: "",
         },
       }),

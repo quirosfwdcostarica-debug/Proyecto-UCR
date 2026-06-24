@@ -39,6 +39,7 @@ export async function PATCH(
         select: {
           id: true, titulo: true, empresa: true, exalumno_id: true,
           estado: true,
+          exalumno: { select: { user: { select: { nombre: true, email: true } } } },
         },
       },
       estudiante: {
@@ -59,10 +60,11 @@ export async function PATCH(
   if (aplicacion.estado !== "PENDIENTE")
     return NextResponse.json({ message: "Esta aplicación ya fue procesada" }, { status: 400 });
 
-  const estudianteEmail  = aplicacion.estudiante.user.email;
-  const estudianteNombre = aplicacion.estudiante.user.nombre ?? "Estudiante";
-  const posicionTitulo   = aplicacion.posicion.titulo ?? "la posición";
-  const empresa          = aplicacion.posicion.empresa ?? undefined;
+  const estudianteEmail    = aplicacion.estudiante.user.email;
+  const estudianteNombre   = aplicacion.estudiante.user.nombre ?? "Estudiante";
+  const posicionTitulo     = aplicacion.posicion.titulo ?? "la posición";
+  const exalumnoNombre     = aplicacion.posicion.exalumno?.user.nombre ?? "";
+  const exalumnoEmail      = aplicacion.posicion.exalumno?.user.email ?? "";
 
   try {
     if (action === "seleccionar") {
@@ -75,7 +77,7 @@ export async function PATCH(
 
       // 2. Send success email to selected student
       if (estudianteEmail) {
-        await sendAplicacionSeleccionada(estudianteEmail, estudianteNombre, posicionTitulo, empresa);
+        await sendAplicacionSeleccionada(estudianteEmail, estudianteNombre, posicionTitulo, exalumnoNombre, exalumnoEmail);
       }
 
       // 3. If requested: close position + reject all other PENDIENTE applicants

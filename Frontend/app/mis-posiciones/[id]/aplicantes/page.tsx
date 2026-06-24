@@ -6,16 +6,19 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, User, Loader2, CheckCircle2,
-  XCircle, Clock, GraduationCap,
+  XCircle, Clock, GraduationCap, MessageCircle, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useDialog } from "@/hooks/useDialog";
+import { CVDrawer } from "@/components/cv/CVDrawer";
 
 interface Aplicante {
   id: string;
   estado: "PENDIENTE" | "SELECCIONADO" | "DESCARTADO";
   created_at: string;
+  estudiante_id: string | null;
   posicion: { id: string; titulo: string; empresa: string | null } | null;
   estudiante: {
     nombre: string | null;
@@ -47,6 +50,9 @@ export default function AplicantesPage() {
   const [loading, setLoading]              = useState(true);
   const [error, setError]                  = useState<string | null>(null);
   const [actionLoading, setActionLoading]  = useState<string | null>(null);
+  const [cvUserId, setCvUserId]            = useState<string | null>(null);
+  const [cvStudentName, setCvStudentName]  = useState<string | undefined>();
+  const { showAlert, showConfirm, showDialog } = useDialog();
 
   const role = (session?.user as any)?.tipo as string | undefined;
 
@@ -95,19 +101,48 @@ export default function AplicantesPage() {
         );
       }
     } catch (err: any) {
-      alert(err.message);
+      await showAlert(err.message || "Error al procesar la acción.", { title: "Error", variant: "error" });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleContactar(aplicanteId: string) {
+    setActionLoading(aplicanteId + "contactar");
+    try {
+      const res = await fetch(`/api/aplicaciones/${aplicanteId}/contactar`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al crear contacto");
+      router.push(`/mensajes?matchId=${data.matchId}`);
+    } catch (err: any) {
+      await showAlert(err.message || "Error al iniciar conversación.", { title: "Error", variant: "error" });
     } finally {
       setActionLoading(null);
     }
   }
 
   async function seleccionarConConfirmacion(aplicanteId: string, nombre: string) {
-    const cerrar = confirm(
-      `¿Seleccionar a ${nombre}?\n\n` +
-      `Presiona OK para seleccionar y CERRAR la posición (notifica a los demás aplicantes).\n` +
-      `Presiona Cancelar para solo seleccionar (la posición sigue abierta).`
-    );
-    await handleAction(aplicanteId, "seleccionar", cerrar);
+    const result = await showDialog({
+      title: `Seleccionar a ${nombre}`,
+      message: "¿Cómo deseas procesar esta selección?",
+      variant: "info",
+      actions: [
+        { label: "Seleccionar y cerrar posición", value: "cerrar", variant: "danger" },
+        { label: "Solo seleccionar", value: "solo", variant: "primary" },
+      ],
+      cancelLabel: "Cancelar",
+    });
+    if (!result) return;
+    await handleAction(aplicanteId, "seleccionar", result === "cerrar");
+  }
+
+  async function handleDescartarConConfirmacion(aplicanteId: string) {
+    const ok = await showConfirm("¿Descartar esta aplicación? Se notificará al estudiante.", {
+      title: "Descartar aplicación",
+      confirmLabel: "Descartar",
+      variant: "error",
+    });
+    if (ok) handleAction(aplicanteId, "descartar");
   }
 
   const pendientes = aplicantes.filter((a) => a.estado === "PENDIENTE");
@@ -123,6 +158,11 @@ export default function AplicantesPage() {
 
   return (
     <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+      <CVDrawer
+        userId={cvUserId}
+        studentName={cvStudentName}
+        onClose={() => { setCvUserId(null); setCvStudentName(undefined); }}
+      />
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <Link
@@ -175,11 +215,9 @@ export default function AplicantesPage() {
                       a={a}
                       actionLoading={actionLoading}
                       onSeleccionar={(nombre) => seleccionarConConfirmacion(a.id, nombre)}
-                      onDescartar={() => {
-                        if (confirm("¿Descartar esta aplicación? Se notificará al estudiante.")) {
-                          handleAction(a.id, "descartar");
-                        }
-                      }}
+                      onDescartar={() => handleDescartarConConfirmacion(a.id)}
+                      onContactar={() => handleContactar(a.id)}
+                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
                     />
                   ))}
                 </div>
@@ -200,6 +238,8 @@ export default function AplicantesPage() {
                       key={a.id}
                       a={a}
                       actionLoading={actionLoading}
+                      onContactar={() => handleContactar(a.id)}
+                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
                     />
                   ))}
                 </div>
@@ -217,11 +257,15 @@ function AplicanteCard({
   actionLoading,
   onSeleccionar,
   onDescartar,
+  onContactar,
+  onVerCV,
 }: {
   a: Aplicante;
   actionLoading: string | null;
   onSeleccionar?: (nombre: string) => void;
   onDescartar?: () => void;
+  onContactar?: () => void;
+  onVerCV?: () => void;
 }) {
   const cfg    = ESTADO_CFG[a.estado];
   const { Icon } = cfg;
@@ -272,6 +316,36 @@ function AplicanteCard({
               >
                 {a.estudiante.email}
               </a>
+            </div>
+          )}
+
+          {/* Ver CV + Enviar mensaje */}
+          {a.estudiante_id && (
+            <div className="mt-2.5 flex items-center gap-2">
+              {onVerCV && (
+                <button
+                  onClick={onVerCV}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[#005da4] hover:text-[#003d6e] border border-[#005da4]/30 hover:border-[#005da4] bg-white rounded-md px-2.5 py-1 transition-colors"
+                >
+                  <FileText className="w-3 h-3" /> Ver CV
+                </button>
+              )}
+
+              {/* Enviar mensaje — solo si fue SELECCIONADO */}
+              {a.estado === "SELECCIONADO" && onContactar && (
+                <button
+                  onClick={onContactar}
+                  disabled={anyLoading}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-white bg-[#005da4] hover:bg-[#003d6e] rounded-md px-2.5 py-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {actionLoading === a.id + "contactar" ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <MessageCircle className="w-3 h-3" />
+                  )}
+                  Enviar mensaje
+                </button>
+              )}
             </div>
           )}
         </div>

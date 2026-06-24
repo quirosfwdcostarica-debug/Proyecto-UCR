@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Loader2, Mail, MessageSquare } from "lucide-react";
+import { useDialog } from "@/hooks/useDialog";
 
 interface MatchItem {
   id: string;
@@ -64,6 +65,7 @@ export default function MisMatchesPage() {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showAlert, showConfirm } = useDialog();
 
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
 
@@ -109,7 +111,7 @@ export default function MisMatchesPage() {
         })
       );
     } catch (err: any) {
-      alert(err.message);
+      await showAlert(err.message || "Error al procesar la acción.", { title: "Error", variant: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -172,6 +174,14 @@ export default function MisMatchesPage() {
                     actionLoading={actionLoading}
                     handleAction={handleAction}
                     getScoreSolid={getScoreSolid}
+                    onCerrarConConfirm={async (id) => {
+                      const ok = await showConfirm("¿Cerrar esta conexión? Esta acción no se puede deshacer.", {
+                        title: "Cerrar conexión",
+                        confirmLabel: "Cerrar conexión",
+                        variant: "warning",
+                      });
+                      if (ok) handleAction(id, "CERRAR");
+                    }}
                   />
                 ))}
               </div>
@@ -193,6 +203,14 @@ export default function MisMatchesPage() {
                       actionLoading={actionLoading}
                       handleAction={handleAction}
                       getScoreSolid={getScoreSolid}
+                      onCerrarConConfirm={async (id) => {
+                        const ok = await showConfirm("¿Cerrar esta conexión? Esta acción no se puede deshacer.", {
+                          title: "Cerrar conexión",
+                          confirmLabel: "Cerrar conexión",
+                          variant: "warning",
+                        });
+                        if (ok) handleAction(id, "CERRAR");
+                      }}
                     />
                   ))}
                 </div>
@@ -213,12 +231,14 @@ function MatchCard({
   actionLoading,
   handleAction,
   getScoreSolid,
+  onCerrarConConfirm,
 }: {
   match: MatchItem;
   role: string;
   actionLoading: string | null;
   handleAction: (id: string, action: Action) => void;
   getScoreSolid: (score: number) => string;
+  onCerrarConConfirm: (id: string) => void;
 }) {
   const persona      = role === "EXALUMNO" ? match.estudiante : match.exalumno;
   const personaNombre = persona?.user?.name || "Usuario";
@@ -420,11 +440,7 @@ function MatchCard({
               variant="outline"
               className="w-full border-slate-200 text-slate-600 hover:bg-slate-100 text-sm"
               disabled={anyLoading}
-              onClick={() => {
-                if (confirm("¿Cerrar esta conexión? Esta acción no se puede deshacer.")) {
-                  handleAction(match.id, "CERRAR");
-                }
-              }}
+              onClick={() => onCerrarConConfirm(match.id)}
             >
               {isLoading("CERRAR") && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
               Cerrar Conexión

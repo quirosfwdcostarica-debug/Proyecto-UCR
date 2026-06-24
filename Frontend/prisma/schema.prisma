@@ -96,6 +96,8 @@ model Estudiante {
   proyecto_necesidades      Json?
   proyecto_porcentaje_avance Int?
   habilidades               Json?
+  soft_skills               Json?
+  idiomas                   Json?
   area_tematica             String?
   areas_interes             Json?
   beca_socioeconomica       Boolean  @default(false)

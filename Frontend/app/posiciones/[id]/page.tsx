@@ -9,6 +9,7 @@ import {
   Users, CheckCircle2, Loader2, AlertCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { useDialog } from "@/hooks/useDialog";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -65,6 +66,7 @@ export default function PosicionDetallePage() {
 
   const role   = (session?.user as any)?.tipo;
   const userId = (session?.user as any)?.id as string | undefined;
+  const { showConfirm } = useDialog();
 
   useEffect(() => {
     if (status === "unauthenticated") { router.replace("/login"); return; }
@@ -78,7 +80,12 @@ export default function PosicionDetallePage() {
 
   async function retirarAplicacion() {
     if (!posicion?.mi_aplicacion) return;
-    if (!confirm("¿Retirar tu aplicación a esta posición? Esta acción no se puede deshacer.")) return;
+    const ok = await showConfirm("¿Retirar tu aplicación a esta posición? Esta acción no se puede deshacer.", {
+      title: "Retirar aplicación",
+      confirmLabel: "Retirar",
+      variant: "warning",
+    });
+    if (!ok) return;
     setWithdrawing(true);
     const res = await fetch(`/api/aplicaciones/${posicion.mi_aplicacion.id}`, { method: "DELETE" });
     const d = await res.json();

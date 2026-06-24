@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search } from "lucide-react";
+import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
 import {
   Form,
   FormControl,
@@ -36,6 +37,54 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
+
+  // ── Skills state (fuera de react-hook-form para UI compleja) ────────────────
+  function parseHardSkills(raw: any): { skill: string; level: string }[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.map((r) => typeof r === "string" ? { skill: r, level: "Intermedio" } : r);
+    return [];
+  }
+  const [hardSkills, setHardSkills] = useState<{ skill: string; level: string }[]>(
+    parseHardSkills(initialData?.habilidades)
+  );
+  const [softSkillsList, setSoftSkillsList] = useState<string[]>(
+    Array.isArray(initialData?.soft_skills) ? initialData.soft_skills : []
+  );
+  const [idiomasList, setIdiomasList] = useState<{ idioma: string; nivel: string }[]>(
+    Array.isArray(initialData?.idiomas) ? initialData.idiomas : []
+  );
+  const [skillInput, setSkillInput] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(SKILLS_BANK[0].categoria);
+  const [idiomaInput, setIdiomaInput] = useState("Inglés");
+  const [nivelIdiomaInput, setNivelIdiomaInput] = useState("B1 – Intermedio");
+
+  function addHardSkill(skillName: string) {
+    const name = skillName.trim();
+    if (!name || hardSkills.find((s) => s.skill.toLowerCase() === name.toLowerCase())) return;
+    setHardSkills((p) => [...p, { skill: name, level: "Intermedio" }]);
+    setSkillInput("");
+  }
+  function updateSkillLevel(i: number, level: string) {
+    setHardSkills((p) => p.map((s, idx) => idx === i ? { ...s, level } : s));
+  }
+  function removeHardSkill(i: number) {
+    setHardSkills((p) => p.filter((_, idx) => idx !== i));
+  }
+  function toggleSoftSkill(s: string) {
+    setSoftSkillsList((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
+  }
+  function addIdioma() {
+    if (idiomasList.find((id) => id.idioma === idiomaInput)) return;
+    setIdiomasList((p) => [...p, { idioma: idiomaInput, nivel: nivelIdiomaInput }]);
+  }
+  function removeIdioma(i: number) {
+    setIdiomasList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  const filteredSkills = SKILLS_BANK.find((c) => c.categoria === selectedCategory)?.skills.filter(
+    (s) => !skillFilter || s.toLowerCase().includes(skillFilter.toLowerCase())
+  ) ?? [];
 
   const form = useForm<UserProfileUpdateValues>({
     resolver: zodResolver(userProfileUpdateSchema) as any,
@@ -98,7 +147,12 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const onSubmit = (data: UserProfileUpdateValues) => {
     startTransition(async () => {
       try {
-        const result = await updateUserProfile(data);
+        const result = await updateUserProfile({
+          ...data,
+          habilidades: hardSkills as any,
+          soft_skills: softSkillsList as any,
+          idiomas: idiomasList as any,
+        } as any);
         if (result.success) {
           if (data.image) {
             await update({ user: { image: data.image } });
@@ -565,6 +619,233 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   )}
                 />
               </div>
+            </div>
+
+            {/* ══ IDIOMAS ══════════════════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-sky-50 rounded-xl text-sky-600">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Idiomas</h2>
+                  <p className="text-sm text-slate-500">Agrega los idiomas que manejas y tu nivel de dominio.</p>
+                </div>
+              </div>
+
+              {/* Selector */}
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Idioma</label>
+                  <select
+                    value={idiomaInput}
+                    onChange={(e) => setIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                  >
+                    {IDIOMAS_OPTS.map((id) => <option key={id}>{id}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nivel</label>
+                  <select
+                    value={nivelIdiomaInput}
+                    onChange={(e) => setNivelIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                  >
+                    {NIVELES_IDIOMA.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={addIdioma}
+                  className="h-11 px-5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Chips */}
+              {idiomasList.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {idiomasList.map((id, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-sm font-medium text-sky-800">
+                      <Globe2 className="w-3.5 h-3.5 text-sky-500" />
+                      {id.idioma}
+                      <span className="text-sky-500 text-xs ml-1">{id.nivel}</span>
+                      <button type="button" onClick={() => removeIdioma(i)} className="ml-1 text-sky-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {idiomasList.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado idiomas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES TÉCNICAS ══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
+                  <Code2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Técnicas</h2>
+                  <p className="text-sm text-slate-500">Selecciona del banco predefinido o escribe una habilidad propia. Indica tu nivel en cada una.</p>
+                </div>
+              </div>
+
+              {/* Banco de habilidades */}
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banco de habilidades</p>
+
+                {/* Categorías */}
+                <div className="flex flex-wrap gap-1.5">
+                  {SKILLS_BANK.map((cat) => (
+                    <button
+                      key={cat.categoria}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat.categoria); setSkillFilter(""); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                        selectedCategory === cat.categoria
+                          ? "bg-violet-600 text-white border-violet-600 shadow"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                      }`}
+                    >
+                      {cat.icon} {cat.categoria}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filtro de skills en categoría */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar en esta categoría..."
+                    value={skillFilter}
+                    onChange={(e) => setSkillFilter(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white border border-slate-200 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
+                  />
+                </div>
+
+                {/* Grilla de skills */}
+                <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+                  {filteredSkills.map((skill) => {
+                    const already = hardSkills.some((s) => s.skill.toLowerCase() === skill.toLowerCase());
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        disabled={already}
+                        onClick={() => addHardSkill(skill)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                          already
+                            ? "bg-violet-100 text-violet-500 border-violet-200 cursor-default"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-violet-50 hover:border-violet-400 hover:text-violet-700"
+                        }`}
+                      >
+                        {already ? "✓ " : "+ "}{skill}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Input manual */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="O escribe una habilidad propia..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(skillInput); } }}
+                  className="flex-1 h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-violet-400 focus:ring-2 focus:ring-violet-100 text-sm transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addHardSkill(skillInput)}
+                  className="h-11 px-5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Habilidades seleccionadas + nivel */}
+              {hardSkills.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tus habilidades ({hardSkills.length})</p>
+                  <div className="space-y-2">
+                    {hardSkills.map((s, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                        <span className="flex-1 text-sm font-semibold text-slate-800 min-w-0 truncate">{s.skill}</span>
+                        <div className="flex gap-1 shrink-0">
+                          {SKILL_LEVELS.map((lv) => (
+                            <button
+                              key={lv}
+                              type="button"
+                              onClick={() => updateSkillLevel(i, lv)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                s.level === lv
+                                  ? "bg-violet-600 text-white border-violet-600"
+                                  : "bg-white text-slate-500 border-slate-200 hover:border-violet-300"
+                              }`}
+                            >
+                              {lv}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => removeHardSkill(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {hardSkills.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Selecciona del banco o escribe tus propias habilidades técnicas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES BLANDAS ═══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Star className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Blandas</h2>
+                  <p className="text-sm text-slate-500">Selecciona las competencias interpersonales que mejor te describen.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {SOFT_SKILLS_BANK.map((skill) => {
+                  const active = softSkillsList.includes(skill);
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => toggleSoftSkill(skill)}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium border text-left transition-all ${
+                        active
+                          ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+                      }`}
+                    >
+                      {active ? "✓ " : ""}{skill}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {softSkillsList.length > 0 && (
+                <p className="text-xs text-amber-700 font-semibold pt-1">
+                  {softSkillsList.length} habilidad{softSkillsList.length !== 1 ? "es" : ""} seleccionada{softSkillsList.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
 
             {/* APOYO BUSCADO */}
