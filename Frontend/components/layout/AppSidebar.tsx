@@ -64,13 +64,13 @@ export function AppSidebar() {
     { label: "Reportes",           href: "/admin/reportes",   icon: FileBarChart2 },
   ];
 
-  const exalumnoNav: NavItem[] = [
+    const exalumnoNav: NavItem[] = [
     { labelKey: "sidebar.dashboard",          href: "/",                       icon: LayoutDashboard },
     { labelKey: "sidebar.directory.student",  href: "/directorio/estudiantes", icon: Users },
     { labelKey: "sidebar.positions.own",      href: "/mis-posiciones",          icon: Briefcase },
     { labelKey: "sidebar.donations.exalumno", href: "/donaciones",              icon: Heart },
     { labelKey: "sidebar.donations.history",  href: "/mis-donaciones",          icon: Receipt },
-    { labelKey: "sidebar.matches",            href: "/mis-matches",             icon: Handshake },
+    { labelKey: "sidebar.matches",            href: "/mis-matches/exalumno",    icon: Handshake },
     { labelKey: "sidebar.profile.exalumno",   href: "/perfil/editar",           icon: UserCircle },
   ];
 

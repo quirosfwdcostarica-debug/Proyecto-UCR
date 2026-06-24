@@ -12,40 +12,13 @@ export async function GET() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        nombre: true,
-        email: true,
-        foto_url: true,
-        tipo: true,
-        estudiante: {
-          select: {
-            carrera: true,
-            escuela_facultad: true,
-            proyecto_titulo: true,
-            proyecto_tipo: true,
-            nivel_academico: true,
-            busca_mentoria: true,
-            busca_empleo: true,
-            busca_pasantia: true,
-            busca_financiamiento: true,
-          },
-        },
-        exalumno: {
-          select: {
-            empresa_actual: true,
-            cargo_actual: true,
-            pais_ciudad: true,
-            escuela_facultad: true,
-            anio_graduacion: true,
-            ofrece_mentoria: true,
-          },
-        },
-      },
-    });
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
 
+    const { data: user } = await supabaseAdmin.from('USERS').select('*').eq('id', userId).maybeSingle();
     if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
@@ -57,48 +30,39 @@ export async function GET() {
     let proyectosPatrocinados: any[] = [];
 
     if (tipo === "ESTUDIANTE") {
-      [matchesActivos, matchesPendientes] = await Promise.all([
-        prisma.match.count({ where: { estudiante_id: userId, estado: "ACTIVO" } }),
-        prisma.match.count({ where: { estudiante_id: userId, estado: "SUGERIDO" } }),
-      ]);
+      const { data: estMatches } = await supabaseAdmin.from('MATCHES').select('estado').eq('estudiante_id', userId);
+      matchesActivos = estMatches?.filter((m:any) => m.estado === "ACTIVO").length || 0;
+      matchesPendientes = estMatches?.filter((m:any) => m.estado === "SUGERIDO").length || 0;
     } else if (tipo === "EXALUMNO") {
-      [matchesActivos, matchesPendientes, matchesContactados] = await Promise.all([
-        prisma.match.count({ where: { exalumno_id: userId, estado: "ACTIVO" } }),
-        prisma.match.count({ where: { exalumno_id: userId, estado: "SUGERIDO" } }),
-        prisma.match.count({ where: { exalumno_id: userId, estado: "CONTACTADO" } }),
-      ]);
+      const { data: exaMatches } = await supabaseAdmin.from('MATCHES').select('estado').eq('exalumno_id', userId);
+      matchesActivos = exaMatches?.filter((m:any) => m.estado === "ACTIVO").length || 0;
+      matchesPendientes = exaMatches?.filter((m:any) => m.estado === "SUGERIDO").length || 0;
+      matchesContactados = exaMatches?.filter((m:any) => m.estado === "CONTACTADO").length || 0;
 
-      const [agg, recentDonaciones] = await Promise.all([
-        prisma.donacion.aggregate({
-          where: { exalumno_id: userId, estado: "CONFIRMADA" },
-          _sum: { monto: true },
-        }),
-        prisma.donacion.findMany({
-          where: { exalumno_id: userId, proyecto_estudiante_id: { not: null } },
-          select: {
-            monto: true,
-            estado: true,
-            estudiante: {
-              select: {
-                proyecto_titulo: true,
-                proyecto_porcentaje_avance: true,
-                user: { select: { nombre: true } },
-              },
-            },
-          },
-          orderBy: { created_at: "desc" },
-          take: 3,
-        }),
-      ]);
-
-      donacionTotalConfirmada = Number(agg._sum.monto ?? 0);
-      proyectosPatrocinados = recentDonaciones.map((d) => ({
-        monto: Number(d.monto),
-        estado: d.estado,
-        nombre_estudiante: d.estudiante?.user?.nombre ?? "Estudiante",
-        proyecto_titulo: d.estudiante?.proyecto_titulo ?? "Proyecto",
-        avance: d.estudiante?.proyecto_porcentaje_avance ?? 0,
-      }));
+      const { data: donaciones } = await supabaseAdmin.from('DONACIONES').select('monto, estado, proyecto_estudiante_id').eq('exalumno_id', userId);
+      if (donaciones) {
+        donacionTotalConfirmada = donaciones.filter((d:any) => d.estado === "CONFIRMADA").reduce((sum:number, d:any) => sum + Number(d.monto), 0);
+        
+        const patrocinados = donaciones.filter((d:any) => d.proyecto_estudiante_id != null).slice(0, 3);
+        
+        const estIds = patrocinados.map((d:any) => d.proyecto_estudiante_id);
+        if (estIds.length > 0) {
+          const { data: estudiantes } = await supabaseAdmin.from('ESTUDIANTES').select('*').in('user_id', estIds);
+          const { data: users } = await supabaseAdmin.from('USERS').select('id, nombre').in('id', estIds);
+          
+          proyectosPatrocinados = patrocinados.map((d:any) => {
+            const est = estudiantes?.find((e:any) => e.user_id === d.proyecto_estudiante_id);
+            const usr = users?.find((u:any) => u.id === d.proyecto_estudiante_id);
+            return {
+              monto: Number(d.monto),
+              estado: d.estado,
+              nombre_estudiante: usr?.nombre ?? "Estudiante",
+              proyecto_titulo: est?.proyecto_titulo ?? "Proyecto",
+              avance: est?.proyecto_porcentaje_avance ?? 0,
+            };
+          });
+        }
+      }
     }
 
     return NextResponse.json({

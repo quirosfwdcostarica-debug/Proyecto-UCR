@@ -15,31 +15,42 @@ export default async function MisMatchesPage() {
   let matches: any[] = [];
 
   try {
+    const { createClient } = require("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    if (role === "EXALUMNO") {
+      redirect("/mis-matches/exalumno");
+    }
+
     if (role === "ESTUDIANTE") {
-      matches = await prisma.match.findMany({
-        where: { estudiante_id: userId },
-        include: {
+      const { data: rawMatches } = await supabaseAdmin
+        .from('MATCHES')
+        .select('*')
+        .eq('estudiante_id', userId)
+        .order('created_at', { ascending: false });
+
+      const exalumnoIds = rawMatches?.map((m: any) => m.exalumno_id) || [];
+      const { data: exalumnos } = await supabaseAdmin.from('EXALUMNOS').select('*').in('user_id', exalumnoIds);
+      const { data: users } = await supabaseAdmin.from('USERS').select('id, nombre, foto_url, email').in('id', exalumnoIds);
+
+      matches = (rawMatches || []).map((m: any) => {
+        const exa = exalumnos?.find((e: any) => e.user_id === m.exalumno_id);
+        const usr = users?.find((u: any) => u.id === m.exalumno_id);
+        return {
+          ...m,
           exalumno: {
-            include: {
-              user: { select: { nombre: true, foto_url: true, email: true } }
-            }
+            carrera: exa?.carrera,
+            sector: exa?.sector,
+            apoyo_ofrecido: [],
+            user: usr ? { nombre: usr.nombre, foto_url: usr.foto_url, email: usr.email } : null
           }
-        },
-        orderBy: { created_at: "desc" }
-      });
-    } else if (role === "EXALUMNO") {
-      matches = await prisma.match.findMany({
-        where: { exalumno_id: userId },
-        include: {
-          estudiante: {
-            include: {
-              user: { select: { nombre: true, foto_url: true, email: true } }
-            }
-          }
-        },
-        orderBy: { created_at: "desc" }
+        };
       });
     }
+
 
     // Normalize for the client
     matches = matches.map((m: any) => ({
@@ -52,14 +63,14 @@ export default async function MisMatchesPage() {
         carrera: m.exalumno.carrera,
         sector: m.exalumno.sector,
         apoyoOfrecido: m.exalumno.apoyo_ofrecido || [],
-        user: { name: m.exalumno.user.nombre, image: m.exalumno.user.foto_url }
+        user: { name: m.exalumno.user?.nombre, image: m.exalumno.user?.foto_url }
       } : null,
       estudiante: m.estudiante ? {
         carrera: m.estudiante.carrera,
         avanceProyecto: m.estudiante.proyecto_porcentaje_avance || 0,
         areaProyecto: m.estudiante.area_proyecto,
         apoyoBuscado: m.estudiante.apoyo_buscado || [],
-        user: { name: m.estudiante.user.nombre, image: m.estudiante.user.foto_url }
+        user: { name: m.estudiante.user?.nombre, image: m.estudiante.user?.foto_url }
       } : null,
     }));
   } catch (error) {

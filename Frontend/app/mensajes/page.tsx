@@ -87,6 +87,7 @@ export default function MensajesPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevMessagesLength = useRef(0);
 
   useEffect(() => {
     async function load() {
@@ -152,7 +153,10 @@ export default function MensajesPage() {
   }, [activeMatchId, loadMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessagesLength.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMessagesLength.current = messages.length;
   }, [messages]);
 
   useEffect(() => {
