@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
 
 // PATCH — actualizar tipo/status de un usuario (solo admin)
 export async function PATCH(
@@ -38,11 +38,13 @@ export async function PATCH(
     return NextResponse.json({ message: "Nada que actualizar" }, { status: 400 });
 
   try {
-    const updated = await prisma.user.update({
-      where: { id: params.id },
-      data,
-      select: { id: true, tipo: true, status: true, activo: true },
-    });
+    const { data: updated, error } = await supabaseAdmin
+      .from("USERS")
+      .update(data)
+      .eq("id", params.id)
+      .select("id, tipo, status, activo")
+      .single();
+    if (error) throw error;
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[PATCH /api/admin/usuarios/[id]]", error);
@@ -65,20 +67,19 @@ export async function DELETE(
     return NextResponse.json({ message: "No puedes eliminar tu propia cuenta." }, { status: 400 });
 
   try {
-    const target = await prisma.user.findUnique({
-      where: { id: params.id },
-      select: { id: true, tipo: true },
-    });
+    const { data: target } = await supabaseAdmin
+      .from("USERS")
+      .select("id, tipo")
+      .eq("id", params.id)
+      .maybeSingle();
     if (!target) return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
 
-    // 1. Eliminar de la BD. La mayoría de relaciones cascadean por el schema, pero
-    //    Message.sender no tiene cascade: borramos sus mensajes primero en una transacción.
-    await prisma.$transaction([
-      prisma.message.deleteMany({ where: { sender_id: params.id } }),
-      prisma.user.delete({ where: { id: params.id } }),
-    ]);
+    // Delete messages first, then user (cascade handles the rest)
+    await supabaseAdmin.from("MESSAGES").delete().eq("sender_id", params.id);
+    const { error: deleteErr } = await supabaseAdmin.from("USERS").delete().eq("id", params.id);
+    if (deleteErr) throw deleteErr;
 
-    // 2. Eliminar del Auth de Supabase (no bloquear si falla, el registro de BD ya se fue)
+    // Delete from Supabase Auth
     try {
       await supabaseAdmin.auth.admin.deleteUser(params.id);
     } catch (authError) {

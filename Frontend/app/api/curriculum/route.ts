@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
-// Convierte el campo habilidades (Json) a string[]
 function parseSkills(raw: any): string[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.map((s: any) => typeof s === "string" ? s : (s?.skill ?? "")).filter(Boolean);
@@ -12,7 +11,6 @@ function parseSkills(raw: any): string[] {
   return [];
 }
 
-// Convierte el campo certificaciones (Json) a string[]
 function parseCertifications(raw: any): string[] {
   if (!raw) return [];
   if (Array.isArray(raw)) {
@@ -21,7 +19,6 @@ function parseCertifications(raw: any): string[] {
   return [];
 }
 
-// Mapea experiencia_laboral (Json) al formato Experience del editor de CV
 function parseExperience(raw: any): { id: string; role: string; company: string; period: string; bullets: string[] }[] {
   if (!raw) return [];
   const arr = Array.isArray(raw) ? raw : (typeof raw === "string" ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : []);
@@ -44,61 +41,42 @@ export async function GET() {
   const tipo = (session.user as any).tipo as string;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        nombre: true,
-        email: true,
-        foto_url: true,
-        exalumno: {
-          select: {
-            cargo_actual: true,
-            empresa_actual: true,
-            pais_ciudad: true,
-            escuela_facultad: true,
-            anio_graduacion: true,
-            biografia: true,
-            habilidades: true,
-            certificaciones: true,
-            experiencia_laboral: true,
-          },
-        },
-        estudiante: {
-          select: {
-            carrera: true,
-            escuela_facultad: true,
-            sede: true,
-            anio_ingreso: true,
-            nivel_academico: true,
-            habilidades: true,
-            soft_skills: true,
-            idiomas: true,
-            curriculum: {
-              select: {
-                habilidades_tecnicas: true,
-                idiomas: true,
-                cv_data: true,
-                experiencias: {
-                  select: { id: true, titulo: true, organizacion: true, tipo: true },
-                },
-                certificaciones: {
-                  select: { id: true, nombre: true, institucion: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const { data: user } = await supabaseAdmin
+      .from("USERS")
+      .select(`
+        nombre, email, foto_url,
+        exalumno:EXALUMNOS!EXALUMNOS_user_id_fkey(
+          cargo_actual, empresa_actual, pais_ciudad,
+          escuela_facultad, anio_graduacion, biografia,
+          habilidades, certificaciones, experiencia_laboral
+        ),
+        estudiante:ESTUDIANTES!ESTUDIANTES_user_id_fkey(
+          carrera, escuela_facultad, sede,
+          anio_ingreso, nivel_academico, habilidades,
+          soft_skills, idiomas,
+          curriculum:CURRICULUMS!CURRICULUMS_estudiante_id_fkey(
+            habilidades_tecnicas, idiomas, cv_data,
+            experiencias:EXPERIENCIAS_CV!EXPERIENCIAS_CV_curriculum_id_fkey(id, titulo, organizacion, tipo),
+            certificaciones:CERTIFICACIONES_CV!CERTIFICACIONES_CV_curriculum_id_fkey(id, nombre, institucion)
+          )
+        )
+      `)
+      .eq("id", userId)
+      .maybeSingle();
 
     if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
 
-    const ex = user.exalumno;
-    const est = user.estudiante;
+    const exArr = user.exalumno;
+    const ex = Array.isArray(exArr) ? exArr[0] : exArr;
+    
+    const estArr = user.estudiante;
+    const est = Array.isArray(estArr) ? estArr[0] : estArr;
+    
+    const curArr = est?.curriculum;
+    const cur = Array.isArray(curArr) ? curArr[0] : curArr;
 
-    // ── Build CV data ──────────────────────────────────────────────────────
     let title = "";
     let location = "San José, Costa Rica";
     let summary = "";
@@ -125,9 +103,9 @@ export async function GET() {
       const nivelStr = est.nivel_academico ? `${est.nivel_academico} en ` : "";
       title = est.carrera ? `${nivelStr}${est.carrera}` : "";
       location = est.sede || "San José, Costa Rica";
-      skills = parseSkills(est.habilidades ?? est.curriculum?.habilidades_tecnicas);
-      certifications = (est.curriculum?.certificaciones ?? []).map((c) => c.nombre || "").filter(Boolean);
-      experience = (est.curriculum?.experiencias ?? []).map((e, i) => ({
+      skills = parseSkills(est.habilidades ?? cur?.habilidades_tecnicas);
+      certifications = (cur?.certificaciones ?? []).map((c: any) => c.nombre || "").filter(Boolean);
+      experience = (cur?.experiencias ?? []).map((e: any, i: number) => ({
         id: e.id,
         role: e.titulo || "",
         company: e.organizacion || "",
@@ -157,8 +135,7 @@ export async function GET() {
       certifications,
     };
 
-    // Si el estudiante ya guardó una versión editada del CV, esa manda (T-47).
-    const saved = (est?.curriculum as any)?.cv_data;
+    const saved = cur?.cv_data;
     if (saved && typeof saved === "object") {
       return NextResponse.json({ ...base, ...saved, foto_url: user.foto_url });
     }
@@ -170,7 +147,6 @@ export async function GET() {
   }
 }
 
-// POST /api/curriculum — guarda el CV editado del estudiante autenticado (T-47)
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -188,7 +164,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  // Normalizar el CV a la forma CVData esperada (evita guardar basura)
   const cvData = {
     name: String(cv?.name ?? ""),
     title: String(cv?.title ?? ""),
@@ -203,19 +178,26 @@ export async function POST(request: Request) {
   };
 
   try {
-    // El Curriculum se cuelga del estudiante; upsert por estudiante_id.
-    await prisma.curriculum.upsert({
-      where: { estudiante_id: session.user.id },
-      create: {
-        estudiante_id: session.user.id,
+    const userId = session.user.id;
+    const { data: existingCur } = await supabaseAdmin
+      .from("CURRICULUMS")
+      .select("id")
+      .eq("estudiante_id", userId)
+      .maybeSingle();
+
+    if (existingCur) {
+      await supabaseAdmin
+        .from("CURRICULUMS")
+        .update({ cv_data: cvData, habilidades_tecnicas: cvData.skills, updated_at: new Date().toISOString() })
+        .eq("id", existingCur.id);
+    } else {
+      await supabaseAdmin.from("CURRICULUMS").insert({
+        estudiante_id: userId,
         cv_data: cvData,
         habilidades_tecnicas: cvData.skills,
-      },
-      update: {
-        cv_data: cvData,
-        habilidades_tecnicas: cvData.skills,
-      },
-    });
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[POST /api/curriculum]", error);

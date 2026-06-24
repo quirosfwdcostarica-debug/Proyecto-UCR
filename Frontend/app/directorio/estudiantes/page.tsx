@@ -25,6 +25,7 @@ interface EstudianteItem {
   proyectoTitulo: string | null;
   proyectoDescripcion: string | null;
   sede: string | null;
+  nivelAcademico: string | null;
   apoyoBuscado: string[];
   user: {
     id: string;
@@ -363,10 +364,10 @@ export default function DirectorioEstudiantes() {
         <div className="mb-6">
           <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Directorio</p>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Proyectos Estudiantiles
+            Directorio de Estudiantes
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-base max-w-2xl">
-            Conoce los proyectos de graduación de los estudiantes UCR. Apoya el talento universitario con mentoría, financiamiento o tu red de contactos.
+            Conoce a los estudiantes y futuros profesionales de la UCR. Encuentra talento, ofrece mentoría y conecta con perfiles prometedores.
           </p>
         </div>
 
@@ -446,7 +447,7 @@ export default function DirectorioEstudiantes() {
         ) : estudiantes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎓</div>
-            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">No se encontraron proyectos</h3>
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-1">No se encontraron estudiantes</h3>
             <p className="text-slate-500 text-sm">Intenta cambiar los filtros.</p>
             {hasFilters && (
               <button onClick={() => { setNombre(""); setCarrera(""); setAreaProyecto(""); setApoyoBuscado(""); }}
@@ -458,7 +459,7 @@ export default function DirectorioEstudiantes() {
         ) : (
           <>
             <p className="text-sm text-slate-500 font-medium">
-              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> proyecto{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -498,27 +499,34 @@ export default function DirectorioEstudiantes() {
 
                     {/* Contenido */}
                     <div className="p-5 flex flex-col flex-1">
-                      {/* Estudiante */}
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 shrink-0">
+                      {/* Título: Nombre del Estudiante */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 shrink-0">
                           {student.user.image ? (
                             <img src={student.user.image} alt={student.user.name || ""} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold" style={{ background: theme.accent + "20", color: theme.accent }}>
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm font-bold" style={{ background: theme.accent + "20", color: theme.accent }}>
                               {(student.user.name || "E").charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{student.user.name || "Estudiante UCR"}</p>
-                          <p className="text-[10px] text-slate-400 truncate">{student.carrera}</p>
+                          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-snug truncate">
+                            {student.user.name || "Estudiante UCR"}
+                          </h3>
+                          <p className="text-[11px] text-[#005da4] dark:text-sky-400 font-semibold truncate">{student.carrera}</p>
                         </div>
                       </div>
 
-                      {/* Título del proyecto */}
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug mb-1 line-clamp-2">
-                        {student.proyectoTitulo || "Proyecto de Graduación"}
-                      </h3>
+                      {/* Título del proyecto (secundario) */}
+                      {hasProject && (
+                        <div className="mt-2 mb-1">
+                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Proyecto</p>
+                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 line-clamp-1">
+                            {student.proyectoTitulo}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Área explícita */}
                       <p className="text-xs text-[#005da4] dark:text-sky-400 font-semibold mb-2 flex items-center gap-1">
@@ -531,14 +539,15 @@ export default function DirectorioEstudiantes() {
                         {student.proyectoDescripcion || "El estudiante aún no ha agregado una descripción de su proyecto."}
                       </p>
 
-                      {/* Avance */}
-                      <div className="mb-4">
-                        <div className="flex justify-between text-xs font-semibold mb-1">
-                          <span className="text-slate-500">{getFaseLabel(student.avanceProyecto)}</span>
-                          <span className="font-bold" style={{ color: theme.accent }}>{student.avanceProyecto}%</span>
+                      {/* Detalles del Estudiante */}
+                      <div className="mb-4 space-y-1.5 mt-auto">
+                        <div className="flex items-center text-xs text-slate-500">
+                          <GraduationCap className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                          <span><span className="font-semibold text-slate-700 dark:text-slate-300">Nivel:</span> {student.nivelAcademico || "No especificado"}</span>
                         </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                          <div className="h-full rounded-full transition-all" style={{ width: `${student.avanceProyecto}%`, background: theme.accent }} />
+                        <div className="flex items-center text-xs text-slate-500">
+                          <Globe className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                          <span><span className="font-semibold text-slate-700 dark:text-slate-300">Sede:</span> {student.sede || "No especificada"}</span>
                         </div>
                       </div>
 
@@ -562,7 +571,7 @@ export default function DirectorioEstudiantes() {
                           className="flex-1 text-xs border-slate-200 hover:border-slate-300 gap-1"
                           onClick={() => setModalStudent(student)}
                         >
-                          <BookOpen className="w-3.5 h-3.5" /> Ver Proyecto
+                          <BookOpen className="w-3.5 h-3.5" /> Ver Perfil
                         </Button>
 
                         {role === "EXALUMNO" && (

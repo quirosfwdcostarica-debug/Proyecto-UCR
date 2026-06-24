@@ -59,6 +59,7 @@ model User {
   activo             Boolean    @default(true)
   reportes_recibidos Int        @default(0)
   cedula             String?
+  telefono           String?
   fecha_nacimiento   DateTime?  @db.Date
   genero             String?
   status             UserStatus @default(PENDIENTE)

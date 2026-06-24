@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
   const session = await auth();
@@ -12,12 +12,6 @@ export async function GET() {
   }
 
   try {
-    const { createClient } = require("@supabase/supabase-js");
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
     const { data: user } = await supabaseAdmin.from('USERS').select('*').eq('id', userId).maybeSingle();
     if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });

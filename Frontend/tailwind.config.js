@@ -21,6 +21,13 @@ module.exports = {
         body: ["'Inter'", "sans-serif"],
       },
       colors: {
+        // FWD Costa Rica brand colors (logo)
+        fwd: {
+          cyan:   "#00AEEF",  // Azul FWD
+          purple: "#6B2D8B",  // Morado FWD
+          yellow: "#F5C400",  // Amarillo FWD
+          green:  "#00A651",  // Verde FWD
+        },
         ucr: {
           // Colores oficiales de la web de la Fundación
           esmeralda: "#004C63",      // Color corporativo oscuro / azul profundo

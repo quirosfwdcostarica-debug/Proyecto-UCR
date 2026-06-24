@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // PATCH — editar contenido de un mensaje (solo el remitente)
 export async function PATCH(
@@ -19,10 +19,11 @@ export async function PATCH(
   if (!body.content?.trim())
     return NextResponse.json({ message: "El mensaje no puede estar vacío" }, { status: 400 });
 
-  const message = await prisma.message.findUnique({
-    where: { id: params.messageId },
-    select: { id: true, sender_id: true, match_id: true },
-  });
+  const { data: message } = await supabaseAdmin
+    .from("MESSAGES")
+    .select("id, sender_id, match_id")
+    .eq("id", params.messageId)
+    .maybeSingle();
 
   if (!message)
     return NextResponse.json({ message: "Mensaje no encontrado" }, { status: 404 });
@@ -31,10 +32,17 @@ export async function PATCH(
   if (message.match_id !== params.matchId)
     return NextResponse.json({ message: "Mensaje no pertenece a este chat" }, { status: 400 });
 
-  const updated = await prisma.message.update({
-    where: { id: params.messageId },
-    data: { content: body.content.trim() },
-  });
+  const { data: updated, error } = await supabaseAdmin
+    .from("MESSAGES")
+    .update({ content: body.content.trim() })
+    .eq("id", params.messageId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[PATCH /api/messages/:matchId/:messageId]", error);
+    return NextResponse.json({ message: "Error al actualizar mensaje" }, { status: 500 });
+  }
 
   return NextResponse.json(updated);
 }
@@ -48,10 +56,11 @@ export async function DELETE(
   if (!session?.user?.id)
     return NextResponse.json({ message: "No autenticado" }, { status: 401 });
 
-  const message = await prisma.message.findUnique({
-    where: { id: params.messageId },
-    select: { id: true, sender_id: true, match_id: true },
-  });
+  const { data: message } = await supabaseAdmin
+    .from("MESSAGES")
+    .select("id, sender_id, match_id")
+    .eq("id", params.messageId)
+    .maybeSingle();
 
   if (!message)
     return NextResponse.json({ message: "Mensaje no encontrado" }, { status: 404 });
@@ -60,7 +69,12 @@ export async function DELETE(
   if (message.match_id !== params.matchId)
     return NextResponse.json({ message: "Mensaje no pertenece a este chat" }, { status: 400 });
 
-  await prisma.message.delete({ where: { id: params.messageId } });
+  const { error } = await supabaseAdmin.from("MESSAGES").delete().eq("id", params.messageId);
+
+  if (error) {
+    console.error("[DELETE /api/messages/:matchId/:messageId]", error);
+    return NextResponse.json({ message: "Error al eliminar mensaje" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

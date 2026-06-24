@@ -38,9 +38,11 @@ interface Donacion {
   id: string;
   monto: number;
   destino: string;
-  status: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
-  comprobanteUrl: string;
-  createdAt: string;
+  estado: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
+  comprobante_url: string | null;
+  created_at: string;
+  estudiante_nombre?: string | null;
+  proyecto_titulo?: string | null;
 }
 
 interface ProyectoEstudiantil {
@@ -92,6 +94,9 @@ function DonacionModal({
 }) {
   const [monto, setMonto] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [frecuencia, setFrecuencia] = useState("Única");
+  const [contacto, setContacto] = useState("");
+  const [condiciones, setCondiciones] = useState("");
   const [metodo, setMetodo] = useState<MetodoPago>("SINPE");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -124,10 +129,20 @@ function DonacionModal({
       setError("Ingresa un monto válido mayor a ₡0.");
       return;
     }
+    if (!motivo.trim()) {
+      setError("Por favor detalla por qué te gustaría donar (para que la fundación lo apruebe).");
+      return;
+    }
     setUploading(true);
     try {
       // Registrar la solicitud de donación en la API
       const publicUrl = ""; // Sin comprobante inicialmente
+
+      const destinoFormat = `Proyecto: ${proyecto.nombre}
+Frecuencia: ${frecuencia}
+Contacto preferido: ${contacto || 'No especificado'}
+Motivo: ${motivo.trim()}
+Condiciones: ${condiciones.trim() || 'Ninguna'}`;
 
       // 2. Registrar la donación en la API
       const res = await fetch("/api/donaciones", {
@@ -137,8 +152,9 @@ function DonacionModal({
           exalumnoId,
           monto: montoNum,
           comprobanteUrl: publicUrl,
-          destino: `${proyecto.nombre}${motivo.trim() ? ` - Motivo: ${motivo.trim()}` : ""}`,
+          destino: destinoFormat,
           metodoPago: "",
+          proyectoEstudianteId: proyecto.id,
         }),
       });
 
@@ -219,17 +235,68 @@ function DonacionModal({
             </div>
           </div>
 
+          {/* Frecuencia */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Tipo de donación
+            </label>
+            <div className="flex gap-4">
+              {["Única", "Mensual", "Anual"].map((tipo) => (
+                <label key={tipo} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="frecuencia"
+                    value={tipo}
+                    checked={frecuencia === tipo}
+                    onChange={(e) => setFrecuencia(e.target.value)}
+                    className="text-ucr-celeste focus:ring-ucr-celeste"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">{tipo}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Motivo */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              ¿Por qué te gustaría donar a este proyecto? (Opcional)
+              ¿Por qué te gustaría donar a este proyecto? <span className="text-red-500">*</span>
             </label>
             <textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ej. Me parece una excelente iniciativa y quiero apoyar..."
+              placeholder="Ej. Me parece una excelente iniciativa de impacto social..."
               className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
-              rows={3}
+              rows={2}
+              required
+            />
+          </div>
+
+          {/* Contacto */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Medio de contacto preferido (Opcional)
+            </label>
+            <Input
+              value={contacto}
+              onChange={(e) => setContacto(e.target.value)}
+              placeholder="Ej. mi.correo@ejemplo.com o +506 8888-8888"
+              className="h-11 bg-white dark:bg-slate-950 dark:border-slate-800"
+            />
+            <p className="text-xs text-slate-500 mt-1">Para que el estudiante o administrador te contacte y finalice la transacción.</p>
+          </div>
+
+          {/* Condiciones */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              Condiciones o comentarios adicionales (Opcional)
+            </label>
+            <textarea
+              value={condiciones}
+              onChange={(e) => setCondiciones(e.target.value)}
+              placeholder="Ej. Quiero donar equipo en lugar de dinero, solicito anonimato, etc."
+              className="w-full flex min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
+              rows={2}
             />
           </div>
 
@@ -421,7 +488,7 @@ export default function DonacionesPage() {
                       <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Monto</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Destino</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Proyecto/Estudiante</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Fecha</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estado</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Comprobante</th>
@@ -429,21 +496,26 @@ export default function DonacionesPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {donaciones.map((d) => {
-                          const statusInfo = BADGE_STATUS[d.status];
+                          const statusInfo = BADGE_STATUS[d.estado] || BADGE_STATUS["PENDIENTE"];
                           return (
                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">
                                 ₡{d.monto.toLocaleString("es-CR")}
                               </td>
-                              <td className="px-4 py-3 text-slate-600 dark:text-slate-400 max-w-[180px] truncate">
-                                {d.destino}
+                              <td className="px-4 py-3">
+                                <div className="max-w-[220px] truncate">
+                                  <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{d.proyecto_titulo || d.destino}</p>
+                                  {d.estudiante_nombre && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">Estudiante: {d.estudiante_nombre}</p>
+                                  )}
+                                </div>
                               </td>
-                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                {new Date(d.createdAt).toLocaleDateString("es-CR", {
+                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                {d.created_at ? new Date(d.created_at).toLocaleDateString("es-CR", {
                                   day: "2-digit",
                                   month: "short",
                                   year: "numeric",
-                                })}
+                                }) : "-"}
                               </td>
                               <td className="px-4 py-3">
                                 <Badge
@@ -455,14 +527,18 @@ export default function DonacionesPage() {
                                 </Badge>
                               </td>
                               <td className="px-4 py-3">
-                                <a
-                                  href={d.comprobanteUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#0f4c81] hover:underline text-xs font-medium"
-                                >
-                                  Ver →
-                                </a>
+                                {d.comprobante_url ? (
+                                  <a
+                                    href={d.comprobante_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#0f4c81] dark:text-sky-400 hover:underline text-xs font-medium"
+                                  >
+                                    Ver →
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-slate-400">Pendiente</span>
+                                )}
                               </td>
                             </tr>
                           );

@@ -100,39 +100,50 @@ export function AppSidebar() {
 
   // ── CLASSES ──────────────────────────────────────────────────────────────────
 
-  const colorfulTextBase = "bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 font-extrabold";
-  const colorfulTextHover = "group-hover/item:bg-clip-text group-hover/item:text-transparent group-hover/item:bg-gradient-to-r group-hover/item:from-cyan-500 group-hover/item:via-purple-500 group-hover/item:to-pink-500 group-hover/item:font-extrabold";
+  const isAdmin = role === "ADMIN";
+  
+  // A much more obvious active state so the user can tell it changed
+  const activeCls = isAdmin 
+    ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-md font-bold scale-[1.02]" 
+    : "bg-gradient-to-r from-[#005da4] to-[#007cc0] text-white shadow-md font-bold scale-[1.02]";
 
   const linkCls =
-    "flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-sky-100 dark:text-slate-400 hover:bg-white hover:shadow-lg hover:text-[#005da4] dark:hover:bg-slate-800 dark:hover:text-white transition-all duration-300 w-full group/item";
-  const activeCls = "bg-white text-[#005da4] dark:bg-slate-800 dark:text-white shadow-lg";
+    "relative flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-300 w-full group/link hover:translate-x-2";
+
+  // Admin accent color
+  const accentCls = isAdmin
+    ? "bg-red-50 dark:bg-red-900/10 border-b-2 border-red-200 dark:border-red-900/30"
+    : "bg-slate-50/80 dark:bg-slate-900/20 border-b-2 border-slate-200/60 dark:border-slate-800/50";
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-[#005da4] dark:bg-slate-950 border-none flex flex-col z-30 transition-all duration-300 ease-in-out group shadow-2xl">
+    <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border-r-2 border-slate-200 dark:border-slate-800 flex flex-col z-30 transition-all duration-500 ease-out group shadow-[8px_0_30px_rgba(0,0,0,0.05)] hover:shadow-[16px_0_40px_rgba(0,0,0,0.1)] overflow-hidden">
       {/* Logo */}
-      <div className="px-4 group-hover:px-6 pt-5 pb-4 flex flex-col items-center group-hover:items-start gap-2 group-hover:gap-0 transition-all duration-300 border-b border-white/10 dark:border-slate-900/50">
+      <div className={`px-4 group-hover:px-6 pt-6 pb-5 flex flex-col items-center group-hover:items-start gap-2 group-hover:gap-0 transition-all duration-300 ${accentCls}`}>
         <img
           src="/logo.png"
           alt="Logo U"
-          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 brightness-0 invert"
+          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 dark:brightness-0 dark:invert"
         />
         <div className="mt-0 group-hover:mt-2 text-center group-hover:text-left transition-all duration-300 w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap">
           {role === "ADMIN" ? (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-red-400">ADMIN UCR</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70 dark:text-red-400/70">Panel Administrativo</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-red-600 dark:text-red-400">ADMIN UCR</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-red-600/70 dark:text-red-400/70">Panel Administrativo</p>
             </>
           ) : (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-sky-400">EXALUMNOS U</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-sky-100 dark:text-sky-400/80">Impacto y Legado</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-[#005da4] dark:text-sky-400">EXALUMNOS U</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-[#005da4]/70 dark:text-sky-400/80">Impacto y Legado</p>
             </>
           )}
         </div>
       </div>
 
+      {/* FWD accent bar — 4 brand colors under the logo */}
+      <div className="fwd-accent-bar shrink-0" />
+
       {/* Nav */}
-      <nav className="flex-1 px-3 group-hover:px-4 space-y-1 mt-6 overflow-y-auto">
+      <nav className="flex-1 px-3 group-hover:px-4 space-y-1.5 mt-6 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const itemKey = item.label ?? (item.labelKey as string) ?? "";
           const isActive = item.href ? pathname === item.href : false;
@@ -147,8 +158,8 @@ export function AppSidebar() {
                   onClick={() => toggleSubmenu(itemKey)}
                   className={`${linkCls} ${anyChildActive || isSubmenuOpen ? activeCls : ""}`}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${anyChildActive || isSubmenuOpen ? "text-purple-500" : "group-hover/item:text-purple-500"}`} />
-                  <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left ${(anyChildActive || isSubmenuOpen) ? colorfulTextBase : colorfulTextHover}`}>
+                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? "text-white dark:text-white drop-shadow-md" : "text-slate-400 dark:text-slate-500 group-hover/link:text-[#005da4] dark:group-hover/link:text-sky-300"}`} />
+                  <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left">
                     {displayLabel}
                   </span>
                   <ChevronDown
@@ -183,8 +194,8 @@ export function AppSidebar() {
               href={item.href!}
               className={`${linkCls} ${isActive ? activeCls : ""}`}
             >
-              <item.icon className={`h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? "text-purple-500" : "group-hover/item:text-purple-500"}`} />
-              <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden ${isActive ? colorfulTextBase : colorfulTextHover}`}>
+              <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? "text-white dark:text-white drop-shadow-md" : "text-slate-400 dark:text-slate-500 group-hover/link:text-[#005da4] dark:group-hover/link:text-sky-300"}`} />
+              <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden">
                 {displayLabel}
               </span>
             </Link>
@@ -193,19 +204,19 @@ export function AppSidebar() {
       </nav>
 
       {/* Bottom links */}
-      <div className="p-3 group-hover:p-4 space-y-2 border-t border-white/10 dark:border-slate-800 mt-auto transition-all duration-300">
+      <div className="p-3 group-hover:p-4 space-y-2 border-t border-slate-200/50 dark:border-slate-800/50 mt-auto transition-all duration-300 bg-slate-50/30 dark:bg-slate-900/30">
         <Link href="/ajustes" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-sky-100 dark:text-slate-400 hover:bg-white hover:shadow-lg hover:text-[#005da4] dark:hover:bg-slate-800 dark:hover:text-white px-2 group-hover:px-3 group/item">
-            <Settings className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover/item:text-purple-500" />
-            <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-2.5 transition-all duration-300 whitespace-nowrap overflow-hidden ${colorfulTextHover}`}>
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11">
+            <Settings className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:rotate-45" />
+            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold">
               {t("sidebar.settings")}
             </span>
           </Button>
         </Link>
         <Link href="/ajustes?tab=help" className="block w-full">
-          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-sky-100 dark:text-slate-400 hover:bg-white hover:shadow-lg hover:text-[#005da4] dark:hover:bg-slate-800 dark:hover:text-white px-2 group-hover:px-3 group/item">
-            <HelpCircle className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover/item:text-purple-500" />
-            <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-2.5 transition-all duration-300 whitespace-nowrap overflow-hidden ${colorfulTextHover}`}>
+          <Button variant="ghost" className="w-full flex items-center justify-center group-hover:justify-start text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 px-2 group-hover:px-3 hover:translate-x-1 transition-all rounded-xl h-11">
+            <HelpCircle className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:-rotate-12" />
+            <span className="opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto ml-0 group-hover:ml-3 transition-all duration-300 whitespace-nowrap overflow-hidden text-[13px] font-semibold">
               {t("sidebar.help")}
             </span>
           </Button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function getToken_(req: NextRequest) {
   return getToken({
@@ -18,16 +18,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   if (!token) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   try {
-    const { createClient } = require("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
-    const { error } = await supabase
-      .from('MATCHES')
-      .update({ estado: 'CERRADO', closed_at: new Date().toISOString() })
-      .eq('id', params.id);
+    const { error } = await supabaseAdmin
+      .from("MATCHES")
+      .update({ estado: "CERRADO", closed_at: new Date().toISOString() })
+      .eq("id", params.id);
 
     if (error) throw error;
 
