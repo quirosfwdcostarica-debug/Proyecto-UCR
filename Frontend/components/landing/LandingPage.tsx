@@ -131,7 +131,7 @@ export default function LandingPage() {
           {/* Mobile Left: Login Link */}
           <div className="md:hidden flex items-center">
             <Link href="/login">
-              <span className="text-white text-xs font-bold uppercase tracking-wider hover:text-slate-200">
+              <span className="text-white text-sm font-bold uppercase tracking-wider hover:text-slate-200">
                 Ingresar
               </span>
             </Link>
@@ -141,15 +141,15 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8 flex-1 justify-end pr-10">
             <div className="flex items-center gap-4 border-r border-white/20 pr-8 mr-2">
               <Link href="/login">
-                <Button className="bg-[#F34B26] hover:bg-[#d73b1d] text-white font-extrabold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none transition-all shadow-md">
+                <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-extrabold text-sm uppercase tracking-wider rounded-[8px] h-10 px-5 border-none transition-all shadow-md">
                   Ingresar
                 </Button>
               </Link>
             </div>
-            <a href="#" className="text-white hover:text-ucr-celeste text-xs font-bold uppercase tracking-widest transition-colors">
+            <a href="#" className="text-white hover:text-ucr-celeste text-sm font-bold uppercase tracking-widest transition-colors">
               Inicio
             </a>
-            <a href="#pilares" className="text-white hover:text-ucr-celeste text-xs font-bold uppercase tracking-widest transition-colors">
+            <a href="#pilares" className="text-white hover:text-ucr-celeste text-sm font-bold uppercase tracking-widest transition-colors">
               Pilares
             </a>
           </nav>
@@ -163,23 +163,23 @@ export default function LandingPage() {
                 className="h-16 w-auto object-contain dark:brightness-110 group-hover:scale-105 transition-transform duration-300"
               />
               <div className="text-center">
-                <span className="text-xs sm:text-sm font-bold tracking-widest text-white font-display block leading-none">EXALUMNOS U</span>
-                <span className="text-[8px] sm:text-[9px] font-bold text-slate-300 uppercase tracking-widest block mt-0.5">Impacto y Legado</span>
+                <span className="text-sm sm:text-base font-bold tracking-widest text-white font-display block leading-none">EXALUMNOS U</span>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-widest block mt-0.5">Impacto y Legado</span>
               </div>
             </Link>
           </div>
 
           {/* Right Navigation Links and CTAs (Desktop) */}
           <div className="hidden md:flex items-center gap-8 flex-1 justify-start pl-10">
-            <a href="#como-funciona" className="text-white hover:text-ucr-celeste text-xs font-bold uppercase tracking-widest transition-colors">
+            <a href="#como-funciona" className="text-white hover:text-ucr-celeste text-sm font-bold uppercase tracking-widest transition-colors">
               Proceso
             </a>
-            <a href="#faq" className="text-white hover:text-ucr-celeste text-xs font-bold uppercase tracking-widest transition-colors">
+            <a href="#faq" className="text-white hover:text-ucr-celeste text-sm font-bold uppercase tracking-widest transition-colors">
               FAQ
             </a>
             <div className="flex items-center gap-4 border-l border-white/20 pl-8">
               <Link href="/registro">
-                <Button className="bg-[#F34B26] hover:bg-[#d73b1d] text-white font-extrabold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none transition-all shadow-md">
+                <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-extrabold text-sm uppercase tracking-wider rounded-[8px] h-10 px-5 border-none transition-all shadow-md">
                   Inscribirse
                 </Button>
               </Link>
@@ -189,7 +189,7 @@ export default function LandingPage() {
           {/* Mobile Right: Register Link */}
           <div className="md:hidden flex items-center">
             <Link href="/registro">
-              <Button className="bg-[#F34B26] hover:bg-[#d73b1d] text-white font-bold text-[10px] uppercase tracking-wider rounded-[6px] h-8 px-3 border-none shadow-sm">
+              <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-bold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none shadow-sm">
                 Registro
               </Button>
             </Link>
@@ -213,23 +213,7 @@ export default function LandingPage() {
         {/* Overlays: solid mask for readability */}
         <div className="absolute inset-0 bg-ucr-negro/70 z-10 pointer-events-none" />
         
-        {/* Diagonal Slash Cutout */}
-        <div className="absolute bottom-0 left-0 right-0 h-[160px] z-20 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
-            {/* Subtle background wave accent (taller and scalloped) */}
-            <path 
-              d="M 0,32 C 100,32 120,12 200,12 C 280,12 300,42 400,42 C 500,42 520,5 620,5 C 720,5 750,32 850,32 C 900,32 950,22 1000,22 L 1000,100 L 0,100 Z" 
-              fill="#4BA5D9" 
-              opacity="0.3" 
-            />
-            {/* Main brand blue wavy shape (taller and scalloped, filled all the way to the bottom) */}
-            <path 
-              d="M 0,40 C 100,40 120,20 200,20 C 280,20 300,50 400,50 C 500,50 520,10 620,10 C 720,10 750,40 850,40 C 900,40 950,30 1000,30 L 1000,100 L 0,100 Z" 
-              fill="#006AD3" 
-            />
-          </svg>
 
-        </div>
 
         {/* Content Container */}
         <div className="max-w-5xl mx-auto px-6 relative z-20 w-full flex flex-col items-center text-center pt-48 pb-12">
