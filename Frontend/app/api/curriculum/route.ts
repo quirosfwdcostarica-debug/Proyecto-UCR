@@ -77,6 +77,7 @@ export async function GET() {
               select: {
                 habilidades_tecnicas: true,
                 idiomas: true,
+                cv_data: true,
                 experiencias: {
                   select: { id: true, titulo: true, organizacion: true, tipo: true },
                 },
@@ -142,7 +143,7 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const base = {
       name: user.nombre,
       email: user.email,
       foto_url: user.foto_url,
@@ -154,9 +155,70 @@ export async function GET() {
       education,
       experience,
       certifications,
-    });
+    };
+
+    // Si el estudiante ya guardó una versión editada del CV, esa manda (T-47).
+    const saved = (est?.curriculum as any)?.cv_data;
+    if (saved && typeof saved === "object") {
+      return NextResponse.json({ ...base, ...saved, foto_url: user.foto_url });
+    }
+
+    return NextResponse.json(base);
   } catch (error) {
     console.error("[GET /api/curriculum]", error);
     return NextResponse.json({ message: "Error al obtener datos de curriculum" }, { status: 500 });
+  }
+}
+
+// POST /api/curriculum — guarda el CV editado del estudiante autenticado (T-47)
+export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+  }
+  const tipo = (session.user as any).tipo as string;
+  if (tipo !== "ESTUDIANTE") {
+    return NextResponse.json({ message: "Solo los estudiantes pueden editar su CV." }, { status: 403 });
+  }
+
+  let cv: any;
+  try {
+    cv = await request.json();
+  } catch {
+    return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
+  }
+
+  // Normalizar el CV a la forma CVData esperada (evita guardar basura)
+  const cvData = {
+    name: String(cv?.name ?? ""),
+    title: String(cv?.title ?? ""),
+    location: String(cv?.location ?? ""),
+    email: String(cv?.email ?? ""),
+    phone: String(cv?.phone ?? ""),
+    summary: String(cv?.summary ?? ""),
+    experience: Array.isArray(cv?.experience) ? cv.experience : [],
+    skills: Array.isArray(cv?.skills) ? cv.skills : [],
+    education: Array.isArray(cv?.education) ? cv.education : [],
+    certifications: Array.isArray(cv?.certifications) ? cv.certifications : [],
+  };
+
+  try {
+    // El Curriculum se cuelga del estudiante; upsert por estudiante_id.
+    await prisma.curriculum.upsert({
+      where: { estudiante_id: session.user.id },
+      create: {
+        estudiante_id: session.user.id,
+        cv_data: cvData,
+        habilidades_tecnicas: cvData.skills,
+      },
+      update: {
+        cv_data: cvData,
+        habilidades_tecnicas: cvData.skills,
+      },
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[POST /api/curriculum]", error);
+    return NextResponse.json({ message: "Error al guardar el CV" }, { status: 500 });
   }
 }

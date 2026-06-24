@@ -73,7 +73,7 @@ export function ExperienceForm({
           <div key={i} className="flex gap-2 mb-2">
             <input className={input + " flex-1"} placeholder={`Logro ${i + 1}`} value={b} onChange={(e) => updateBullet(i, e.target.value)} />
             {bullets.length > 1 && (
-              <button onClick={() => removeBullet(i)} className="p-2 text-red-400 hover:text-red-600">
+              <button aria-label={`Eliminar logro ${i + 1}`} onClick={() => removeBullet(i)} className="p-2 text-red-400 hover:text-red-600">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
@@ -112,7 +112,7 @@ export function SkillsEditor({
         {skills.map((s) => (
           <span key={s} className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-red-50 text-slate-700 rounded-full text-xs font-medium border border-transparent hover:border-red-200 transition-all group/sk cursor-default">
             {s}
-            <button onClick={() => onRemove(s)} className="opacity-0 group-hover/sk:opacity-100 text-red-400 hover:text-red-600 transition-opacity">
+            <button aria-label={`Eliminar habilidad ${s}`} onClick={() => onRemove(s)} className="opacity-0 group-hover/sk:opacity-100 text-red-400 hover:text-red-600 transition-opacity">
               <X className="w-2.5 h-2.5" />
             </button>
           </span>

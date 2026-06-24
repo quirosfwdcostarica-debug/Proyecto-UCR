@@ -204,10 +204,10 @@ export function AlumniDirectoryClient() {
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-1 shadow-sm">
-            <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
+            <button aria-label="Vista de cuadrícula" onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
               <LayoutGrid className="w-4 h-4" />
             </button>
-            <button onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
+            <button aria-label="Vista de lista" onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
               <List className="w-4 h-4" />
             </button>
           </div>

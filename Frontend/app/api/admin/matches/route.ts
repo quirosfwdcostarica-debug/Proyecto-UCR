@@ -30,8 +30,8 @@ export async function GET(req: Request) {
         id: true, estado: true, score_match: true, tipo_apoyo: true,
         match_reasons: true, initiated_by: true, created_at: true,
         estudiante_id: true, exalumno_id: true,
-        estudiante: { select: { user_id: true, user: { select: { nombre: true, email: true } } } },
-        exalumno:   { select: { user_id: true, user: { select: { nombre: true, email: true } } } },
+        estudiante: { select: { user_id: true, carrera: true, user: { select: { nombre: true, email: true } } } },
+        exalumno:   { select: { user_id: true, carrera: true, user: { select: { nombre: true, email: true } } } },
       },
     });
 

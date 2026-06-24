@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download, RefreshCw, BarChart, Users, DollarSign, HeartHandshake, Printer } from "lucide-react";
+import { ArrowLeft, RefreshCw, BarChart, Users, DollarSign, HeartHandshake, Printer, FolderHeart, UserPlus, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { 
   BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -18,6 +18,8 @@ export default function AdminReportesPage() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
@@ -30,13 +32,22 @@ export default function AdminReportesPage() {
   async function loadStats() {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/stats");
+      const qs = new URLSearchParams();
+      if (desde) qs.set("desde", desde);
+      if (hasta) qs.set("hasta", hasta);
+      const res = await fetch(`/api/admin/stats${qs.toString() ? `?${qs}` : ""}`);
       const d = await res.json();
       setData(d);
     } catch (error) {
       console.error("Error loading stats:", error);
     }
     setLoading(false);
+  }
+
+  function limpiarRango() {
+    setDesde(""); setHasta("");
+    // recargar sin rango en el siguiente tick
+    setTimeout(loadStats, 0);
   }
 
   const handlePrint = () => {
@@ -65,6 +76,37 @@ export default function AdminReportesPage() {
             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-[#0f4c81] text-white rounded-lg hover:bg-[#0f4c81]/90 shadow-sm transition-colors font-medium text-sm">
               <Printer className="w-4 h-4" /> Exportar a PDF
             </button>
+          </div>
+
+          {/* Filtro de rango de fechas */}
+          <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            <div className="flex items-center gap-2 text-slate-400">
+              <Calendar className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Periodo</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500">Desde</label>
+              <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500">Hasta</label>
+              <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm" />
+            </div>
+            <button onClick={loadStats}
+              className="px-4 py-2 bg-[#0f4c81] text-white rounded-lg hover:bg-[#0f4c81]/90 shadow-sm transition-colors font-medium text-sm">
+              Aplicar
+            </button>
+            {(desde || hasta) && (
+              <button onClick={limpiarRango}
+                className="px-3 py-2 text-sm text-slate-500 hover:text-[#0f4c81] font-medium">
+                Limpiar
+              </button>
+            )}
+            <p className="text-xs text-slate-400 sm:ml-auto sm:self-center">
+              Sin filtro: últimos 12 meses.
+            </p>
           </div>
         </div>
 
@@ -113,6 +155,51 @@ export default function AdminReportesPage() {
             <div>
               <p className="text-sm font-medium text-slate-500">Exalumnos Activos</p>
               <p className="text-2xl font-bold text-slate-900">{data.kpis?.exalumnosActivos || 0}</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* KPIs del periodo seleccionado */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Donado (periodo)</p>
+              <p className="text-2xl font-bold text-slate-900">₡{(data.kpis?.totalDonadoPeriodo || 0).toLocaleString("es-CR")}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+              <FolderHeart className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Proyectos Apoyados</p>
+              <p className="text-2xl font-bold text-slate-900">{data.kpis?.proyectosApoyados || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+              <HeartHandshake className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Matches Cerrados</p>
+              <p className="text-2xl font-bold text-slate-900">{data.kpis?.matchesCerrados || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+              <UserPlus className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">Donantes (nuevos / recurr.)</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {data.kpis?.donantesNuevos || 0} <span className="text-slate-300">/</span> {data.kpis?.donantesRecurrentes || 0}
+              </p>
             </div>
           </Card>
         </div>
@@ -169,7 +256,35 @@ export default function AdminReportesPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid lg:col-span-2">
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-[#0f4c81]" /> Donantes: Nuevos vs. Recurrentes
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.graficoDonantes || []}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {(data.graficoDonantes || []).map((_entry: any, index: number) => (
+                      <Cell key={`cell-don-${index}`} fill={index === 0 ? '#f37021' : '#0f4c81'} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
               <Users className="w-5 h-5 text-[#0f4c81]" /> Estudiantes por Sede UCR
             </h3>

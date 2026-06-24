@@ -140,6 +140,38 @@
   .badge.med   { background: #dbeafe; color: #1e40af;           border: 1px solid #bfdbfe; }
   .badge.low   { background: #f1f5f9; color: var(--muted);      border: 1px solid #e2e8f0; }
   .badge.dep   { background: #f0fdf4; color: var(--ok);         border: 1px solid #bbf7d0; }
+  .badge.done  { background: #dcfce7; color: #15803d;           border: 1px solid #86efac; }
+
+  /* Tareas completadas */
+  tr.task-done td { opacity: 0.62; }
+  tr.task-done .task-name { text-decoration: line-through; text-decoration-color: #86efac; }
+  .done-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #15803d;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 3px;
+  }
+  .done-tag::before { content: "✓ "; }
+  .block-done {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: #15803d;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
 
   /* ── BLOCKS ──────────────────────────────────────── */
   .block {
@@ -329,7 +361,7 @@
     <p>Plataforma Digital — Fundación Exalumnos UCR · Versión 1.0</p>
   </div>
   <div class="doc-meta">
-    Fecha: 22 junio 2026<br>
+    Fecha: 24 junio 2026<br>
     Total tareas: 56<br>
     Rama: john
   </div>
@@ -342,6 +374,7 @@
   <div class="summary-cell med"><span class="num">18</span><span class="lbl">Medio</span></div>
   <div class="summary-cell low"><span class="num">8</span><span class="lbl">Bajo</span></div>
   <div class="summary-cell tot"><span class="num">56</span><span class="lbl">Total</span></div>
+  <div class="summary-cell" style="background:#f0fdf4"><span class="num" style="color:#15803d">5</span><span class="lbl">B6 Hechas</span></div>
 </div>
 
 <!-- LEGEND -->
@@ -351,6 +384,7 @@
   <div class="legend-item"><span class="badge med">MEDIO</span> Funcionalidad completa pero no urgente</div>
   <div class="legend-item"><span class="badge low">BAJO</span> Polish, accesibilidad, no funcionales</div>
   <div class="legend-item"><span class="badge dep">↳ T-XX</span> Depende de esta tarea</div>
+  <div class="legend-item"><span class="badge done">HECHO</span> Tarea completada y verificada</div>
 </div>
 
 
@@ -709,52 +743,53 @@
   <div class="block-header admin">
     <span class="block-num">B6</span>
     <span class="block-title">RF-08 — Panel Administrativo completo</span>
+    <span class="block-done">✓ COMPLETADO</span>
     <span class="block-week">Semana 3–4</span>
   </div>
   <table class="tasks">
-    <tr>
+    <tr class="task-done">
       <td class="td-num">T-31</td>
-      <td class="td-badge"><span class="badge high">ALTO</span></td>
+      <td class="td-badge"><span class="badge done">HECHO</span></td>
       <td class="td-desc">
         <div class="task-name">Conectar dashboard <code>/admin</code> al endpoint real de KPIs</div>
         <div class="task-detail">El endpoint <code>/api/admin/kpis</code> existe y devuelve datos reales. El frontend muestra datos mock — solo falta conectarlos</div>
-        <div><span class="dep-tag">T-01</span></div>
+        <div><span class="done-tag">Dashboard conectado a <code>/api/admin/stats</code> con datos reales</span></div>
       </td>
     </tr>
-    <tr>
+    <tr class="task-done">
       <td class="td-num">T-32</td>
-      <td class="td-badge"><span class="badge high">ALTO</span></td>
+      <td class="td-badge"><span class="badge done">HECHO</span></td>
       <td class="td-desc">
         <div class="task-name">Crear página <code>/admin/matches</code> — tabla de conexiones con gestión</div>
         <div class="task-detail">Columnas: exalumno, estudiante, tipo de apoyo, score, estado, fecha. Filtros: carrera, tipo de apoyo, estado, rango de fechas. Exportar a CSV. Alerta visual si el match lleva más de 6 meses activo</div>
-        <div><span class="dep-tag">T-01</span><span class="dep-tag">T-21</span></div>
+        <div><span class="done-tag">Filtros de carrera y rango de fechas añadidos (+ fix: la API no devolvía carrera)</span></div>
       </td>
     </tr>
-    <tr>
+    <tr class="task-done">
       <td class="td-num">T-33</td>
-      <td class="td-badge"><span class="badge high">ALTO</span></td>
+      <td class="td-badge"><span class="badge done">HECHO</span></td>
       <td class="td-desc">
         <div class="task-name">Crear página <code>/admin/donaciones</code> — cola con confirmación/rechazo</div>
         <div class="task-detail">Cola ordenada por antigüedad, indicador rojo si lleva más de 24 horas pendiente, visor de comprobante (imagen o PDF), botones Confirmar / Rechazar con motivo obligatorio</div>
-        <div><span class="dep-tag">T-27</span></div>
+        <div><span class="done-tag">Indicador "+24h pendiente" y modal de motivo obligatorio (se guarda y se notifica por email)</span></div>
       </td>
     </tr>
-    <tr>
+    <tr class="task-done">
       <td class="td-num">T-34</td>
-      <td class="td-badge"><span class="badge med">MEDIO</span></td>
+      <td class="td-badge"><span class="badge done">HECHO</span></td>
       <td class="td-desc">
         <div class="task-name">Crear página <code>/admin/reportes</code> — dashboard de impacto con gráficos</div>
         <div class="task-detail">Métricas: total donado CRC+USD, proyectos apoyados, matches activos/cerrados, distribución por carrera y sede, donantes nuevos vs. recurrentes. Filtro por rango de fechas. Exportar como PDF</div>
-        <div><span class="dep-tag">T-27</span><span class="dep-tag">T-21</span></div>
+        <div><span class="done-tag">Filtro de fechas + KPIs de periodo, proyectos apoyados, matches cerrados y gráfico donantes nuevos/recurrentes</span></div>
       </td>
     </tr>
-    <tr>
+    <tr class="task-done">
       <td class="td-num">T-35</td>
-      <td class="td-badge"><span class="badge med">MEDIO</span></td>
+      <td class="td-badge"><span class="badge done">HECHO</span></td>
       <td class="td-desc">
         <div class="task-name">Crear página <code>/admin/usuarios</code> — gestión de cuentas</div>
         <div class="task-detail">Tabla de todos los usuarios con acción de suspender/activar y eliminación permanente. Implementar <code>GET /admin/usuarios</code>, <code>PATCH /admin/usuarios/:id</code>, <code>DELETE /admin/usuarios/:id</code> en backend</div>
-        <div><span class="dep-tag">T-01</span><span class="dep-tag">T-02</span></div>
+        <div><span class="done-tag">Endpoint DELETE (Prisma en transacción + Auth de Supabase) y botón eliminar con confirmación</span></div>
       </td>
     </tr>
   </table>

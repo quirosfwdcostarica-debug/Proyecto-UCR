@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { sendDonacionAprobada, sendDonacionRecibidaStudent } from "@/lib/email";
+import { sendDonacionAprobada, sendDonacionRecibidaStudent, sendDonacionRechazada } from "@/lib/email";
 
 export async function PATCH(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function PATCH(
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  let body: { status: "CONFIRMADA" | "RECHAZADA" };
+  let body: { status: "CONFIRMADA" | "RECHAZADA"; motivo_rechazo?: string };
   try {
     body = await request.json();
   } catch {
@@ -35,6 +35,15 @@ export async function PATCH(
   if (!estado) {
     return NextResponse.json(
       { message: "Status debe ser CONFIRMADA (o APROBADA) o RECHAZADA" },
+      { status: 400 }
+    );
+  }
+
+  // El motivo es obligatorio al rechazar
+  const motivo = body.motivo_rechazo?.trim();
+  if (estado === "RECHAZADA" && !motivo) {
+    return NextResponse.json(
+      { message: "Debes indicar un motivo para rechazar la donación." },
       { status: 400 }
     );
   }
@@ -62,13 +71,25 @@ export async function PATCH(
 
     const updated = await prisma.donacion.update({
       where: { id: params.id },
-      data: { 
+      data: {
         estado,
-        confirmado_por: adminId // Auditoría (RNF-08)
+        confirmado_por: adminId, // Auditoría (RNF-08)
+        motivo_rechazo: estado === "RECHAZADA" ? motivo : null,
       },
     });
 
-    console.log(`[AUDITORIA] Donación ${params.id} ha sido ${estado} por el admin ${adminId}.`);
+    console.log(`[AUDITORIA] Donación ${params.id} ha sido ${estado} por el admin ${adminId}.${estado === "RECHAZADA" ? ` Motivo: ${motivo}` : ""}`);
+
+    // Si se rechaza, notificar al donante con el motivo
+    if (estado === "RECHAZADA" && donacion.exalumno?.user?.email) {
+      await sendDonacionRechazada(
+        donacion.exalumno.user.email,
+        donacion.exalumno.user.nombre || "Exalumno",
+        Number(donacion.monto),
+        donacion.destino || "Fondo General",
+        motivo!
+      );
+    }
 
     // Si se aprueba/confirma, enviar emails
     if (estado === "CONFIRMADA") {

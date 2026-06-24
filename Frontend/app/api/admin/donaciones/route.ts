@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true, monto: true, destino: true, moneda: true,
           metodo_pago: true, estado: true, comprobante_url: true,
-          created_at: true, updated_at: true,
+          motivo_rechazo: true, created_at: true, updated_at: true,
           exalumno: { select: { user: { select: { id: true, nombre: true, email: true } } } },
           estudiante: { select: { proyecto_titulo: true, user: { select: { nombre: true } } } },
         },
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       metodo_pago: d.metodo_pago,
       estado: d.estado,
       comprobante_url: d.comprobante_url ?? null,
+      motivo_rechazo: d.motivo_rechazo ?? null,
       created_at: d.created_at.toISOString(),
       updated_at: d.updated_at.toISOString(),
       exalumno_nombre: d.exalumno?.user?.nombre ?? null,

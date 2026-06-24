@@ -92,6 +92,26 @@ export async function sendAlumniApprovedEmail(
   });
 }
 
+// ─── Moderación / Fraude (RF-09) ───────────────────────────────────────────────
+
+export async function sendPerfilAutoSuspendido(
+  adminEmail: string,
+  nombreReportado: string,
+  emailReportado: string,
+  totalReportes: number
+): Promise<void> {
+  await sendEmailJS(adminEmail, TEMPLATE_NOTIF, {
+    recipient_name: "Administrador",
+    title: "🚨 Perfil auto-suspendido por reportes",
+    message:
+      `El perfil de ${nombreReportado} (${emailReportado}) alcanzó ${totalReportes} reportes ` +
+      "y fue suspendido automáticamente por el sistema. Revisa el caso en el panel de administración " +
+      "para confirmar la suspensión o rehabilitar la cuenta.",
+    action_url: `${BASE_URL}/admin`,
+    action_text: "Revisar en el panel",
+  });
+}
+
 // ─── Matches ──────────────────────────────────────────────────────────────────
 
 export async function sendMatchAceptado(
@@ -171,6 +191,25 @@ export async function sendDonacionAprobada(
     message:
       `Tu donación de ₡${monto.toLocaleString("es-CR")} destinada a ${destino} ` +
       "ha sido verificada y aprobada. ¡Gracias por apoyar el talento de la UCR!",
+    action_url: `${BASE_URL}/mis-donaciones`,
+    action_text: "Ver mis donaciones",
+  });
+}
+
+export async function sendDonacionRechazada(
+  toEmail: string,
+  exalumnoNombre: string,
+  monto: number,
+  destino: string,
+  motivo: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "Sobre tu donación",
+    message:
+      `Lamentamos informarte que tu donación de ₡${monto.toLocaleString("es-CR")} destinada a ${destino} ` +
+      `no pudo ser verificada. Motivo: ${motivo}. ` +
+      "Si crees que se trata de un error, por favor contacta a la Fundación UCR.",
     action_url: `${BASE_URL}/mis-donaciones`,
     action_text: "Ver mis donaciones",
   });

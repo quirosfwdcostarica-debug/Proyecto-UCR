@@ -13,37 +13,71 @@ export async function GET(_request: NextRequest) {
     );
   }
 
+  // Rango de fechas opcional (T-34). Por defecto: últimos 12 meses.
+  const { searchParams } = new URL(_request.url);
+  const desdeParam = searchParams.get("desde");
+  const hastaParam = searchParams.get("hasta");
+  const desde = desdeParam ? new Date(desdeParam + "T00:00:00") : new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+  const hasta = hastaParam ? new Date(hastaParam + "T23:59:59") : null;
+  const rangoDonacion = { gte: desde, ...(hasta ? { lte: hasta } : {}) };
+
   try {
     // KPIs desde las tablas MAYÚSCULAS vía rawQuery (más eficiente)
     const [
       totalDonadoResult,
       matchesActivos,
+      matchesCerrados,
       estudiantesActivos,
       exalumnosActivos,
     ] = await Promise.all([
       prisma.$queryRaw<{ total: number; count: number }[]>`
-        SELECT 
+        SELECT
           COALESCE(SUM(monto), 0) as total,
           COUNT(*) as count
         FROM "DONACIONES"
         WHERE estado = 'CONFIRMADA'
       `,
       prisma.match.count({ where: { estado: "ACTIVO" } }),
+      prisma.match.count({ where: { estado: "CERRADO" } }),
       prisma.user.count({ where: { tipo: "ESTUDIANTE", status: "ACTIVO", activo: true } }),
       prisma.user.count({ where: { tipo: "EXALUMNO", status: "ACTIVO", activo: true } }),
     ]);
 
-    // Donaciones de los últimos 12 meses agrupadas por mes
+    // Donaciones confirmadas dentro del rango (para gráfico, total del periodo y donantes)
     const todasDonaciones = await prisma.donacion.findMany({
       where: {
         estado: "CONFIRMADA",
-        created_at: {
-          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
-        },
+        created_at: rangoDonacion,
       },
-      select: { monto: true, created_at: true },
+      select: { monto: true, created_at: true, exalumno_id: true, proyecto_estudiante_id: true },
       orderBy: { created_at: "asc" },
     });
+
+    // ── Donantes nuevos vs. recurrentes (dentro del rango) ──────────────────
+    // Para cada donante en el rango, contar si tenía donaciones confirmadas ANTES del rango.
+    const donantesEnRango = Array.from(new Set(todasDonaciones.map((d) => d.exalumno_id)));
+    let donantesRecurrentes = 0;
+    if (donantesEnRango.length > 0) {
+      const previas = await prisma.donacion.groupBy({
+        by: ["exalumno_id"],
+        where: {
+          estado: "CONFIRMADA",
+          exalumno_id: { in: donantesEnRango },
+          created_at: { lt: desde },
+        },
+      });
+      const setPrevias = new Set(previas.map((p) => p.exalumno_id));
+      donantesRecurrentes = donantesEnRango.filter((id) => setPrevias.has(id)).length;
+    }
+    const donantesNuevos = donantesEnRango.length - donantesRecurrentes;
+
+    // Proyectos apoyados: proyectos distintos que recibieron donación confirmada en el rango
+    const proyectosApoyados = new Set(
+      todasDonaciones.map((d) => d.proyecto_estudiante_id).filter(Boolean)
+    ).size;
+
+    // Total donado dentro del rango
+    const totalDonadoRango = todasDonaciones.reduce((sum, d) => sum + Number(d.monto), 0);
 
     // Procesar donaciones por mes
     const donacionesPorMes: Record<string, number> = {};
@@ -118,12 +152,26 @@ export async function GET(_request: NextRequest) {
         totalDonado: Number(totales?.total) || 0,
         donacionesAprobadas: Number(totales?.count) || 0,
         matchesActivos,
+        matchesCerrados,
         estudiantesActivos,
         exalumnosActivos,
+        // Métricas del periodo seleccionado (T-34)
+        totalDonadoPeriodo: totalDonadoRango,
+        proyectosApoyados,
+        donantesNuevos,
+        donantesRecurrentes,
+      },
+      rango: {
+        desde: desde.toISOString(),
+        hasta: hasta ? hasta.toISOString() : null,
       },
       graficoDonaciones,
       graficoSedes,
       graficoMatchesCarrera,
+      graficoDonantes: [
+        { name: "Nuevos", value: donantesNuevos },
+        { name: "Recurrentes", value: donantesRecurrentes },
+      ],
       donacionesPendientes: pendientesNormalized,
     });
   } catch (error) {

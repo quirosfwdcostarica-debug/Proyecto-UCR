@@ -38,6 +38,9 @@ export default function AdminMatchesPage() {
   const [loading, setLoading] = useState(true);
   const [filterEstado, setFilterEstado] = useState("");
   const [search, setSearch] = useState("");
+  const [filterCarrera, setFilterCarrera] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
@@ -59,9 +62,15 @@ export default function AdminMatchesPage() {
     setLoading(false);
   }
 
+  // Escapa un valor según RFC 4180: entrecomilla si contiene coma, comilla o salto de línea.
+  const csvCell = (val: unknown) => {
+    const s = String(val ?? "");
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
   const exportCSV = () => {
     const headers = ["ID", "Exalumno", "Estudiante", "Tipo de Apoyo", "Afinidad (%)", "Estado", "Fecha Creación", "Alerta 6 Meses"];
-    const rows = matches.map(m => {
+    const rows = filteredMatches.map(m => {
       const is6MonthsOld = isSixMonthsOld(m.created_at) && m.estado === "ACTIVO";
       return [
         m.id,
@@ -70,21 +79,25 @@ export default function AdminMatchesPage() {
         m.tipo_apoyo || "General",
         m.score_match || 0,
         m.estado,
-        new Date(m.created_at).toLocaleDateString(),
+        new Date(m.created_at).toLocaleDateString("es-CR"),
         is6MonthsOld ? "SI" : "NO"
       ];
     });
 
-    let csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-      
-    const encodedUri = encodeURI(csvContent);
+    // CSV con celdas escapadas; BOM (﻿) para que Excel interprete UTF-8 correctamente.
+    const csv = "﻿" + [headers, ...rows]
+      .map(fila => fila.map(csvCell).join(","))
+      .join("\r\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `matches_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.href = url;
+    link.download = `matches_export_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const isSixMonthsOld = (dateStr: string) => {
@@ -94,6 +107,13 @@ export default function AdminMatchesPage() {
     return diffDays > 180;
   };
 
+  // Lista única de carreras presentes en los matches (para el selector)
+  const carreras = Array.from(
+    new Set(
+      matches.flatMap(m => [m.estudiante?.carrera, m.exalumno?.carrera].filter(Boolean) as string[])
+    )
+  ).sort();
+
   const filteredMatches = matches.filter(m => {
     if (filterEstado && m.estado !== filterEstado) return false;
     if (search) {
@@ -102,8 +122,23 @@ export default function AdminMatchesPage() {
       const exName = m.exalumno?.user?.name?.toLowerCase() || "";
       if (!stName.includes(query) && !exName.includes(query)) return false;
     }
+    if (filterCarrera) {
+      const stCarrera = m.estudiante?.carrera || "";
+      const exCarrera = m.exalumno?.carrera || "";
+      if (stCarrera !== filterCarrera && exCarrera !== filterCarrera) return false;
+    }
+    if (fechaDesde || fechaHasta) {
+      const created = new Date(m.created_at);
+      if (fechaDesde && created < new Date(fechaDesde + "T00:00:00")) return false;
+      if (fechaHasta && created > new Date(fechaHasta + "T23:59:59")) return false;
+    }
     return true;
   });
+
+  const hayFiltros = !!(filterEstado || search || filterCarrera || fechaDesde || fechaHasta);
+  function limpiarFiltros() {
+    setFilterEstado(""); setSearch(""); setFilterCarrera(""); setFechaDesde(""); setFechaHasta("");
+  }
 
   if (status === "loading" || loading) {
     return <div className="flex h-screen items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-[#0f4c81]" /></div>;
@@ -128,28 +163,67 @@ export default function AdminMatchesPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar por nombre..." 
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20"
-            />
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20"
+              />
+            </div>
+            <select
+              value={filterCarrera}
+              onChange={e => setFilterCarrera(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white max-w-[220px]"
+            >
+              <option value="">Todas las Carreras</option>
+              {carreras.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select
+              value={filterEstado}
+              onChange={e => setFilterEstado(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white"
+            >
+              <option value="">Todos los Estados</option>
+              <option value="SUGERIDO">Sugerido</option>
+              <option value="CONTACTADO">Contactado</option>
+              <option value="ACTIVO">Activo</option>
+              <option value="CERRADO">Cerrado</option>
+              <option value="RECHAZADO">Rechazado</option>
+            </select>
           </div>
-          <select 
-            value={filterEstado}
-            onChange={e => setFilterEstado(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white"
-          >
-            <option value="">Todos los Estados</option>
-            <option value="SUGERIDO">Sugerido</option>
-            <option value="CONTACTADO">Contactado</option>
-            <option value="ACTIVO">Activo</option>
-            <option value="CERRADO">Cerrado</option>
-          </select>
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Desde</label>
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={e => setFechaDesde(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Hasta</label>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={e => setFechaHasta(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm"
+              />
+            </div>
+            {hayFiltros && (
+              <button
+                onClick={limpiarFiltros}
+                className="ml-auto text-sm text-slate-500 hover:text-[#0f4c81] font-medium"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Table */}

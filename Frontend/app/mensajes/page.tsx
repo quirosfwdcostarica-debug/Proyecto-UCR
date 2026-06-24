@@ -278,6 +278,7 @@ export default function MensajesPage() {
                 </div>
               </div>
               <button
+                aria-label="Cerrar"
                 onClick={() => { setShowWAModal(false); setWaPhone(""); }}
                 className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400"
               >

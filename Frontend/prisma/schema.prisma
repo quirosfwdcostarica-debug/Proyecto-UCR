@@ -222,6 +222,7 @@ model Donacion {
   estado                DonacionEstado @default(PENDIENTE)
   comprobante_url       String?
   confirmado_por        String?        @db.Uuid
+  motivo_rechazo        String?
   created_at            DateTime       @default(now())
   updated_at            DateTime       @updatedAt
 
@@ -285,6 +286,7 @@ model Curriculum {
   estudiante_id       String   @unique @db.Uuid
   habilidades_tecnicas Json?
   idiomas             Json?
+  cv_data             Json?
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
@@ -324,6 +326,8 @@ model CurriculumVersion {
   curriculum_id   String   @db.Uuid
   posicion_id     String?  @db.Uuid
   nombre_version  String?
+  contenido       Json?
+  ats_score       Int?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

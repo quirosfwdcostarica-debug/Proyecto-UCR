@@ -6,12 +6,13 @@ import Link from "next/link";
 import {
   ArrowLeft, Users, Search, Loader2, RefreshCw,
   UserCheck, UserX, ShieldAlert, CheckCircle2,
-  Mail, Calendar, Briefcase, GraduationCap,
+  Mail, Calendar, Briefcase, GraduationCap, Trash2, AlertTriangle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { useDialog } from "@/hooks/useDialog";
 
 interface Usuario {
   id: string;
@@ -26,6 +27,8 @@ interface Usuario {
   carrera: string | null;
   carnet_ucr: string | null;
   empresa_actual: string | null;
+  anio_ingreso: number | null;
+  coherencia_alerta: boolean;
 }
 
 const TIPO_CFG: Record<string, { label: string; cls: string }> = {
@@ -46,6 +49,7 @@ function Avatar({ nombre }: { nombre: string }) {
 export default function AdminUsuariosPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { showConfirm } = useDialog();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
@@ -114,6 +118,27 @@ export default function AdminUsuariosPage() {
       load();
     } else {
       setMsg({ type: "err", text: "Error al cambiar el rol." });
+    }
+    setWorking(null);
+  }
+
+  async function eliminarUsuario(u: Usuario) {
+    const ok = await showConfirm(
+      `Vas a eliminar permanentemente la cuenta de ${u.nombre} (${u.email}). ` +
+      "Se borrarán su perfil, matches, mensajes y demás datos asociados. Esta acción NO se puede deshacer.",
+      { title: "Eliminar usuario permanentemente", confirmLabel: "Eliminar", variant: "error" }
+    );
+    if (!ok) return;
+
+    setWorking(u.id + "_del");
+    setMsg(null);
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg({ type: "ok", text: `Usuario ${u.nombre} eliminado permanentemente.` });
+      load();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setMsg({ type: "err", text: d.message || "Error al eliminar el usuario." });
     }
     setWorking(null);
   }
@@ -267,6 +292,14 @@ export default function AdminUsuariosPage() {
                                 <CheckCircle2 className="w-3 h-3" /> Email verificado
                               </p>
                             )}
+                            {u.coherencia_alerta && (
+                              <p
+                                className="flex items-center gap-1 text-amber-600 font-semibold mt-0.5"
+                                title={`Ingresó en ${u.anio_ingreso}: más de 8 años sin actualizar su nivel académico. Requiere revisión (RF-09.2).`}
+                              >
+                                <AlertTriangle className="w-3 h-3" /> Coherencia: +8 años
+                              </p>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             {isSuspended ? (
@@ -339,6 +372,22 @@ export default function AdminUsuariosPage() {
                                     <UserX className="w-3 h-3" />
                                   )}
                                   &nbsp;{isSuspended ? "Reactivar" : "Suspender"}
+                                </Button>
+
+                                {/* Eliminar permanentemente */}
+                                <Button
+                                  size="sm"
+                                  disabled={!!working}
+                                  onClick={() => eliminarUsuario(u)}
+                                  variant="outline"
+                                  className="text-xs h-8 border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+                                  title="Eliminar permanentemente"
+                                >
+                                  {working === u.id + "_del" ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-3 h-3" />
+                                  )}
                                 </Button>
                               </div>
                             )}

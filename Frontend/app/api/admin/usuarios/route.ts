@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
           id: true, nombre: true, email: true, tipo: true,
           activo: true, status: true, email_verified: true,
           created_at: true, reportes_recibidos: true,
-          estudiante: { select: { carrera: true, carnet_ucr: true } },
+          estudiante: { select: { carrera: true, carnet_ucr: true, anio_ingreso: true, nivel_academico: true } },
           exalumno:   { select: { escuela_facultad: true, empresa_actual: true } },
         },
         orderBy: { created_at: "desc" },
@@ -40,20 +40,36 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const data = users.map((u) => ({
-      id: u.id,
-      nombre: u.nombre,
-      email: u.email,
-      tipo: u.tipo,
-      activo: u.activo,
-      status: u.status,
-      email_verified: u.email_verified,
-      created_at: u.created_at.toISOString(),
-      reportes_recibidos: u.reportes_recibidos,
-      carrera: u.estudiante?.carrera ?? u.exalumno?.escuela_facultad ?? null,
-      carnet_ucr: u.estudiante?.carnet_ucr ?? null,
-      empresa_actual: u.exalumno?.empresa_actual ?? null,
-    }));
+    const anioActual = new Date().getFullYear();
+
+    const data = users.map((u) => {
+      // RF-09.2 (T-54): alerta de coherencia — estudiante con 8+ años desde el ingreso
+      // y un nivel académico que sugiere que el dato no se ha actualizado.
+      const anioIngreso = u.estudiante?.anio_ingreso ?? null;
+      const coherencia_alerta = !!(
+        u.tipo === "ESTUDIANTE" &&
+        anioIngreso &&
+        anioActual - anioIngreso > 8
+      );
+
+      return {
+        id: u.id,
+        nombre: u.nombre,
+        email: u.email,
+        tipo: u.tipo,
+        activo: u.activo,
+        status: u.status,
+        email_verified: u.email_verified,
+        created_at: u.created_at.toISOString(),
+        reportes_recibidos: u.reportes_recibidos,
+        carrera: u.estudiante?.carrera ?? u.exalumno?.escuela_facultad ?? null,
+        carnet_ucr: u.estudiante?.carnet_ucr ?? null,
+        empresa_actual: u.exalumno?.empresa_actual ?? null,
+        anio_ingreso: anioIngreso,
+        nivel_academico: u.estudiante?.nivel_academico ?? null,
+        coherencia_alerta,
+      };
+    });
 
     return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / PAGE_SIZE) });
   } catch (error) {

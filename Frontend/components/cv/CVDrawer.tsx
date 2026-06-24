@@ -77,6 +77,7 @@ export function CVDrawer({ userId, studentName, onClose }: Props) {
             </h2>
           </div>
           <button
+            aria-label="Cerrar curriculum"
             onClick={onClose}
             className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
           >

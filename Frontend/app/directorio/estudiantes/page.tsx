@@ -390,7 +390,7 @@ export default function DirectorioEstudiantes() {
             Filtros {hasFilters && "(activos)"}
           </Button>
           {hasFilters && (
-            <Button variant="outline" onClick={() => { setNombre(""); setCarrera(""); setAreaProyecto(""); setApoyoBuscado(""); }} className="h-12 px-4 border-slate-300 text-slate-500">
+            <Button aria-label="Limpiar filtros" variant="outline" onClick={() => { setNombre(""); setCarrera(""); setAreaProyecto(""); setApoyoBuscado(""); }} className="h-12 px-4 border-slate-300 text-slate-500">
               <X className="h-4 w-4" />
             </Button>
           )}

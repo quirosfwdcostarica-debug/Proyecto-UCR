@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // PATCH — actualizar tipo/status de un usuario (solo admin)
 export async function PATCH(
@@ -46,5 +47,48 @@ export async function PATCH(
   } catch (error) {
     console.error("[PATCH /api/admin/usuarios/[id]]", error);
     return NextResponse.json({ message: "Error al actualizar usuario" }, { status: 500 });
+  }
+}
+
+// DELETE — elimina permanentemente un usuario (solo admin)
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+  if ((session.user as any).tipo !== "ADMIN")
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
+  // Un admin no puede eliminarse a sí mismo
+  if (session.user.id === params.id)
+    return NextResponse.json({ message: "No puedes eliminar tu propia cuenta." }, { status: 400 });
+
+  try {
+    const target = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: { id: true, tipo: true },
+    });
+    if (!target) return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
+
+    // 1. Eliminar de la BD. La mayoría de relaciones cascadean por el schema, pero
+    //    Message.sender no tiene cascade: borramos sus mensajes primero en una transacción.
+    await prisma.$transaction([
+      prisma.message.deleteMany({ where: { sender_id: params.id } }),
+      prisma.user.delete({ where: { id: params.id } }),
+    ]);
+
+    // 2. Eliminar del Auth de Supabase (no bloquear si falla, el registro de BD ya se fue)
+    try {
+      await supabaseAdmin.auth.admin.deleteUser(params.id);
+    } catch (authError) {
+      console.error("[DELETE /api/admin/usuarios/[id]] Falló borrar auth de Supabase:", authError);
+    }
+
+    console.log(`[AUDITORIA] Usuario ${params.id} eliminado permanentemente por el admin ${session.user.id}.`);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[DELETE /api/admin/usuarios/[id]]", error);
+    return NextResponse.json({ message: "Error al eliminar usuario" }, { status: 500 });
   }
 }

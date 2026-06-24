@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Briefcase, Building2, MapPin, Clock, Calendar,
-  Users, CheckCircle2, Loader2, AlertCircle,
+  Users, CheckCircle2, Loader2, AlertCircle, Sparkles,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useDialog } from "@/hooks/useDialog";
@@ -259,6 +259,20 @@ export default function PosicionDetallePage() {
               <p className="text-xs text-slate-400 text-center mt-2">
                 Tu perfil y CV digital serán compartidos con el exalumno.
               </p>
+            </div>
+          )}
+
+          {/* Adaptar CV con IA — disponible para estudiantes */}
+          {role === "ESTUDIANTE" && (
+            <div className="mt-3">
+              <Link href={`/mi-curriculum/adaptar/${posicion.id}`} className="block">
+                <Button
+                  variant="outline"
+                  className="w-full border-[#0f4c81]/30 text-[#0f4c81] hover:bg-[#0f4c81]/5 dark:text-sky-400 dark:border-sky-800"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" /> Adaptar mi CV a esta posición
+                </Button>
+              </Link>
             </div>
           )}
 

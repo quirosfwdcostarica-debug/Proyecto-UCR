@@ -11,13 +11,14 @@ import {
   Linkedin, 
   Github, 
   Globe, 
-  UserPlus, 
-  Check, 
-  X, 
-  Loader2, 
+  UserPlus,
+  Check,
+  X,
+  Loader2,
   ArrowLeft,
   Calendar,
-  Award
+  Award,
+  Flag
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -37,6 +38,57 @@ export function ProfileDetailsClient({ exalumno, currentUser, accessToken, apiUr
 
   const user = exalumno.User || {};
   const isOwnProfile = currentUser?.id === user.id;
+
+  // ── Reportar perfil (RF-09 / T-53) ──────────────────────────────────────────
+  const MOTIVOS_REPORTE = [
+    "Perfil falso o suplantación de identidad",
+    "Información engañosa o incoherente",
+    "Contenido inapropiado u ofensivo",
+    "Spam o publicidad no solicitada",
+    "Acoso o comportamiento abusivo",
+    "Otro",
+  ];
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState(MOTIVOS_REPORTE[0]);
+  const [reportDesc, setReportDesc] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+
+  const submitReport = async () => {
+    if (reportSubmitting) return;
+    setReportSubmitting(true);
+    try {
+      const motivo = reportDesc.trim()
+        ? `${reportReason} — ${reportDesc.trim()}`
+        : reportReason;
+      const res = await fetch(`${apiUrl}/reportes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportadoId: user.id, motivo }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 409) {
+          setShowReport(false);
+          Swal.fire({ title: "Ya reportaste este perfil", text: "Tu reporte anterior sigue registrado.", icon: "info", confirmButtonColor: "#006AD3" });
+          return;
+        }
+        throw new Error(data.message || "No se pudo enviar el reporte.");
+      }
+      setShowReport(false);
+      setReportDesc("");
+      setReportReason(MOTIVOS_REPORTE[0]);
+      Swal.fire({
+        title: "Reporte enviado",
+        text: "Gracias. El equipo de la Fundación revisará este perfil. Tu identidad se mantiene anónima.",
+        icon: "success",
+        confirmButtonColor: "#006AD3",
+      });
+    } catch (err: any) {
+      Swal.fire({ title: "Error", text: err.message || "Ocurrió un error.", icon: "error", confirmButtonColor: "#006AD3" });
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
 // Define the type for support tags
 interface SupportType {
@@ -342,7 +394,19 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
             {/* Action buttons */}
             <div className="w-full mt-6 space-y-3">
               {renderConnectButton()}
-              
+
+              {/* Reportar perfil — visible para usuarios autenticados que no sean el dueño */}
+              {currentUser && !isOwnProfile && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReport(true)}
+                  className="w-full border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 font-medium transition-all"
+                >
+                  <Flag className="mr-2 h-4 w-4" />
+                  Reportar perfil
+                </Button>
+              )}
+
               <div className="flex gap-3 justify-center pt-2">
                 {exalumno.linkedin_url && (
                   <a href={exalumno.linkedin_url} target="_blank" rel="noreferrer" className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-[#0077b5] hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
@@ -470,6 +534,64 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
 
         </div>
       </div>
+
+      {/* ── Modal: Reportar perfil ─────────────────────────────────────────── */}
+      {showReport && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => !reportSubmitting && setShowReport(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 p-5 border-b border-slate-200 dark:border-slate-800">
+              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                <Flag className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-white">Reportar perfil</h3>
+                <p className="text-xs text-slate-500">{user.nombre}</p>
+              </div>
+              <button onClick={() => !reportSubmitting && setShowReport(false)} className="ml-auto p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" aria-label="Cerrar">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Motivo</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                >
+                  {MOTIVOS_REPORTE.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Descripción (opcional)</label>
+                <textarea
+                  value={reportDesc}
+                  onChange={(e) => setReportDesc(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  placeholder="Cuéntanos más detalles del problema..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none"
+                />
+              </div>
+              <p className="text-xs text-slate-400 flex items-start gap-1.5">
+                <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
+                Tu reporte es anónimo. La persona reportada no sabrá quién la reportó.
+              </p>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowReport(false)} disabled={reportSubmitting} className="text-sm">
+                Cancelar
+              </Button>
+              <Button onClick={submitReport} disabled={reportSubmitting} className="bg-red-600 hover:bg-red-700 text-white text-sm">
+                {reportSubmitting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Flag className="w-4 h-4 mr-1.5" />}
+                {reportSubmitting ? "Enviando..." : "Enviar reporte"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
