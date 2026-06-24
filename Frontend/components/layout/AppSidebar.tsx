@@ -122,18 +122,18 @@ export function AppSidebar() {
         <img
           src="/logo.png"
           alt="Logo U"
-          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 brightness-0 invert"
+          className="h-10 group-hover:h-14 w-auto object-contain transition-all duration-300 dark:brightness-0 dark:invert"
         />
         <div className="mt-0 group-hover:mt-2 text-center group-hover:text-left transition-all duration-300 w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap">
           {role === "ADMIN" ? (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-red-400">ADMIN UCR</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70 dark:text-red-400/70">Panel Administrativo</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-red-600 dark:text-red-400">ADMIN UCR</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-red-600/70 dark:text-red-400/70">Panel Administrativo</p>
             </>
           ) : (
             <>
-              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white dark:text-sky-400">EXALUMNOS U</h1>
-              <p className="text-[9px] group-hover:text-[10px] font-semibold text-sky-100 dark:text-sky-400/80">Impacto y Legado</p>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-[#005da4] dark:text-sky-400">EXALUMNOS U</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-[#005da4]/70 dark:text-sky-400/80">Impacto y Legado</p>
             </>
           )}
         </div>

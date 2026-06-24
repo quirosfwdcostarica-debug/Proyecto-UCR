@@ -38,9 +38,11 @@ interface Donacion {
   id: string;
   monto: number;
   destino: string;
-  status: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
-  comprobanteUrl: string;
-  createdAt: string;
+  estado: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
+  comprobante_url: string | null;
+  created_at: string;
+  estudiante_nombre?: string | null;
+  proyecto_titulo?: string | null;
 }
 
 interface ProyectoEstudiantil {
@@ -152,6 +154,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
           comprobanteUrl: publicUrl,
           destino: destinoFormat,
           metodoPago: "",
+          proyectoEstudianteId: proyecto.id,
         }),
       });
 
@@ -485,7 +488,7 @@ export default function DonacionesPage() {
                       <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Monto</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Destino</th>
+                          <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Proyecto/Estudiante</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Fecha</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estado</th>
                           <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Comprobante</th>
@@ -493,21 +496,26 @@ export default function DonacionesPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {donaciones.map((d) => {
-                          const statusInfo = BADGE_STATUS[d.status];
+                          const statusInfo = BADGE_STATUS[d.estado] || BADGE_STATUS["PENDIENTE"];
                           return (
                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">
                                 ₡{d.monto.toLocaleString("es-CR")}
                               </td>
-                              <td className="px-4 py-3 text-slate-600 dark:text-slate-400 max-w-[180px] truncate">
-                                {d.destino}
+                              <td className="px-4 py-3">
+                                <div className="max-w-[220px] truncate">
+                                  <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{d.proyecto_titulo || d.destino}</p>
+                                  {d.estudiante_nombre && (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">Estudiante: {d.estudiante_nombre}</p>
+                                  )}
+                                </div>
                               </td>
-                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                {new Date(d.createdAt).toLocaleDateString("es-CR", {
+                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                {d.created_at ? new Date(d.created_at).toLocaleDateString("es-CR", {
                                   day: "2-digit",
                                   month: "short",
                                   year: "numeric",
-                                })}
+                                }) : "-"}
                               </td>
                               <td className="px-4 py-3">
                                 <Badge
@@ -519,14 +527,18 @@ export default function DonacionesPage() {
                                 </Badge>
                               </td>
                               <td className="px-4 py-3">
-                                <a
-                                  href={d.comprobanteUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#0f4c81] hover:underline text-xs font-medium"
-                                >
-                                  Ver →
-                                </a>
+                                {d.comprobante_url ? (
+                                  <a
+                                    href={d.comprobante_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#0f4c81] dark:text-sky-400 hover:underline text-xs font-medium"
+                                  >
+                                    Ver →
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-slate-400">Pendiente</span>
+                                )}
                               </td>
                             </tr>
                           );
