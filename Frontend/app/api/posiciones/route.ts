@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { getToken } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
     const { data: posicion, error } = await supabase
       .from('POSICIONES')
       .insert({
+        id: randomUUID(),
         exalumno_id: token.id as string,
         titulo,
         tipo: tipo || null,
@@ -142,6 +144,8 @@ export async function POST(request: NextRequest) {
         idiomas_requeridos: idiomas_requeridos || null,
         soft_skills: soft_skills || null,
         matching_weights: matching_weights || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

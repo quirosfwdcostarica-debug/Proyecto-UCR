@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
         tipo: "EXALUMNO",
         activo: true,
         email_verified: true,
+        updated_at: new Date().toISOString(),
       });
     } catch (e) {
       console.error("Fallo auto-creando usuario:", e);
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
   let { data: exalumno } = await supabaseAdmin.from('EXALUMNOS').select('user_id').eq('user_id', exalumnoId).maybeSingle();
   if (!exalumno) {
     try {
-      await supabaseAdmin.from('EXALUMNOS').insert({ user_id: exalumnoId });
+      await supabaseAdmin.from('EXALUMNOS').insert({ user_id: exalumnoId, updated_at: new Date().toISOString() });
     } catch (err: any) {
       return NextResponse.json({ message: "Error interno creando perfil: " + err.message }, { status: 500 });
     }
@@ -193,6 +194,7 @@ export async function POST(request: NextRequest) {
       destino,
       estado: "PENDIENTE",
       comprobante_url: comprobanteUrl || null,
+      updated_at: new Date().toISOString(),
       ...(metodoPago ? { metodo_pago: metodoPago } : {}),
       ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
     }).select('*').single();

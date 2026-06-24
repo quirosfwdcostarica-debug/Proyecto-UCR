@@ -22,8 +22,6 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
 // ============================================================
 // Constantes de pago (configurables)
 // ============================================================
@@ -60,6 +58,11 @@ const BADGE_STATUS: Record<string, { label: string; className: string; icon: Rea
     icon: <Clock className="w-3 h-3" />,
   },
   APROBADA: {
+    label: "Aprobada",
+    className: "bg-green-100 text-green-700 border-green-200",
+    icon: <CheckCircle2 className="w-3 h-3" />,
+  },
+  CONFIRMADA: {
     label: "Aprobada",
     className: "bg-green-100 text-green-700 border-green-200",
     icon: <CheckCircle2 className="w-3 h-3" />,
@@ -134,6 +137,7 @@ function DonacionModal({
           comprobanteUrl: publicUrl,
           destino: `${proyecto.nombre}${motivo.trim() ? ` - Motivo: ${motivo.trim()}` : ""}`,
           metodoPago: "",
+          proyectoEstudianteId: proyecto.id,
         }),
       });
 
@@ -267,7 +271,7 @@ function DonacionModal({
 
 
 export default function DonacionesPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const role = (session?.user as any)?.tipo || (session?.user as any)?.role;
   const userId = (session?.user as any)?.id as string | undefined;
   const userName = session?.user?.name || "Usuario";
@@ -308,6 +312,14 @@ export default function DonacionesPage() {
     }
     loadProyectos();
   }, [userId, role]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
@@ -424,7 +436,7 @@ export default function DonacionesPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {donaciones.map((d) => {
-                          const statusInfo = BADGE_STATUS[d.status];
+                          const statusInfo = BADGE_STATUS[d.status] ?? BADGE_STATUS["PENDIENTE"];
                           return (
                             <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">
