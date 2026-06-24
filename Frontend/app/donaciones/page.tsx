@@ -38,7 +38,7 @@ interface Donacion {
   id: string;
   monto: number;
   destino: string;
-  status: "PENDIENTE" | "APROBADA" | "RECHAZADA";
+  status: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "CONFIRMADA";
   comprobanteUrl: string;
   createdAt: string;
 }
@@ -64,6 +64,11 @@ const BADGE_STATUS: Record<string, { label: string; className: string; icon: Rea
     className: "bg-green-100 text-green-700 border-green-200",
     icon: <CheckCircle2 className="w-3 h-3" />,
   },
+  CONFIRMADA: {
+    label: "Confirmada",
+    className: "bg-green-100 text-green-700 border-green-200",
+    icon: <CheckCircle2 className="w-3 h-3" />,
+  },
   RECHAZADA: {
     label: "Rechazada",
     className: "bg-red-100 text-red-700 border-red-200",
@@ -86,6 +91,7 @@ function DonacionModal({
   onSuccess: () => void;
 }) {
   const [monto, setMonto] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [metodo, setMetodo] = useState<MetodoPago>("SINPE");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -118,30 +124,10 @@ function DonacionModal({
       setError("Ingresa un monto válido mayor a ₡0.");
       return;
     }
-    if (!archivo) {
-      setError("Debes adjuntar el comprobante de pago.");
-      return;
-    }
-
     setUploading(true);
     try {
-      // 1. Subir comprobante a Cloudinary
-      const formData = new FormData();
-      formData.append("file", archivo);
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
-
-      const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!cloudinaryRes.ok) {
-        throw new Error("Error al subir el comprobante a Cloudinary");
-      }
-
-      const uploadData = await cloudinaryRes.json();
-      const publicUrl = uploadData.secure_url;
+      // Registrar la solicitud de donación en la API
+      const publicUrl = ""; // Sin comprobante inicialmente
 
       // 2. Registrar la donación en la API
       const res = await fetch("/api/donaciones", {
@@ -151,8 +137,8 @@ function DonacionModal({
           exalumnoId,
           monto: montoNum,
           comprobanteUrl: publicUrl,
-          destino: proyecto.nombre,
-          metodoPago: metodo,
+          destino: `${proyecto.nombre}${motivo.trim() ? ` - Motivo: ${motivo.trim()}` : ""}`,
+          metodoPago: "",
         }),
       });
 
@@ -174,21 +160,21 @@ function DonacionModal({
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">¡Donación enviada!</h3>
-          <p className="text-slate-500 text-sm mb-6">
-            Tu comprobante está en revisión. Recibirás un email de confirmación cuando sea aprobado. Gracias por apoyar el talento UCR.
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">¡Solicitud enviada!</h3>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+            Tu solicitud de donación ha sido enviada al administrador para su revisión y aprobación. Pronto recibirás las instrucciones de pago.
           </p>
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-sm px-4 py-2">
+          <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/50 text-sm px-4 py-2">
             <Clock className="w-4 h-4 mr-1.5" />
             Estado: En revisión
           </Badge>
-          <Button onClick={onClose} className="w-full mt-6 bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+          <Button onClick={onClose} className="w-full mt-6 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white">
             Cerrar
           </Button>
         </div>
@@ -199,165 +185,59 @@ function DonacionModal({
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Realizar Donación</h3>
-            <p className="text-sm text-slate-500 mt-0.5">Proyecto: {proyecto.nombre}</p>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Solicitar Donación</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Proyecto: {proyecto.nombre}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Monto */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               Monto a donar (₡)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-slate-400 font-semibold text-sm">₡</span>
+              <span className="absolute left-3 top-3 text-slate-400 dark:text-slate-500 font-semibold text-sm">₡</span>
               <Input
                 type="number"
                 min="1"
                 value={monto}
                 onChange={(e) => setMonto(e.target.value)}
                 placeholder="0"
-                className="pl-8 h-11 text-lg font-semibold"
+                className="pl-8 h-11 text-lg font-semibold bg-white dark:bg-slate-950 dark:border-slate-800"
                 required
               />
             </div>
           </div>
 
-          {/* Método de pago */}
+          {/* Motivo */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Método de pago
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              ¿Por qué te gustaría donar a este proyecto? (Opcional)
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setMetodo("SINPE")}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                  metodo === "SINPE"
-                    ? "border-[#0f4c81] bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <Smartphone className={`w-6 h-6 ${metodo === "SINPE" ? "text-[#0f4c81]" : "text-slate-400"}`} />
-                <span className={`text-sm font-semibold ${metodo === "SINPE" ? "text-[#0f4c81]" : "text-slate-600"}`}>
-                  SINPE Móvil
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMetodo("TRANSFERENCIA")}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                  metodo === "TRANSFERENCIA"
-                    ? "border-[#0f4c81] bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <CreditCard className={`w-6 h-6 ${metodo === "TRANSFERENCIA" ? "text-[#0f4c81]" : "text-slate-400"}`} />
-                <span className={`text-sm font-semibold ${metodo === "TRANSFERENCIA" ? "text-[#0f4c81]" : "text-slate-600"}`}>
-                  Transferencia
-                </span>
-              </button>
-            </div>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ej. Me parece una excelente iniciativa y quiero apoyar..."
+              className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:border-slate-800"
+              rows={3}
+            />
           </div>
 
-          {/* Información de pago */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
-            {metodo === "SINPE" ? (
-              <>
-                <p className="text-sm font-bold text-[#0f4c81] flex items-center gap-2">
-                  <Smartphone className="w-4 h-4" />
-                  Datos para SINPE Móvil
-                </p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Número</span>
-                  <span className="font-bold text-slate-800 font-mono">{SINPE_NUMERO}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Concepto</span>
-                  <span className="font-medium text-slate-700">Donación Alumni UCR</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm font-bold text-[#0f4c81] flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
-                  Datos para Transferencia
-                </p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Banco</span>
-                  <span className="font-medium text-slate-700">{BANCO_DESTINO}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">IBAN</span>
-                  <span className="font-mono text-xs font-bold text-slate-800 break-all">{IBAN_DESTINO}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Beneficiario</span>
-                  <span className="font-medium text-slate-700">Fundación UCR</span>
-                </div>
-              </>
-            )}
-            <p className="text-xs text-slate-500 pt-1">
-              Realiza el pago primero, luego adjunta el comprobante.
-            </p>
-          </div>
-
-          {/* Comprobante */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Comprobante de pago *
-            </label>
-            <div
-              className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
-                archivo ? "border-green-400 bg-green-50" : "border-slate-200 hover:border-[#0f4c81] hover:bg-blue-50/30"
-              }`}
-              onClick={() => fileRef.current?.click()}
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,application/pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              {archivo ? (
-                <div className="flex items-center justify-center gap-2 text-green-700">
-                  <FileText className="w-5 h-5" />
-                  <span className="text-sm font-medium truncate max-w-[200px]">{archivo.name}</span>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setArchivo(null); }}
-                    className="ml-1 p-0.5 hover:bg-green-200 rounded"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-1 py-2">
-                  <Upload className="w-6 h-6 text-slate-400" />
-                  <p className="text-sm text-slate-500">
-                    <span className="font-semibold text-[#0f4c81]">Seleccionar archivo</span>{" "}
-                    o arrastra aquí
-                  </p>
-                  <p className="text-xs text-slate-400">JPG, PNG, WEBP o PDF · Máx. 5MB</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* El usuario solo solicita el monto. El método de pago y comprobante se pedirán después de la aprobación. */}
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 rounded-lg px-3 py-2.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {error}
             </div>
@@ -366,7 +246,7 @@ function DonacionModal({
           <Button
             type="submit"
             disabled={uploading}
-            className="w-full h-12 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-semibold text-base"
+            className="w-full h-12 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white font-semibold text-base"
           >
             {uploading ? (
               <>
@@ -376,7 +256,7 @@ function DonacionModal({
             ) : (
               <>
                 <DollarSign className="w-4 h-4 mr-2" />
-                Enviar Donación
+                Solicitar Donación
               </>
             )}
           </Button>
@@ -506,7 +386,7 @@ export default function DonacionesPage() {
                       className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white"
                     >
                       <DollarSign className="w-4 h-4 mr-2" />
-                      Donar a este proyecto
+                      Solicitar donar a este proyecto
                     </Button>
                   </CardContent>
                 </Card>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { sendPerfilAutoSuspendido } from "@/lib/email";
 
 const REPORTES_PARA_SUSPENSION = 3;
 
@@ -55,37 +56,60 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Crear el reporte en REPORTES_PERFIL
-    const reporte = await prisma.reportePerfil.create({
-      data: {
-        reportado_por: reportadorId,
-        perfil_reportado: reportadoId,
-        motivo,
-      },
-    });
-
-    // Contar todos los reportes del usuario reportado
-    const totalReportes = await prisma.reportePerfil.count({
-      where: { perfil_reportado: reportadoId },
-    });
-
-    let suspendidoAuto = false;
-
-    // Auto-suspensión si llega a 3 o más reportes
-    if (totalReportes >= REPORTES_PARA_SUSPENSION && reportado.status !== "SUSPENDIDO") {
-      await prisma.user.update({
-        where: { id: reportadoId },
-        data: { status: "SUSPENDIDO" },
+    // Crear el reporte, recontar y aplicar auto-suspensión de forma atómica (T-51).
+    const { totalReportes, suspendidoAuto } = await prisma.$transaction(async (tx) => {
+      await tx.reportePerfil.create({
+        data: {
+          reportado_por: reportadorId,
+          perfil_reportado: reportadoId,
+          motivo,
+        },
       });
-      suspendidoAuto = true;
+
+      const total = await tx.reportePerfil.count({
+        where: { perfil_reportado: reportadoId },
+      });
+
+      // Mantener sincronizado el contador del usuario
+      const yaSuspendido = reportado.status === "SUSPENDIDO";
+      const debeSuspender = total >= REPORTES_PARA_SUSPENSION && !yaSuspendido;
+
+      await tx.user.update({
+        where: { id: reportadoId },
+        data: {
+          reportes_recibidos: total,
+          ...(debeSuspender ? { status: "SUSPENDIDO", activo: false } : {}),
+        },
+      });
+
+      return { totalReportes: total, suspendidoAuto: debeSuspender };
+    });
+
+    // Notificar a los administradores si hubo auto-suspensión (best-effort, fuera de la transacción)
+    if (suspendidoAuto) {
+      try {
+        const admins = await prisma.user.findMany({
+          where: { tipo: "ADMIN" },
+          select: { email: true },
+        });
+        await Promise.all(
+          admins
+            .filter((a) => a.email)
+            .map((a) =>
+              sendPerfilAutoSuspendido(a.email, reportado.nombre, reportado.email, totalReportes)
+            )
+        );
+      } catch (mailErr) {
+        console.error("[POST /api/reportes] Falló el email a admins:", mailErr);
+      }
     }
 
+    // T-52: NUNCA devolver reportado_por ni el objeto del reporte (anonimato del reportador).
     return NextResponse.json(
       {
         message: suspendidoAuto
           ? "Reporte registrado. El usuario fue suspendido automáticamente."
           : "Reporte registrado exitosamente.",
-        reporte,
         totalReportes,
         suspendidoAuto,
       },

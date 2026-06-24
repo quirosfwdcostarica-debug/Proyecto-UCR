@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useDialog } from "@/hooks/useDialog";
 import {
   Loader2,
   ArrowLeft,
@@ -30,6 +31,7 @@ export default function MatchDetailPage() {
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showAlert, showConfirm } = useDialog();
 
   const role = (session?.user as any)?.tipo;
   const isEstudiante = role === "ESTUDIANTE";
@@ -65,7 +67,7 @@ export default function MatchDetailPage() {
         setMatch({ ...match, ...updated });
       } else {
         const err = await res.json();
-        alert(err.message || "Error al procesar la acción");
+        await showAlert(err.message || "Error al procesar la acción", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -198,10 +200,13 @@ export default function MatchDetailPage() {
                 variant="outline"
                 className="w-full border-slate-300 text-slate-600 hover:bg-slate-50"
                 disabled={actionLoading === "CERRAR"}
-                onClick={() => {
-                  if (confirm("¿Estás seguro de cerrar este match? Ya no podrás interactuar con él.")) {
-                    handleAction("CERRAR");
-                  }
+                onClick={async () => {
+                  const ok = await showConfirm("¿Cerrar este match? Ya no podrás interactuar con él.", {
+                    title: "Cerrar match",
+                    confirmLabel: "Cerrar match",
+                    variant: "warning",
+                  });
+                  if (ok) handleAction("CERRAR");
                 }}
               >
                 {actionLoading === "CERRAR" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cerrar Match"}

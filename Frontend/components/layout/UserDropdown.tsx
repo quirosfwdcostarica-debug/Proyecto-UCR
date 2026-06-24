@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useCallback, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, User } from "lucide-react";
-import { logoutAction } from "@/actions/auth.actions";
+import { signOut } from "next-auth/react";
 
 export function UserDropdown() {
   const { data: session } = useSession();
@@ -109,9 +109,10 @@ export function UserDropdown() {
           <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
           <button
-            onClick={() => {
-              startTransition(() => {
-                logoutAction();
+            onClick={async () => {
+              startTransition(async () => {
+                await signOut({ redirect: false });
+                window.location.href = "/login";
               });
             }}
             disabled={isPending}

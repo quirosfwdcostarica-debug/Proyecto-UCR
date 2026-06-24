@@ -82,7 +82,6 @@ function Dashboard() {
   // Beca Modal States
   const [isBecaOpen, setIsBecaOpen] = useState(false);
   const [becaJustification, setBecaJustification] = useState("");
-  const [becaMonto] = useState("¢450,000");
 
   // Coffee Modal States
   const [isCoffeeOpen, setIsCoffeeOpen] = useState(false);
@@ -97,7 +96,7 @@ function Dashboard() {
     setBecaJustification("");
     toast({
       title: "Solicitud de Beca Enviada",
-      description: `Tu postulación al fondo de Excelencia de Exalumnos por ${becaMonto} ha sido recibida con éxito y está en revisión.`
+      description: "Tu postulación al fondo de Excelencia de Exalumnos ha sido recibida con éxito y está en revisión."
     });
   };
 
@@ -221,8 +220,8 @@ function Dashboard() {
                       <Building2 className="h-5 w-5" />
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Fondos de Beca</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">¢450,000</h4>
-                    <p className="text-xs font-semibold text-green-600">+12% desde el ciclo anterior</p>
+                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
+                    <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
                   </Card>
                   <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
                     <div className="h-10 w-10 rounded-lg bg-green-700 flex items-center justify-center text-white mb-4">
@@ -273,14 +272,17 @@ function Dashboard() {
                     <span className="text-[#0f4c81] dark:text-sky-400">Tu red está activa.</span>
                   </h1>
                   <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
-                    Gracias por apoyar al talento de la UCR. Tienes 3 solicitudes de café virtual de estudiantes esperando tu respuesta esta semana.
+                    Gracias por apoyar al talento de la UCR.{" "}
+                    {profile?.matchesContactados > 0
+                      ? `Tienes ${profile.matchesContactados} solicitud${profile.matchesContactados !== 1 ? "es" : ""} de estudiantes esperando tu respuesta.`
+                      : "Sigue conectando con estudiantes de la red UCR."}
                   </p>
                   <div className="flex gap-4">
                     <Link href="/directorio/estudiantes">
                       <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white border-0">Ver Estudiantes</Button>
                     </Link>
-                    <Link href="/posiciones">
-                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Publicar Empleo</Button>
+                    <Link href="/mis-posiciones">
+                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Mis Posiciones</Button>
                     </Link>
                   </div>
                 </div>
@@ -296,28 +298,33 @@ function Dashboard() {
                   
                   <div className="space-y-6">
                     <div>
-                      <span className="text-sm text-slate-500 block mb-1">Donación Total Acumulada</span>
-                      <span className="text-3xl font-extrabold text-[#0f4c81] dark:text-sky-400">¢950,000</span>
+                      <span className="text-sm text-slate-500 block mb-1">Donación Total Confirmada</span>
+                      <span className="text-3xl font-extrabold text-[#0f4c81] dark:text-sky-400">
+                        {profile?.donacionTotalConfirmada != null
+                          ? `₡${Number(profile.donacionTotalConfirmada).toLocaleString("es-CR")}`
+                          : "₡0"}
+                      </span>
                     </div>
-                    
+
                     <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
                       <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Proyectos Patrocinados</span>
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="font-medium text-slate-700 dark:text-slate-300">Energía Renovable (Gabriel)</span>
-                            <span className="font-bold text-[#0f4c81] dark:text-sky-400">75%</span>
-                          </div>
-                          <Progress value={75} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+                      {Array.isArray(profile?.proyectosPatrocinados) && profile.proyectosPatrocinados.length > 0 ? (
+                        <div className="space-y-3">
+                          {profile.proyectosPatrocinados.map((p: any, i: number) => (
+                            <div key={i}>
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
+                                  {p.proyecto_titulo} ({p.nombre_estudiante})
+                                </span>
+                                <span className="font-bold text-[#0f4c81] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
+                              </div>
+                              <Progress value={p.avance ?? 0} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+                            </div>
+                          ))}
                         </div>
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="font-medium text-slate-700 dark:text-slate-300">Plataforma Inclusiva (María)</span>
-                            <span className="font-bold text-[#0f4c81] dark:text-sky-400">40%</span>
-                          </div>
-                          <Progress value={40} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
-                        </div>
-                      </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">Sin proyectos patrocinados aún.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -346,7 +353,7 @@ function Dashboard() {
             Aplicar a Beca de Excelencia
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
-            Estás postulando para el fondo especial de exalumnos por un monto total de <span className="font-semibold text-slate-700">{becaMonto}</span>.
+            Estás postulando al fondo especial de Excelencia de Exalumnos de la UCR.
           </DialogDescription>
         </DialogHeader>
 

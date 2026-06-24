@@ -28,41 +28,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Try with reference_id column (added in RF06 migration). Falls back gracefully if column doesn't exist yet.
-    let notifications: any[];
-    try {
-      notifications = await prisma.$queryRaw<any[]>`
-        SELECT
-          id::text,
-          title,
-          message,
-          type,
-          read,
-          created_at AS "time",
-          reference_id::text AS "matchId"
-        FROM "NOTIFICATIONS"
-        WHERE user_id = ${userId}::uuid
-          AND created_at >= NOW() - INTERVAL '7 days'
-        ORDER BY created_at DESC
-        LIMIT 100
-      `;
-    } catch {
-      notifications = await prisma.$queryRaw<any[]>`
-        SELECT
-          id::text,
-          title,
-          message,
-          type,
-          read,
-          created_at AS "time",
-          NULL::text AS "matchId"
-        FROM "NOTIFICATIONS"
-        WHERE user_id = ${userId}::uuid
-          AND created_at >= NOW() - INTERVAL '7 days'
-        ORDER BY created_at DESC
-        LIMIT 100
-      `;
-    }
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: notificationsData, error } = await supabase
+      .from('NOTIFICATIONS')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+
+    const notifications = notificationsData || [];
 
     const isExalumno = (session.user as any)?.tipo === 'EXALUMNO';
     const matchesUrl = isExalumno ? '/mis-matches/exalumno' : '/mis-matches';
@@ -107,8 +92,8 @@ export async function GET(request: NextRequest) {
         read: n.read,
         time: timeStr,
         type: n.type,
-        matchId: n.matchId || null,
-        actionable: isActionable && !!n.matchId && !n.read,
+        matchId: n.reference_id || n.matchId || null,
+        actionable: isActionable && !!(n.reference_id || n.matchId) && !n.read,
         rejectedBy,
         url,
       };
@@ -133,18 +118,26 @@ export async function PUT(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { id } = body;
 
+    const { createClient } = require("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
     if (id) {
-      await prisma.$executeRaw`
-        UPDATE "NOTIFICATIONS"
-        SET read = true, updated_at = NOW()
-        WHERE id = ${id}::uuid AND user_id = ${userId}::uuid
-      `;
+      const { error } = await supabase
+        .from('NOTIFICATIONS')
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', userId);
+      if (error) throw error;
     } else {
-      await prisma.$executeRaw`
-        UPDATE "NOTIFICATIONS"
-        SET read = true, updated_at = NOW()
-        WHERE user_id = ${userId}::uuid AND read = false
-      `;
+      const { error } = await supabase
+        .from('NOTIFICATIONS')
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('read', false);
+      if (error) throw error;
     }
 
     return NextResponse.json({ success: true });

@@ -1,290 +1,382 @@
-import { Resend } from "resend";
+// ─── EmailJS server-side sender ──────────────────────────────────────────────
+// Usa la API REST de EmailJS con autenticación por private key (server-only).
+// Templates:
+//   TEMPLATE_NOTIF  (template_hih689c) → {{recipient_name}}, {{title}}, {{message}}, {{action_url}}, {{action_text}}
+//   TEMPLATE_AUTH   (template_zfbvncq) → {{recipient_name}}, {{title}}, {{verification_url}}
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const TEMPLATE_NOTIF = process.env.EMAILJS_NOTIFICATION_TEMPLATE_ID ?? "template_hih689c";
+const TEMPLATE_AUTH = process.env.EMAILJS_AUTH_TEMPLATE_ID ?? "template_zfbvncq";
 
-const FROM_EMAIL = "Alumni U <noreply@alumni.ucr.ac.cr>";
+function devLog(to: string, extra?: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`\n📧 [DEV email] → ${to}${extra ? "\n   " + extra : ""}\n`);
+  }
+}
 
-/**
- * Envía email de notificación cuando un match es ACEPTADO (status → ACTIVO).
- * Se envía al estudiante notificándole que el exalumno aceptó conectar.
- */
+async function sendEmailJS(
+  toEmail: string,
+  templateId: string,
+  templateParams: Record<string, string>
+): Promise<void> {
+  devLog(toEmail, templateParams.verification_url ?? templateParams.action_url);
+
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+  if (!serviceId || !publicKey || !privateKey) {
+    console.error("[sendEmailJS] Faltan EMAILJS_SERVICE_ID / EMAILJS_PUBLIC_KEY / EMAILJS_PRIVATE_KEY en .env.local");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        accessToken: privateKey,
+        template_params: { to_email: toEmail, ...templateParams },
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error(`[sendEmailJS:${templateId}] Rechazado:`, txt);
+    }
+  } catch (e: any) {
+    console.error(`[sendEmailJS:${templateId}] Excepción:`, e?.message ?? e);
+  }
+}
+
+// ─── Auth / verificación ──────────────────────────────────────────────────────
+
+export async function sendMagicLinkEmail(
+  toEmail: string,
+  link: string,
+  nombre: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_AUTH, {
+    recipient_name: nombre,
+    title: "Verifica tu cuenta",
+    verification_url: link,
+  });
+}
+
+export async function sendAlumniPendingEmail(
+  toEmail: string,
+  nombre: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: nombre,
+    title: "Tu perfil está en revisión",
+    message:
+      "Tu perfil de exalumno ha sido creado exitosamente y está siendo revisado por el equipo de la Fundación UCR. " +
+      "Recibirás una notificación en máximo 48 horas cuando sea aprobado.",
+    action_url: `${BASE_URL}/login`,
+    action_text: "Ir al inicio",
+  });
+}
+
+export async function sendAlumniApprovedEmail(
+  toEmail: string,
+  nombre: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_AUTH, {
+    recipient_name: nombre,
+    title: "¡Tu perfil fue aprobado!",
+    verification_url: `${BASE_URL}/login`,
+  });
+}
+
+// ─── Moderación / Fraude (RF-09) ───────────────────────────────────────────────
+
+export async function sendPerfilAutoSuspendido(
+  adminEmail: string,
+  nombreReportado: string,
+  emailReportado: string,
+  totalReportes: number
+): Promise<void> {
+  await sendEmailJS(adminEmail, TEMPLATE_NOTIF, {
+    recipient_name: "Administrador",
+    title: "🚨 Perfil auto-suspendido por reportes",
+    message:
+      `El perfil de ${nombreReportado} (${emailReportado}) alcanzó ${totalReportes} reportes ` +
+      "y fue suspendido automáticamente por el sistema. Revisa el caso en el panel de administración " +
+      "para confirmar la suspensión o rehabilitar la cuenta.",
+    action_url: `${BASE_URL}/admin`,
+    action_text: "Revisar en el panel",
+  });
+}
+
+// ─── Matches ──────────────────────────────────────────────────────────────────
+
 export async function sendMatchAceptado(
   toEmail: string,
   estudianteNombre: string,
   exalumnoNombre: string
 ): Promise<void> {
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject: `¡${exalumnoNombre} aceptó conectar contigo! — Alumni U`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-            <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
-              
-              <!-- Header -->
-              <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Alumni U</h1>
-                <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Plataforma de Conexión Universitaria</p>
-              </div>
-
-              <!-- Body -->
-              <div style="padding: 40px 32px;">
-                <div style="text-align: center; margin-bottom: 28px;">
-                  <div style="width: 64px; height: 64px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">🎉</div>
-                  <h2 style="color: #0f4c81; font-size: 22px; font-weight: 700; margin: 0 0 8px;">¡Tienes un nuevo match activo!</h2>
-                </div>
-
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Hola <strong style="color: #0f172a;">${estudianteNombre}</strong>,
-                </p>
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Nos alegra informarte que <strong style="color: #0f4c81;">${exalumnoNombre}</strong> ha aceptado conectar contigo en la plataforma Alumni U. ¡Es momento de iniciar una conversación y aprovechar esta oportunidad!
-                </p>
-
-                <!-- CTA -->
-                <div style="text-align: center; margin: 32px 0;">
-                  <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/mis-matches"
-                     style="background: #0f4c81; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">
-                    Ver mis Matches →
-                  </a>
-                </div>
-
-                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 24px 0 0;">
-                  Este email fue enviado automáticamente por la plataforma Alumni U.<br>
-                  La Universidad — Fundación U.
-                </p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    });
-  } catch (error) {
-    // No lanzar el error para que no interrumpa el flujo principal
-    console.error("[sendMatchAceptado] Error enviando email:", error);
-  }
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: estudianteNombre,
+    title: `¡${exalumnoNombre} aceptó conectar contigo!`,
+    message:
+      `${exalumnoNombre} ha aceptado tu solicitud de conexión en la plataforma. ` +
+      "¡Es momento de iniciar una conversación y aprovechar esta oportunidad!",
+    action_url: `${BASE_URL}/mis-matches`,
+    action_text: "Ver mis Matches",
+  });
 }
 
-/**
- * Envía email de notificación cuando un match es RECHAZADO.
- * Se envía al estudiante informándole que la conexión no pudo establecerse.
- */
 export async function sendMatchRechazado(
   toEmail: string,
   estudianteNombre: string
 ): Promise<void> {
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject: "Actualización sobre tu solicitud de match — Alumni U",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-            <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
-              
-              <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni U</h1>
-                <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Plataforma de Conexión Universitaria</p>
-              </div>
-
-              <div style="padding: 40px 32px;">
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Hola <strong style="color: #0f172a;">${estudianteNombre}</strong>,
-                </p>
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Te informamos que la solicitud de conexión enviada no pudo concretarse en esta ocasión. No te desanimes — hay muchos exalumnos más en la plataforma con quienes podrías hacer match.
-                </p>
-
-                <div style="background: #eff6ff; border-left: 4px solid #0f4c81; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 24px 0;">
-                  <p style="color: #0f4c81; font-weight: 600; margin: 0 0 4px; font-size: 15px;">💡 Consejo</p>
-                  <p style="color: #475569; margin: 0; font-size: 14px;">Completa tu perfil y actualiza las áreas de apoyo que buscas para mejorar tus futuros matches.</p>
-                </div>
-
-                <div style="text-align: center; margin: 32px 0;">
-                  <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/mis-matches"
-                     style="background: #0f4c81; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">
-                    Ver más matches →
-                  </a>
-                </div>
-
-                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 24px 0 0;">
-                  Este email fue enviado automáticamente por la plataforma Alumni U.
-                </p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    });
-  } catch (error) {
-    console.error("[sendMatchRechazado] Error enviando email:", error);
-  }
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: estudianteNombre,
+    title: "Actualización sobre tu solicitud de match",
+    message:
+      "La solicitud de conexión enviada no pudo concretarse en esta ocasión. " +
+      "No te desanimes — completa tu perfil para mejorar tus próximos matches.",
+    action_url: `${BASE_URL}/mis-matches`,
+    action_text: "Ver más matches",
+  });
 }
 
-/**
- * Envía confirmación de donación aprobada al exalumno.
- */
+export async function sendMatchConnectionRequest(
+  toEmail: string,
+  receptorNombre: string,
+  emisorNombre: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: receptorNombre,
+    title: `${emisorNombre} quiere conectar contigo`,
+    message:
+      `${emisorNombre} quiere conectar contigo en la plataforma. ` +
+      "Ingresa para revisar su perfil y decidir si deseas aceptar.",
+    action_url: `${BASE_URL}/mis-matches`,
+    action_text: "Ver solicitud",
+  });
+}
+
+export async function sendAdminNewActiveMatch(
+  adminEmail: string,
+  estudianteNombre: string,
+  exalumnoNombre: string
+): Promise<void> {
+  await sendEmailJS(adminEmail, TEMPLATE_NOTIF, {
+    recipient_name: "Administrador",
+    title: `Nuevo match activo: ${estudianteNombre} ↔ ${exalumnoNombre}`,
+    message:
+      `El match entre el estudiante ${estudianteNombre} y el exalumno ${exalumnoNombre} ` +
+      "ha sido aceptado y está activo.",
+    action_url: `${BASE_URL}/admin/matches`,
+    action_text: "Ver matches",
+  });
+}
+
+// ─── Donaciones ───────────────────────────────────────────────────────────────
+
 export async function sendDonacionAprobada(
   toEmail: string,
   exalumnoNombre: string,
   monto: number,
   destino: string
 ): Promise<void> {
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject: "¡Tu donación fue aprobada! — Alumni U",
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8" /></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-            <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
-              
-              <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni U</h1>
-              </div>
-
-              <div style="padding: 40px 32px;">
-                <div style="text-align: center; margin-bottom: 28px;">
-                  <div style="width: 64px; height: 64px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">✅</div>
-                  <h2 style="color: #0f4c81; font-size: 22px; font-weight: 700; margin: 0;">¡Donación Aprobada!</h2>
-                </div>
-
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Estimado/a <strong>${exalumnoNombre}</strong>,
-                </p>
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Tu donación de <strong style="color: #0f4c81;">₡${monto.toLocaleString("es-CR")}</strong> destinada a <strong>${destino}</strong> ha sido verificada y aprobada por nuestro equipo. ¡Gracias por apoyar el talento de la U!
-                </p>
-
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
-                  <p style="color: #166534; font-weight: 600; margin: 0 0 4px;">Detalle de la donación:</p>
-                  <p style="color: #374151; margin: 0; font-size: 14px;">Monto: ₡${monto.toLocaleString("es-CR")}</p>
-                  <p style="color: #374151; margin: 0; font-size: 14px;">Destino: ${destino}</p>
-                </div>
-
-                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-top: 32px;">
-                  La Universidad — Fundación U
-                </p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    });
-  } catch (error) {
-    console.error("[sendDonacionAprobada] Error enviando email:", error);
-  }
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "¡Tu donación fue aprobada!",
+    message:
+      `Tu donación de ₡${monto.toLocaleString("es-CR")} destinada a ${destino} ` +
+      "ha sido verificada y aprobada. ¡Gracias por apoyar el talento de la UCR!",
+    action_url: `${BASE_URL}/mis-donaciones`,
+    action_text: "Ver mis donaciones",
+  });
 }
 
-/**
- * Envía email de solicitud de conexión al receptor del match.
- */
-export async function sendMatchConnectionRequest(
+export async function sendDonacionRechazada(
   toEmail: string,
-  receptorNombre: string,
-  emisorNombre: string
+  exalumnoNombre: string,
+  monto: number,
+  destino: string,
+  motivo: string
 ): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "Sobre tu donación",
+    message:
+      `Lamentamos informarte que tu donación de ₡${monto.toLocaleString("es-CR")} destinada a ${destino} ` +
+      `no pudo ser verificada. Motivo: ${motivo}. ` +
+      "Si crees que se trata de un error, por favor contacta a la Fundación UCR.",
+    action_url: `${BASE_URL}/mis-donaciones`,
+    action_text: "Ver mis donaciones",
+  });
+}
+
+export async function sendDonacionRecibidaStudent(
+  toEmail: string,
+  estudianteNombre: string,
+  proyectoTitulo: string,
+  monto: number
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: estudianteNombre,
+    title: "¡Has recibido una donación!",
+    message:
+      `¡Felicidades! Un exalumno ha realizado una donación de ₡${monto.toLocaleString("es-CR")} ` +
+      `para apoyar tu proyecto "${proyectoTitulo}". ` +
+      "La Fundación UCR se pondrá en contacto pronto para gestionar la entrega de estos fondos.",
+    action_url: `${BASE_URL}/mis-donaciones`,
+    action_text: "Ver mis donaciones",
+  });
+}
+
+// ─── Aplicaciones ─────────────────────────────────────────────────────────────
+
+async function sendApplicantEmailJS(
+  toEmail: string,
+  templateId: string,
+  templateParams: Record<string, string>
+): Promise<void> {
+  devLog(toEmail);
+
+  const serviceId  = process.env.EMAILJS_APPLICANT_SERVICE_ID;
+  const publicKey  = process.env.EMAILJS_APPLICANT_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_APPLICANT_PRIVATE_KEY;
+
+  if (!serviceId || !publicKey || !privateKey) {
+    console.error("[sendApplicantEmailJS] Faltan EMAILJS_APPLICANT_* en .env.local");
+    return;
+  }
+
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: toEmail,
-      subject: `${emisorNombre} quiere conectar contigo — Alumni U`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8" /></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-            <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
-              <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 40px 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Alumni U</h1>
-                <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 14px;">Plataforma de Conexión Universitaria</p>
-              </div>
-              <div style="padding: 40px 32px;">
-                <div style="text-align: center; margin-bottom: 28px;">
-                  <div style="width: 64px; height: 64px; background: #eff6ff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">🤝</div>
-                  <h2 style="color: #0f4c81; font-size: 22px; font-weight: 700; margin: 0 0 8px;">Nueva solicitud de conexión</h2>
-                </div>
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  Hola <strong style="color: #0f172a;">${receptorNombre}</strong>,
-                </p>
-                <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                  <strong style="color: #0f4c81;">${emisorNombre}</strong> quiere conectar contigo en la plataforma Alumni U. Ingresa para revisar su perfil y decidir si deseas aceptar.
-                </p>
-                <div style="text-align: center; margin: 32px 0;">
-                  <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}/mis-matches"
-                     style="background: #0f4c81; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">
-                    Ver solicitud →
-                  </a>
-                </div>
-                <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 24px 0 0;">
-                  Este email fue enviado automáticamente por la plataforma Alumni U.
-                </p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        accessToken: privateKey,
+        template_params: { to_email: toEmail, ...templateParams },
+      }),
     });
-  } catch (error) {
-    console.error("[sendMatchConnectionRequest] Error enviando email:", error);
+
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error(`[sendApplicantEmailJS:${templateId}] Rechazado (${res.status}):`, txt);
+    } else {
+      console.log(`[sendApplicantEmailJS:${templateId}] ✓ aceptado por EmailJS → ${toEmail}`);
+    }
+  } catch (e: any) {
+    console.error(`[sendApplicantEmailJS:${templateId}] Excepción:`, e?.message ?? e);
   }
 }
 
-/**
- * Notifica al admin cuando un match pasa a estado ACTIVO.
- */
-export async function sendAdminNewActiveMatch(
-  adminEmail: string,
-  estudianteNombre: string,
-  exalumnoNombre: string
+export async function sendNuevaAplicacion(
+  toEmail: string,
+  exalumnoNombre: string,
+  posicionTitulo: string,
+  estudianteNombre: string
 ): Promise<void> {
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: adminEmail,
-      subject: `Nuevo match activo: ${estudianteNombre} ↔ ${exalumnoNombre} — Alumni U`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head><meta charset="utf-8" /></head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-            <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(15,76,129,0.08);">
-              <div style="background: linear-gradient(135deg, #0f4c81 0%, #1a7abf 100%); padding: 32px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">Alumni U — Admin</h1>
-              </div>
-              <div style="padding: 32px;">
-                <h2 style="color: #0f4c81; font-size: 18px; margin: 0 0 16px;">🟢 Match Activado</h2>
-                <p style="color: #475569; font-size: 15px; line-height: 1.6;">
-                  El siguiente match ha sido aceptado y está activo:
-                </p>
-                <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin: 16px 0;">
-                  <p style="margin: 0; color: #0f172a;"><strong>Estudiante:</strong> ${estudianteNombre}</p>
-                  <p style="margin: 8px 0 0; color: #0f172a;"><strong>Exalumno:</strong> ${exalumnoNombre}</p>
-                </div>
-                <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">Notificación automática del sistema Alumni U.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    });
-  } catch (error) {
-    console.error("[sendAdminNewActiveMatch] Error enviando email:", error);
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "¡Nueva aplicación recibida!",
+    message: `${estudianteNombre} acaba de aplicar a tu posición "${posicionTitulo}". Revisa su perfil en tu panel.`,
+    action_url: `${BASE_URL}/mis-posiciones`,
+    action_text: "Ver mis posiciones",
+  });
+}
+
+export async function sendAplicacionSeleccionada(
+  toEmail: string,
+  estudianteNombre: string,
+  posicionTitulo: string,
+  vacancyOwnerName: string,
+  vacancyOwnerEmail: string
+): Promise<void> {
+  const templateId = process.env.EMAILJS_APPLICANT_ACCEPTED_TEMPLATE ?? "template_7e3p7jr";
+  await sendApplicantEmailJS(toEmail, templateId, {
+    applicant_name: estudianteNombre,
+    name: estudianteNombre,
+    vacancy_name: posicionTitulo,
+    vacancy_owner_name: vacancyOwnerName,
+    vacancy_owner_email: vacancyOwnerEmail,
+    email: toEmail,
+  });
+}
+
+export async function sendAplicacionDescartada(
+  toEmail: string,
+  estudianteNombre: string,
+  posicionTitulo: string
+): Promise<void> {
+  const templateId = process.env.EMAILJS_APPLICANT_REJECTED_TEMPLATE ?? "template_5dkl7bw";
+  await sendApplicantEmailJS(toEmail, templateId, {
+    applicant_name: estudianteNombre,
+    vacancy_name: posicionTitulo,
+    email: toEmail,
+  });
+}
+
+// ─── Recuperación de contraseña ───────────────────────────────────────────────
+
+export async function sendPasswordResetEmailJS(
+  toEmail: string,
+  nombre: string,
+  tempPassword: string
+): Promise<boolean> {
+  const serviceId = process.env.EMAILJS_SERVICE_ID;
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+  if (!serviceId || !publicKey || !privateKey) {
+    console.error("[sendPasswordResetEmailJS] Faltan variables EMAILJS_* en .env.local");
+    return false;
   }
+
+  devLog(toEmail, `Contraseña temporal: ${tempPassword}`);
+
+  try {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: "template_zfbvncq",
+        user_id: publicKey,
+        accessToken: privateKey,
+        template_params: {
+          to_email: toEmail,
+          email: toEmail,
+          recipient_name: nombre,
+          nombre,
+          title: "Recuperación de contraseña",
+          password: tempPassword,
+          verification_url: "",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("[sendPasswordResetEmailJS] Rechazado:", errText);
+      return false;
+    }
+    return true;
+  } catch (e: any) {
+    console.error("[sendPasswordResetEmailJS] Excepción:", e?.message ?? e);
+    return false;
+  }
+}
+
+// Alias para compatibilidad con auth.actions.ts (llama a EmailJS internamente)
+export async function sendPasswordResetEmail(
+  toEmail: string,
+  nombre: string,
+  tempPassword: string
+): Promise<boolean> {
+  return sendPasswordResetEmailJS(toEmail, nombre, tempPassword);
 }

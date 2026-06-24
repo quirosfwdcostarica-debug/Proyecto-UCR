@@ -2,6 +2,7 @@
 // ─── FUENTE ÚNICA DE VERDAD ─────────────────────────────────────────────────
 // Todos los modelos apuntan a las tablas MAYÚSCULAS del backend (Sequelize).
 // El frontend usa Prisma como capa de acceso a esas mismas tablas.
+// Los campos de tipo enum usan @db.Text porque las columnas en la BD son TEXT.
 
 generator client {
   provider = "prisma-client-js"
@@ -79,22 +80,34 @@ model User {
 }
 
 model Estudiante {
-  user_id              String   @id @db.Uuid
-  user                 User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  carnet_ucr           String?
-  carrera              String?
-  escuela_facultad     String?
-  sede                 String?
-  anio_ingreso         Int?
-  nivel_academico      String?
-  promedio_ponderado   Decimal?
-  proyecto_titulo      String?
-  proyecto_tipo        String?
-  nivel_beca           String?
-  busca_financiamiento Boolean  @default(false)
-  busca_mentoria       Boolean  @default(false)
-  busca_empleo         Boolean  @default(false)
-  busca_pasantia       Boolean  @default(false)
+  user_id                   String   @id @db.Uuid
+  user                      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  carnet_ucr                String?
+  carrera                   String?
+  escuela_facultad          String?
+  sede                      String?
+  anio_ingreso              Int?
+  nivel_academico           String?
+  promedio_ponderado        Decimal?
+  nivel_beca                String?
+  proyecto_titulo           String?
+  proyecto_tipo             String?
+  proyecto_descripcion      String?
+  proyecto_necesidades      Json?
+  proyecto_porcentaje_avance Int?
+  habilidades               Json?
+  soft_skills               Json?
+  idiomas                   Json?
+  area_tematica             String?
+  areas_interes             Json?
+  beca_socioeconomica       Boolean  @default(false)
+  visible_en_directorio     Boolean  @default(false)
+  fecha_nacimiento          DateTime? @db.Date
+  activo                    Boolean?
+  busca_financiamiento      Boolean  @default(false)
+  busca_mentoria            Boolean  @default(false)
+  busca_empleo              Boolean  @default(false)
+  busca_pasantia            Boolean  @default(false)
 
   // Relaciones
   matches     Match[]          @relation("EstudianteMatch")
@@ -106,31 +119,36 @@ model Estudiante {
 }
 
 model Exalumno {
-  user_id              String   @id @db.Uuid
-  user                 User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  carnet_ucr           String?
-  escuela_facultad     String?
-  anio_graduacion      Int?
-  empresa_actual       String?
-  cargo_actual         String?
-  pais_ciudad          String?
-  anios_experiencia    Int?
-  linkedin_url         String?
-  biografia            String?
-  github_url           String?
-  website_url          String?
-  habilidades          Json?
-  certificaciones      Json?
-  experiencia_laboral  Json?
-  ofrece_mentoria      Boolean  @default(false)
-  ofrece_empleo        Boolean  @default(false)
-  ofrece_pasantia      Boolean  @default(false)
-  ofrece_proyecto      Boolean  @default(false)
-  ofrece_donacion_dinero Boolean @default(false)
-  ofrece_guest_speaking  Boolean @default(false)
-  ofrece_volunteering    Boolean @default(false)
-  ofrece_career_advice   Boolean @default(false)
-  ofrece_networking      Boolean @default(false)
+  user_id                String   @id @db.Uuid
+  user                   User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  carnet_ucr             String?
+  carrera                String?
+  escuela_facultad       String?
+  anio_graduacion        Int?
+  empresa_actual         String?
+  cargo_actual           String?
+  sector                 String?
+  pais_ciudad            String?
+  anios_experiencia      Int?
+  linkedin_url           String?
+  biografia              String?
+  github_url             String?
+  website_url            String?
+  habilidades            Json?
+  certificaciones        Json?
+  experiencia_laboral    Json?
+  areas_interes          Json?
+  perfil_completo        Boolean  @default(false)
+  visible_en_directorio  Boolean  @default(false)
+  ofrece_mentoria        Boolean  @default(false)
+  ofrece_empleo          Boolean  @default(false)
+  ofrece_pasantia        Boolean  @default(false)
+  ofrece_proyecto        Boolean  @default(false)
+  ofrece_donacion_dinero Boolean  @default(false)
+  ofrece_guest_speaking  Boolean  @default(false)
+  ofrece_volunteering    Boolean  @default(false)
+  ofrece_career_advice   Boolean  @default(false)
+  ofrece_networking      Boolean  @default(false)
 
   // Relaciones
   matches    Match[]    @relation("ExalumnoMatch")
@@ -202,7 +220,9 @@ model Donacion {
   moneda                String?
   metodo_pago           String?
   estado                DonacionEstado @default(PENDIENTE)
+  comprobante_url       String?
   confirmado_por        String?        @db.Uuid
+  motivo_rechazo        String?
   created_at            DateTime       @default(now())
   updated_at            DateTime       @updatedAt
 
@@ -213,19 +233,32 @@ model Donacion {
 }
 
 model Posicion {
-  id          String   @id @default(uuid()) @db.Uuid
-  exalumno_id String   @db.Uuid
-  tipo        String?
-  titulo      String?
-  modalidad   String?
-  jornada     String?
-  empresa     String?
-  fecha_limite DateTime?
-  estado      String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                  String    @id @default(uuid()) @db.Uuid
+  exalumno_id         String    @db.Uuid
+  tipo                String?
+  titulo              String?
+  modalidad           String?
+  jornada             String?
+  empresa             String?
+  fecha_limite        DateTime?
+  estado              String?
+  // Detalles del puesto (Paso 2)
+  descripcion         String?
+  responsabilidades   String?
+  horario             String?
+  beneficios          Json?
+  // Requisitos (Paso 3)
+  nivel_grado_minimo  String?
+  area_estudio        String?
+  hard_skills         Json?
+  idiomas_requeridos  Json?
+  soft_skills         Json?
+  // Matching (Paso 4)
+  matching_weights    Json?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
-  exalumno    Exalumno    @relation(fields: [exalumno_id], references: [user_id], onDelete: Cascade)
+  exalumno     Exalumno     @relation(fields: [exalumno_id], references: [user_id], onDelete: Cascade)
   aplicaciones Aplicacion[]
   versiones    CurriculumVersion[]
 
@@ -253,6 +286,7 @@ model Curriculum {
   estudiante_id       String   @unique @db.Uuid
   habilidades_tecnicas Json?
   idiomas             Json?
+  cv_data             Json?
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
@@ -292,6 +326,8 @@ model CurriculumVersion {
   curriculum_id   String   @db.Uuid
   posicion_id     String?  @db.Uuid
   nombre_version  String?
+  contenido       Json?
+  ats_score       Int?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

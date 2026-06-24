@@ -17,8 +17,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ["'Plus Jakarta Sans'", "sans-serif"],
-        body: ["'Work Sans'", "sans-serif"],
+        display: ["'Outfit'", "sans-serif"],
+        body: ["'Inter'", "sans-serif"],
       },
       colors: {
         ucr: {

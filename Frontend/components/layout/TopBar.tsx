@@ -32,11 +32,7 @@ export function TopBar({ title, titleKey }: TopBarProps) {
   const displayTitle = mounted && titleKey ? t(titleKey) : title;
 
   return (
-    <header className={`h-16 flex items-center justify-between px-8 sticky top-0 z-10 transition-colors duration-300 ${
-      isHome 
-        ? "border-none bg-transparent" 
-        : "border-b border-border dark:border-slate-800 bg-white dark:bg-slate-950"
-    }`}>
+    <header className={`h-16 flex items-center justify-between px-8 sticky top-0 z-50 bg-transparent transition-colors duration-300 pt-4 ${isHome ? '-mb-16' : ''}`}>
       <div className="flex items-center gap-4">
         {!isHome && displayTitle && (
           <h2 className="text-xl font-bold text-ucr-celeste-medium dark:text-sky-400">{displayTitle}</h2>

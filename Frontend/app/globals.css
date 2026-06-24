@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Raleway:wght@700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -73,7 +73,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased font-sans;
+    @apply text-foreground antialiased font-sans;
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(to right, hsl(var(--primary) / 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, hsl(var(--primary) / 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 }
 

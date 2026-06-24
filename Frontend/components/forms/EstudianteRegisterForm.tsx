@@ -17,8 +17,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { registerStudentAction } from "@/actions/auth.actions";
 
 const registerSchema = z.object({
   tipo_identificacion: z.string().min(1, "Seleccione un tipo de identificación"),
@@ -27,7 +28,6 @@ const registerSchema = z.object({
   email: z.string().email("Correo inválido"),
   fechaNacimiento: z.string().min(1, "Fecha de nacimiento es requerida"),
   genero: z.string().min(1, "Género es requerido"),
-  // --- Nuevos campos de Información Académica ---
   carnet_ucr: z.string().min(6, "Carné inválido"),
   carrera: z.string().min(3, "Carrera es requerida"),
   escuela_facultad: z.string().min(3, "Escuela/Facultad es requerida"),
@@ -35,7 +35,6 @@ const registerSchema = z.object({
   anio_ingreso: z.string().min(4, "Año de ingreso inválido"),
   nivel_academico: z.string().min(2, "Nivel académico es requerido"),
   promedio_ponderado: z.string().min(1, "Promedio es requerido"),
-  // ---------------------------------------------
   password: z.string()
     .min(8, "La contraseña debe tener mínimo 8 caracteres")
     .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
@@ -50,6 +49,10 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function EstudianteRegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [cedulaLoading, setCedulaLoading] = useState(false);
+  const [cedulaHint, setCedulaHint] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -76,63 +79,77 @@ export function EstudianteRegisterForm() {
 
   const handleCedulaBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cedula = e.target.value;
-    if (cedula.length >= 9) {
-      try {
-        const response = await fetch(`https://api.hacienda.go.cr/fe/ae?identificacion=${cedula}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.nombre) {
-            form.setValue("nombre", data.nombre, { shouldValidate: true });
-          }
+    if (cedula.length < 9) return;
+
+    setCedulaLoading(true);
+    setCedulaHint(null);
+
+    const timeoutId = setTimeout(() => {
+      setCedulaLoading(false);
+      setCedulaHint("Está tardando. Puede ingresar el nombre manualmente si lo prefiere.");
+    }, 3000);
+
+    try {
+      const response = await fetch(`/api/hacienda?identificacion=${encodeURIComponent(cedula)}`);
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.nombre) {
+          form.setValue("nombre", data.nombre, { shouldValidate: true });
+          setCedulaHint("Nombre cargado automáticamente desde Hacienda.");
+        } else {
+          setCedulaHint("No se encontró el nombre. Ingréselo manualmente.");
         }
-      } catch (error) {
-        console.error("Error fetching name from Hacienda API:", error);
+      } else {
+        setCedulaHint("No se encontró el nombre. Ingréselo manualmente.");
       }
+    } catch {
+      clearTimeout(timeoutId);
+      setCedulaHint("No se pudo verificar la cédula. Ingrese el nombre manualmente.");
+    } finally {
+      setCedulaLoading(false);
     }
   };
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register/student`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: data.nombre,
-          email: data.email,
-          password: data.password,
-          cedula: data.cedula,
-          fecha_nacimiento: data.fechaNacimiento,
-          genero: data.genero,
-          carnet_ucr: data.carnet_ucr,
-          carrera: data.carrera,
-          escuela_facultad: data.escuela_facultad,
-          sede: data.sede,
-          anio_ingreso: parseInt(data.anio_ingreso),
-          nivel_academico: data.nivel_academico,
-          promedio_ponderado: parseFloat(data.promedio_ponderado)
-        }),
+      const result = await registerStudentAction({
+        nombre: data.nombre,
+        email: data.email,
+        password: data.password,
+        cedula: data.cedula,
+        fecha_nacimiento: data.fechaNacimiento,
+        genero: data.genero,
+        carnet_ucr: data.carnet_ucr,
+        carrera: data.carrera,
+        escuela_facultad: data.escuela_facultad,
+        sede: data.sede,
+        anio_ingreso: parseInt(data.anio_ingreso),
+        nivel_academico: data.nivel_academico,
+        promedio_ponderado: parseFloat(data.promedio_ponderado),
       });
 
-      const result = await res.json();
-
-      if (res.ok) {
+      if (result.success) {
         toast({
           title: "Registro exitoso",
           description: "Revisa tu correo para verificar tu cuenta.",
         });
         router.push(`/verificar-correo?email=${encodeURIComponent(data.email)}`);
       } else {
-        toast({
-          title: "Error en el registro",
-          description: result.message || "Ocurrió un error al registrarse.",
-          variant: "destructive",
-        });
+        // Errores de duplicado → error inline en el campo correspondiente
+        if (result.message?.toLowerCase().includes("correo")) {
+          form.setError("email", { message: result.message });
+        } else if (result.message?.toLowerCase().includes("cédula")) {
+          form.setError("cedula", { message: result.message });
+        } else {
+          toast({ title: "Error en el registro", description: result.message, variant: "destructive" });
+        }
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: "Error de conexión",
-        description: "No se pudo conectar con el servidor.",
+        title: "Error inesperado",
+        description: "Ocurrió un error al registrarse. Intenta de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -143,11 +160,11 @@ export function EstudianteRegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-2xl mx-auto">
-        
+
         {/* SECCIÓN: Información Personal */}
         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Información Personal</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
             <FormField
               control={form.control}
@@ -178,13 +195,28 @@ export function EstudianteRegisterForm() {
               name="cedula"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cédula</FormLabel>
+                  <FormLabel>Número de Identificación</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej. 101110111" {...field} onBlur={(e) => {
-                      field.onBlur();
-                      handleCedulaBlur(e);
-                    }} />
+                    <div className="relative">
+                      <Input
+                        placeholder="Ej. 101110111"
+                        {...field}
+                        onBlur={(e) => { field.onBlur(); handleCedulaBlur(e); }}
+                      />
+                      {cedulaLoading && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />
+                      )}
+                    </div>
                   </FormControl>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Ingrese su número de identificación y haga clic fuera del campo para cargar el nombre automáticamente.
+                    Si demora más de 3 segundos o no se carga, ingréselo manualmente.
+                  </p>
+                  {cedulaHint && (
+                    <p className={`text-xs mt-1 ${cedulaHint.includes("cargado") ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}`}>
+                      {cedulaHint}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -260,7 +292,7 @@ export function EstudianteRegisterForm() {
         {/* SECCIÓN: Información Académica */}
         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Información Académica</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
             <FormField
               control={form.control}
@@ -365,7 +397,7 @@ export function EstudianteRegisterForm() {
         {/* SECCIÓN: Seguridad */}
         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">Seguridad</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
             <FormField
               control={form.control}
@@ -374,7 +406,17 @@ export function EstudianteRegisterForm() {
                 <FormItem>
                   <FormLabel>Contraseña</FormLabel>
                   <FormControl>
-                    <Input placeholder="••••••••" type="password" {...field} />
+                    <div className="relative">
+                      <Input placeholder="••••••••" type={showPassword ? "text" : "password"} {...field} />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -388,7 +430,17 @@ export function EstudianteRegisterForm() {
                 <FormItem>
                   <FormLabel>Confirmar Contraseña</FormLabel>
                   <FormControl>
-                    <Input placeholder="••••••••" type="password" {...field} />
+                    <div className="relative">
+                      <Input placeholder="••••••••" type={showConfirmPassword ? "text" : "password"} {...field} />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Bell, Check, X, MessageCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { aceptarMatch, rechazarMatch } from "@/actions/matching.actions";
 
 interface Notification {
@@ -21,6 +22,7 @@ interface Notification {
 }
 
 export function NotificationsDropdown() {
+  const { status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [showAllModal, setShowAllModal] = useState(false);
   const [infoModalMessage, setInfoModalMessage] = useState("");
@@ -31,11 +33,14 @@ export function NotificationsDropdown() {
   const router = useRouter();
 
   const fetchNotifications = async () => {
+    if (status === "unauthenticated") return;
     try {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
         setNotificationsState(data);
+      } else if (res.status === 401) {
+        // Ignorar si no está autorizado
       }
     } catch (err) {
       console.error("Error fetching notifications:", err);
@@ -44,8 +49,12 @@ export function NotificationsDropdown() {
 
   useEffect(() => {
     setIsClient(true);
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
+    if (status === "authenticated") {
+      fetchNotifications();
+    }
+    const interval = setInterval(() => {
+      if (status === "authenticated") fetchNotifications();
+    }, 10000);
 
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -60,8 +69,8 @@ export function NotificationsDropdown() {
   }, []);
 
   useEffect(() => {
-    if (isOpen) fetchNotifications();
-  }, [isOpen]);
+    if (isOpen && status === "authenticated") fetchNotifications();
+  }, [isOpen, status]);
 
   useEffect(() => {
     if (showAllModal || infoModalMessage !== "") {

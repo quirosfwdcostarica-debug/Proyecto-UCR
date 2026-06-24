@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/layout/AuthProvider"
 import { ThemeProvider } from "@/components/providers/ThemeContext"
 import { LanguageProvider } from "@/components/providers/LanguageContext"
 import { NavigationLoadingProvider } from "@/components/providers/NavigationLoadingProvider"
+import { DialogProvider } from "@/hooks/useDialog"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -65,13 +66,15 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <Suspense fallback={null}>
-                <NavigationLoadingProvider>
-                  <SidebarWrapper>
-                    {children}
-                  </SidebarWrapper>
-                </NavigationLoadingProvider>
-              </Suspense>
+              <DialogProvider>
+                <Suspense fallback={null}>
+                  <NavigationLoadingProvider>
+                    <SidebarWrapper>
+                      {children}
+                    </SidebarWrapper>
+                  </NavigationLoadingProvider>
+                </Suspense>
+              </DialogProvider>
             </AuthProvider>
             <Toaster />
           </LanguageProvider>

@@ -5,13 +5,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition, useState } from "react";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
+import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
+import { CATALOGO_AREAS, CATALOGO_CARRERAS } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search } from "lucide-react";
+import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
 import {
   Form,
   FormControl,
@@ -28,10 +31,61 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const { update } = useSession();
+  const { data: session, update } = useSession();
   const [isUploading, setIsUploading] = useState(false);
 
+  const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
+
+  // ── Skills state (fuera de react-hook-form para UI compleja) ────────────────
+  function parseHardSkills(raw: any): { skill: string; level: string }[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.map((r) => typeof r === "string" ? { skill: r, level: "Intermedio" } : r);
+    return [];
+  }
+  const [hardSkills, setHardSkills] = useState<{ skill: string; level: string }[]>(
+    parseHardSkills(initialData?.habilidades)
+  );
+  const [softSkillsList, setSoftSkillsList] = useState<string[]>(
+    Array.isArray(initialData?.soft_skills) ? initialData.soft_skills : []
+  );
+  const [idiomasList, setIdiomasList] = useState<{ idioma: string; nivel: string }[]>(
+    Array.isArray(initialData?.idiomas) ? initialData.idiomas : []
+  );
+  const [skillInput, setSkillInput] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(SKILLS_BANK[0].categoria);
+  const [idiomaInput, setIdiomaInput] = useState("Inglés");
+  const [nivelIdiomaInput, setNivelIdiomaInput] = useState("B1 – Intermedio");
+
+  function addHardSkill(skillName: string) {
+    const name = skillName.trim();
+    if (!name || hardSkills.find((s) => s.skill.toLowerCase() === name.toLowerCase())) return;
+    setHardSkills((p) => [...p, { skill: name, level: "Intermedio" }]);
+    setSkillInput("");
+  }
+  function updateSkillLevel(i: number, level: string) {
+    setHardSkills((p) => p.map((s, idx) => idx === i ? { ...s, level } : s));
+  }
+  function removeHardSkill(i: number) {
+    setHardSkills((p) => p.filter((_, idx) => idx !== i));
+  }
+  function toggleSoftSkill(s: string) {
+    setSoftSkillsList((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
+  }
+  function addIdioma() {
+    if (idiomasList.find((id) => id.idioma === idiomaInput)) return;
+    setIdiomasList((p) => [...p, { idioma: idiomaInput, nivel: nivelIdiomaInput }]);
+  }
+  function removeIdioma(i: number) {
+    setIdiomasList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  const filteredSkills = SKILLS_BANK.find((c) => c.categoria === selectedCategory)?.skills.filter(
+    (s) => !skillFilter || s.toLowerCase().includes(skillFilter.toLowerCase())
+  ) ?? [];
 
   const form = useForm<UserProfileUpdateValues>({
     resolver: zodResolver(userProfileUpdateSchema) as any,
@@ -51,6 +105,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       },
       
       // Estudiante fields
+      nivel_beca: (initialData as any)?.nivel_beca || "",
       carnet_ucr: initialData?.carnet_ucr || "",
       carrera: initialData?.carrera || "",
       escuela_facultad: initialData?.escuela_facultad || "",
@@ -60,30 +115,45 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       promedio_ponderado: initialData?.promedio_ponderado || "",
       proyecto_titulo: initialData?.proyecto_titulo || "",
       proyecto_tipo: initialData?.proyecto_tipo || "",
+      proyecto_descripcion: initialData?.proyecto_descripcion || "",
+      proyecto_porcentaje_avance: initialData?.proyecto_porcentaje_avance ?? 0,
+      area_tematica: initialData?.area_tematica || "",
       busca_financiamiento: !!initialData?.busca_financiamiento,
       busca_mentoria: !!initialData?.busca_mentoria,
       busca_empleo: !!initialData?.busca_empleo,
       busca_pasantia: !!initialData?.busca_pasantia,
+      perfil_pausado: !!initialData?.perfil_pausado,
 
       // Exalumno fields
       anio_graduacion: initialData?.anio_graduacion || "",
       empresa_actual: initialData?.empresa_actual || "",
       cargo_actual: initialData?.cargo_actual || "",
+      sector: initialData?.sector || "",
       pais_ciudad: initialData?.pais_ciudad || "",
       anios_experiencia: initialData?.anios_experiencia || "",
       linkedin_url: initialData?.linkedin_url || "",
+      biografia: initialData?.biografia || "",
       ofrece_mentoria: !!initialData?.ofrece_mentoria,
       ofrece_empleo: !!initialData?.ofrece_empleo,
       ofrece_pasantia: !!initialData?.ofrece_pasantia,
       ofrece_proyecto: !!initialData?.ofrece_proyecto,
       ofrece_donacion_dinero: !!initialData?.ofrece_donacion_dinero,
+      ofrece_guest_speaking: !!initialData?.ofrece_guest_speaking,
+      ofrece_volunteering: !!initialData?.ofrece_volunteering,
+      ofrece_career_advice: !!initialData?.ofrece_career_advice,
+      ofrece_networking: !!initialData?.ofrece_networking,
     },
   });
 
   const onSubmit = (data: UserProfileUpdateValues) => {
     startTransition(async () => {
       try {
-        const result = await updateUserProfile(data);
+        const result = await updateUserProfile({
+          ...data,
+          habilidades: hardSkills as any,
+          soft_skills: softSkillsList as any,
+          idiomas: idiomasList as any,
+        } as any);
         if (result.success) {
           if (data.image) {
             await update({ user: { image: data.image } });
@@ -93,6 +163,23 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             description: "Tus datos se han guardado correctamente.",
             className: "bg-ucr-azul-1 text-white border-none",
           });
+          // T-13: si el avance llegó al 100%, preguntar si el proyecto finalizó
+          if ((result as any).proyectoCompleto) {
+            const { isConfirmed } = await import("sweetalert2").then(m =>
+              m.default.fire({
+                title: "¿Tu proyecto está finalizado?",
+                text: "El avance llegó al 100%. ¿Deseas marcar el proyecto como finalizado? Esto lo retirará del directorio activo.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, finalizar",
+                cancelButtonText: "No, mantener activo",
+                confirmButtonColor: "#005da4",
+              })
+            );
+            if (isConfirmed) {
+              await updateUserProfile({ ...data, proyecto_tipo: `${data.proyecto_tipo ?? ""}__finalizado` });
+            }
+          }
         }
       } catch (error: any) {
         toast({
@@ -104,7 +191,30 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     });
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPass !== passwordForm.confirm) {
+      toast({ title: "Error", description: "Las contraseñas nuevas no coinciden.", variant: "destructive" });
+      return;
+    }
+    const userId = (session?.user as any)?.id as string | undefined;
+    if (!userId) {
+      toast({ title: "Error", description: "Sesión inválida. Recarga la página.", variant: "destructive" });
+      return;
+    }
+    setIsChangingPassword(true);
+    const result = await changePasswordWithVerificationAction(userId, passwordForm.current, passwordForm.newPass);
+    setIsChangingPassword(false);
+    if (result.success) {
+      toast({ title: "Contraseña actualizada", description: "Tu contraseña ha sido cambiada correctamente.", className: "bg-ucr-azul-1 text-white border-none" });
+      setPasswordForm({ current: "", newPass: "", confirm: "" });
+    } else {
+      toast({ title: "Error", description: result.message, variant: "destructive" });
+    }
+  };
+
   return (
+    <div className="space-y-8">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
         
@@ -316,7 +426,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carrera</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione una carrera</option>
+                          {CATALOGO_CARRERAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -392,6 +509,38 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name={"nivel_beca" as any}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700 flex items-center gap-2">
+                        Tipo de Beca
+                        <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                          🔒 Privado
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="w-full h-12 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm text-sm"
+                        >
+                          <option value="">Sin beca</option>
+                          <option value="Socioeconómica">Socioeconómica</option>
+                          <option value="Excelencia Académica">Excelencia Académica</option>
+                          <option value="Deporte">Deporte</option>
+                          <option value="Arte y Cultura">Arte y Cultura</option>
+                          <option value="Estímulo">Estímulo</option>
+                          <option value="Otra">Otra</option>
+                        </select>
+                      </FormControl>
+                      <p className="text-xs text-slate-400 mt-1">Solo tú y el equipo UCR pueden ver este dato.</p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
@@ -435,7 +584,283 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name={"area_tematica" as any}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Área Temática</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione un área</option>
+                          {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={"proyecto_porcentaje_avance" as any}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Avance del Proyecto (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} max={100} placeholder="Ej. 45" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 0)} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={"proyecto_descripcion" as any}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700">Descripción del Proyecto</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Describe brevemente tu proyecto, objetivos y estado actual..." {...field} value={field.value || ""} className="min-h-[100px] resize-none bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+            </div>
+
+            {/* ══ IDIOMAS ══════════════════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-sky-50 rounded-xl text-sky-600">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Idiomas</h2>
+                  <p className="text-sm text-slate-500">Agrega los idiomas que manejas y tu nivel de dominio.</p>
+                </div>
+              </div>
+
+              {/* Selector */}
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Idioma</label>
+                  <select
+                    value={idiomaInput}
+                    onChange={(e) => setIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                  >
+                    {IDIOMAS_OPTS.map((id) => <option key={id}>{id}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nivel</label>
+                  <select
+                    value={nivelIdiomaInput}
+                    onChange={(e) => setNivelIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                  >
+                    {NIVELES_IDIOMA.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={addIdioma}
+                  className="h-11 px-5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Chips */}
+              {idiomasList.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {idiomasList.map((id, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-sm font-medium text-sky-800">
+                      <Globe2 className="w-3.5 h-3.5 text-sky-500" />
+                      {id.idioma}
+                      <span className="text-sky-500 text-xs ml-1">{id.nivel}</span>
+                      <button type="button" onClick={() => removeIdioma(i)} className="ml-1 text-sky-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {idiomasList.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado idiomas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES TÉCNICAS ══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
+                  <Code2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Técnicas</h2>
+                  <p className="text-sm text-slate-500">Selecciona del banco predefinido o escribe una habilidad propia. Indica tu nivel en cada una.</p>
+                </div>
+              </div>
+
+              {/* Banco de habilidades */}
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banco de habilidades</p>
+
+                {/* Categorías */}
+                <div className="flex flex-wrap gap-1.5">
+                  {SKILLS_BANK.map((cat) => (
+                    <button
+                      key={cat.categoria}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat.categoria); setSkillFilter(""); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                        selectedCategory === cat.categoria
+                          ? "bg-violet-600 text-white border-violet-600 shadow"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                      }`}
+                    >
+                      {cat.icon} {cat.categoria}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filtro de skills en categoría */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar en esta categoría..."
+                    value={skillFilter}
+                    onChange={(e) => setSkillFilter(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white border border-slate-200 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
+                  />
+                </div>
+
+                {/* Grilla de skills */}
+                <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+                  {filteredSkills.map((skill) => {
+                    const already = hardSkills.some((s) => s.skill.toLowerCase() === skill.toLowerCase());
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        disabled={already}
+                        onClick={() => addHardSkill(skill)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                          already
+                            ? "bg-violet-100 text-violet-500 border-violet-200 cursor-default"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-violet-50 hover:border-violet-400 hover:text-violet-700"
+                        }`}
+                      >
+                        {already ? "✓ " : "+ "}{skill}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Input manual */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="O escribe una habilidad propia..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(skillInput); } }}
+                  className="flex-1 h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-violet-400 focus:ring-2 focus:ring-violet-100 text-sm transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addHardSkill(skillInput)}
+                  className="h-11 px-5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Habilidades seleccionadas + nivel */}
+              {hardSkills.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tus habilidades ({hardSkills.length})</p>
+                  <div className="space-y-2">
+                    {hardSkills.map((s, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                        <span className="flex-1 text-sm font-semibold text-slate-800 min-w-0 truncate">{s.skill}</span>
+                        <div className="flex gap-1 shrink-0">
+                          {SKILL_LEVELS.map((lv) => (
+                            <button
+                              key={lv}
+                              type="button"
+                              onClick={() => updateSkillLevel(i, lv)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                s.level === lv
+                                  ? "bg-violet-600 text-white border-violet-600"
+                                  : "bg-white text-slate-500 border-slate-200 hover:border-violet-300"
+                              }`}
+                            >
+                              {lv}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => removeHardSkill(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {hardSkills.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Selecciona del banco o escribe tus propias habilidades técnicas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES BLANDAS ═══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Star className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Blandas</h2>
+                  <p className="text-sm text-slate-500">Selecciona las competencias interpersonales que mejor te describen.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {SOFT_SKILLS_BANK.map((skill) => {
+                  const active = softSkillsList.includes(skill);
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => toggleSoftSkill(skill)}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium border text-left transition-all ${
+                        active
+                          ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+                      }`}
+                    >
+                      {active ? "✓ " : ""}{skill}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {softSkillsList.length > 0 && (
+                <p className="text-xs text-amber-700 font-semibold pt-1">
+                  {softSkillsList.length} habilidad{softSkillsList.length !== 1 ? "es" : ""} seleccionada{softSkillsList.length !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
 
             {/* APOYO BUSCADO */}
@@ -477,6 +902,42 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Pausar perfil (T-12) */}
+            <div className="bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-amber-200/50 dark:border-amber-800 transition-all hover:shadow-2xl">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-amber-100 dark:border-amber-800">
+                <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Visibilidad del Perfil</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Controla si apareces en el directorio y recibes solicitudes de contacto.</p>
+                </div>
+              </div>
+              <FormField
+                control={form.control}
+                name="perfil_pausado"
+                render={({ field }) => (
+                  <FormItem className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-1 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                      />
+                    </FormControl>
+                    <div>
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        Pausar mi perfil temporalmente
+                      </FormLabel>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Tu perfil no aparecerá en el directorio y no recibirás nuevas solicitudes de contacto. Puedes reactivarlo en cualquier momento.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
           </>
         ) : (
@@ -605,6 +1066,35 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name={"sector" as any}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-slate-700">Sector de Industria</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. Tecnología, Salud, Finanzas" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={"biografia" as any}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700">Biografía Profesional</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Cuéntale a los estudiantes sobre tu trayectoria, experiencia y qué te motiva a apoyar a la comunidad UCR..." {...field} value={field.value || ""} className="min-h-[120px] resize-none bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                      </FormControl>
+                      <p className="text-xs text-right text-slate-400 mt-1">{field.value?.length || 0} / 1000</p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
@@ -622,11 +1112,15 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { name: "ofrece_mentoria", label: "Ofrezco Mentoría / Guía Profesional" },
-                  { name: "ofrece_empleo", label: "Ofrezco Oportunidades Laborales / Empleo" },
-                  { name: "ofrece_pasantia", label: "Ofrezco Oportunidades de Pasantía" },
-                  { name: "ofrece_proyecto", label: "Ofrezco Apoyo / Financiamiento a Proyectos" },
-                  { name: "ofrece_donacion_dinero", label: "Ofrezco Donaciones al Fondo de Becas" }
+                  { name: "ofrece_mentoria", label: "Mentoría / Guía Profesional" },
+                  { name: "ofrece_empleo", label: "Oportunidades Laborales" },
+                  { name: "ofrece_pasantia", label: "Pasantías / Prácticas" },
+                  { name: "ofrece_proyecto", label: "Apoyo a Proyectos" },
+                  { name: "ofrece_donacion_dinero", label: "Donaciones al Fondo de Becas" },
+                  { name: "ofrece_guest_speaking", label: "Charlas / Guest Speaking" },
+                  { name: "ofrece_career_advice", label: "Asesoría de Carrera" },
+                  { name: "ofrece_networking", label: "Networking Profesional" },
+                  { name: "ofrece_volunteering", label: "Voluntariado" },
                 ].map((item) => (
                   <FormField
                     key={item.name}
@@ -720,33 +1214,106 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           </div>
         </div>
 
-        {/* Botón de Guardado (Barra Inferior Flotante) */}
-        <div className="sticky bottom-8 z-50 flex justify-end mt-8">
-          <div className="bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-gray-200 flex items-center justify-between w-full md:w-auto md:min-w-[400px]">
-            <p className="text-sm text-ucr-gris-2 dark:text-slate-400 font-medium px-4 hidden md:block">
-              Revisa tus cambios antes de guardar.
-            </p>
-            <Button 
-              type="submit" 
-              disabled={isPending}
-              className="w-full md:w-auto h-14 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-ucr-blanco shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all px-10 rounded-2xl font-bold text-lg group"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                  Guardar Cambios
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Espaciado para que el botón fijo no tape contenido */}
+        <div className="h-28" />
 
       </form>
     </Form>
+
+    {/* Botón fijo siempre visible en esquina inferior derecha */}
+    <div className="fixed bottom-6 right-8 z-50">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
+          Revisa tus cambios antes de guardar.
+        </p>
+        <Button
+          type="button"
+          disabled={isPending}
+          onClick={() => form.handleSubmit(onSubmit)()}
+          className="h-12 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-white shadow-lg transition-all px-8 rounded-xl font-bold text-base group"
+        >
+          {isPending ? (
+            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Guardando...</>
+          ) : (
+            <><Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Guardar Cambios</>
+          )}
+        </Button>
+      </div>
+    </div>
+
+    {/* Tarjeta: Seguridad — formulario independiente para evitar form anidado */}
+    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
+          <ShieldCheck className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400">Seguridad</h2>
+          <p className="text-sm text-ucr-gris-2 dark:text-slate-400">Cambia tu contraseña de acceso.</p>
+        </div>
+      </div>
+
+      <form onSubmit={handlePasswordChange} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Contraseña actual</label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={passwordForm.current}
+              onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Nueva contraseña</label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            <input
+              type="password"
+              placeholder="Mínimo 8 caracteres"
+              value={passwordForm.newPass}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPass: e.target.value })}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-ucr-azul-2 dark:text-sky-300">Confirmar nueva contraseña</label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            <input
+              type="password"
+              placeholder="Repite la contraseña"
+              value={passwordForm.confirm}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+          </div>
+        </div>
+
+        <div className="md:col-span-3 flex justify-end">
+          <Button
+            type="submit"
+            disabled={isChangingPassword || !passwordForm.current || !passwordForm.newPass || !passwordForm.confirm}
+            className="h-11 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-bold px-8 rounded-xl"
+          >
+            {isChangingPassword ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Actualizando...</>
+            ) : (
+              <><ShieldCheck className="mr-2 h-4 w-4" /> Cambiar contraseña</>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+    </div>
   );
 }

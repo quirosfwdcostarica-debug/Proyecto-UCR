@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useDialog } from "@/hooks/useDialog";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -193,6 +194,7 @@ export default function AdminDashboardPage() {
 
   // ---- Acciones en vuelo ----
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showAlert } = useDialog();
   const [comprobanteUrl, setComprobanteUrl] = useState<string | null>(null);
 
   // ---- Generación de matches ----
@@ -254,7 +256,7 @@ export default function AdminDashboardPage() {
         fetchStats(); // Refrescar donaciones pendientes y KPIs
       } else {
         const d = await res.json();
-        alert(d.message || "Error al actualizar");
+        await showAlert(d.message || "Error al actualizar", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -274,7 +276,7 @@ export default function AdminDashboardPage() {
         fetchStats();
       } else {
         const d = await res.json();
-        alert(d.message || "Error al actualizar usuario");
+        await showAlert(d.message || "Error al actualizar usuario", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -344,7 +346,7 @@ export default function AdminDashboardPage() {
       pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
     } catch (err) {
       console.error("Error al exportar PDF:", err);
-      alert("Hubo un error al generar el PDF.");
+      await showAlert("Hubo un error al generar el PDF.", { title: "Error al exportar", variant: "error" });
     } finally {
       setDownloadingPDF(false);
     }

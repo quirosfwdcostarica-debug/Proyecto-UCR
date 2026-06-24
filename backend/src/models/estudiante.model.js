@@ -15,7 +15,17 @@ module.exports = (sequelize) => {
     busca_financiamiento: { type: DataTypes.BOOLEAN, defaultValue: false },
     busca_mentoria: { type: DataTypes.BOOLEAN, defaultValue: false },
     busca_empleo: { type: DataTypes.BOOLEAN, defaultValue: false },
-    busca_pasantia: { type: DataTypes.BOOLEAN, defaultValue: false }
+    busca_pasantia: { type: DataTypes.BOOLEAN, defaultValue: false },
+    proyecto_descripcion: { type: DataTypes.TEXT },
+    proyecto_necesidades: { type: DataTypes.JSONB },
+    proyecto_porcentaje_avance: { type: DataTypes.INTEGER },
+    habilidades: { type: DataTypes.JSONB },
+    area_tematica: { type: DataTypes.TEXT },
+    areas_interes: { type: DataTypes.JSONB },
+    nivel_beca: { type: DataTypes.TEXT },
+    beca_socioeconomica: { type: DataTypes.BOOLEAN, defaultValue: false },
+    visible_en_directorio: { type: DataTypes.BOOLEAN, defaultValue: false },
+    activo: { type: DataTypes.BOOLEAN, defaultValue: true }
   }, {
     tableName: 'ESTUDIANTES',
     timestamps: false,
