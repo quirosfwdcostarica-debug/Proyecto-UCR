@@ -9,7 +9,14 @@ module.exports = (sequelize) => {
     moneda: { type: DataTypes.TEXT },
     metodo_pago: { type: DataTypes.TEXT },
     estado: { type: DataTypes.TEXT },
-    confirmado_por: { type: DataTypes.UUID }
+    confirmado_por: { type: DataTypes.UUID },
+    comprobante_url: { type: DataTypes.TEXT },
+    fecha_transferencia: { type: DataTypes.DATE },
+    numero_referencia: { type: DataTypes.TEXT },
+    validacion_estado: { type: DataTypes.TEXT },
+    validacion_confianza: { type: DataTypes.INTEGER },
+    validacion_detalle: { type: DataTypes.JSONB },
+    validacion_at: { type: DataTypes.DATE }
   }, {
     tableName: 'DONACIONES',
     timestamps: true,

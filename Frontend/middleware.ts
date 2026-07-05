@@ -14,9 +14,13 @@ const PROTECTED_PREFIXES = [
   "/completar-perfil",
   "/admin",
   "/donaciones",
-  "/proyecto",
+  "/proyecto/",
+  "/proyectos",
   "/mentoria",
   "/ajustes",
+  "/retribuir",
+  "/talleres",
+  "/feed",
 ];
 
 // Solo EXALUMNO (o ADMIN) pueden acceder
@@ -25,13 +29,17 @@ const EXALUMNO_ONLY = [
   "/posiciones/nueva",
   "/directorio/estudiantes",
   "/donaciones",
+  "/retribuir",
 ];
 
 // Solo ESTUDIANTE (o ADMIN) pueden acceder
+// Nota: "/proyecto/" lleva la barra final a propósito — sin ella,
+// startsWith("/proyecto") también atrapaba "/proyectos/[id]" (la vista
+// pública de un proyecto, que cualquier usuario autenticado puede ver).
 const ESTUDIANTE_ONLY = [
   "/mis-aplicaciones",
   "/mi-curriculum",
-  "/proyecto",
+  "/proyecto/",
 ];
 
 export async function middleware(req: NextRequest) {

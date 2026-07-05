@@ -148,7 +148,11 @@ export async function PATCH(
   }
 }
 
-// DELETE — elimina una posición (solo dueño o admin)
+// DELETE — elimina una posición (solo dueño o admin).
+// T-19: antes era un hard delete; como APLICACIONES.posicion_id tiene
+// onDelete: Cascade, esto borraba silenciosamente el historial de
+// aplicaciones de los estudiantes. Ahora es soft delete (deleted_at +
+// estado: "eliminada") para preservarlas.
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -167,7 +171,14 @@ export async function DELETE(
     if (token.tipo !== "ADMIN" && posicion.exalumno_id !== token.id)
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
-    const { error } = await supabaseAdmin.from("POSICIONES").delete().eq("id", params.id);
+    const { error } = await supabaseAdmin
+      .from("POSICIONES")
+      .update({
+        estado: "eliminada",
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", params.id);
     if (error) throw error;
 
     return NextResponse.json({ ok: true });

@@ -16,7 +16,7 @@ import { CVDrawer } from "@/components/cv/CVDrawer";
 
 interface Aplicante {
   id: string;
-  estado: "PENDIENTE" | "SELECCIONADO" | "DESCARTADO";
+  estado: "ENVIADA" | "EN_REVISION" | "SELECCIONADO" | "DESCARTADO";
   created_at: string;
   estudiante_id: string | null;
   posicion: { id: string; titulo: string; empresa: string | null } | null;
@@ -30,10 +30,13 @@ interface Aplicante {
 }
 
 const ESTADO_CFG = {
-  PENDIENTE:    { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
+  ENVIADA:      { label: "Nueva",           cls: "bg-blue-50 text-blue-700 border-blue-200",       Icon: Clock },
+  EN_REVISION:  { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
   SELECCIONADO: { label: "Seleccionado",    cls: "bg-green-50 text-green-700 border-green-200",   Icon: CheckCircle2 },
   DESCARTADO:   { label: "No seleccionado", cls: "bg-slate-100 text-slate-500 border-slate-200",   Icon: XCircle },
 };
+
+const ESTADOS_SIN_DECIDIR = ["ENVIADA", "EN_REVISION"] as const;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" });
@@ -91,7 +94,7 @@ export default function AplicantesPage() {
         setAplicantes((prev) =>
           prev.map((a) => {
             if (a.id === aplicanteId) return { ...a, estado: "SELECCIONADO" };
-            if (cerrarPosicion && a.estado === "PENDIENTE") return { ...a, estado: "DESCARTADO" };
+            if (cerrarPosicion && (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado)) return { ...a, estado: "DESCARTADO" };
             return a;
           })
         );
@@ -104,6 +107,26 @@ export default function AplicantesPage() {
       await showAlert(err.message || "Error al procesar la acción.", { title: "Error", variant: "error" });
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  // T-14: al abrir el CV desde ENVIADA, pasa automáticamente a EN_REVISION.
+  function handleVerCV(a: Aplicante) {
+    setCvUserId(a.estudiante_id);
+    setCvStudentName(a.estudiante?.nombre ?? undefined);
+    if (a.estado === "ENVIADA") {
+      fetch(`/api/aplicaciones/${a.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "marcar_revision" }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.estado) {
+            setAplicantes((prev) => prev.map((x) => (x.id === a.id ? { ...x, estado: data.estado } : x)));
+          }
+        })
+        .catch(() => {});
     }
   }
 
@@ -145,8 +168,8 @@ export default function AplicantesPage() {
     if (ok) handleAction(aplicanteId, "descartar");
   }
 
-  const pendientes = aplicantes.filter((a) => a.estado === "PENDIENTE");
-  const procesados = aplicantes.filter((a) => a.estado !== "PENDIENTE");
+  const pendientes = aplicantes.filter((a) => (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado));
+  const procesados = aplicantes.filter((a) => !(ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado));
 
   if (status === "loading" || loading) {
     return (
@@ -217,7 +240,7 @@ export default function AplicantesPage() {
                       onSeleccionar={(nombre) => seleccionarConConfirmacion(a.id, nombre)}
                       onDescartar={() => handleDescartarConConfirmacion(a.id)}
                       onContactar={() => handleContactar(a.id)}
-                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
+                      onVerCV={a.estudiante_id ? () => handleVerCV(a) : undefined}
                     />
                   ))}
                 </div>
@@ -239,7 +262,7 @@ export default function AplicantesPage() {
                       a={a}
                       actionLoading={actionLoading}
                       onContactar={() => handleContactar(a.id)}
-                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
+                      onVerCV={a.estudiante_id ? () => handleVerCV(a) : undefined}
                     />
                   ))}
                 </div>
@@ -270,7 +293,7 @@ function AplicanteCard({
   const cfg    = ESTADO_CFG[a.estado];
   const { Icon } = cfg;
   const nombre    = a.estudiante?.nombre ?? "Estudiante";
-  const isPending = a.estado === "PENDIENTE";
+  const isPending = (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado);
   const anyLoading = !!actionLoading?.startsWith(a.id);
 
   return (
@@ -350,7 +373,7 @@ function AplicanteCard({
           )}
         </div>
 
-        {/* Actions (only for PENDIENTE) */}
+        {/* Actions (solo para ENVIADA/EN_REVISION) */}
         {isPending && onSeleccionar && onDescartar && (
           <div className="flex gap-2 shrink-0">
             <Button

@@ -18,7 +18,7 @@ export default async function EditarPerfilPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 dark:bg-slate-950 min-h-screen">
+    <div className="flex-1 w-full relative bg-ucr-gris-1/30 dark:bg-slate-950 min-h-screen">
 
       {/* Fondo Dinámico con Blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">

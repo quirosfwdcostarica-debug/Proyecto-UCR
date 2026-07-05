@@ -23,6 +23,9 @@ export type TranslationKeys =
   | "sidebar.editProfile"
   | "sidebar.connections"
   | "sidebar.matches"
+  | "sidebar.retribuye"
+  | "sidebar.talleres"
+  | "sidebar.feed"
   | "sidebar.messages"
   | "sidebar.settings"
   | "sidebar.help"
@@ -122,6 +125,9 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.connections": "Mis Conexiones",
     "sidebar.matches": "Mis Matches",
+    "sidebar.retribuye": "Retribuye a la UCR",
+    "sidebar.talleres": "Talleres",
+    "sidebar.feed": "Feed Comunidad",
     "sidebar.messages": "Mis Chats",
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
@@ -215,6 +221,9 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Edit Profile",
     "sidebar.connections": "My Connections",
     "sidebar.matches": "My Matches",
+    "sidebar.retribuye": "Give Back to UCR",
+    "sidebar.talleres": "Workshops",
+    "sidebar.feed": "Community Feed",
     "sidebar.messages": "My Chats",
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
@@ -308,6 +317,9 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.connections": "Minhas Conexões",
     "sidebar.matches": "Meus Matches",
+    "sidebar.retribuye": "Retribua à UCR",
+    "sidebar.talleres": "Workshops",
+    "sidebar.feed": "Feed da Comunidade",
     "sidebar.messages": "Meus Chats",
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
@@ -401,6 +413,9 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Modifier le Profil",
     "sidebar.connections": "Mes Connexions",
     "sidebar.matches": "Mes Matches",
+    "sidebar.retribuye": "Redonner à l'UCR",
+    "sidebar.talleres": "Ateliers",
+    "sidebar.feed": "Fil Communautaire",
     "sidebar.messages": "Mes Chats",
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",

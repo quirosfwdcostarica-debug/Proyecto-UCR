@@ -12,10 +12,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // Traer todos los estudiantes con su proyecto y preferencias
+    // Traer todos los estudiantes con su proyecto y preferencias.
+    // T-18: activo=false → perfil pausado, no debe recibir nuevas sugerencias.
     const { data: estudiantesRaw } = await supabaseAdmin
       .from("ESTUDIANTES")
-      .select("user_id, carrera, proyecto_tipo, busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento");
+      .select("user_id, carrera, proyecto_tipo, busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento")
+      .eq("activo", true);
       
     // Traer exalumnos activos
     const { data: exalumnosRaw } = await supabaseAdmin
@@ -32,6 +34,20 @@ export async function POST(req: Request) {
     const estudiantes = estudiantesRaw ?? [];
     const exalumnos = exalumnosRaw ?? [];
 
+    // T-11: áreas de interés desde la tabla relacional USUARIOS_AREAS (antes
+    // siempre quedaban como [] hardcodeado y nunca influían en el score).
+    const todosLosIds = [...estudiantes.map((e) => e.user_id), ...exalumnos.map((e) => e.user_id)];
+    const { data: areasRaw } = await supabaseAdmin
+      .from("USUARIOS_AREAS")
+      .select("user_id, area_codigo")
+      .in("user_id", todosLosIds);
+    const areasPorUsuario = new Map<string, string[]>();
+    for (const row of areasRaw ?? []) {
+      const actuales = areasPorUsuario.get(row.user_id) ?? [];
+      actuales.push(row.area_codigo);
+      areasPorUsuario.set(row.user_id, actuales);
+    }
+
     let creados = 0;
     let actualizados = 0;
 
@@ -46,13 +62,13 @@ export async function POST(req: Request) {
             ...(est.busca_financiamiento ? ["financiamiento"] : []),
           ],
           areaProyecto: est.proyecto_tipo || null,
-          areasInteres: [] as string[],
+          areasInteres: areasPorUsuario.get(est.user_id) ?? [],
         };
 
         const exaCompat = {
           carrera: exa.escuela_facultad || "",
           sector: null as string | null,
-          areasInteres: [] as string[],
+          areasInteres: areasPorUsuario.get(exa.user_id) ?? [],
           apoyoOfrecido: [
             ...(exa.ofrece_mentoria ? ["mentoria"] : []),
             ...(exa.ofrece_empleo ? ["empleo"] : []),

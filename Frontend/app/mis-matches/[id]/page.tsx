@@ -21,6 +21,9 @@ import {
   Clock,
   ShieldAlert,
   Handshake,
+  Award,
+  FileText,
+  Lock,
 } from "lucide-react";
 
 export default function MatchDetailPage() {
@@ -312,6 +315,41 @@ export default function MatchDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {!isEstudiante && (
+              <Card className="bg-white border-slate-200 shadow-sm">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Award className="w-5 h-5 text-[#005da4]" />
+                    <h3 className="text-xl font-bold text-slate-800">Beca del Estudiante</h3>
+                  </div>
+                  {isActivo && otherUser.nivel_beca ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge className="bg-[#005da4]/10 text-[#005da4] border border-[#005da4]/20 font-bold px-3 py-1.5">
+                        {otherUser.nivel_beca}
+                      </Badge>
+                      {otherUser.comprobante_beca_url ? (
+                        <a
+                          href={otherUser.comprobante_beca_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-[#005da4] hover:underline"
+                        >
+                          <FileText className="w-4 h-4" /> Ver comprobante
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400">Sin comprobante adjunto</span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <Lock className="w-4 h-4" />
+                      Esta información se mostrará cuando el match esté Activo.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

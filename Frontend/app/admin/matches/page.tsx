@@ -12,6 +12,9 @@ interface MatchData {
   score_match: number;
   estado: string;
   created_at: string;
+  accepted_at: string | null;
+  mesesActivo: number | null;
+  requiereSeguimiento: boolean;
   tipo_apoyo: string;
   estudiante: {
     user: { name: string; email: string };
@@ -41,6 +44,8 @@ export default function AdminMatchesPage() {
   const [filterCarrera, setFilterCarrera] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
@@ -62,6 +67,29 @@ export default function AdminMatchesPage() {
     setLoading(false);
   }
 
+  // T-20: el admin puede cerrar un match activo con seguimiento y marcarlo como completado.
+  async function marcarCompletado(id: string) {
+    setClosingId(id);
+    setActionMsg(null);
+    try {
+      const res = await fetch(`/api/matches/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "CERRAR" }),
+      });
+      if (res.ok) {
+        setActionMsg("Match marcado como completado.");
+        await loadMatches();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setActionMsg(d.message || "Error al cerrar el match.");
+      }
+    } catch {
+      setActionMsg("Error al cerrar el match.");
+    }
+    setClosingId(null);
+  }
+
   // Escapa un valor según RFC 4180: entrecomilla si contiene coma, comilla o salto de línea.
   const csvCell = (val: unknown) => {
     const s = String(val ?? "");
@@ -69,9 +97,8 @@ export default function AdminMatchesPage() {
   };
 
   const exportCSV = () => {
-    const headers = ["ID", "Exalumno", "Estudiante", "Tipo de Apoyo", "Afinidad (%)", "Estado", "Fecha Creación", "Alerta 6 Meses"];
+    const headers = ["ID", "Exalumno", "Estudiante", "Tipo de Apoyo", "Afinidad (%)", "Estado", "Fecha Creación", "Meses Activo", "Requiere Seguimiento"];
     const rows = filteredMatches.map(m => {
-      const is6MonthsOld = isSixMonthsOld(m.created_at) && m.estado === "ACTIVO";
       return [
         m.id,
         m.exalumno?.user?.name || "N/A",
@@ -80,7 +107,8 @@ export default function AdminMatchesPage() {
         m.score_match || 0,
         m.estado,
         new Date(m.created_at).toLocaleDateString("es-CR"),
-        is6MonthsOld ? "SI" : "NO"
+        m.mesesActivo ?? "",
+        m.requiereSeguimiento ? "SI" : "NO"
       ];
     });
 
@@ -98,13 +126,6 @@ export default function AdminMatchesPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
-
-  const isSixMonthsOld = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const diffTime = Math.abs(new Date().getTime() - d.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    return diffDays > 180;
   };
 
   // Lista única de carreras presentes en los matches (para el selector)
@@ -226,6 +247,12 @@ export default function AdminMatchesPage() {
           </div>
         </div>
 
+        {actionMsg && (
+          <div className="px-4 py-3 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+            {actionMsg}
+          </div>
+        )}
+
         {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -238,16 +265,17 @@ export default function AdminMatchesPage() {
                   <th className="px-6 py-4">Afinidad</th>
                   <th className="px-6 py-4">Estado</th>
                   <th className="px-6 py-4">Fecha</th>
+                  <th className="px-6 py-4">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {filteredMatches.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">No se encontraron matches.</td></tr>
+                  <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No se encontraron matches.</td></tr>
                 ) : (
                   filteredMatches.map(m => {
                     const cfg = ESTADO_BADGE[m.estado] || { cls: "bg-slate-100 text-slate-700", icon: Clock };
                     const Icon = cfg.icon;
-                    const alert = m.estado === "ACTIVO" && isSixMonthsOld(m.created_at);
+                    const alert = m.requiereSeguimiento;
 
                     return (
                       <tr key={m.id} className={`hover:bg-slate-50 ${alert ? 'bg-red-50/30' : ''}`}>
@@ -269,20 +297,31 @@ export default function AdminMatchesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={`${cfg.cls} border-0 flex items-center gap-1.5`}>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className={`${cfg.cls} border-0 flex items-center gap-1.5 w-fit`}>
                               <Icon className="w-3 h-3" />
                               {m.estado}
                             </Badge>
                             {alert && (
-                              <div title="Match activo por más de 6 meses. Requiere seguimiento." className="text-red-500 flex items-center gap-1 text-xs font-bold animate-pulse">
-                                <AlertTriangle className="w-4 h-4" /> +6m
-                              </div>
+                              <Badge variant="destructive" className="flex items-center gap-1 text-xs font-bold w-fit">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Activo hace {m.mesesActivo} meses
+                              </Badge>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {new Date(m.created_at).toLocaleDateString("es-CR")}
+                        </td>
+                        <td className="px-6 py-4">
+                          {m.estado === "ACTIVO" && (
+                            <button
+                              onClick={() => marcarCompletado(m.id)}
+                              disabled={closingId === m.id}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {closingId === m.id ? "Guardando..." : "Marcado como completado"}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );

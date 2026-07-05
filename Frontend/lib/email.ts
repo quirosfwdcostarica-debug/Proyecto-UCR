@@ -215,6 +215,29 @@ export async function sendDonacionRechazada(
   });
 }
 
+export async function sendDonacionAtrasadaEmail(
+  adminEmail: string,
+  adminNombre: string,
+  monto: number,
+  moneda: string,
+  destino: string,
+  horasPendiente: number
+): Promise<void> {
+  // Usa la plantilla genérica de notificaciones (TEMPLATE_NOTIF) mientras no
+  // exista una plantilla dedicada. Cuando se cree TEMPLATE_DONACION_ATRASADA
+  // en EmailJS, basta con definir EMAILJS_DONACION_ATRASADA_TEMPLATE en .env.
+  const templateId = process.env.EMAILJS_DONACION_ATRASADA_TEMPLATE ?? TEMPLATE_NOTIF;
+  await sendEmailJS(adminEmail, templateId, {
+    recipient_name: adminNombre,
+    title: "Donación pendiente de confirmar",
+    message:
+      `Hay una donación de ${moneda} ${monto.toLocaleString("es-CR")} destinada a "${destino}" ` +
+      `que lleva más de ${horasPendiente}h sin confirmar. Revísala en el panel de administración.`,
+    action_url: `${BASE_URL}/admin/donaciones`,
+    action_text: "Ver donaciones pendientes",
+  });
+}
+
 export async function sendDonacionRecibidaStudent(
   toEmail: string,
   estudianteNombre: string,
@@ -230,6 +253,94 @@ export async function sendDonacionRecibidaStudent(
       "La Fundación UCR se pondrá en contacto pronto para gestionar la entrega de estos fondos.",
     action_url: `${BASE_URL}/mis-donaciones`,
     action_text: "Ver mis donaciones",
+  });
+}
+
+// ─── Voluntariado UCR ("Retribuye a la UCR") ──────────────────────────────────
+
+export async function sendVoluntariadoAceptado(
+  toEmail: string,
+  exalumnoNombre: string,
+  actividadTitulo: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "¡Tu oferta de apoyo fue aceptada!",
+    message:
+      `La Fundación UCR aceptó tu oferta para "${actividadTitulo}". ` +
+      "Pronto te contactaremos para coordinar los detalles. ¡Gracias por retribuir a la UCR!",
+    action_url: `${BASE_URL}/retribuir`,
+    action_text: "Ver mis ofertas",
+  });
+}
+
+export async function sendVoluntariadoRechazado(
+  toEmail: string,
+  exalumnoNombre: string,
+  actividadTitulo: string,
+  motivo: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "Sobre tu oferta de apoyo",
+    message:
+      `Lamentamos informarte que tu oferta para "${actividadTitulo}" no fue aceptada en esta ocasión. ` +
+      `Motivo: ${motivo}. ¡Gracias por tu disposición a apoyar a la UCR!`,
+    action_url: `${BASE_URL}/retribuir`,
+    action_text: "Ver mis ofertas",
+  });
+}
+
+// ─── Talleres ──────────────────────────────────────────────────────────────────
+
+export async function sendTallerAprobado(
+  toEmail: string,
+  exalumnoNombre: string,
+  tallerTitulo: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "¡Tu taller fue aprobado!",
+    message:
+      `Tu taller "${tallerTitulo}" fue aprobado y ya está visible para estudiantes y exalumnos. ` +
+      "¡Gracias por compartir tu conocimiento con la comunidad UCR!",
+    action_url: `${BASE_URL}/retribuir`,
+    action_text: "Ver mis talleres",
+  });
+}
+
+export async function sendTallerRechazado(
+  toEmail: string,
+  exalumnoNombre: string,
+  tallerTitulo: string,
+  motivo: string
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: exalumnoNombre,
+    title: "Sobre tu taller propuesto",
+    message:
+      `Lamentamos informarte que tu taller "${tallerTitulo}" no fue aprobado en esta ocasión. ` +
+      `Motivo: ${motivo}. ¡Gracias por tu interés en aportar a la comunidad UCR!`,
+    action_url: `${BASE_URL}/retribuir`,
+    action_text: "Ver mis talleres",
+  });
+}
+
+export async function sendTallerCupoConfirmado(
+  toEmail: string,
+  estudianteNombre: string,
+  tallerTitulo: string,
+  fechaHora: string | null
+): Promise<void> {
+  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
+    recipient_name: estudianteNombre,
+    title: "¡Cupo confirmado!",
+    message:
+      `Tu cupo para el taller "${tallerTitulo}" quedó confirmado` +
+      (fechaHora ? ` para el ${fechaHora}.` : ".") +
+      " Te contactaremos con más detalles antes de la fecha.",
+    action_url: `${BASE_URL}/talleres`,
+    action_text: "Ver talleres",
   });
 }
 

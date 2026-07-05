@@ -14,6 +14,7 @@ async function fetchMatchWithUsers(id: string) {
       estudiante:ESTUDIANTES!MATCHES_estudiante_id_fkey(
         user_id, carrera, escuela_facultad, proyecto_titulo, proyecto_tipo,
         busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento,
+        nivel_beca, comprobante_beca_url,
         user:USERS!ESTUDIANTES_user_id_fkey(nombre, email, foto_url)
       ),
       exalumno:EXALUMNOS!MATCHES_exalumno_id_fkey(
@@ -43,8 +44,30 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const match = await fetchMatchWithUsers(params.id);
     if (!match) return NextResponse.json({ message: "Match no encontrado" }, { status: 404 });
 
+    const userId = session.user.id;
+    const isAdmin = (session.user as any).tipo === "ADMIN";
+    const isOwnStudent = match.estudiante_id === userId;
+    const isOwnExalumno = match.exalumno_id === userId;
+    if (!isOwnStudent && !isOwnExalumno && !isAdmin) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    }
+
     const est = flattenUser(Array.isArray(match.estudiante) ? match.estudiante[0] : match.estudiante);
     const exa = flattenUser(Array.isArray(match.exalumno) ? match.exalumno[0] : match.exalumno);
+
+    // La info de beca (tipo y comprobante) es sensible: solo la ve el propio
+    // estudiante, el admin, o el exalumno una vez que el match fue aceptado.
+    const matchYaAceptado = !!match.accepted_at;
+    const puedeVerBeca = isOwnStudent || isAdmin || matchYaAceptado;
+
+    const estudianteResponse = est
+      ? {
+          ...est,
+          id: est.user_id,
+          user: { name: est.user?.nombre, email: est.user?.email, image: est.user?.foto_url },
+          ...(puedeVerBeca ? {} : { nivel_beca: null, comprobante_beca_url: null }),
+        }
+      : null;
 
     return NextResponse.json({
       ...match,
@@ -53,7 +76,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       estudianteId: match.estudiante_id,
       exalumnoId: match.exalumno_id,
       initiatedBy: match.initiated_by,
-      estudiante: est ? { ...est, id: est.user_id, user: { name: est.user?.nombre, email: est.user?.email, image: est.user?.foto_url } } : null,
+      estudiante: estudianteResponse,
       exalumno: exa ? { ...exa, id: exa.user_id, user: { name: exa.user?.nombre, email: exa.user?.email, image: exa.user?.foto_url } } : null,
     });
   } catch (error) {
@@ -79,7 +102,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     const isEstudiante = match.estudiante_id === userId;
     const isExalumno   = match.exalumno_id === userId;
-    if (!isEstudiante && !isExalumno) return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    // T-20: el admin solo puede intervenir para cerrar (marcar como completado) un
+    // match ya activo, no para las acciones de dos partes (contactar/aceptar/rechazar).
+    const isAdmin      = (session.user as any).tipo === "ADMIN" && action === "CERRAR";
+    if (!isEstudiante && !isExalumno && !isAdmin) return NextResponse.json({ message: "No autorizado" }, { status: 403 });
 
     const emisorNombre  = isEstudiante ? est?.user?.nombre : exa?.user?.nombre;
     const receptorNombre = isEstudiante ? exa?.user?.nombre : est?.user?.nombre;
@@ -137,7 +163,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       if (match.estado !== "ACTIVO") return NextResponse.json({ message: "Solo puedes cerrar matches activos" }, { status: 400 });
       const { data: updated, error } = await supabaseAdmin
         .from("MATCHES")
-        .update({ estado: "CERRADO", closed_at: new Date().toISOString() })
+        .update({
+          estado: "CERRADO",
+          closed_at: new Date().toISOString(),
+          ...(isAdmin ? { resultado: "COMPLETADO" } : {}),
+        })
         .eq("id", params.id)
         .select()
         .single();

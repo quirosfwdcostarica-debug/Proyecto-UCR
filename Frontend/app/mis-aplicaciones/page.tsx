@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/Button";
 
 interface Aplicacion {
   id: string;
-  estado: "PENDIENTE" | "SELECCIONADO" | "DESCARTADO";
+  estado: "ENVIADA" | "EN_REVISION" | "SELECCIONADO" | "DESCARTADO";
   created_at: string;
   posicion: {
     id: string;
@@ -30,9 +30,10 @@ interface Aplicacion {
 }
 
 const ESTADO_CFG = {
-  PENDIENTE:    { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
-  SELECCIONADO: { label: "Seleccionado",    cls: "bg-green-50 text-green-700 border-green-200",   Icon: CheckCircle2 },
-  DESCARTADO:   { label: "No seleccionado", cls: "bg-red-50 text-red-600 border-red-200",         Icon: XCircle },
+  ENVIADA:      { label: "Enviada",         mensaje: "Tu aplicación fue enviada",                       cls: "bg-blue-50 text-blue-700 border-blue-200",     Icon: Clock },
+  EN_REVISION:  { label: "En revisión",     mensaje: "El exalumno está revisando tu perfil",            cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
+  SELECCIONADO: { label: "Seleccionado",    mensaje: "¡Fuiste seleccionado! Revisa tu correo",          cls: "bg-green-50 text-green-700 border-green-200",  Icon: CheckCircle2 },
+  DESCARTADO:   { label: "No seleccionado", mensaje: "La posición fue cubierta por otro candidato",     cls: "bg-red-50 text-red-600 border-red-200",        Icon: XCircle },
 };
 
 function formatDate(iso: string) {
@@ -90,7 +91,8 @@ export default function MisAplicacionesPage() {
 
   const contadores = {
     total: aplicaciones.length,
-    pendiente: aplicaciones.filter((a) => a.estado === "PENDIENTE").length,
+    enviada: aplicaciones.filter((a) => a.estado === "ENVIADA").length,
+    enRevision: aplicaciones.filter((a) => a.estado === "EN_REVISION").length,
     seleccionado: aplicaciones.filter((a) => a.estado === "SELECCIONADO").length,
     descartado: aplicaciones.filter((a) => a.estado === "DESCARTADO").length,
   };
@@ -114,10 +116,11 @@ export default function MisAplicacionesPage() {
 
         {/* Resumen */}
         {aplicaciones.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
             {[
               { label: "Total", value: contadores.total, cls: "text-slate-700" },
-              { label: "En revisión", value: contadores.pendiente, cls: "text-yellow-700" },
+              { label: "Enviadas", value: contadores.enviada, cls: "text-blue-700" },
+              { label: "En revisión", value: contadores.enRevision, cls: "text-yellow-700" },
               { label: "Seleccionado", value: contadores.seleccionado, cls: "text-green-700" },
               { label: "No seleccionado", value: contadores.descartado, cls: "text-red-600" },
             ].map((item) => (
@@ -146,7 +149,7 @@ export default function MisAplicacionesPage() {
         ) : (
           <div className="space-y-4">
             {aplicaciones.map((a) => {
-              const cfg = ESTADO_CFG[a.estado] ?? ESTADO_CFG.PENDIENTE;
+              const cfg = ESTADO_CFG[a.estado] ?? ESTADO_CFG.ENVIADA;
               const { Icon } = cfg;
               return (
                 <Card key={a.id} className="p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
@@ -167,6 +170,9 @@ export default function MisAplicacionesPage() {
                         <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${cfg.cls}`}>
                           <Icon className="h-3 w-3" /> {cfg.label}
                         </Badge>
+                      </div>
+                      <div className="mb-1">
+                        <p className="text-xs font-medium text-slate-500">{cfg.mensaje}</p>
                       </div>
 
                       {a.posicion && (
@@ -211,7 +217,7 @@ export default function MisAplicacionesPage() {
                       <p className="text-xs text-slate-400 flex items-center gap-1 justify-end">
                         <Calendar className="w-3 h-3" /> Aplicado el {formatDate(a.created_at)}
                       </p>
-                      {a.estado === "PENDIENTE" && (
+                      {a.estado === "ENVIADA" && (
                         <Button
                           size="sm"
                           variant="outline"

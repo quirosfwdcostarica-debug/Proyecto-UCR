@@ -7,6 +7,7 @@ import {
   ArrowLeft, Users, Search, Loader2, RefreshCw,
   UserCheck, UserX, ShieldAlert, CheckCircle2,
   Mail, Calendar, Briefcase, GraduationCap, Trash2, AlertTriangle,
+  Award, FileText,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -28,6 +29,8 @@ interface Usuario {
   carnet_ucr: string | null;
   empresa_actual: string | null;
   anio_ingreso: number | null;
+  nivel_beca: string | null;
+  comprobante_beca_url: string | null;
   coherencia_alerta: boolean;
 }
 
@@ -290,6 +293,23 @@ export default function AdminUsuariosPage() {
                             {u.email_verified && (
                               <p className="flex items-center gap-1 text-green-600">
                                 <CheckCircle2 className="w-3 h-3" /> Email verificado
+                              </p>
+                            )}
+                            {u.nivel_beca && (
+                              <p className="flex items-center gap-1.5 text-[#005da4] font-semibold">
+                                <Award className="w-3 h-3" />
+                                <span className="truncate max-w-[110px]">{u.nivel_beca}</span>
+                                {u.comprobante_beca_url && (
+                                  <a
+                                    href={u.comprobante_beca_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Ver comprobante de beca"
+                                    className="text-[#005da4] hover:text-[#003b6d]"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                  </a>
+                                )}
                               </p>
                             )}
                             {u.coherencia_alerta && (

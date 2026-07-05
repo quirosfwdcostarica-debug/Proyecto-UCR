@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { generarScoresPosiciones } from "@/actions/matching.actions";
 import MisMatchesClient from "./MisMatchesClient";
 
 export default async function MisMatchesPage() {
@@ -13,6 +14,7 @@ export default async function MisMatchesPage() {
   const userId = session.user.id;
 
   let matches: any[] = [];
+  let posiciones: any[] = [];
 
   try {
     const { createClient } = require("@supabase/supabase-js");
@@ -49,6 +51,12 @@ export default async function MisMatchesPage() {
           }
         };
       });
+
+      try {
+        posiciones = await generarScoresPosiciones(userId);
+      } catch (posError) {
+        console.error("Error generando scores de posiciones:", posError);
+      }
     }
 
 
@@ -77,5 +85,5 @@ export default async function MisMatchesPage() {
     console.error("Error fetching matches:", error);
   }
 
-  return <MisMatchesClient matches={matches} />;
+  return <MisMatchesClient matches={matches} posiciones={posiciones} />;
 }

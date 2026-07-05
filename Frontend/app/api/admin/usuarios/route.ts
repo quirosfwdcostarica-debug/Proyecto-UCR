@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       .select(`
         id, nombre, email, tipo, activo, status, email_verified,
         created_at, reportes_recibidos,
-        estudiante:ESTUDIANTES!ESTUDIANTES_user_id_fkey(carrera, carnet_ucr, anio_ingreso, nivel_academico),
+        estudiante:ESTUDIANTES!ESTUDIANTES_user_id_fkey(carrera, carnet_ucr, anio_ingreso, nivel_academico, nivel_beca, comprobante_beca_url),
         exalumno:EXALUMNOS!EXALUMNOS_user_id_fkey(escuela_facultad, empresa_actual)
       `, { count: "exact" })
       .order("created_at", { ascending: false })
@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
         empresa_actual: exa?.empresa_actual ?? null,
         anio_ingreso: anioIngreso,
         nivel_academico: est?.nivel_academico ?? null,
+        nivel_beca: est?.nivel_beca ?? null,
+        comprobante_beca_url: est?.comprobante_beca_url ?? null,
         coherencia_alerta,
       };
     });

@@ -30,6 +30,7 @@ const ESTADO_COLORS: Record<string, string> = {
   activa: "bg-green-100 text-green-700 border-green-200",
   cubierta: "bg-slate-100 text-slate-600 border-slate-200",
   cancelada: "bg-red-100 text-red-600 border-red-200",
+  vencida: "bg-amber-100 text-amber-700 border-amber-200",
 };
 
 const TIPOS = ["EMPLEO", "PASANTIA", "PRACTICA", "VOLUNTARIADO"];

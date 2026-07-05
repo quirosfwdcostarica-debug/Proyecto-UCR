@@ -6,7 +6,8 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Briefcase, Heart, UserCircle,
   Settings, HelpCircle, FolderOpen, ChevronDown, Handshake,
-  FileBarChart2, Receipt, ClipboardList, FileText,
+  FileBarChart2, Receipt, ClipboardList, FileText, HeartHandshake,
+  GraduationCap, Globe2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
@@ -59,28 +60,36 @@ export function AppSidebar() {
   const adminNav: NavItem[] = [
     { label: "Panel Principal",    href: "/admin",            icon: LayoutDashboard },
     { label: "Usuarios",           href: "/admin/usuarios",   icon: Users },
+    { label: "Vacantes",           href: "/admin/posiciones", icon: Briefcase },
     { label: "Gestión de Matches", href: "/admin/matches",    icon: Handshake },
     { label: "Cola Donaciones",    href: "/admin/donaciones", icon: Heart },
+    { label: "Voluntariado UCR",   href: "/admin/voluntariados", icon: HeartHandshake },
+    { label: "Talleres",           href: "/admin/talleres",   icon: GraduationCap },
+    { label: "Feed Comunidad",     href: "/feed",             icon: Globe2 },
     { label: "Reportes",           href: "/admin/reportes",   icon: FileBarChart2 },
   ];
 
     const exalumnoNav: NavItem[] = [
     { labelKey: "sidebar.dashboard",          href: "/",                       icon: LayoutDashboard },
+    { labelKey: "sidebar.feed",               href: "/feed",                   icon: Globe2 },
     { labelKey: "sidebar.directory.student",  href: "/directorio/estudiantes", icon: Users },
     { labelKey: "sidebar.positions.own",      href: "/mis-posiciones",          icon: Briefcase },
     { labelKey: "sidebar.donations.exalumno", href: "/donaciones",              icon: Heart },
     { labelKey: "sidebar.donations.history",  href: "/mis-donaciones",          icon: Receipt },
     { labelKey: "sidebar.matches",            href: "/mis-matches/exalumno",    icon: Handshake },
+    { labelKey: "sidebar.retribuye",          href: "/retribuir",               icon: HeartHandshake },
     { labelKey: "sidebar.profile.exalumno",   href: "/perfil/editar",           icon: UserCircle },
   ];
 
   const estudianteNav: NavItem[] = [
     { labelKey: "sidebar.dashboard",            href: "/",                     icon: LayoutDashboard },
+    { labelKey: "sidebar.feed",                 href: "/feed",                 icon: Globe2 },
     { labelKey: "sidebar.directory.exalumno",   href: "/directorio/exalumnos", icon: Users },
     { labelKey: "sidebar.positions.student",    href: "/posiciones",            icon: Briefcase },
     { labelKey: "sidebar.applications.student", href: "/mis-aplicaciones",      icon: ClipboardList },
     { labelKey: "sidebar.donations.student",    href: "/mis-donaciones",        icon: Heart },
     { labelKey: "sidebar.matches",              href: "/mis-matches",           icon: Handshake },
+    { labelKey: "sidebar.talleres",             href: "/talleres",              icon: GraduationCap },
     {
       labelKey: "sidebar.project.student",
       icon: FolderOpen,

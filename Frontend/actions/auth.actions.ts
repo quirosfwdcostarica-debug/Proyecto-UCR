@@ -17,6 +17,10 @@ type ActionResult =
   | { success: true; message: string; userId?: string }
   | { success: false; message: string };
 
+// Antes de producción: poner NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN=true en .env
+// (por ahora no hay correos @ucr.ac.cr reales disponibles para probar el registro).
+const REQUIRE_UCR_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN === "true";
+
 const isValidPassword = (password: string) => {
   if (!password || password.length < 8) return false;
   if (!/[A-Z]/.test(password)) return false;
@@ -54,12 +58,23 @@ export async function registerStudentAction(data: {
   anio_ingreso?: number;
   nivel_academico?: string;
   promedio_ponderado?: number;
+  aceptaPrivacidad: boolean;
 }): Promise<ActionResult> {
   if (!data.nombre || data.nombre.trim().length < 3) {
     return { success: false, message: "El nombre debe tener al menos 3 caracteres." };
   }
   if (!isValidPassword(data.password)) {
     return { success: false, message: "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número." };
+  }
+  if (!data.aceptaPrivacidad) {
+    return { success: false, message: "Debes aceptar la política de privacidad para registrarte." };
+  }
+
+  if (REQUIRE_UCR_EMAIL_DOMAIN && !data.email.trim().toLowerCase().endsWith("@ucr.ac.cr")) {
+    return {
+      success: false,
+      message: "Los estudiantes deben registrarse con su correo institucional @ucr.ac.cr",
+    };
   }
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -97,6 +112,7 @@ export async function registerStudentAction(data: {
       cedula: data.cedula,
       fecha_nacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null,
       genero: data.genero,
+      acepta_privacidad_at: new Date(),
     },
   });
 
@@ -146,12 +162,16 @@ export async function registerAlumniAction(data: {
   cedula?: string;
   fecha_nacimiento?: string;
   genero?: string;
+  aceptaPrivacidad: boolean;
 }): Promise<ActionResult> {
   if (!data.nombre || data.nombre.trim().length < 3) {
     return { success: false, message: "El nombre debe tener al menos 3 caracteres." };
   }
   if (!isValidPassword(data.password)) {
     return { success: false, message: "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número." };
+  }
+  if (!data.aceptaPrivacidad) {
+    return { success: false, message: "Debes aceptar la política de privacidad para registrarte." };
   }
   const currentYear = new Date().getFullYear();
   if (!data.anio_graduacion || data.anio_graduacion < 1940 || data.anio_graduacion > currentYear) {
@@ -193,6 +213,7 @@ export async function registerAlumniAction(data: {
       cedula: data.cedula,
       fecha_nacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null,
       genero: data.genero,
+      acepta_privacidad_at: new Date(),
     },
   });
 

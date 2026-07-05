@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       .from("MATCHES")
       .select(`
         id, estado, score_match, tipo_apoyo, match_reasons,
-        initiated_by, created_at, estudiante_id, exalumno_id,
+        initiated_by, created_at, accepted_at, resultado, estudiante_id, exalumno_id,
         estudiante:ESTUDIANTES!MATCHES_estudiante_id_fkey(
           user_id, carrera,
           user:USERS!ESTUDIANTES_user_id_fkey(nombre, email)
@@ -48,12 +48,25 @@ export async function GET(req: Request) {
         }
       }
 
+      // T-20: "meses activo" se cuenta desde que el match pasó a ACTIVO
+      // (accepted_at), no desde que fue sugerido (created_at) — un match
+      // puede llevar meses como SUGERIDO sin que eso implique falta de
+      // seguimiento de una conexión real.
+      let mesesActivo: number | null = null;
+      let requiereSeguimiento = false;
+      if (m.estado === "ACTIVO" && m.accepted_at) {
+        mesesActivo = Math.floor((Date.now() - new Date(m.accepted_at).getTime()) / (30 * 24 * 60 * 60 * 1000));
+        requiereSeguimiento = mesesActivo > 6;
+      }
+
       return {
         ...m,
         status: m.estado,
         afinidad: m.score_match,
         estudianteId: m.estudiante_id,
         exalumnoId: m.exalumno_id,
+        mesesActivo,
+        requiereSeguimiento,
         estudiante: est ? { ...est, id: est.user_id, user: { name: estUser?.nombre, email: estUser?.email } } : null,
         exalumno:   exa ? { ...exa, id: exa.user_id, user: { name: exaUser?.nombre, email: exaUser?.email } } : null,
       };

@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -34,6 +35,9 @@ const registerSchema = z.object({
   carrera: z.string().min(3, "Indica la carrera de la cual te graduaste"),
   escuela_facultad: z.string().min(3, "Indica la escuela o facultad"),
   anio_graduacion: z.coerce.number().min(1940, "Año inválido").max(new Date().getFullYear(), "Año inválido"),
+  aceptaPrivacidad: z.boolean().refine((v) => v === true, {
+    message: "Debes aceptar la política de privacidad para continuar",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
@@ -64,6 +68,7 @@ export function ExalumnoRegisterForm() {
       carrera: "",
       escuela_facultad: "",
       anio_graduacion: new Date().getFullYear(),
+      aceptaPrivacidad: false,
     },
   });
 
@@ -138,6 +143,7 @@ export function ExalumnoRegisterForm() {
         escuela_facultad: data.escuela_facultad,
         anio_graduacion: data.anio_graduacion,
         cedula: data.cedula,
+        aceptaPrivacidad: data.aceptaPrivacidad,
       });
 
       if (result.success) {
@@ -431,6 +437,28 @@ export function ExalumnoRegisterForm() {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="aceptaPrivacidad"
+            render={({ field }) => (
+              <FormItem className={`md:col-span-2 flex items-start gap-2 space-y-0 ${formBlocked ? "opacity-40 pointer-events-none" : ""}`}>
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+                </FormControl>
+                <div>
+                  <FormLabel className="font-normal text-sm text-slate-600 dark:text-slate-400">
+                    Acepto la{" "}
+                    <Link href="/politica-privacidad" target="_blank" className="underline text-ucr-celeste-medium">
+                      política de privacidad
+                    </Link>{" "}
+                    y el tratamiento de mis datos conforme a la Ley 8968.
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
           <div className="md:col-span-2 pt-4">
             <Button
               type="submit"
@@ -443,9 +471,6 @@ export function ExalumnoRegisterForm() {
                 "Crear cuenta y solicitar aprobación"
               )}
             </Button>
-            <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
-              ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium dark:text-ucr-celeste hover:underline font-medium">Volver al login</Link>
-            </div>
             <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-4">
               Al registrarte, tu perfil entrará en estado pendiente y será verificado por el equipo de la Fundación.
             </p>

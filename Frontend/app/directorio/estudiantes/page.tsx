@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { CATALOGO_AREAS, TIPOS_APOYO, CATALOGO_CARRERAS } from "@/lib/constants";
 import { ofrecerApoyo, getMatchesForExalumno, rechazarMatch } from "@/actions/matching.actions";
+import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
 
 interface EstudianteItem {
   id: string;
@@ -27,6 +28,9 @@ interface EstudianteItem {
   sede: string | null;
   nivelAcademico: string | null;
   apoyoBuscado: string[];
+  matchScore?: number;
+  matchBreakdown?: { carrera: number; intereses: number; sector: number; apoyo: number };
+  matchReasons?: string[];
   user: {
     id: string;
     name: string | null;
@@ -111,6 +115,9 @@ function ProyectoModal({
           >
             <X className="w-5 h-5" />
           </button>
+          {student.matchScore !== undefined && (
+            <MatchScoreBadge score={student.matchScore} breakdown={student.matchBreakdown} reasons={student.matchReasons} size="sm" className="absolute top-3 right-14" />
+          )}
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
               <Icon className="w-5 h-5 text-white" />
@@ -459,7 +466,7 @@ export default function DirectorioEstudiantes() {
         ) : (
           <>
             <p className="text-sm text-slate-500 font-medium">
-              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}{role === "EXALUMNO" && " · ordenados por mayor afinidad"}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -491,9 +498,13 @@ export default function DirectorioEstudiantes() {
 
                       {/* Badge verificado si tiene proyecto */}
                       {hasProject && (
-                        <span className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span className={`absolute right-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${student.matchScore !== undefined ? "top-16" : "top-3"}`}>
                           <CheckCircle2 className="w-3 h-3" /> Verificado
                         </span>
+                      )}
+
+                      {student.matchScore !== undefined && (
+                        <MatchScoreBadge score={student.matchScore} breakdown={student.matchBreakdown} reasons={student.matchReasons} size="sm" className="absolute top-3 right-3 z-10" />
                       )}
                     </div>
 

@@ -9,6 +9,7 @@ import {
   Users, GraduationCap, MapPin, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FundingProgressBar } from "@/components/donaciones/FundingProgressBar";
 
 interface ProyectoPublico {
   studentId: string;
@@ -26,6 +27,9 @@ interface ProyectoPublico {
   busca_mentoria: boolean;
   busca_empleo: boolean;
   busca_pasantia: boolean;
+  montoObjetivo?: number;
+  montoObjetivoUsd?: number;
+  montoRecaudado?: number;
 }
 
 const UCR = {
@@ -99,6 +103,7 @@ export default function ProyectoPublicoPage() {
   const avance = proyecto.proyecto_porcentaje_avance ?? 0;
   const initials = proyecto.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const isExalumno = (session?.user as any)?.tipo === "EXALUMNO";
+  const isOwnProject = (session?.user as any)?.id === proyecto.studentId;
 
   return (
     <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10">
@@ -171,6 +176,19 @@ export default function ProyectoPublicoPage() {
                 <div className="h-full rounded-full" style={{ width: `${avance}%`, background: `linear-gradient(90deg, ${UCR.blue}, ${UCR.sky})` }} />
               </div>
             </div>
+
+            {/* Recaudación */}
+            {proyecto.busca_financiamiento && !!proyecto.montoObjetivo && (
+              <div className="mb-6 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-900/10">
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">Recaudación del proyecto</p>
+                <FundingProgressBar
+                  objetivo={proyecto.montoObjetivo}
+                  objetivoUsd={proyecto.montoObjetivoUsd}
+                  recaudado={proyecto.montoRecaudado ?? 0}
+                  variant={isOwnProject ? "self" : "donor"}
+                />
+              </div>
+            )}
 
             {/* Support */}
             <div className="mb-6">

@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import LandingPage from "@/components/landing/LandingPage";
+import { BecasInfoDialog } from "@/components/becas/BecasInfoDialog";
+import { FundingProgressBar } from "@/components/donaciones/FundingProgressBar";
 
 export default function RootPage() {
   const { data: session, status } = useSession();
@@ -215,14 +217,19 @@ function Dashboard() {
               <div className="space-y-6">
                 <h3 className="text-lg font-bold text-foreground">Apoyo y Recursos</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                    <div className="h-10 w-10 rounded-lg bg-[#0f4c81] flex items-center justify-center text-white mb-4">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Fondos de Beca</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
-                    <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
-                  </Card>
+                  <BecasInfoDialog
+                    trigger={
+                      <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer hover:shadow-md hover:border-[#00c0f3]/40 transition-all">
+                        <div className="h-10 w-10 rounded-lg bg-[#0f4c81] flex items-center justify-center text-white mb-4">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Fondos de Beca</p>
+                        <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
+                        <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
+                        <p className="text-xs font-bold text-[#005da4] mt-2 hover:underline">Ver categorías de becas →</p>
+                      </Card>
+                    }
+                  />
                   <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
                     <div className="h-10 w-10 rounded-lg bg-green-700 flex items-center justify-center text-white mb-4">
                       <Users className="h-5 w-5" />
@@ -244,14 +251,34 @@ function Dashboard() {
                       <p className="text-sm text-slate-500">Tu perfil califica para el fondo de Excelencia de Exalumnos.</p>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => setIsBecaOpen(true)}
-                    variant="outline" 
+                    variant="outline"
                     className="border-[#0f4c81] text-[#0f4c81] dark:border-sky-400 dark:text-sky-400"
                   >
                     Aplicar Ahora
                   </Button>
                 </Card>
+
+                {profile?.financiamiento?.busca && (
+                  <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                        <DollarSign className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Recaudación de tu Proyecto</p>
+                        <p className="text-xs text-slate-400">Fondos recibidos de exalumnos donantes</p>
+                      </div>
+                    </div>
+                    <FundingProgressBar
+                      objetivo={profile.financiamiento.objetivo}
+                      objetivoUsd={profile.financiamiento.objetivoUsd}
+                      recaudado={profile.financiamiento.recaudado}
+                      variant="self"
+                    />
+                  </Card>
+                )}
               </div>
 
               {/* Recommended Opportunities / Next Steps */}
@@ -398,6 +425,15 @@ function Dashboard() {
                                 <span className="font-extrabold text-[#005da4] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
                               </div>
                               <Progress value={p.avance ?? 0} className="h-2 bg-slate-100 dark:bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-[#005da4] [&>div]:to-[#00a3e0]" />
+                              {p.montoObjetivo > 0 && (
+                                <FundingProgressBar
+                                  objetivo={p.montoObjetivo}
+                                  objetivoUsd={p.montoObjetivoUsd}
+                                  recaudado={p.montoRecaudado ?? 0}
+                                  variant="donor"
+                                  className="mt-3"
+                                />
+                              )}
                             </div>
                           ))}
                         </div>

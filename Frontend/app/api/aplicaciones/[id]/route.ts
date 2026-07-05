@@ -26,8 +26,8 @@ export async function PATCH(
   }
 
   const { action, cerrarPosicion = false } = body;
-  if (!["seleccionar", "descartar"].includes(action))
-    return NextResponse.json({ message: "Acción inválida. Use 'seleccionar' o 'descartar'" }, { status: 400 });
+  if (!["seleccionar", "descartar", "marcar_revision"].includes(action))
+    return NextResponse.json({ message: "Acción inválida. Use 'seleccionar', 'descartar' o 'marcar_revision'" }, { status: 400 });
 
   // Fetch the application with context
   const { data: aplicacion, error: apErr } = await supabaseAdmin
@@ -53,7 +53,24 @@ export async function PATCH(
   if (tipo !== "ADMIN" && pos?.exalumno_id !== userId)
     return NextResponse.json({ message: "No tienes permiso para gestionar esta aplicación" }, { status: 403 });
 
-  if (aplicacion.estado !== "PENDIENTE")
+  // T-14: marcar_revision es idempotente y solo aplica desde ENVIADA — se
+  // resuelve antes de la validación genérica de "ya fue procesada", que es
+  // específica de seleccionar/descartar.
+  if (action === "marcar_revision") {
+    if (aplicacion.estado !== "ENVIADA") {
+      return NextResponse.json({ ok: true, estado: aplicacion.estado });
+    }
+    const { data: updated, error } = await supabaseAdmin
+      .from("APLICACIONES")
+      .update({ estado: "EN_REVISION", updated_at: new Date().toISOString() })
+      .eq("id", params.id)
+      .select("id, estado")
+      .single();
+    if (error) return NextResponse.json({ message: "Error al actualizar la aplicación" }, { status: 500 });
+    return NextResponse.json({ ok: true, estado: updated.estado });
+  }
+
+  if (!["ENVIADA", "EN_REVISION"].includes(aplicacion.estado))
     return NextResponse.json({ message: "Esta aplicación ya fue procesada" }, { status: 400 });
 
   // Get exalumno user data for emails
@@ -73,7 +90,7 @@ export async function PATCH(
     if (action === "seleccionar") {
       const { data: updated, error } = await supabaseAdmin
         .from("APLICACIONES")
-        .update({ estado: "SELECCIONADO" })
+        .update({ estado: "SELECCIONADO", updated_at: new Date().toISOString() })
         .eq("id", params.id)
         .select("id, estado")
         .single();
@@ -84,21 +101,21 @@ export async function PATCH(
       }
 
       if (cerrarPosicion) {
-        // Get other pending applicants to notify them
+        // Get other pending applicants to notify them (ENVIADA o EN_REVISION, ambos "no decididos")
         const { data: otrosPendientes } = await supabaseAdmin
           .from("APLICACIONES")
           .select(`id, estudiante:ESTUDIANTES!APLICACIONES_estudiante_id_fkey(user:USERS!ESTUDIANTES_user_id_fkey(email, nombre))`)
           .eq("posicion_id", aplicacion.posicion_id)
           .neq("id", params.id)
-          .eq("estado", "PENDIENTE");
+          .in("estado", ["ENVIADA", "EN_REVISION"]);
 
         // Batch reject
         await supabaseAdmin
           .from("APLICACIONES")
-          .update({ estado: "DESCARTADO" })
+          .update({ estado: "DESCARTADO", updated_at: new Date().toISOString() })
           .eq("posicion_id", aplicacion.posicion_id)
           .neq("id", params.id)
-          .eq("estado", "PENDIENTE");
+          .in("estado", ["ENVIADA", "EN_REVISION"]);
 
         // Close position
         await supabaseAdmin
@@ -140,7 +157,7 @@ export async function PATCH(
   }
 }
 
-// DELETE — estudiante retira su aplicación (solo si PENDIENTE)
+// DELETE — estudiante retira su aplicación (solo si ENVIADA)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -164,8 +181,8 @@ export async function DELETE(
     return NextResponse.json({ message: "Aplicación no encontrada" }, { status: 404 });
   if (aplicacion.estudiante_id !== userId)
     return NextResponse.json({ message: "No tienes permiso para retirar esta aplicación" }, { status: 403 });
-  if (aplicacion.estado !== "PENDIENTE")
-    return NextResponse.json({ message: "Solo puedes retirar aplicaciones en estado 'En revisión'" }, { status: 400 });
+  if (aplicacion.estado !== "ENVIADA")
+    return NextResponse.json({ message: "Solo puedes retirar aplicaciones que aún no han sido revisadas por el exalumno." }, { status: 400 });
 
   try {
     const { error } = await supabaseAdmin.from("APLICACIONES").delete().eq("id", params.id);

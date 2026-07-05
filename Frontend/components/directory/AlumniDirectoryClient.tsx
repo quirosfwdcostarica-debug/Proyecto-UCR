@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { GraduationCap, UserPlus, Search, LayoutGrid, List, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { CATALOGO_AREAS } from "@/lib/constants";
+import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
 
 interface AlumniItem {
   user_id: string;
@@ -26,6 +28,9 @@ interface AlumniItem {
   ofrece_volunteering: boolean;
   ofrece_career_advice: boolean;
   ofrece_networking: boolean;
+  matchScore?: number;
+  matchBreakdown?: { carrera: number; intereses: number; sector: number; apoyo: number };
+  matchReasons?: string[];
   User: { id: string; nombre: string; foto_url: string | null; email: string | null };
 }
 
@@ -59,6 +64,8 @@ function getSupportTags(al: AlumniItem): string[] {
 }
 
 export function AlumniDirectoryClient() {
+  const { data: session } = useSession();
+  const isEstudiante = (session?.user as any)?.tipo === "ESTUDIANTE";
   const [alumni, setAlumni] = useState<AlumniItem[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -200,7 +207,7 @@ export function AlumniDirectoryClient() {
           <div>
             <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Directorio de Exalumnos</h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              {loading ? "Cargando..." : <><span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> profesionales conectados</>}
+              {loading ? "Cargando..." : <><span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> profesionales conectados{isEstudiante && " · ordenados por mayor afinidad"}</>}
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-1 shadow-sm">
@@ -255,7 +262,10 @@ export function AlumniDirectoryClient() {
 
                 if (viewMode === "list") {
                   return (
-                    <Card key={al.user_id} className="p-4 border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                    <Card key={al.user_id} className="relative p-4 border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                      {al.matchScore !== undefined && (
+                        <MatchScoreBadge score={al.matchScore} breakdown={al.matchBreakdown} reasons={al.matchReasons} className="absolute -top-3 -right-3 z-10" />
+                      )}
                       <div className="h-16 w-16 rounded-md bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border dark:border-slate-700 shadow-sm">
                         <img src={u.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`} alt={name} className="h-full w-full object-cover" />
                       </div>
@@ -279,7 +289,10 @@ export function AlumniDirectoryClient() {
                 }
 
                 return (
-                  <Card key={al.user_id} className="overflow-hidden border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
+                  <Card key={al.user_id} className="relative overflow-hidden border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
+                    {al.matchScore !== undefined && (
+                      <MatchScoreBadge score={al.matchScore} breakdown={al.matchBreakdown} reasons={al.matchReasons} className="absolute top-3 right-3 z-10" />
+                    )}
                     <div className={`h-20 ${bgCover} w-full`} />
                     <div className="px-5 pb-5 flex-1 flex flex-col relative pt-10">
                       <div className="absolute -top-8 left-5 h-16 w-16 rounded-md border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 overflow-hidden shadow-sm">

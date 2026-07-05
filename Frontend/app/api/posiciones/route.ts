@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from("POSICIONES")
       .select("*, APLICACIONES(count), exalumno:EXALUMNOS!inner(user:USERS!inner(id, nombre, foto_url))", { count: "exact" })
-      .eq("estado", "activa");
+      .eq("estado", "activa")
+      .is("deleted_at", null);
 
     if (tipo) query = query.ilike("tipo", `%${tipo}%`);
     if (modalidad) query = query.ilike("modalidad", `%${modalidad}%`);

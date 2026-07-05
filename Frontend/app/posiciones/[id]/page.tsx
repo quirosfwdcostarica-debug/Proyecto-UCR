@@ -47,9 +47,10 @@ const ESTADO_CFG: Record<string, string> = {
 };
 
 const APLICACION_ESTADO_CFG: Record<string, { label: string; cls: string }> = {
-  PENDIENTE: { label: "Aplicación enviada — En revisión", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  SELECCIONADO: { label: "Seleccionado", cls: "bg-green-50 text-green-700 border-green-200" },
-  DESCARTADO: { label: "No seleccionado", cls: "bg-red-50 text-red-600 border-red-200" },
+  ENVIADA: { label: "Aplicación enviada", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  EN_REVISION: { label: "El exalumno está revisando tu perfil", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  SELECCIONADO: { label: "¡Fuiste seleccionado! Revisa tu correo", cls: "bg-green-50 text-green-700 border-green-200" },
+  DESCARTADO: { label: "La posición fue cubierta por otro candidato", cls: "bg-red-50 text-red-600 border-red-200" },
 };
 
 export default function PosicionDetallePage() {
@@ -109,7 +110,7 @@ export default function PosicionDetallePage() {
     const d = await res.json();
     if (res.ok) {
       setMsg({ type: "ok", text: "Aplicación enviada correctamente." });
-      setPosicion((prev) => prev ? { ...prev, mi_aplicacion: { id: d.id, estado: "PENDIENTE" }, aplicantes: prev.aplicantes + 1 } : prev);
+      setPosicion((prev) => prev ? { ...prev, mi_aplicacion: { id: d.id, estado: "ENVIADA" }, aplicantes: prev.aplicantes + 1 } : prev);
     } else {
       setMsg({ type: "err", text: d.message || "Error al aplicar." });
     }
@@ -216,7 +217,7 @@ export default function PosicionDetallePage() {
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" /> {aplicCfg.label}
               </div>
-              {posicion.mi_aplicacion?.estado === "PENDIENTE" && (
+              {posicion.mi_aplicacion?.estado === "ENVIADA" && (
                 <Button
                   variant="outline"
                   size="sm"

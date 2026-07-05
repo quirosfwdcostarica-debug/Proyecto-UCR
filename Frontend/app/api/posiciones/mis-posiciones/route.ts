@@ -19,6 +19,7 @@ export async function GET() {
     let query = supabaseAdmin
       .from("POSICIONES")
       .select("id, titulo, tipo, modalidad, jornada, empresa, estado, fecha_limite, created_at, APLICACIONES(count)", { count: "exact" })
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (tipo !== "ADMIN") {

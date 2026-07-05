@@ -19,19 +19,17 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-
 export default function MisConexionesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   const [pendingReceived, setPendingReceived] = useState<any[]>([]);
   const [sentRequests, setSentRequests] = useState<any[]>([]);
   const [activeConnections, setActiveConnections] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const accessToken = (session as any)?.user?.accessToken;
+  const userId = session?.user?.id;
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -40,21 +38,16 @@ export default function MisConexionesPage() {
   }, [status, router]);
 
   const fetchConnections = async () => {
-    if (!accessToken) return;
     setLoading(true);
     try {
       // 1. Pending Received
-      const resPending = await fetch(`${API_URL}/connections/pending`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const resPending = await fetch(`/api/connections/pending`);
       if (resPending.ok) {
         setPendingReceived(await resPending.json());
       }
 
       // 2. Sent
-      const resSent = await fetch(`${API_URL}/connections/sent`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const resSent = await fetch(`/api/connections/sent`);
       if (resSent.ok) {
         // filter down to only pending sent to separate clearly from accepted connections
         const allSent = await resSent.json();
@@ -62,9 +55,7 @@ export default function MisConexionesPage() {
       }
 
       // 3. Active Connections
-      const resActive = await fetch(`${API_URL}/connections/active`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const resActive = await fetch(`/api/connections/active`);
       if (resActive.ok) {
         setActiveConnections(await resActive.json());
       }
@@ -76,17 +67,16 @@ export default function MisConexionesPage() {
   };
 
   useEffect(() => {
-    if (accessToken) {
+    if (userId) {
       fetchConnections();
     }
-  }, [accessToken]);
+  }, [userId]);
 
   const handleAccept = async (id: string, senderName: string) => {
     setActionLoadingId(id);
     try {
-      const res = await fetch(`${API_URL}/connections/${id}/accept`, {
+      const res = await fetch(`/api/connections/${id}/accept`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${accessToken}` }
       });
       
       if (!res.ok) {
@@ -124,9 +114,8 @@ export default function MisConexionesPage() {
       if (result.isConfirmed) {
         setActionLoadingId(id);
         try {
-          const res = await fetch(`${API_URL}/connections/${id}/reject`, {
+          const res = await fetch(`/api/connections/${id}/reject`, {
             method: "PUT",
-            headers: { Authorization: `Bearer ${accessToken}` }
           });
           
           if (!res.ok) {
@@ -159,9 +148,8 @@ export default function MisConexionesPage() {
       if (result.isConfirmed) {
         setActionLoadingId(id);
         try {
-          const res = await fetch(`${API_URL}/connections/${id}/cancel`, {
+          const res = await fetch(`/api/connections/${id}/cancel`, {
             method: "PUT",
-            headers: { Authorization: `Bearer ${accessToken}` }
           });
           
           if (!res.ok) {
@@ -194,9 +182,8 @@ export default function MisConexionesPage() {
       if (result.isConfirmed) {
         setActionLoadingId(id);
         try {
-          const res = await fetch(`${API_URL}/connections/${id}`, {
+          const res = await fetch(`/api/connections/${id}`, {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${accessToken}` }
           });
           
           if (!res.ok) {

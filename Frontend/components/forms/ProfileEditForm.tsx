@@ -1,10 +1,12 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useState } from "react";
+import { useTransition, useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
+import { calcularCompletitudEstudiante, calcularCompletitudExalumno } from "@/lib/profile-completeness";
 import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
 import {
   CATALOGO_CARRERAS,
@@ -18,8 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search, FileText, Paperclip } from "lucide-react";
 import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
+import { AreasInteresSelector } from "@/components/forms/AreasInteresSelector";
+import { BecasInfoDialog } from "@/components/becas/BecasInfoDialog";
+import { Progress } from "@/components/ui/Progress";
 import {
   Form,
   FormControl,
@@ -38,6 +43,13 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const [isPending, startTransition] = useTransition();
   const { data: session, update } = useSession();
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingComprobante, setIsUploadingComprobante] = useState(false);
+  // El botón flotante se porta a document.body: SidebarWrapper aplica
+  // backdrop-blur al <main>, y eso crea un "containing block" propio para
+  // los descendientes con position:fixed (se pegan al fondo del contenido
+  // en vez de a la ventana). Solo se monta tras el primer render en cliente.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -58,6 +70,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   );
   const [idiomasList, setIdiomasList] = useState<{ idioma: string; nivel: string }[]>(
     Array.isArray(initialData?.idiomas) ? initialData.idiomas : []
+  );
+  const [areasInteresList, setAreasInteresList] = useState<string[]>(
+    Array.isArray(initialData?.areas_interes) ? initialData.areas_interes : []
   );
   const [skillInput, setSkillInput] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
@@ -111,6 +126,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       
       // Estudiante fields
       nivel_beca: (initialData as any)?.nivel_beca || "",
+      comprobante_beca_url: (initialData as any)?.comprobante_beca_url || "",
       carnet_ucr: initialData?.carnet_ucr || "",
       carrera: initialData?.carrera || "",
       escuela_facultad: initialData?.escuela_facultad || "",
@@ -150,6 +166,13 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     },
   });
 
+  // T-13: completitud recalculada en vivo mientras el usuario escribe, sin esperar al guardado.
+  const watchedValues = useWatch({ control: form.control });
+  const liveCompletitud = useMemo(() => {
+    const data = { ...watchedValues, areas_interes: areasInteresList };
+    return isEstudiante ? calcularCompletitudEstudiante(data) : calcularCompletitudExalumno(data);
+  }, [watchedValues, areasInteresList, isEstudiante]);
+
   const onSubmit = (data: UserProfileUpdateValues) => {
     startTransition(async () => {
       try {
@@ -158,6 +181,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           habilidades: hardSkills as any,
           soft_skills: softSkillsList as any,
           idiomas: idiomasList as any,
+          areas_interes: areasInteresList as any,
         } as any);
         if (result.success) {
           if (data.image) {
@@ -168,7 +192,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             description: "Tus datos se han guardado correctamente.",
             className: "bg-ucr-azul-1 text-white border-none",
           });
-          // T-13: si el avance llegó al 100%, preguntar si el proyecto finalizó
+          // T-17: si el avance llegó al 100%, preguntar si el proyecto finalizó
           if ((result as any).proyectoCompleto) {
             const { isConfirmed } = await import("sweetalert2").then(m =>
               m.default.fire({
@@ -182,7 +206,12 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               })
             );
             if (isConfirmed) {
-              await updateUserProfile({ ...data, proyecto_tipo: `${data.proyecto_tipo ?? ""}__finalizado` });
+              await updateUserProfile({ ...data, proyecto_activo: false } as any);
+              toast({
+                title: "Proyecto marcado como finalizado",
+                description: "Ya no aparecerá en el directorio activo de estudiantes.",
+                className: "bg-ucr-azul-1 text-white border-none",
+              });
             }
           }
         }
@@ -222,7 +251,28 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     <div className="space-y-8">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-        
+
+        {/* Completitud del perfil (T-13) — se recalcula en vivo con cada cambio.
+            sticky (no fixed): permanece pegada al hacer scroll sin necesitar un
+            portal, ya que --a diferencia de fixed-- no la rompe el backdrop-blur
+            de los contenedores padre (ver SidebarWrapper). */}
+        <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+              {liveCompletitud.completo ? "¡Tu perfil está completo!" : "Completitud de tu perfil"}
+            </p>
+            <span className="text-sm font-extrabold text-ucr-celeste-medium">
+              {liveCompletitud.porcentaje}%
+            </span>
+          </div>
+          <Progress value={liveCompletitud.porcentaje} tone="#005da4" />
+          {!liveCompletitud.completo && (
+            <p className="text-xs text-slate-500 mt-2">
+              Los perfiles solo aparecen en el directorio cuando llegan al 100%. Guarda tus cambios para que este porcentaje quede registrado.
+            </p>
+          )}
+        </div>
+
         {/* Tarjeta 1: Información Personal */}
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -565,15 +615,95 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                           className="w-full h-12 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm text-sm"
                         >
                           <option value="">Sin beca</option>
-                          <option value="Socioeconómica">Socioeconómica</option>
-                          <option value="Excelencia Académica">Excelencia Académica</option>
-                          <option value="Deporte">Deporte</option>
-                          <option value="Arte y Cultura">Arte y Cultura</option>
-                          <option value="Estímulo">Estímulo</option>
-                          <option value="Otra">Otra</option>
+                          <option value="Beca 1">Beca 1</option>
+                          <option value="Beca 2">Beca 2</option>
+                          <option value="Beca 3">Beca 3</option>
+                          <option value="Beca 4">Beca 4</option>
+                          <option value="Beca 5">Beca 5</option>
                         </select>
                       </FormControl>
-                      <p className="text-xs text-slate-400 mt-1">Solo tú y el equipo UCR pueden ver este dato.</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-slate-400">Solo tú y el equipo UCR pueden ver este dato.</p>
+                        <BecasInfoDialog
+                          trigger={
+                            <button type="button" className="text-xs font-bold text-[#005da4] hover:underline shrink-0 ml-2">
+                              ¿Qué incluye cada beca?
+                            </button>
+                          }
+                        />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={"comprobante_beca_url" as any}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700 flex items-center gap-2">
+                        Comprobante de Beca
+                        <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                          🔒 Privado
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-4">
+                          {field.value ? (
+                            <a
+                              href={field.value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 flex items-center gap-2 h-12 px-4 rounded-xl bg-[#005da4]/10 text-[#005da4] font-semibold text-sm hover:bg-[#005da4]/20 transition-colors"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Ver comprobante actual
+                            </a>
+                          ) : (
+                            <div className="shrink-0 flex items-center gap-2 h-12 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-sm">
+                              <FileText className="w-4 h-4" />
+                              Sin comprobante
+                            </div>
+                          )}
+                          <div className="relative group flex-1">
+                            <Paperclip className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploadingComprobante ? "animate-pulse text-ucr-celeste" : ""}`} />
+                            <Input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              disabled={isUploadingComprobante}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  setIsUploadingComprobante(true);
+                                  const formData = new FormData();
+                                  formData.append("file", file);
+                                  formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+                                  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
+
+                                  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+                                    method: "POST",
+                                    body: formData,
+                                  });
+                                  if (!res.ok) throw new Error("Error subiendo el comprobante");
+                                  const data = await res.json();
+                                  field.onChange(data.secure_url);
+                                  toast({ title: "Comprobante subido", description: "Recuerda presionar 'Guardar Cambios' al final." });
+                                } catch (error) {
+                                  toast({ title: "Error", description: "No se pudo subir el comprobante", variant: "destructive" });
+                                } finally {
+                                  setIsUploadingComprobante(false);
+                                }
+                              }}
+                              className="pl-10 h-12 pt-2.5 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Foto o PDF de tu comprobante de beca. Solo tú, el equipo UCR y el exalumno con quien tengas un match activo podrán verlo.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -900,6 +1030,21 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             </div>
 
+            {/* ÁREAS DE INTERÉS (T-11) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Áreas de Interés</h2>
+                  <p className="text-sm text-slate-500">Selecciona las áreas del catálogo que mejor describen tus intereses — mejora la calidad de tus matches.</p>
+                </div>
+              </div>
+
+              <AreasInteresSelector value={areasInteresList} onChange={setAreasInteresList} />
+            </div>
+
             {/* APOYO BUSCADO */}
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -1135,6 +1280,21 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               </div>
             </div>
 
+            {/* ÁREAS DE INTERÉS (T-11/T-13) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Áreas de Interés</h2>
+                  <p className="text-sm text-slate-500">Selecciona las áreas del catálogo que mejor describen tus intereses — mejora la calidad de tus matches.</p>
+                </div>
+              </div>
+
+              <AreasInteresSelector value={areasInteresList} onChange={setAreasInteresList} />
+            </div>
+
             {/* APOYO OFRECIDO */}
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
@@ -1257,26 +1417,32 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       </form>
     </Form>
 
-    {/* Botón fijo siempre visible en esquina inferior derecha */}
-    <div className="fixed bottom-6 right-8 z-50">
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
-          Revisa tus cambios antes de guardar.
-        </p>
-        <Button
-          type="button"
-          disabled={isPending}
-          onClick={() => form.handleSubmit(onSubmit)()}
-          className="h-12 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-white shadow-lg transition-all px-8 rounded-xl font-bold text-base group"
-        >
-          {isPending ? (
-            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Guardando...</>
-          ) : (
-            <><Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Guardar Cambios</>
-          )}
-        </Button>
-      </div>
-    </div>
+    {/* Botón de guardar, siempre visible mientras se hace scroll.
+        Se porta a document.body para escapar del backdrop-blur del <main>
+        (ver nota junto a `mounted` más arriba) y así quedar fijo respecto
+        a la ventana real, no al contenido de la página. */}
+    {mounted && createPortal(
+      <div className="fixed bottom-6 right-6 md:right-8 z-50">
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
+            Revisa tus cambios antes de guardar.
+          </p>
+          <Button
+            type="button"
+            disabled={isPending}
+            onClick={() => form.handleSubmit(onSubmit)()}
+            className="h-12 shrink-0 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-white shadow-lg transition-all px-6 rounded-xl font-bold text-sm md:text-base group"
+          >
+            {isPending ? (
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Guardando...</>
+            ) : (
+              <><Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Guardar Cambios</>
+            )}
+          </Button>
+        </div>
+      </div>,
+      document.body
+    )}
 
     {/* Tarjeta: Seguridad — formulario independiente para evitar form anidado */}
     <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">

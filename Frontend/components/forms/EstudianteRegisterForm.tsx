@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -22,11 +23,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { registerStudentAction } from "@/actions/auth.actions";
 import { CATALOGO_CARRERAS, SEDES_UCR, NIVELES_ACADEMICOS } from "@/lib/constants";
 
+// Antes de producción: poner NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN=true en .env
+// (por ahora no hay correos @ucr.ac.cr reales disponibles para probar el registro).
+const REQUIRE_UCR_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN === "true";
+
 const registerSchema = z.object({
   tipo_identificacion: z.string().min(1, "Seleccione un tipo de identificación"),
   cedula: z.string().min(9, "La identificación debe tener al menos 9 caracteres"),
   nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-  email: z.string().email("Correo inválido"),
+  email: z.string()
+    .email("Correo inválido")
+    .refine((v) => !REQUIRE_UCR_EMAIL_DOMAIN || v.trim().toLowerCase().endsWith("@ucr.ac.cr"), {
+      message: "Debes usar tu correo institucional @ucr.ac.cr",
+    }),
   fechaNacimiento: z.string().min(1, "Fecha de nacimiento es requerida"),
   genero: z.string().min(1, "Género es requerido"),
   carnet_ucr: z.string().min(6, "Carné inválido"),
@@ -40,7 +49,10 @@ const registerSchema = z.object({
     .min(8, "La contraseña debe tener mínimo 8 caracteres")
     .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
     .regex(/[0-9]/, "Debe contener al menos un número"),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  aceptaPrivacidad: z.boolean().refine((v) => v === true, {
+    message: "Debes aceptar la política de privacidad para continuar",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
@@ -75,6 +87,7 @@ export function EstudianteRegisterForm() {
       promedio_ponderado: "",
       password: "",
       confirmPassword: "",
+      aceptaPrivacidad: false,
     },
   });
 
@@ -129,6 +142,7 @@ export function EstudianteRegisterForm() {
         anio_ingreso: parseInt(data.anio_ingreso),
         nivel_academico: data.nivel_academico,
         promedio_ponderado: parseFloat(data.promedio_ponderado),
+        aceptaPrivacidad: data.aceptaPrivacidad,
       });
 
       if (result.success) {
@@ -468,6 +482,28 @@ export function EstudianteRegisterForm() {
           </div>
         </div>
 
+        <FormField
+          control={form.control}
+          name="aceptaPrivacidad"
+          render={({ field }) => (
+            <FormItem className="flex items-start gap-2 space-y-0">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+              </FormControl>
+              <div>
+                <FormLabel className="font-normal text-sm text-slate-600 dark:text-slate-400">
+                  Acepto la{" "}
+                  <Link href="/politica-privacidad" target="_blank" className="underline text-ucr-celeste-medium">
+                    política de privacidad
+                  </Link>{" "}
+                  y el tratamiento de mis datos conforme a la Ley 8968.
+                </FormLabel>
+                <FormMessage />
+              </div>
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" disabled={isLoading} className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white py-2">
           {isLoading ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registrando...</>
@@ -475,9 +511,6 @@ export function EstudianteRegisterForm() {
             "Crear cuenta"
           )}
         </Button>
-        <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
-          ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium dark:text-ucr-celeste hover:underline font-medium">Volver al login</Link>
-        </div>
       </form>
     </Form>
   );

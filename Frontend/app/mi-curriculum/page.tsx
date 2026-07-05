@@ -6,15 +6,21 @@ import jsPDF from "jspdf";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkles, Check, Edit2, Trash2, Download, CheckCircle2, Loader2, Lightbulb, Plus, Save, X, MapPin, Mail, Phone, Briefcase, GraduationCap, Code2, Award, Upload } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { initialCV, type CVData, type Experience } from "@/components/cv/CVTypes";
-import { ConfirmModal, ExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
+import { ConfirmModal, ExperienceForm, StudentExperienceForm, SkillsEditor, EducationForm } from "@/components/cv/CVEditors";
 import { OptimizePanel } from "@/components/cv/OptimizePanel";
+import { ImprovePanel } from "@/components/cv/ImprovePanel";
 import { ChatBot } from "@/components/cv/ChatBot";
 import { useDialog } from "@/hooks/useDialog";
 
 type AISection = "profile" | "experience";
 
 export default function CVPage() {
+  const { data: session } = useSession();
+  // La experiencia se muestra con un formulario amigable a estudiantes
+  // (proyectos / pasantías / voluntariados) o el laboral clásico según el rol.
+  const esEstudiante = (session?.user as any)?.tipo !== "EXALUMNO";
   const [cv, setCV] = useState<CVData>(initialCV);
   const [cvLoading, setCvLoading] = useState(true);
   const cvRef = useRef<HTMLDivElement>(null);
@@ -140,14 +146,45 @@ export default function CVPage() {
     const formData = new FormData();
     formData.append("file", file);
     try {
+      // 1. Extraer el texto crudo del archivo (PDF/DOCX/TXT).
       const res = await fetch("/api/cv/extract", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Error extrayendo texto");
       const data = await res.json();
-      setCV(c => ({ ...c, summary: data.text }));
-      await showAlert("CV cargado y texto extraído al perfil.", { title: "¡Listo!", variant: "success", buttonLabel: "Entendido" });
-    } catch (error) {
+      const texto = (data.text ?? "").trim();
+      if (!texto) throw new Error("No se pudo leer contenido del archivo.");
+
+      // 2. La IA estructura el texto en los campos del CV y mejora la redacción.
+      const parseRes = await fetch("/api/cv/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: texto }),
+      });
+      const parseData = await parseRes.json();
+      if (!parseRes.ok) throw new Error(parseData.message || "La IA no pudo estructurar el CV.");
+
+      const parsed = parseData.cv;
+      // 3. Se llenan los campos con lo detectado; para datos de contacto que ya
+      // tenemos de la cuenta, se conserva el existente si el PDF no los trae.
+      setCV((c) => ({
+        name: parsed.name || c.name,
+        title: parsed.title || c.title,
+        location: parsed.location || c.location,
+        email: parsed.email || c.email,
+        phone: parsed.phone || c.phone,
+        summary: parsed.summary || c.summary,
+        experience: parsed.experience?.length ? parsed.experience : c.experience,
+        skills: parsed.skills?.length ? parsed.skills : c.skills,
+        education: parsed.education?.length ? parsed.education : c.education,
+        certifications: parsed.certifications?.length ? parsed.certifications : c.certifications,
+      }));
+
+      await showAlert(
+        "Tu CV se leyó, se organizó en cada sección y se mejoró la redacción. Revisa los campos a la izquierda y guarda cuando estés conforme.",
+        { title: "¡CV importado con IA!", variant: "success", buttonLabel: "Entendido" }
+      );
+    } catch (error: any) {
       console.error(error);
-      await showAlert("Error procesando el archivo.", { title: "Error", variant: "error" });
+      await showAlert(error?.message || "Error procesando el archivo.", { title: "Error", variant: "error" });
     } finally {
       setUploadingCV(false);
       e.target.value = ''; // reset input
@@ -204,7 +241,7 @@ export default function CVPage() {
       {/* Sub-header */}
       <div className="bg-white dark:bg-slate-900 border-b border-border dark:border-slate-800 px-8 py-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">AI Career Assistant</p>
+          <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Asistente de Carrera con IA</p>
           <h1 className="text-2xl font-bold text-foreground">Optimización de CV</h1>
         </div>
         <div className="flex items-center gap-6">
@@ -338,15 +375,17 @@ export default function CVPage() {
               <div>
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
                   <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-600"><Briefcase className="w-4 h-4" /></div>
-                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Experiencia</h3>
-                  <button aria-label="Agregar experiencia laboral" onClick={() => { setAddingExp(true); setEditingExpId(null); }} className="ml-auto p-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">{esEstudiante ? "Experiencia y Proyectos" : "Experiencia"}</h3>
+                  <button aria-label="Agregar experiencia o proyecto" onClick={() => { setAddingExp(true); setEditingExpId(null); }} className="ml-auto p-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
                     <Plus className="w-3.5 h-3.5 text-slate-400 hover:text-indigo-600" />
                   </button>
                 </div>
 
                 {addingExp && !editingExpId && (
                   <div className="mb-4">
-                    <ExperienceForm onSave={saveExp} onCancel={() => setAddingExp(false)} />
+                    {esEstudiante
+                      ? <StudentExperienceForm onSave={saveExp} onCancel={() => setAddingExp(false)} />
+                      : <ExperienceForm onSave={saveExp} onCancel={() => setAddingExp(false)} />}
                   </div>
                 )}
 
@@ -354,14 +393,18 @@ export default function CVPage() {
                   {cv.experience.map((exp) => (
                     <div key={exp.id}>
                       {editingExpId === exp.id ? (
-                        <ExperienceForm initial={exp} onSave={saveExp} onCancel={() => setEditingExpId(null)} />
+                        esEstudiante
+                          ? <StudentExperienceForm initial={exp} onSave={saveExp} onCancel={() => setEditingExpId(null)} />
+                          : <ExperienceForm initial={exp} onSave={saveExp} onCancel={() => setEditingExpId(null)} />
                       ) : (
                         <div className="relative pl-4 border-l-2 border-slate-200 hover:border-[#1a6db5] transition-colors group/exp">
                           <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-slate-300 group-hover/exp:bg-[#1a6db5] transition-colors" />
                           <div className="flex items-start justify-between">
                             <div>
                               <h4 className="font-bold text-slate-800 text-sm">{exp.role}</h4>
-                              <p className="text-xs text-[#1a6db5] font-medium">{exp.company} · {exp.period}</p>
+                              {(exp.company || exp.period) && (
+                                <p className="text-xs text-[#1a6db5] font-medium">{[exp.company, exp.period].filter(Boolean).join(" · ")}</p>
+                              )}
                             </div>
                             <div className="flex gap-1 opacity-0 group-hover/exp:opacity-100 transition-opacity">
                               <button aria-label="Editar experiencia" onClick={() => { setEditingExpId(exp.id); setAddingExp(false); }} className="p-1 hover:bg-blue-50 rounded-md"><Edit2 className="w-3 h-3 text-slate-400 hover:text-blue-600" /></button>
@@ -381,7 +424,7 @@ export default function CVPage() {
                       )}
                     </div>
                   ))}
-                  {cv.experience.length === 0 && <p className="text-xs text-slate-400 italic">Sin experiencias. Agrega una con el botón +</p>}
+                  {cv.experience.length === 0 && <p className="text-xs text-slate-400 italic">{esEstudiante ? "Aún no has agregado nada. Suma tus proyectos de la U, pasantías o voluntariados con el botón +" : "Sin experiencias. Agrega una con el botón +"}</p>}
                 </div>
               </div>
 
@@ -491,8 +534,11 @@ export default function CVPage() {
               </p>
             </div>
 
-            {/* ── OPTIMIZACIÓN IA CON GROK ───────────────────────────── */}
+            {/* ── OPTIMIZACIÓN IA CON GROK (análisis ATS) ────────────── */}
             <OptimizePanel cv={cv} />
+
+            {/* ── OPTIMIZAR Y APLICAR — MEJORA GENERAL ───────────────── */}
+            <ImprovePanel cv={cv} onApply={setCV} />
 
             {/* ── ASISTENTE INTERACTIVO CAREERBOT ────────────────────── */}
             <ChatBot cv={cv} onUpdateCV={setCV} />

@@ -2,11 +2,24 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { contactarMatch, cerrarMatch, aceptarMatch, rechazarMatch } from "@/actions/matching.actions";
-import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles, CheckCircle2, MessageCircle } from "lucide-react";
+import { Loader2, UserCheck, Clock, Handshake, XCircle, Sparkles, CheckCircle2, MessageCircle, Briefcase } from "lucide-react";
+
+interface PosicionSugerida {
+  id: string;
+  titulo: string | null;
+  empresa: string | null;
+  tipo: string | null;
+  modalidad: string | null;
+  jornada: string | null;
+  fecha_limite: string | null;
+  score: number;
+  reasons: string[];
+}
 
 type MatchStatus = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
@@ -41,7 +54,13 @@ const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
   { key: "CERRADO",    label: "Cerrados"   },
 ];
 
-export default function MisMatchesClient({ matches: initial }: { matches: Match[] }) {
+export default function MisMatchesClient({
+  matches: initial,
+  posiciones = [],
+}: {
+  matches: Match[];
+  posiciones?: PosicionSugerida[];
+}) {
   const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
   const [filter, setFilter]     = useState<MatchStatus | "TODOS">("TODOS");
@@ -117,6 +136,49 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
         </div>
       )}
 
+      {/* Posiciones para ti */}
+      {posiciones.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-xl font-bold mb-1">Posiciones para ti</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Vacantes de empleo y pasantía que mejor calzan con tu perfil.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {posiciones.map((p) => (
+              <Card key={p.id} className="relative overflow-hidden hover:shadow-lg transition-all border-primary/10">
+                <div className="absolute top-4 right-4 flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-base shadow-md">
+                  {p.score}
+                </div>
+                <CardHeader className="pr-16">
+                  <CardTitle className="text-lg">{p.titulo ?? "Posición"}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {p.empresa ?? "Empresa no especificada"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {p.tipo && <Badge variant="outline" className="text-xs">{p.tipo}</Badge>}
+                    {p.modalidad && <Badge variant="secondary" className="text-xs bg-muted">{p.modalidad}</Badge>}
+                  </div>
+                  {p.reasons.length > 0 && (
+                    <p className="text-xs text-muted-foreground">{p.reasons.join(" · ")}</p>
+                  )}
+                </CardContent>
+                <CardFooter className="bg-muted/30 pt-4 border-t border-border/50">
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white">
+                    <Link href={`/posiciones/${p.id}`}>
+                      <Briefcase size={16} className="mr-2" /> Ver posición
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-xl font-bold mb-4">Mentorías sugeridas</h2>
+
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 mb-8">
         {FILTER_TABS.map(tab => (
@@ -146,7 +208,7 @@ export default function MisMatchesClient({ matches: initial }: { matches: Match[
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visible.map(match => {
-            const cfg       = STATUS_CONFIG[match.status];
+            const cfg       = STATUS_CONFIG[match.status] ?? STATUS_CONFIG.SUGERIDO;
             const isLoading = loadingId === match.id;
             const isClosed  = match.status === "CERRADO";
             // El exalumno ofreció ayuda: el estudiante debe aceptar/rechazar
