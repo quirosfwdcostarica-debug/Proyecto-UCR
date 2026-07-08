@@ -79,36 +79,62 @@ function ScoreRing({ value, color, size = 80 }: { value: number; color: string; 
 // ── Sidebar ──
 function StepSidebar({ current, completed }: { current: number; completed: boolean[] }) {
   return (
-    <aside className="w-60 shrink-0 hidden md:flex flex-col gap-2 print:hidden">
-      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div className="px-5 py-4" style={{ background: UCR.blue }}>
-          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Publicación de Proyecto</p>
-          <p className="text-lg font-extrabold text-white mt-0.5">Asistente UCR</p>
+    <aside className="w-64 shrink-0 hidden md:flex flex-col gap-3 print:hidden">
+      <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-slate-700 bg-white dark:bg-slate-900" style={{ boxShadow: "0 4px 24px rgba(0,93,164,0.1)" }}>
+        {/* Gradient header */}
+        <div className="px-5 py-5 relative overflow-hidden"
+          style={{ background: `linear-gradient(135deg, ${UCR.blue} 0%, #0079cc 60%, ${UCR.sky} 100%)` }}>
+          {/* decorative circles */}
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-10" style={{ background: UCR.sky }}/>
+          <div className="absolute bottom-1 -left-3 w-12 h-12 rounded-full opacity-10" style={{ background: UCR.yellow }}/>
+          <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest relative">Publicación de Proyecto</p>
+          <p className="text-lg font-extrabold text-white mt-0.5 relative">Asistente UCR</p>
+          <div className="flex gap-1 mt-3 relative">
+            {[0,1,2,3].map(i => (
+              <div key={i} className="h-1 flex-1 rounded-full transition-all duration-500"
+                style={{ background: i <= current ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)" }}/>
+            ))}
+          </div>
         </div>
-        <div className="p-4 space-y-1">
+        <div className="p-4 space-y-1.5">
           {STEPS.map((s, i) => {
             const done = completed[i]; const active = current === i; const Icon = s.icon;
             return (
               <div key={i}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? "text-white font-bold shadow-sm" : done ? "text-slate-700 dark:text-slate-200" : "text-slate-400"}`}
-                style={active ? { background: UCR.sky } : done ? { background: "rgba(34,197,94,0.08)" } : {}}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all cursor-default ${active ? "text-white font-bold shadow-md step-glow-active" : done ? "text-slate-700 dark:text-slate-200" : "text-slate-400"}`}
+                style={active
+                  ? { background: `linear-gradient(135deg, ${UCR.sky}, #0099d4)`, boxShadow: `0 4px 14px rgba(0,193,243,0.35)` }
+                  : done ? { background: "rgba(34,197,94,0.08)", borderLeft: "3px solid #22c55e" } : {}}
               >
-                <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                  style={{ background: active ? "#fff" : done ? "#22c55e" : "#e2e8f0", color: active ? UCR.sky : done ? "#fff" : "#94a3b8" }}>
-                  {done && !active ? <CheckCircle2 className="w-4 h-4"/> : i + 1}
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all"
+                  style={{
+                    background: active ? "rgba(255,255,255,0.95)" : done ? "#22c55e" : "#e2e8f0",
+                    color: active ? UCR.sky : done ? "#fff" : "#94a3b8",
+                    boxShadow: active ? `0 2px 8px rgba(0,193,243,0.4)` : "none"
+                  }}>
+                  {done && !active ? <CheckCircle2 className="w-4 h-4"/> : <Icon className="w-4 h-4"/>}
                 </div>
-                <span className="text-xs leading-tight font-medium">{s.label}</span>
+                <div className="min-w-0">
+                  <span className="text-xs leading-tight font-semibold block">{s.label}</span>
+                  {done && !active && <span className="text-[10px] text-emerald-500 font-bold">✓ Completado</span>}
+                </div>
               </div>
             );
           })}
         </div>
         <div className="px-4 pb-4">
-          <div className="w-full rounded-full h-1.5 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500"
+          <div className="w-full rounded-full h-2 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <div className="h-full rounded-full modal-bar-fill"
               style={{ width: `${((current+1)/4)*100}%`, background: `linear-gradient(90deg,${UCR.blue},${UCR.sky})` }}/>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1.5 text-center">Paso {current+1} de 4</p>
+          <p className="text-[10px] text-slate-400 mt-2 text-center font-medium">Paso {current+1} de 4 · {Math.round(((current+1)/4)*100)}% completado</p>
         </div>
+      </div>
+
+      {/* Tip card */}
+      <div className="rounded-xl p-4 border border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 text-xs text-slate-500">
+        <p className="font-bold mb-1" style={{ color: UCR.blue }}>💡 ¿Sabías que...</p>
+        <p className="leading-relaxed">Los proyectos con descripción completa tienen un <strong>3× más</strong> probabilidad de encontrar mentor o financiamiento.</p>
       </div>
     </aside>
   );
@@ -129,12 +155,13 @@ function StepNav({ step, onPrev, onNext, onSave, saving, nextDisabled = false }:
   step: number; onPrev: ()=>void; onNext: ()=>void; onSave: ()=>void; saving: boolean; nextDisabled?: boolean;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between print:hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between print:hidden"
+      style={{ boxShadow: "0 4px 20px rgba(0,93,164,0.07)" }}>
       {step > 0 ? (
         <button type="button" onClick={onPrev}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-500"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-500 group"
           style={{ borderColor: "#e2e8f0" }}>
-          <ChevronLeft className="w-4 h-4"/> Anterior
+          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"/> Anterior
         </button>
       ) : <div/>}
       <div className="flex gap-3">
@@ -145,9 +172,10 @@ function StepNav({ step, onPrev, onNext, onSave, saving, nextDisabled = false }:
           Guardar Borrador
         </button>
         <button type="button" onClick={onNext} disabled={nextDisabled || saving}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-extrabold text-sm text-white hover:opacity-90 disabled:opacity-50 transition-all shadow-sm"
-          style={{ background: `linear-gradient(135deg,${UCR.blue},${UCR.sky})` }}>
-          Siguiente Paso <ChevronRight className="w-4 h-4"/>
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-extrabold text-sm text-white disabled:opacity-50 transition-all group relative overflow-hidden"
+          style={{ background: nextDisabled ? `linear-gradient(135deg,#94a3b8,#b0c0d0)` : `linear-gradient(135deg,${UCR.blue},${UCR.sky})`, boxShadow: nextDisabled ? "none" : "0 4px 14px rgba(0,193,243,0.35)" }}>
+          <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"/>
+          Siguiente Paso <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform"/>
         </button>
       </div>
     </div>
@@ -398,6 +426,88 @@ export default function PublicarProyectoPage() {
           #print-document-area, #print-document-area * { visibility: visible; }
           #print-document-area { position: absolute; left:0; top:0; width:100%; padding:2cm; font-family:'Times New Roman',serif; }
         }
+        @keyframes wizardSlideUp {
+          from { opacity:0; transform:translateY(18px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes wizardFadeIn {
+          from { opacity:0; transform:scale(0.97); }
+          to   { opacity:1; transform:scale(1); }
+        }
+        @keyframes pulseGlow {
+          0%,100% { box-shadow: 0 0 0 0 rgba(0,93,164,0);
+          50%  { box-shadow: 0 0 14px 4px rgba(0,193,243,0.35); }}
+        }
+        @keyframes floatBob {
+          0%,100% { transform:translateY(0px) rotate(0deg); }
+          50%      { transform:translateY(-10px) rotate(4deg); }
+        }
+        @keyframes shimmerSlide {
+          0%   { background-position: -400px 0; }
+          100% { background-position: 400px 0; }
+        }
+        @keyframes scoreReveal {
+          from { stroke-dashoffset: 999; }
+          to   { /* handled inline */ }
+        }
+        @keyframes counterPing {
+          0%   { transform: scale(1);   opacity:1; }
+          70%  { transform: scale(1.8); opacity:0; }
+          100% { transform: scale(1);   opacity:0; }
+        }
+        .wizard-card {
+          animation: wizardSlideUp 0.4s cubic-bezier(.22,1,.36,1) both;
+        }
+        .wizard-card-delayed {
+          animation: wizardSlideUp 0.45s 0.08s cubic-bezier(.22,1,.36,1) both;
+        }
+        .wizard-fade {
+          animation: wizardFadeIn 0.35s ease both;
+        }
+        .step-glow-active {
+          animation: pulseGlow 2.4s ease-in-out infinite;
+        }
+        .metric-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(0,93,164,0.12);
+        }
+        .support-card {
+          transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+        .support-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0,93,164,0.1);
+        }
+        .support-card.selected {
+          animation: pulseGlow 2s ease-in-out infinite;
+        }
+        .float-deco {
+          animation: floatBob 5s ease-in-out infinite;
+        }
+        .float-deco-slow {
+          animation: floatBob 7s 1.5s ease-in-out infinite;
+        }
+        .shimmer-bg {
+          background: linear-gradient(90deg, #e8f0fe 25%, #c7d8f5 50%, #e8f0fe 75%);
+          background-size: 400px 100%;
+          animation: shimmerSlide 1.4s linear infinite;
+        }
+        .directory-card-hover {
+          transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .directory-card-hover:hover {
+          transform: translateY(-3px) scale(1.005);
+          box-shadow: 0 12px 32px rgba(0,93,164,0.14);
+        }
+        .calc-btn-glow:not(:disabled):hover {
+          box-shadow: 0 0 16px rgba(0,193,243,0.5);
+        }
+        .modal-bar-fill {
+          transition: width 1.2s cubic-bezier(.22,1,.36,1);
+        }
       `}</style>
 
       {/* Mobile progress */}
@@ -416,31 +526,47 @@ export default function PublicarProyectoPage() {
 
           {/* ── STEP 1: Información Académica ── */}
           {step === 0 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300 print:hidden">
-              <div className="rounded-2xl p-5 flex items-start gap-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40">
-                <AlertTriangle className="w-6 h-6 shrink-0 text-amber-600 mt-0.5"/>
-                <div>
-                  <p className="font-extrabold text-sm text-amber-900 dark:text-amber-300 uppercase tracking-wide">
-                    Reglamento de Trabajos Finales de Graduación UCR
-                  </p>
-                  <p className="text-amber-800 dark:text-amber-400 mt-1 text-xs leading-relaxed">
+            <div className="space-y-5 wizard-card print:hidden">
+              {/* Reglamento banner */}
+              <div className="rounded-2xl overflow-hidden shadow-sm" style={{ border: "1.5px solid #f59e0b" }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ background: "linear-gradient(135deg,#f59e0b,#fbbf24)" }}>
+                  <AlertTriangle className="w-5 h-5 text-white shrink-0"/>
+                  <p className="font-extrabold text-sm text-white uppercase tracking-wide">Reglamento UCR — Requisito de Admisibilidad</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-950/20 px-5 py-4">
+                  <p className="text-amber-800 dark:text-amber-400 text-xs leading-relaxed">
                     Según el reglamento vigente de la UCR, debes tener aprobado al menos el <strong>75% de los créditos totales</strong> para inscribir formalmente tu TFG.
                   </p>
-                  <label className="flex items-center gap-2.5 mt-3.5 cursor-pointer select-none">
+                  <label className="flex items-center gap-2.5 mt-3.5 cursor-pointer select-none group">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${ checkReglamentoAprobado ? "border-amber-600 bg-amber-600" : "border-amber-400"}`}>
+                      {checkReglamentoAprobado && <CheckCircle2 className="w-3.5 h-3.5 text-white"/>}
+                    </div>
                     <input type="checkbox" checked={checkReglamentoAprobado}
                       onChange={e => setCheckReglamentoAprobado(e.target.checked)}
-                      className="w-4 h-4 accent-amber-600 rounded"/>
-                    <span className="text-xs font-bold text-amber-950 dark:text-amber-300">
+                      className="sr-only"/>
+                    <span className="text-xs font-bold text-amber-950 dark:text-amber-300 group-hover:underline">
                       Confirmo bajo juramento que cumplo con el requisito del 75% o más de créditos aprobados.
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>Paso 1: Información Académica</h2>
-                <p className="text-sm text-slate-500 mb-6">Confirma tus detalles académicos del perfil.</p>
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-6 flex flex-col sm:flex-row gap-5">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden wizard-card-delayed"
+                style={{ boxShadow: "0 4px 24px rgba(0,93,164,0.07)" }}>
+                {/* Card header */}
+                <div className="px-6 py-4 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800"
+                  style={{ background: `linear-gradient(90deg, rgba(0,93,164,0.04) 0%, transparent 100%)` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${UCR.blue},${UCR.sky})` }}>
+                    <GraduationCap className="w-5 h-5 text-white"/>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold" style={{ color: UCR.blue }}>Información Académica</h2>
+                    <p className="text-xs text-slate-400">Confirma tus detalles de perfil registrados en la plataforma.</p>
+                  </div>
+                </div>
+                <div className="p-6">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-6 flex flex-col sm:flex-row gap-5"
+                  style={{ background: "linear-gradient(135deg,rgba(0,93,164,0.02),rgba(0,193,243,0.02))" }}>
                   {info?.user?.foto_url ? (
                     <Image src={info.user.foto_url} alt={info.user.nombre} width={72} height={72} className="rounded-full object-cover shrink-0"/>
                   ) : (
@@ -461,12 +587,13 @@ export default function PublicarProyectoPage() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label:"Carné Universitario", value: info?.carnet_ucr ?? "—" },
-                    { label:"Año de Ingreso", value: info?.anio_ingreso ? String(info.anio_ingreso) : "—" },
-                    { label:"Facultad / Escuela", value: info?.escuela_facultad ?? "—" },
-                    { label:"Sede de Estudios", value: info?.sede ?? "—" },
+                    { label:"Carné Universitario", value: info?.carnet_ucr ?? "—", icon: "🎓" },
+                    { label:"Año de Ingreso", value: info?.anio_ingreso ? String(info.anio_ingreso) : "—", icon: "📅" },
+                    { label:"Facultad / Escuela", value: info?.escuela_facultad ?? "—", icon: "🏛️" },
+                    { label:"Sede de Estudios", value: info?.sede ?? "—", icon: "📍" },
                   ].map(item => (
-                    <div key={item.label} className="rounded-xl p-3 text-center border border-slate-100 bg-[#fafafa] dark:bg-slate-800/40 dark:border-slate-800">
+                    <div key={item.label} className="rounded-xl p-3 text-center border border-slate-100 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/60 dark:to-slate-800/40 dark:border-slate-800 metric-card">
+                      <p className="text-base mb-0.5">{item.icon}</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{item.label}</p>
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{item.value}</p>
                     </div>
@@ -476,6 +603,7 @@ export default function PublicarProyectoPage() {
                   ¿Datos incorrectos?{" "}
                   <a href="/perfil/editar" className="underline font-semibold hover:opacity-80" style={{ color: UCR.blue }}>Actualizar mi perfil académico</a>
                 </p>
+                </div>
               </div>
               <StepNav step={step} onPrev={prevStep} onNext={nextStep} onSave={guardarBorrador} saving={saving} nextDisabled={!checkReglamentoAprobado}/>
             </div>
@@ -483,12 +611,22 @@ export default function PublicarProyectoPage() {
 
           {/* ── STEP 2: Detalles del Proyecto ── */}
           {step === 1 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300 print:hidden">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-6">
-                <div>
-                  <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>Paso 2: Detalles del Proyecto</h2>
-                  <p className="text-sm text-slate-500">Describe tu proyecto para que la IA pueda analizarlo con precisión.</p>
+            <div className="space-y-5 wizard-card print:hidden">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden"
+                style={{ boxShadow: "0 4px 24px rgba(0,93,164,0.07)" }}>
+                {/* Card header */}
+                <div className="px-6 py-4 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800"
+                  style={{ background: `linear-gradient(90deg, rgba(0,93,164,0.04) 0%, transparent 100%)` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${UCR.blue},${UCR.sky})` }}>
+                    <BookOpen className="w-5 h-5 text-white"/>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold" style={{ color: UCR.blue }}>Detalles del Proyecto</h2>
+                    <p className="text-xs text-slate-400">Describe tu proyecto para que la IA pueda analizarlo con precisión.</p>
+                  </div>
                 </div>
+                <div className="p-6 space-y-6">
+                <div/>
 
                 {/* Modalidad */}
                 <div>
@@ -596,16 +734,25 @@ export default function PublicarProyectoPage() {
                   <label className="block text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">
                     Porcentaje de Avance Actual: <span className="font-extrabold" style={{ color: UCR.blue }}>{porcentajeAvance}%</span>
                   </label>
-                  <input type="range" min={0} max={100} value={porcentajeAvance}
-                    onChange={e => setPorcentajeAvance(Number(e.target.value))}
-                    className="w-full accent-[#005da4]"/>
+                  <div className="relative">
+                    <input type="range" min={0} max={100} value={porcentajeAvance}
+                      onChange={e => setPorcentajeAvance(Number(e.target.value))}
+                      className="w-full accent-[#005da4]"/>
+                    {/* Progress track fill */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full pointer-events-none modal-bar-fill"
+                      style={{ width: `${porcentajeAvance}%`, background: `linear-gradient(90deg,${UCR.blue},${UCR.sky})`, opacity: 0.3 }}/>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
+                    <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                  </div>
                 </div>
 
                 {!isDetailsValid && (
-                  <div className="p-3 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/40 text-[11px] text-amber-700 dark:text-amber-400 font-bold">
-                    ⚠️ Completa todos los campos obligatorios (*) para avanzar.
+                  <div className="p-3 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/40 text-[11px] text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0"/> Completa todos los campos obligatorios (*) para avanzar al siguiente paso.
                   </div>
                 )}
+                </div>
               </div>
               <StepNav step={step} onPrev={prevStep} onNext={nextStep} onSave={guardarBorrador} saving={saving} nextDisabled={!isDetailsValid}/>
             </div>
@@ -613,75 +760,107 @@ export default function PublicarProyectoPage() {
 
           {/* ── STEP 3: Apoyo y Calculadora ── */}
           {step === 2 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300 print:hidden">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-6">
-                <div>
-                  <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>Paso 3: Apoyo y Calculadora de Valor</h2>
-                  <p className="text-sm text-slate-500">Calcula el valor de tu proyecto con IA y selecciona el tipo de apoyo que necesitas.</p>
+            <div className="space-y-5 wizard-card print:hidden">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden"
+                style={{ boxShadow: "0 4px 24px rgba(0,93,164,0.07)" }}>
+                {/* Card header */}
+                <div className="px-6 py-4 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800"
+                  style={{ background: `linear-gradient(90deg, rgba(0,93,164,0.04) 0%, transparent 100%)` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${UCR.sky},${UCR.blue})` }}>
+                    <TrendingUp className="w-5 h-5 text-white"/>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold" style={{ color: UCR.blue }}>Apoyo y Calculadora de Valor</h2>
+                    <p className="text-xs text-slate-400">Calcula el valor con IA y selecciona el tipo de apoyo que necesitas.</p>
+                  </div>
                 </div>
+                <div className="p-6 space-y-6">
 
                 {/* ── AI Value Calculator ── */}
-                <section className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                  <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3"
-                    style={{ background: `linear-gradient(135deg, ${UCR.blue} 0%, #003f72 100%)` }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
-                        <Sparkles className="w-5 h-5 text-white"/>
+                <section className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800" style={{ boxShadow: "0 2px 12px rgba(0,93,164,0.08)" }}>
+                  <div className="px-5 py-5 flex flex-wrap items-center justify-between gap-3 relative overflow-hidden"
+                    style={{ background: `linear-gradient(135deg, ${UCR.blue} 0%, #003f72 60%, #001f40 100%)` }}>
+                    {/* Decorative bg shapes */}
+                    <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full opacity-10 float-deco" style={{ background: UCR.sky }}/>
+                    <div className="absolute -left-4 bottom-0 w-16 h-16 rounded-full opacity-5 float-deco-slow" style={{ background: UCR.yellow }}/>
+                    <div className="flex items-center gap-3 relative">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)" }}>
+                        <Sparkles className="w-5 h-5 text-yellow-300"/>
                       </div>
                       <div>
-                        <p className="font-extrabold text-white text-sm">Calculadora de Valor del Proyecto con IA</p>
-                        <p className="text-white/60 text-xs">Estimación de valor de mercado, impacto y ROI</p>
+                        <p className="font-extrabold text-white text-sm">Calculadora de Valor del Proyecto</p>
+                        <p className="text-white/60 text-xs">Estimación con IA: valor de mercado, impacto y ROI en colones</p>
                       </div>
                     </div>
                     <button type="button" onClick={handleCalcularValor} disabled={calculatingValor}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 relative calc-btn-glow"
+                      style={{ background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(4px)" }}>
                       {calculatingValor ? <Loader2 className="w-4 h-4 animate-spin"/> : <Zap className="w-4 h-4 text-yellow-300"/>}
                       {calculatingValor ? "Calculando..." : "🤖 Calcular Valor con IA"}
                     </button>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 space-y-5">
-                    {valorError && <div className="p-3 rounded-lg text-xs text-red-700 bg-red-50 border border-red-200">{valorError}</div>}
+                    {valorError && <div className="p-3 rounded-lg text-xs text-red-700 bg-red-50 border border-red-200 flex items-center gap-2"><AlertTriangle className="w-4 h-4 shrink-0"/>{valorError}</div>}
 
                     {calculatingValor && (
-                      <div className="flex flex-col items-center gap-3 py-8 text-slate-400">
-                        <div className="w-12 h-12 rounded-full border-4 border-[#005da4]/20 border-t-[#005da4] animate-spin"/>
-                        <p className="text-sm font-medium">Analizando tu proyecto con IA...</p>
+                      <div className="flex flex-col items-center gap-4 py-10 text-slate-400">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-full border-4 border-[#005da4]/15 border-t-[#005da4] animate-spin"/>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Sparkles className="w-6 h-6" style={{ color: UCR.sky }}/>
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold" style={{ color: UCR.blue }}>Analizando tu proyecto con IA...</p>
+                          <p className="text-xs text-slate-400 mt-1">Evaluando valor de mercado, impacto social y ROI</p>
+                        </div>
+                        {/* Shimmer placeholder rows */}
+                        <div className="w-full space-y-2">
+                          <div className="h-8 rounded-lg shimmer-bg"/>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl shimmer-bg"/>)}
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {valorResult && !calculatingValor && (
-                      <div className="space-y-5">
+                      <div className="space-y-5 wizard-fade">
                         {/* Global score */}
-                        <div className="rounded-xl p-4 flex items-center gap-4"
-                          style={{ background: `${globalColor}10`, border: `1px solid ${globalColor}30` }}>
+                        <div className="rounded-2xl p-5 flex items-center gap-5 relative overflow-hidden"
+                          style={{ background: `linear-gradient(135deg, ${globalColor}12 0%, ${globalColor}06 100%)`, border: `1.5px solid ${globalColor}35` }}>
+                          {/* Decorative glow blob */}
+                          <div className="absolute -right-6 -top-6 w-20 h-20 rounded-full opacity-10" style={{ background: globalColor }}/>
                           <div className="relative shrink-0">
-                            <ScoreRing value={globalScore} color={globalColor} size={72}/>
+                            <ScoreRing value={globalScore} color={globalColor} size={80}/>
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-base font-extrabold" style={{ color: globalColor }}>{globalScore}</span>
+                              <span className="text-lg font-extrabold" style={{ color: globalColor }}>{globalScore}</span>
                             </div>
                           </div>
-                          <div>
-                            <p className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
                               {globalScore >= 85 ? "🌟 Proyecto de Alto Valor" : globalScore >= 65 ? "⭐ Proyecto Sólido" : "📘 Proyecto en Desarrollo"}
                             </p>
-                            <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{valorResult.resumenEjecutivo}</p>
-                            {valorResult.isFallback && <p className="text-[11px] text-amber-600 mt-1">💡 Estimación basada en proyectos similares en CR</p>}
+                            <p className="text-xs text-slate-500 leading-relaxed mt-1">{valorResult.resumenEjecutivo}</p>
+                            {valorResult.isFallback && <p className="text-[11px] text-amber-600 mt-1.5 font-medium">💡 Estimación basada en proyectos similares en CR</p>}
                           </div>
                         </div>
 
                         {/* Financial metrics */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {[
-                            { label:"Valor del Producto", value: valorResult.valorDesarrollo, color: UCR.blue, prefix:"$" },
-                            { label:"Precio de Mercado", value: valorResult.valorMercado, color:"#22c55e", prefix:"$" },
-                            { label:"Costo Desarrollo", value: valorResult.costoDesarrollo, color: UCR.orange, prefix:"$" },
-                            { label:"ROI Estimado", value: valorResult.roi, color: UCR.sky, suffix:"%" },
+                            { label:"Valor del Producto", value: valorResult.valorDesarrollo, color: UCR.blue, prefix:"₡", icon:"📦" },
+                            { label:"Precio de Mercado", value: valorResult.valorMercado, color:"#22c55e", prefix:"₡", icon:"🏪" },
+                            { label:"Costo Desarrollo", value: valorResult.costoDesarrollo, color: UCR.orange, prefix:"₡", icon:"🔧" },
+                            { label:"ROI Estimado", value: valorResult.roi, color: UCR.sky, suffix:"%", icon:"📈" },
                           ].map(item => (
-                            <div key={item.label} className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 text-center">
+                            <div key={item.label}
+                              className="p-3 rounded-xl text-center metric-card relative overflow-hidden"
+                              style={{ border: `1.5px solid ${item.color}25`, background: `linear-gradient(135deg,${item.color}08,transparent)` }}>
+                              <p className="text-base mb-0.5">{item.icon}</p>
                               <p className="text-lg font-extrabold leading-none mb-1" style={{ color: item.color }}>
-                                {item.prefix||""}{item.value.toLocaleString()}{item.suffix||""}
+                                {item.prefix||""}{item.value.toLocaleString("es-CR")}{item.suffix||""}
                               </p>
                               <p className="text-[10px] font-semibold text-slate-400">{item.label}</p>
                             </div>
@@ -691,17 +870,21 @@ export default function PublicarProyectoPage() {
                         {/* Scores */}
                         <div className="grid grid-cols-2 gap-3">
                           {[
-                            { label:"Impacto Social", value: valorResult.impactoSocial, color:"#22c55e" },
-                            { label:"Valor Académico", value: valorResult.valorAcademico, color: UCR.blue },
+                            { label:"Impacto Social", value: valorResult.impactoSocial, color:"#22c55e", desc:"Beneficio para comunidades" },
+                            { label:"Valor Académico", value: valorResult.valorAcademico, color: UCR.blue, desc:"Relevancia científica" },
                           ].map(item => (
-                            <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div key={item.label} className="flex items-center gap-4 p-4 rounded-xl metric-card"
+                              style={{ border: `1.5px solid ${item.color}25`, background: `linear-gradient(135deg,${item.color}06,transparent)` }}>
                               <div className="relative shrink-0">
-                                <ScoreRing value={item.value} color={item.color} size={52}/>
+                                <ScoreRing value={item.value} color={item.color} size={60}/>
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-xs font-extrabold" style={{ color: item.color }}>{item.value}</span>
+                                  <span className="text-sm font-extrabold" style={{ color: item.color }}>{item.value}</span>
                                 </div>
                               </div>
-                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">{item.label}</p>
+                              <div>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{item.label}</p>
+                                <p className="text-[10px] text-slate-400 mt-0.5">{item.desc}</p>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -721,11 +904,11 @@ export default function PublicarProyectoPage() {
                             <div>
                               <p className="text-xs text-slate-500 mb-1 font-semibold">Meta actual</p>
                               <p className="text-2xl font-extrabold" style={{ color: UCR.blue }}>
-                                ${montoFinal.toLocaleString()} <span className="text-xs text-slate-400 font-semibold">USD</span>
+                                ₡{montoFinal.toLocaleString("es-CR")} <span className="text-xs text-slate-400 font-semibold">CRC</span>
                               </p>
                               {ajusteManual !== 0 && (
                                 <p className="text-[11px] mt-0.5" style={{ color: ajusteManual > 0 ? "#22c55e" : UCR.orange }}>
-                                  {ajusteManual > 0 ? "+" : ""}{ajusteManual.toLocaleString()} USD ajustado manualmente
+                                  {ajusteManual > 0 ? "+" : ""}₡{Math.abs(ajusteManual).toLocaleString("es-CR")} ajustado manualmente
                                 </p>
                               )}
                             </div>
@@ -734,27 +917,27 @@ export default function PublicarProyectoPage() {
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 shadow-sm"
                                 style={{ background: "#22c55e" }}>
                                 <ThumbsUp className="w-3.5 h-3.5"/>
-                                Aceptar valor IA (${valorResult.costoDesarrollo.toLocaleString()})
+                                Aceptar valor IA (₡{valorResult.costoDesarrollo.toLocaleString("es-CR")})
                               </button>
-                              <button type="button" onClick={() => ajustarMonto(500)}
+                              <button type="button" onClick={() => ajustarMonto(25000)}
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-slate-50"
                                 style={{ borderColor:"#22c55e", color:"#22c55e" }}>
-                                <Plus className="w-3 h-3"/> +$500
+                                <Plus className="w-3 h-3"/> +₡25k
                               </button>
-                              <button type="button" onClick={() => ajustarMonto(1000)}
+                              <button type="button" onClick={() => ajustarMonto(50000)}
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-slate-50"
                                 style={{ borderColor:"#22c55e", color:"#22c55e" }}>
-                                <Plus className="w-3 h-3"/> +$1,000
+                                <Plus className="w-3 h-3"/> +₡50k
                               </button>
-                              <button type="button" onClick={() => ajustarMonto(-500)} disabled={montoFinal <= 500}
+                              <button type="button" onClick={() => ajustarMonto(-25000)} disabled={montoFinal <= 25000}
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-slate-50 disabled:opacity-40"
                                 style={{ borderColor: UCR.orange, color: UCR.orange }}>
-                                <ThumbsDown className="w-3 h-3"/> -$500
+                                <ThumbsDown className="w-3 h-3"/> -₡25k
                               </button>
-                              <button type="button" onClick={() => ajustarMonto(-1000)} disabled={montoFinal <= 1000}
+                              <button type="button" onClick={() => ajustarMonto(-50000)} disabled={montoFinal <= 50000}
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:bg-slate-50 disabled:opacity-40"
                                 style={{ borderColor: UCR.orange, color: UCR.orange }}>
-                                <ThumbsDown className="w-3 h-3"/> -$1,000
+                                <ThumbsDown className="w-3 h-3"/> -₡50k
                               </button>
                             </div>
                           </div>
@@ -763,7 +946,7 @@ export default function PublicarProyectoPage() {
                           <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
                             <span className="text-xs text-slate-400">O ingresa monto personalizado:</span>
                             <div className="relative flex items-center">
-                              <span className="absolute left-3 text-slate-400 text-sm">$</span>
+                              <span className="absolute left-3 text-slate-400 text-sm">₡</span>
                               <input type="number" value={montoFinal || ""}
                                 onChange={e => {
                                   const v = Number(e.target.value) || 0;
@@ -772,36 +955,42 @@ export default function PublicarProyectoPage() {
                                   setValorAceptado(true);
                                   setBuscaFinanciamiento(true);
                                 }}
-                                className="border rounded-lg pl-7 pr-3 py-1.5 text-sm w-32 outline-none focus:border-[#005da4] bg-white dark:bg-slate-800"/>
+                                className="border rounded-lg pl-7 pr-3 py-1.5 text-sm w-36 outline-none focus:border-[#005da4] bg-white dark:bg-slate-800"/>
                             </div>
-                            <span className="text-xs text-slate-400">USD</span>
+                            <span className="text-xs text-slate-400">CRC</span>
                           </div>
                         </div>
 
                         {/* Fortalezas y oportunidades */}
                         <div className="grid sm:grid-cols-2 gap-4">
-                          <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                            <p className="font-bold text-xs text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Fortalezas del Proyecto
-                            </p>
-                            <ul className="space-y-2">
+                          <div className="p-4 rounded-xl border" style={{ borderColor: "#22c55e30", background: "linear-gradient(135deg,#f0fdf4,#f8fff8)" }}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "#22c55e" }}>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white"/>
+                              </div>
+                              <p className="font-extrabold text-xs text-emerald-700">Fortalezas del Proyecto</p>
+                            </div>
+                            <ul className="space-y-2.5">
                               {valorResult.fortalezas.map((f,i) => (
-                                <li key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                                  <span className="w-4 h-4 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 text-white" style={{ background:"#22c55e" }}>{i+1}</span>
-                                  {f}
+                                <li key={i} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                                  <span className="w-5 h-5 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 text-white mt-px" style={{ background:"#22c55e" }}>{i+1}</span>
+                                  <span className="leading-relaxed">{f}</span>
                                 </li>
                               ))}
                             </ul>
                           </div>
-                          <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                            <p className="font-bold text-xs text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-                              <Lightbulb className="w-3.5 h-3.5 text-yellow-500"/> Oportunidades Detectadas
-                            </p>
-                            <ul className="space-y-2">
+                          <div className="p-4 rounded-xl border" style={{ borderColor: `${UCR.orange}30`, background: `linear-gradient(135deg,#fff7ed,#fffaf5)` }}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: UCR.orange }}>
+                                <Lightbulb className="w-3.5 h-3.5 text-white"/>
+                              </div>
+                              <p className="font-extrabold text-xs" style={{ color: UCR.orange }}>Oportunidades Detectadas</p>
+                            </div>
+                            <ul className="space-y-2.5">
                               {valorResult.oportunidades.map((o,i) => (
-                                <li key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                                  <span className="w-4 h-4 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 text-white" style={{ background: UCR.orange }}>{i+1}</span>
-                                  {o}
+                                <li key={i} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                                  <span className="w-5 h-5 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 text-white mt-px" style={{ background: UCR.orange }}>{i+1}</span>
+                                  <span className="leading-relaxed">{o}</span>
                                 </li>
                               ))}
                             </ul>
@@ -811,10 +1000,18 @@ export default function PublicarProyectoPage() {
                     )}
 
                     {!valorResult && !calculatingValor && (
-                      <div className="py-8 text-center text-slate-400">
-                        <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-30"/>
-                        <p className="text-sm font-medium">Presiona el botón para calcular el valor de tu proyecto</p>
-                        <p className="text-xs mt-1 opacity-70">Usaremos los datos del Paso 2 para el análisis</p>
+                      <div className="py-10 text-center">
+                        <div className="relative inline-block">
+                          <Sparkles className="w-14 h-14 mx-auto mb-3 float-deco" style={{ color: UCR.sky, opacity: 0.5 }}/>
+                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full animate-ping" style={{ background: UCR.sky, opacity: 0.4 }}/>
+                        </div>
+                        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Presiona el botón para calcular el valor de tu proyecto</p>
+                        <p className="text-xs mt-1 text-slate-400">Usaremos los datos del Paso 2 para el análisis con IA</p>
+                        <div className="flex justify-center gap-2 mt-4">
+                          {["Valor de mercado","Impacto social","ROI"].map(tag => (
+                            <span key={tag} className="text-[10px] px-2.5 py-1 rounded-full font-semibold" style={{ background: `${UCR.sky}15`, color: UCR.blue }}>{tag}</span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -822,22 +1019,31 @@ export default function PublicarProyectoPage() {
 
                 {/* ── Tipo de apoyo ── */}
                 <section className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <label className="block text-sm font-bold mb-3" style={{ color: UCR.blue }}>Tipo de Apoyo Adicional Solicitado</label>
+                  <div className="flex items-center gap-2 mb-4">
+                    <HeartHandshake className="w-5 h-5" style={{ color: UCR.blue }}/>
+                    <label className="block text-sm font-extrabold" style={{ color: UCR.blue }}>Tipo de Apoyo Adicional Solicitado</label>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
-                      { key:"financiamiento", label:"Financiamiento", desc:"Recursos económicos para materiales, laboratorios o viáticos.", icon:DollarSign, val:buscaFinanciamiento, set:setBuscaFinanciamiento },
-                      { key:"mentoria", label:"Mentoría", desc:"Guía de exalumnos profesionales con experiencia real.", icon:Lightbulb, val:buscaMentoria, set:setBuscaMentoria },
-                      { key:"pasantia", label:"Pasantía", desc:"Validar tu solución directamente en una empresa.", icon:Briefcase, val:buscaPasantia, set:setBuscaPasantia },
-                      { key:"empleo", label:"Empleabilidad", desc:"Acompañamiento laboral post-proyecto.", icon:Users, val:buscaEmpleo, set:setBuscaEmpleo },
+                      { key:"financiamiento", label:"Financiamiento", desc:"Recursos económicos para materiales, laboratorios o viáticos.", icon:DollarSign, val:buscaFinanciamiento, set:setBuscaFinanciamiento, color:"#22c55e" },
+                      { key:"mentoria", label:"Mentoría", desc:"Guía de exalumnos profesionales con experiencia real.", icon:Lightbulb, val:buscaMentoria, set:setBuscaMentoria, color:UCR.yellow },
+                      { key:"pasantia", label:"Pasantía", desc:"Validar tu solución directamente en una empresa.", icon:Briefcase, val:buscaPasantia, set:setBuscaPasantia, color:UCR.sky },
+                      { key:"empleo", label:"Empleabilidad", desc:"Acompañamiento laboral post-proyecto.", icon:Users, val:buscaEmpleo, set:setBuscaEmpleo, color:UCR.orange },
                     ].map(item => {
                       const Icon = item.icon;
                       return (
                         <button key={item.key} type="button" onClick={() => item.set(!item.val)}
-                          className={`relative text-left p-4 rounded-xl border-2 transition-all ${item.val ? "border-[#005da4] bg-[#005da4]/5" : "border-slate-200 dark:border-slate-800 hover:border-slate-400"}`}>
-                          <Icon className="w-5 h-5 mb-2 text-[#005da4]"/>
-                          <p className="font-extrabold text-sm" style={{ color: UCR.blue }}>{item.label}</p>
-                          <p className="text-xs text-slate-500 leading-snug">{item.desc}</p>
-                          {item.val && <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-[#005da4]"/>}
+                          className={`support-card relative text-left p-4 rounded-xl border-2 ${item.val ? "selected" : "border-slate-200 dark:border-slate-800"}`}
+                          style={item.val ? { borderColor: item.color, background: `${item.color}08` } : {}}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                              style={{ background: item.val ? item.color : "#f1f5f9" }}>
+                              <Icon className="w-4 h-4" style={{ color: item.val ? "#fff" : "#64748b" }}/>
+                            </div>
+                            {item.val && <CheckCircle2 className="w-4 h-4" style={{ color: item.color }}/>}
+                          </div>
+                          <p className="font-extrabold text-sm" style={{ color: item.val ? item.color : UCR.blue }}>{item.label}</p>
+                          <p className="text-xs text-slate-500 leading-snug mt-0.5">{item.desc}</p>
                         </button>
                       );
                     })}
@@ -851,7 +1057,7 @@ export default function PublicarProyectoPage() {
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5">Meta de Financiamiento (USD)</label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₡</span>
                           <input type="number" value={montoRequerido} onChange={e => setMontoRequerido(e.target.value)}
                             placeholder="0" className="w-full border rounded-xl pl-7 pr-4 py-3 text-sm outline-none bg-white dark:bg-slate-800"/>
                         </div>
@@ -935,21 +1141,29 @@ export default function PublicarProyectoPage() {
                   </section>
                 )}
               </div>
+                </div>
+              </div>
               <StepNav step={step} onPrev={prevStep} onNext={nextStep} onSave={guardarBorrador} saving={saving}/>
             </div>
           )}
 
           {/* ── STEP 4: Vista Previa ── */}
           {step === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 print:hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <div>
-                    <h2 className="text-xl font-extrabold" style={{ color: UCR.blue }}>Paso 4: Vista Previa del Proyecto</h2>
-                    <p className="text-xs text-slate-400">Revisa cómo quedará publicado tu proyecto.</p>
+            <div className="space-y-6 wizard-card">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden print:hidden"
+                style={{ boxShadow: "0 4px 24px rgba(0,93,164,0.07)" }}>
+                <div className="px-6 py-4 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800"
+                  style={{ background: `linear-gradient(90deg, rgba(0,93,164,0.04) 0%, transparent 100%)` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${UCR.yellow},${UCR.orange})` }}>
+                    <Eye className="w-5 h-5 text-white"/>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-extrabold" style={{ color: UCR.blue }}>Vista Previa del Proyecto</h2>
+                    <p className="text-xs text-slate-400">Revisa cómo quedará publicado tu proyecto en el directorio.</p>
                   </div>
                   <button type="button" onClick={() => window.print()}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 border rounded-xl font-bold text-xs bg-slate-50 hover:bg-slate-100 transition-all">
+                    className="inline-flex items-center gap-1.5 px-4 py-2 border rounded-xl font-bold text-xs hover:bg-slate-50 transition-all metric-card"
+                    style={{ borderColor: UCR.sky, color: UCR.blue }}>
                     <Printer className="w-4 h-4"/> Imprimir / Exportar
                   </button>
                 </div>
@@ -1003,9 +1217,9 @@ export default function PublicarProyectoPage() {
                       <h3 className="font-extrabold text-base uppercase text-emerald-600 mb-3">Valoración por IA</h3>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                         {[
-                          { label:"Valor Producto", value:`$${valorResult.valorDesarrollo.toLocaleString()}`, color: UCR.blue },
-                          { label:"Mercado", value:`$${valorResult.valorMercado.toLocaleString()}`, color:"#22c55e" },
-                          { label:"Costo Dev.", value:`$${valorResult.costoDesarrollo.toLocaleString()}`, color: UCR.orange },
+                          { label:"Valor Producto", value:`₡${valorResult.valorDesarrollo.toLocaleString("es-CR")}`, color: UCR.blue },
+                          { label:"Mercado", value:`₡${valorResult.valorMercado.toLocaleString("es-CR")}`, color:"#22c55e" },
+                          { label:"Costo Dev.", value:`₡${valorResult.costoDesarrollo.toLocaleString("es-CR")}`, color: UCR.orange },
                           { label:"Puntuación", value:`${valorResult.puntuacionGlobal}/100`, color: globalColor },
                         ].map(item => (
                           <div key={item.label} className="p-3 rounded-xl border border-slate-200">
@@ -1014,7 +1228,7 @@ export default function PublicarProyectoPage() {
                           </div>
                         ))}
                       </div>
-                      {montoRequerido && <p className="mt-3 font-bold text-sm">Meta de Financiamiento: <span style={{ color: UCR.blue }}>${Number(montoRequerido).toLocaleString()} USD</span></p>}
+                      {montoRequerido && <p className="mt-3 font-bold text-sm">Meta de Financiamiento: <span style={{ color: UCR.blue }}>₡{Number(montoRequerido).toLocaleString("es-CR")} CRC</span></p>}
                     </div>
                   )}
                   <div className="pt-16 flex justify-around text-center text-xs">
@@ -1031,34 +1245,39 @@ export default function PublicarProyectoPage() {
               </div>
 
               {/* Directory card preview */}
-              <div className="space-y-2 print:hidden">
+              <div className="space-y-3 print:hidden">
                 <p className="text-sm font-bold flex items-center gap-2" style={{ color: UCR.blue }}>
                   <Eye className="w-4 h-4"/> Así lo verán los Exalumnos en el directorio
                 </p>
-                <div className="rounded-2xl border overflow-hidden shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <div className="rounded-2xl border overflow-hidden shadow-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 directory-card-hover"
+                  style={{ boxShadow: "0 4px 20px rgba(0,93,164,0.1)" }}>
                   <div className="flex flex-col sm:flex-row">
-                    <div className="w-full sm:w-2 h-2 sm:h-auto shrink-0 animate-pulse"
+                    <div className="w-full sm:w-3 h-3 sm:h-auto shrink-0"
                       style={{ background: `linear-gradient(180deg,${UCR.sky},${UCR.blue})` }}/>
                     <div className="p-5 flex-1">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="min-w-0">
-                          {areaTematica && <span className="text-xs font-bold px-2 py-0.5 rounded uppercase tracking-widest text-white" style={{ background: UCR.sky }}>{areaTematica}</span>}
-                          <h3 className="text-lg font-extrabold mt-1 leading-snug" style={{ color: UCR.blue }}>{titulo || "Título del Proyecto"}</h3>
+                          {areaTematica && <span className="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider text-white" style={{ background: `linear-gradient(90deg,${UCR.sky},${UCR.blue})` }}>{areaTematica}</span>}
+                          <h3 className="text-lg font-extrabold mt-1.5 leading-snug" style={{ color: UCR.blue }}>{titulo || "Título del Proyecto"}</h3>
                         </div>
-                        {valorResult && <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0 text-white" style={{ background: globalColor }}>{globalScore}/100</span>}
+                        {valorResult && (
+                          <span className="text-xs font-extrabold px-3 py-1.5 rounded-full shrink-0 text-white" style={{ background: `linear-gradient(135deg,${globalColor},${globalColor}cc)`, boxShadow: `0 2px 8px ${globalColor}40` }}>
+                            ⭐ {globalScore}/100
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-slate-500 line-clamp-2">{descripcion || "Descripción..."}</p>
                       <div className="flex items-center gap-3 mt-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold" style={{ background: UCR.softYellow, color: UCR.blue }}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold shadow-sm" style={{ background: `linear-gradient(135deg,${UCR.softYellow},${UCR.yellow})`, color: UCR.blue }}>
                             {info?.user?.nombre?.charAt(0)}
                           </div>
                           <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{infoNombreCorto}</span>
                         </div>
                         {montoRequerido && (
                           <div className="ml-auto text-right">
-                            <p className="text-[10px] text-slate-400">Meta</p>
-                            <p className="text-sm font-extrabold" style={{ color: UCR.blue }}>${Number(montoRequerido).toLocaleString()} USD</p>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Meta</p>
+                            <p className="text-sm font-extrabold" style={{ color: UCR.blue }}>₡{Number(montoRequerido).toLocaleString("es-CR")} <span className="text-[10px] text-slate-400 font-semibold">CRC</span></p>
                           </div>
                         )}
                       </div>
@@ -1067,13 +1286,14 @@ export default function PublicarProyectoPage() {
                 </div>
               </div>
 
-              {error && <div className="rounded-xl px-4 py-3 text-sm font-medium bg-red-50 text-red-700 border border-red-200 print:hidden">{error}</div>}
+              {error && <div className="rounded-xl px-4 py-3 text-sm font-medium bg-red-50 text-red-700 border border-red-200 print:hidden flex items-center gap-2"><AlertTriangle className="w-4 h-4 shrink-0"/>{error}</div>}
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col sm:flex-row gap-3 items-center justify-between print:hidden">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 p-5 flex flex-col sm:flex-row gap-3 items-center justify-between print:hidden"
+                style={{ boxShadow: "0 4px 20px rgba(0,93,164,0.07)" }}>
                 <button type="button" onClick={prevStep}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm transition-all hover:bg-slate-50"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border font-bold text-sm transition-all hover:bg-slate-50 group"
                   style={{ borderColor:"#e2e8f0", color:"#64748b" }}>
-                  <ChevronLeft className="w-4 h-4"/> Anterior
+                  <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"/> Anterior
                 </button>
                 <div className="flex gap-3">
                   <button type="button" onClick={guardarBorrador} disabled={saving}
@@ -1083,9 +1303,10 @@ export default function PublicarProyectoPage() {
                     Guardar Borrador
                   </button>
                   <button type="button" onClick={publicarProyecto} disabled={saving || !titulo.trim()}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-extrabold text-sm text-white transition-all hover:opacity-90 disabled:opacity-50 shadow-sm"
-                    style={{ background: `linear-gradient(135deg,${UCR.blue},${UCR.sky})` }}>
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Rocket className="w-4 h-4"/>}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-extrabold text-sm text-white transition-all disabled:opacity-50 relative overflow-hidden group"
+                    style={{ background: `linear-gradient(135deg,${UCR.blue},${UCR.sky})`, boxShadow: titulo.trim() ? "0 4px 16px rgba(0,193,243,0.4)" : "none" }}>
+                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Rocket className="w-4 h-4 group-hover:translate-y-[-1px] transition-transform"/>}
                     Publicar Proyecto
                   </button>
                 </div>
