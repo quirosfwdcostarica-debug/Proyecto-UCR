@@ -1,15 +1,34 @@
 import { PrismaClient } from "@prisma/client"
 
-const prismaClientSingleton = () => {
-  return new PrismaClient()
+declare global {
+  // eslint-disable-next-line no-var
+  var prismaGlobal: PrismaClient | undefined
 }
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
+let prisma: PrismaClient | undefined
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+function getPrismaClient() {
+  if (!prisma) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL is not set")
+    }
 
-export default prisma
+    prisma = globalThis.prismaGlobal ?? new PrismaClient()
 
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma
+    if (process.env.NODE_ENV !== "production") {
+      globalThis.prismaGlobal = prisma
+    }
+  }
+
+  return prisma
+}
+
+const prismaProxy = new Proxy({} as PrismaClient, {
+  get(target, prop) {
+    const client = getPrismaClient() as any
+    const value = client[prop]
+    return typeof value === "function" ? value.bind(client) : value
+  }
+})
+
+export default prismaProxy
