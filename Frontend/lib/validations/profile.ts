@@ -6,7 +6,7 @@ import { CODIGOS_AREAS_INTERES } from "../catalogos";
 // subdominio regional (ej. es.linkedin.com), con o sin segmentos extra al
 // final (ej. /in/usuario/detalles). No exige el esquema completo vía z.url()
 // porque eso rechazaría cadenas vacías en campos opcionales.
-const LINKEDIN_URL_REGEX = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|pub)\/[\w\-À-ÿ%]+\/?/i;
+const LINKEDIN_URL_REGEX = /^(https?:\/\/)?(www\.)?([a-z]{2,3}\.)?linkedin\.com\/(in|pub)\/[\w\-À-ÿ%]+\/?/i;
 const esLinkedinValido = (v: string | null | undefined) => !v || LINKEDIN_URL_REGEX.test(v);
 const LINKEDIN_ERROR = { message: "Debe ser una URL de perfil de LinkedIn (ej: https://linkedin.com/in/usuario)" };
 

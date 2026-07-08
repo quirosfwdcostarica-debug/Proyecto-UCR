@@ -51,7 +51,7 @@ function toBreakdown(d: Desglose | null) {
   return { carrera: d.C, intereses: d.I, sector: d.A, apoyo: d.S };
 }
 
-export default function MatchesExalumnoClient({ matches: initial }: { matches: Match[] }) {
+export default function MatchesExalumnoClient({ matches: initial, currentUserId }: { matches: Match[], currentUserId: string }) {
   const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
   const [filter, setFilter]     = useState<MatchStatus | "TODOS">("TODOS");
@@ -167,10 +167,10 @@ export default function MatchesExalumnoClient({ matches: initial }: { matches: M
             const isClosed  = match.status === "CERRADO";
             // El exalumno ofreció → está esperando respuesta del estudiante
             const esperandoEstudiante =
-              match.status === "CONTACTADO" && match.initiated_by === "exalumno";
+              match.status === "CONTACTADO" && match.initiated_by === currentUserId;
             // El estudiante contactó → exalumno debe aceptar/rechazar
             const estudianteContacto =
-              match.status === "CONTACTADO" && match.initiated_by !== "exalumno";
+              match.status === "CONTACTADO" && match.initiated_by !== currentUserId;
 
             return (
               <motion.div

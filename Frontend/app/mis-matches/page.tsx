@@ -105,5 +105,5 @@ export default async function MisMatchesPage() {
     console.error("Error fetching matches:", error);
   }
 
-  return <MisMatchesClient matches={matches} posiciones={posiciones} />;
+  return <MisMatchesClient matches={matches} posiciones={posiciones} currentUserId={userId} />;
 }

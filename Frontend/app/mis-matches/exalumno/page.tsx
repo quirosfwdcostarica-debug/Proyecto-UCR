@@ -18,11 +18,12 @@ function parseDesglose(tipoApoyo: string | null): Desglose | null {
 
 export default async function MatchesExalumnoPage() {
   let matches: any[] = [];
+  let userId = "";
 
   try {
     const session = await auth();
     if (session?.user?.id) {
-      const userId = session.user.id;
+      userId = session.user.id;
 
       const { createClient } = require("@supabase/supabase-js");
       const supabaseAdmin = createClient(
@@ -77,7 +78,7 @@ export default async function MatchesExalumnoPage() {
 
   return (
     <Suspense fallback={<div className="p-12 text-center text-muted-foreground">Cargando matches...</div>}>
-      <MatchesExalumnoClient matches={matches} />
+      <MatchesExalumnoClient matches={matches} currentUserId={userId} />
     </Suspense>
   );
 }
