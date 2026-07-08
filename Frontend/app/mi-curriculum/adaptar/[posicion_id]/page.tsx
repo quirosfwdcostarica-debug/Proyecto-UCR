@@ -211,7 +211,7 @@ export default function AdaptarCVPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 lg:p-8">
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         <Link href={`/posiciones/${posicionId}`} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Volver a la posición
@@ -231,7 +231,7 @@ export default function AdaptarCVPage() {
                 <RotateCcw className="w-4 h-4 mr-2" /> Descartar
               </Button>
             )}
-            <Button onClick={adaptar} disabled={adapting || !cv || !posicion} className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+            <Button onClick={adaptar} disabled={adapting || !cv || !posicion} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {adapting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
               {adapting ? "Adaptando..." : adapted ? "Re-adaptar" : "Adaptar con IA"}
             </Button>

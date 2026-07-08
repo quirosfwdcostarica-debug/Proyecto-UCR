@@ -180,7 +180,7 @@ export default function AplicantesPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-4 sm:p-8">
       <CVDrawer
         userId={cvUserId}
         studentName={cvStudentName}
@@ -197,7 +197,7 @@ export default function AplicantesPage() {
 
         <div className="mb-8">
           <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Gestión de aplicantes</p>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white break-words">
             {posicionTitulo || "Aplicantes"}
           </h1>
           <p className="text-slate-500 text-sm mt-1">
@@ -298,7 +298,7 @@ function AplicanteCard({
 
   return (
     <Card className="p-4 border-slate-200 bg-white dark:bg-slate-900 shadow-sm">
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 flex-wrap">
         {/* Avatar */}
         <div className="w-10 h-10 rounded-full bg-[#005da4]/10 flex items-center justify-center shrink-0 overflow-hidden">
           {a.estudiante?.foto_url ? (
@@ -311,7 +311,7 @@ function AplicanteCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{nombre}</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm break-words">{nombre}</p>
             <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${cfg.cls}`}>
               <Icon className="w-3 h-3" /> {cfg.label}
             </Badge>
@@ -344,7 +344,7 @@ function AplicanteCard({
 
           {/* Ver CV + Enviar mensaje */}
           {a.estudiante_id && (
-            <div className="mt-2.5 flex items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               {onVerCV && (
                 <button
                   onClick={onVerCV}
@@ -359,7 +359,7 @@ function AplicanteCard({
                 <button
                   onClick={onContactar}
                   disabled={anyLoading}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-white bg-[#005da4] hover:bg-[#003d6e] rounded-md px-2.5 py-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md px-2.5 py-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {actionLoading === a.id + "contactar" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -375,7 +375,7 @@ function AplicanteCard({
 
         {/* Actions (solo para ENVIADA/EN_REVISION) */}
         {isPending && onSeleccionar && onDescartar && (
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-end mt-2 sm:mt-0">
             <Button
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white text-xs"

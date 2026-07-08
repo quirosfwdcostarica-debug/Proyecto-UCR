@@ -6,9 +6,12 @@ import Link from "next/link";
 import {
   ArrowLeft, GraduationCap, CheckCircle2, XCircle, Clock, Loader2, RefreshCw, Users,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface TallerAdmin {
   id: string;
@@ -139,22 +142,22 @@ export default function AdminTalleresPage() {
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
-        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
+        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] dark:hover:text-fu-blue-sky mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
         </Link>
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Talleres</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Talleres</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Revisa y decide sobre los talleres propuestos por exalumnos.
             </p>
@@ -171,7 +174,7 @@ export default function AdminTalleresPage() {
               onClick={() => setFiltroEstado(e)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 filtroEstado === e
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#0f4c81]"
               }`}
             >
@@ -204,12 +207,18 @@ export default function AdminTalleresPage() {
             <p className="text-xs text-slate-400 font-medium mb-2">
               {talleres.length} taller{talleres.length !== 1 ? "es" : ""} encontrado{talleres.length !== 1 ? "s" : ""}
             </p>
-            {talleres.map((t) => {
+            {talleres.map((t, i) => {
               const cfg = ESTADO_CFG[t.estado];
               const { Icon } = cfg;
               const isWorking = working === t.id;
               return (
-                <Card key={t.id} className="p-5 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800">
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.05, ease: [0.25, 1, 0.5, 1] }}
+                >
+                <Card className="p-5 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-fu-lg transition-shadow">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="h-10 w-10 rounded-lg bg-[#005da4]/10 flex items-center justify-center shrink-0">
                       <GraduationCap className="h-5 w-5 text-[#005da4]" />
@@ -263,6 +272,7 @@ export default function AdminTalleresPage() {
                     )}
                   </div>
                 </Card>
+                </motion.div>
               );
             })}
           </div>
@@ -277,6 +287,6 @@ export default function AdminTalleresPage() {
           onClose={() => setRechazando(null)}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

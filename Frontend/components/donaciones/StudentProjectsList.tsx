@@ -231,7 +231,7 @@ export function StudentProjectsList() {
             </CardContent>
             <CardFooter className="bg-white pt-0 pb-4 justify-end">
               {selectedProjectId !== project.id && (
-                <Button onClick={() => setSelectedProjectId(project.id)} variant="default" className="bg-[#0f4c81] hover:bg-[#0b3a63]">
+                <Button onClick={() => setSelectedProjectId(project.id)} variant="default" className="bg-primary hover:bg-primary/90">
                   Apoyar Proyecto
                 </Button>
               )}

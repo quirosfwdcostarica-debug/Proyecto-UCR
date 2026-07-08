@@ -136,7 +136,7 @@ export function ChatBot({ cv, onUpdateCV }: { cv: any; onUpdateCV: (newCV: any) 
                 <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs leading-relaxed whitespace-pre-line ${
                   m.role === "assistant"
                     ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none shadow-sm"
-                    : "bg-[#0f4c81] text-white rounded-tr-none"
+                    : "bg-primary text-primary-foreground rounded-tr-none"
                 }`}>
                   {formatText(m.content)}
                 </div>

@@ -10,6 +10,7 @@ import {
   Globe2, Code2, Star, Search,
 } from "lucide-react";
 import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 // ── Paleta UCR ────────────────────────────────────────────────────────────────
 const UCR = {
@@ -232,7 +233,7 @@ export default function NuevaPosicionPage() {
 
         {/* Encabezado */}
         <div className="mb-8">
-          <h1 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">Publicar Nueva Posición</h1>
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl">Publicar Nueva Posición</AnimatedHeading>
           <p className="text-sm text-slate-500 mt-1">Completa los 4 pasos para encontrar al estudiante UCR ideal.</p>
         </div>
 
@@ -769,17 +770,17 @@ export default function NuevaPosicionPage() {
             )}
 
             {/* Navegación */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-2">
               <div>
                 {step > 1 ? (
                   <button type="button" onClick={() => { setError(null); setStep((s) => s - 1); }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all hover:opacity-80"
+                    className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all hover:opacity-80"
                     style={{ borderColor: STEP_COLOR[step - 2], color: STEP_COLOR[step - 2] }}>
                     <ArrowLeft className="w-4 h-4" /> Anterior
                   </button>
                 ) : (
                   <Link href="/mis-posiciones">
-                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-400 hover:opacity-80 transition-all">
+                    <button className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-400 hover:opacity-80 transition-all">
                       Cancelar
                     </button>
                   </Link>
@@ -789,13 +790,13 @@ export default function NuevaPosicionPage() {
               <div>
                 {step < 4 ? (
                   <button type="button" onClick={nextStep}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg"
+                    className="flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg"
                     style={{ background: `linear-gradient(135deg, ${currentStep.color}, ${STEP_COLOR[step] || UCR.gold})` }}>
                     Siguiente <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : (
                   <button type="button" onClick={publish} disabled={loading || totalWeights !== 100}
-                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-5 sm:px-8 py-2.5 rounded-xl text-sm font-extrabold text-white shadow-md transition-all hover:opacity-90 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ background: `linear-gradient(135deg, ${UCR.blue}, ${UCR.sky}, ${UCR.orange})` }}>
                     {loading
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Publicando...</>

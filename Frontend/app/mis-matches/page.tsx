@@ -32,7 +32,7 @@ export default async function MisMatchesPage() {
         .from('MATCHES')
         .select('*')
         .eq('estudiante_id', userId)
-        .order('created_at', { ascending: false });
+        .order('score_match', { ascending: false });
 
       const exalumnoIds = rawMatches?.map((m: any) => m.exalumno_id) || [];
       const { data: exalumnos } = await supabaseAdmin.from('EXALUMNOS').select('*').in('user_id', exalumnoIds);

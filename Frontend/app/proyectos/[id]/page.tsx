@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FundingProgressBar } from "@/components/donaciones/FundingProgressBar";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface ProyectoPublico {
   studentId: string;
@@ -75,15 +77,15 @@ export default function ProyectoPublicoPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full flex items-center justify-center py-24">
+      <ParallaxBackground className="min-h-full flex items-center justify-center py-24">
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: UCR.blue }} />
-      </div>
+      </ParallaxBackground>
     );
   }
 
   if (notFound || !proyecto) {
     return (
-      <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 flex flex-col items-center justify-center py-24 text-center px-4">
+      <ParallaxBackground className="min-h-full flex flex-col items-center justify-center py-24 text-center px-4">
         <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: `${UCR.blue}15` }}>
           <GraduationCap className="w-10 h-10" style={{ color: UCR.blue }} />
         </div>
@@ -96,7 +98,7 @@ export default function ProyectoPublicoPage() {
             <ArrowLeft className="w-4 h-4 mr-1.5" /> Ver directorio de estudiantes
           </Button>
         </Link>
-      </div>
+      </ParallaxBackground>
     );
   }
 
@@ -106,30 +108,31 @@ export default function ProyectoPublicoPage() {
   const isOwnProject = (session?.user as any)?.id === proyecto.studentId;
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10">
-      <div className="max-w-2xl mx-auto">
-        {/* Back */}
-        <Link href="/directorio/estudiantes" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-[#005da4] transition-colors mb-6">
+    <ParallaxBackground className="min-h-full">
+      <div className="fu-hero-gradient animate-fu-gradient border-b border-white/10 text-white py-4 px-6 md:px-12 flex items-center shadow-md">
+        <Link href="/directorio/estudiantes" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-200 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" /> Volver al directorio
         </Link>
+      </div>
 
+      <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-10">
         {/* Project card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
           {/* Gradient bar */}
-          <div className="h-3 w-full" style={{ background: `linear-gradient(90deg, ${UCR.blue}, ${UCR.sky}, ${UCR.orange})` }} />
+          <div className="h-3 w-full fu-hero-gradient animate-fu-gradient" />
 
           {/* Student header */}
-          <div className="px-7 pt-7 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="px-5 sm:px-7 pt-5 sm:pt-7 pb-4 sm:pb-5 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-4">
               {proyecto.foto_url ? (
-                <img src={proyecto.foto_url} alt={proyecto.nombre} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md" />
+                <img src={proyecto.foto_url} alt={proyecto.nombre} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md shrink-0" />
               ) : (
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md" style={{ background: UCR.blue }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0" style={{ background: UCR.blue }}>
                   {initials}
                 </div>
               )}
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{proyecto.nombre}</h2>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white break-words">{proyecto.nombre}</h2>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                   {proyecto.carrera && (
                     <span className="flex items-center gap-1"><GraduationCap className="w-3.5 h-3.5" />{proyecto.carrera}</span>
@@ -148,9 +151,9 @@ export default function ProyectoPublicoPage() {
           </div>
 
           {/* Project details */}
-          <div className="px-7 py-6">
+          <div className="px-5 sm:px-7 py-5 sm:py-6">
             <div className="mb-4">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{proyecto.proyecto_titulo}</h1>
+              <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl mb-2 break-words">{proyecto.proyecto_titulo}</AnimatedHeading>
               {proyecto.proyecto_tipo && (
                 <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: UCR.orange }}>
                   {proyecto.proyecto_tipo}
@@ -220,6 +223,6 @@ export default function ProyectoPublicoPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

@@ -7,10 +7,14 @@ import {
   ClipboardList, Loader2, Briefcase, Building2, MapPin,
   Clock, Calendar, CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { useDialog } from "@/hooks/useDialog";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { SunflowerImage } from "@/components/fu/SunflowerImage";
 
 interface Aplicacion {
   id: string;
@@ -84,9 +88,9 @@ export default function MisAplicacionesPage() {
   }
 
   if (status === "loading" || loading) return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   const contadores = {
@@ -98,15 +102,20 @@ export default function MisAplicacionesPage() {
   };
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Estudiante</p>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Mis Aplicaciones</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        >
+          <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Estudiante</p>
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Mis Aplicaciones</AnimatedHeading>
+          <p className="fu-text-2 mt-2 text-sm">
             Seguimiento de todas tus postulaciones a posiciones laborales y pasantías.
           </p>
-        </div>
+        </motion.div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
@@ -133,26 +142,31 @@ export default function MisAplicacionesPage() {
         )}
 
         {aplicaciones.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 bg-violet-50 dark:bg-violet-900/20 rounded-full flex items-center justify-center mb-6">
-              <ClipboardList className="w-10 h-10 text-violet-400" />
-            </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-3">Sin aplicaciones aún</h2>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <SunflowerImage size={220} />
+            <h2 className="text-xl font-bold fu-text mt-4 mb-3">Sin aplicaciones aún</h2>
             <p className="text-slate-500 dark:text-slate-400 max-w-sm text-sm mb-6">
               Explora la bolsa de empleo y aplica a posiciones que encajen con tu perfil.
             </p>
             <Link href="/posiciones"
-              className="inline-flex items-center gap-2 bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
               <Briefcase className="w-4 h-4" /> Ver posiciones disponibles
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {aplicaciones.map((a) => {
+            {aplicaciones.map((a, i) => {
               const cfg = ESTADO_CFG[a.estado] ?? ESTADO_CFG.ENVIADA;
               const { Icon } = cfg;
               return (
-                <Card key={a.id} className="p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
+                <motion.div
+                  key={a.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.05 }}
+                  whileHover={{ y: -3 }}
+                >
+                <Card className="p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-fu-lg transition-shadow">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="h-10 w-10 rounded-lg bg-[#0f4c81]/10 flex items-center justify-center shrink-0">
                       <Briefcase className="h-5 w-5 text-[#0f4c81]" />
@@ -161,7 +175,7 @@ export default function MisAplicacionesPage() {
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         {a.posicion ? (
                           <Link href={`/posiciones/${a.posicion.id}`}
-                            className="font-semibold text-slate-800 dark:text-slate-100 hover:text-[#0f4c81] transition-colors">
+                            className="font-semibold text-slate-800 dark:text-slate-100 hover:text-[#0f4c81] transition-colors break-words">
                             {a.posicion.titulo}
                           </Link>
                         ) : (
@@ -235,11 +249,12 @@ export default function MisAplicacionesPage() {
                     </div>
                   </div>
                 </Card>
+                </motion.div>
               );
             })}
           </div>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

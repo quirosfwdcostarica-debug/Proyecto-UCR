@@ -7,8 +7,10 @@ import {
   Heart, Loader2, CheckCircle2, Clock, XCircle,
   DollarSign, FileText, ExternalLink, ArrowUpRight, ArrowDownLeft,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
 
 interface Donacion {
   id: string;
@@ -216,9 +218,16 @@ function ListaDonaciones({
         const cfg = ESTADO_CONFIG[d.estado];
         const Icon = cfg.icon;
         return (
-          <Card
+          <motion.div
             key={d.id}
-            className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-30px" }}
+            transition={{ duration: 0.3 }}
+            whileHover={{ y: -3 }}
+          >
+          <Card
+            className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-fu-lg transition-shadow"
           >
             <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               {/* Icono */}
@@ -280,6 +289,7 @@ function ListaDonaciones({
               </div>
             </div>
           </Card>
+          </motion.div>
         );
       })}
     </div>
@@ -349,14 +359,14 @@ export default function DonacionesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-      </div>
+      <ParallaxBackground className="min-h-screen flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+      </ParallaxBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-screen p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
@@ -387,6 +397,6 @@ export default function DonacionesPage() {
           />
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

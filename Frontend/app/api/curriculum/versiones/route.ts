@@ -4,21 +4,26 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { randomUUID } from "crypto";
 
 async function ensureCurriculumId(estudianteId: string): Promise<string> {
-  const { data: cur } = await supabaseAdmin
-    .from("CURRICULUMS")
+  const { data: cur, error: findError } = await supabaseAdmin
+    .from("CURRICULUM")
     .select("id")
     .eq("estudiante_id", estudianteId)
     .maybeSingle();
 
+  if (findError) throw findError;
   if (cur) return cur.id;
 
   const newId = randomUUID();
-  await supabaseAdmin.from("CURRICULUMS").insert({
+  const now = new Date().toISOString();
+  const { error: insertError } = await supabaseAdmin.from("CURRICULUM").insert({
     id: newId,
     estudiante_id: estudianteId,
     cv_data: {},
     habilidades_tecnicas: [],
+    created_at: now,
+    updated_at: now,
   });
+  if (insertError) throw insertError;
   return newId;
 }
 
@@ -33,7 +38,7 @@ export async function GET() {
 
   try {
     const { data: curriculum } = await supabaseAdmin
-      .from("CURRICULUMS")
+      .from("CURRICULUM")
       .select(`
         id,
         versiones:CURRICULUM_VERSIONES!CURRICULUM_VERSIONES_curriculum_id_fkey(

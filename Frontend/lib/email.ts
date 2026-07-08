@@ -66,32 +66,6 @@ export async function sendMagicLinkEmail(
   });
 }
 
-export async function sendAlumniPendingEmail(
-  toEmail: string,
-  nombre: string
-): Promise<void> {
-  await sendEmailJS(toEmail, TEMPLATE_NOTIF, {
-    recipient_name: nombre,
-    title: "Tu perfil está en revisión",
-    message:
-      "Tu perfil de exalumno ha sido creado exitosamente y está siendo revisado por el equipo de la Fundación UCR. " +
-      "Recibirás una notificación en máximo 48 horas cuando sea aprobado.",
-    action_url: `${BASE_URL}/login`,
-    action_text: "Ir al inicio",
-  });
-}
-
-export async function sendAlumniApprovedEmail(
-  toEmail: string,
-  nombre: string
-): Promise<void> {
-  await sendEmailJS(toEmail, TEMPLATE_AUTH, {
-    recipient_name: nombre,
-    title: "¡Tu perfil fue aprobado!",
-    verification_url: `${BASE_URL}/login`,
-  });
-}
-
 // ─── Moderación / Fraude (RF-09) ───────────────────────────────────────────────
 
 export async function sendPerfilAutoSuspendido(

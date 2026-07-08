@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { randomUUID } from "crypto";
 
 function parseSkills(raw: any): string[] {
   if (!raw) return [];
@@ -54,10 +55,10 @@ export async function GET() {
           carrera, escuela_facultad, sede,
           anio_ingreso, nivel_academico, habilidades,
           soft_skills, idiomas,
-          curriculum:CURRICULUMS!CURRICULUMS_estudiante_id_fkey(
+          curriculum:CURRICULUM(
             habilidades_tecnicas, idiomas, cv_data,
-            experiencias:EXPERIENCIAS_CV!EXPERIENCIAS_CV_curriculum_id_fkey(id, titulo, organizacion, tipo),
-            certificaciones:CERTIFICACIONES_CV!CERTIFICACIONES_CV_curriculum_id_fkey(id, nombre, institucion)
+            experiencias:CURRICULUM_EXPERIENCIA(id, titulo, organizacion, tipo),
+            certificaciones:CURRICULUM_CERTIFICACIONES(id, nombre, institucion)
           )
         )
       `)
@@ -179,23 +180,31 @@ export async function POST(request: Request) {
 
   try {
     const userId = session.user.id;
-    const { data: existingCur } = await supabaseAdmin
-      .from("CURRICULUMS")
+    const { data: existingCur, error: findError } = await supabaseAdmin
+      .from("CURRICULUM")
       .select("id")
       .eq("estudiante_id", userId)
       .maybeSingle();
 
+    if (findError) throw findError;
+
     if (existingCur) {
-      await supabaseAdmin
-        .from("CURRICULUMS")
+      const { error: updateError } = await supabaseAdmin
+        .from("CURRICULUM")
         .update({ cv_data: cvData, habilidades_tecnicas: cvData.skills, updated_at: new Date().toISOString() })
         .eq("id", existingCur.id);
+      if (updateError) throw updateError;
     } else {
-      await supabaseAdmin.from("CURRICULUMS").insert({
+      const now = new Date().toISOString();
+      const { error: insertError } = await supabaseAdmin.from("CURRICULUM").insert({
+        id: randomUUID(),
         estudiante_id: userId,
         cv_data: cvData,
         habilidades_tecnicas: cvData.skills,
+        created_at: now,
+        updated_at: now,
       });
+      if (insertError) throw insertError;
     }
 
     return NextResponse.json({ success: true });

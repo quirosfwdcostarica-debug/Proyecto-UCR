@@ -109,7 +109,7 @@ export function GeneralDonationForm() {
 
 
 
-          <Button type="submit" disabled={isSubmitting} className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-6 text-lg rounded-xl shadow-lg transition-all">
+          <Button type="submit" disabled={isSubmitting} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg rounded-xl shadow-lg transition-all">
             {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Enviando solicitud...</> : "Solicitar Donación"}
           </Button>
         </form>

@@ -37,7 +37,7 @@ export async function GET(
     return NextResponse.json({ message: "No autenticado" }, { status: 401 });
 
   try {
-    const { data: user } = await supabaseAdmin
+    const { data: user, error: queryError } = await supabaseAdmin
       .from("USERS")
       .select(`
         id, nombre, email, foto_url, tipo, status,
@@ -53,15 +53,17 @@ export async function GET(
           proyecto_titulo, proyecto_tipo, proyecto_descripcion,
           busca_financiamiento, busca_mentoria,
           busca_empleo, busca_pasantia,
-          curriculum:CURRICULUMS!CURRICULUMS_estudiante_id_fkey(
+          curriculum:CURRICULUM(
             habilidades_tecnicas,
-            experiencias:EXPERIENCIAS_CV!EXPERIENCIAS_CV_curriculum_id_fkey(id, titulo, organizacion, tipo),
-            certificaciones:CERTIFICACIONES_CV!CERTIFICACIONES_CV_curriculum_id_fkey(id, nombre, institucion)
+            experiencias:CURRICULUM_EXPERIENCIA(id, titulo, organizacion, tipo),
+            certificaciones:CURRICULUM_CERTIFICACIONES(id, nombre, institucion)
           )
         )
       `)
       .eq("id", params.userId)
       .maybeSingle();
+
+    if (queryError) throw queryError;
 
     if (!user || user.status === "SUSPENDIDO")
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });

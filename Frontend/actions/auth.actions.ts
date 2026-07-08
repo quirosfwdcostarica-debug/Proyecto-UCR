@@ -7,10 +7,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import prisma from "@/lib/prisma";
 import {
   sendMagicLinkEmail,
-  sendAlumniPendingEmail,
   sendPasswordResetEmail,
   sendPasswordResetEmailJS,
-  sendAlumniApprovedEmail,
 } from "@/lib/email";
 
 type ActionResult =
@@ -193,7 +191,7 @@ export async function registerAlumniAction(data: {
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: data.email,
     password: data.password,
-    email_confirm: true,
+    email_confirm: false,
     user_metadata: { nombre: data.nombre, tipo: "EXALUMNO" },
   });
 
@@ -208,7 +206,7 @@ export async function registerAlumniAction(data: {
       email: data.email,
       nombre: data.nombre.trim(),
       tipo: "EXALUMNO",
-      email_verified: true,
+      email_verified: false,
       activo: true,
       cedula: data.cedula,
       fecha_nacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null,
@@ -226,11 +224,23 @@ export async function registerAlumniAction(data: {
     },
   });
 
-  await sendAlumniPendingEmail(data.email, data.nombre.trim());
+  const callbackUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/auth/callback?email=${encodeURIComponent(data.email)}`;
+  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: "signup",
+    email: data.email,
+    password: data.password,
+    options: { redirectTo: callbackUrl },
+  });
+
+  if (!linkError && linkData?.properties?.action_link) {
+    await sendMagicLinkEmail(data.email, linkData.properties.action_link, data.nombre.trim());
+  } else {
+    console.error("[registerAlumni] Error generando magic link:", linkError);
+  }
 
   return {
     success: true,
-    message: "Registro exitoso. Tu perfil está siendo verificado. Te notificaremos en máximo 48 horas.",
+    message: "Registro exitoso. Revisa tu correo para verificar tu cuenta.",
     userId: authData.user.id,
   };
 }
@@ -313,26 +323,6 @@ export async function forgotPasswordAction(email: string): Promise<ActionResult>
     success: true,
     message: "Si existe una cuenta con ese correo, recibirás tu contraseña temporal por email.",
   };
-}
-
-// ─── Aprobar Exalumno (Admin) ─────────────────────────────────────────────
-
-export async function approveAlumniAction(userId: string): Promise<ActionResult> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, tipo: "EXALUMNO" },
-  });
-  if (!user) {
-    return { success: false, message: "Exalumno no encontrado." };
-  }
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { activo: true },
-  });
-
-  await sendAlumniApprovedEmail(user.email, user.nombre);
-
-  return { success: true, message: "Perfil de exalumno aprobado y correo enviado." };
 }
 
 // ─── Verificar Email (callback de Supabase) ───────────────────────────────

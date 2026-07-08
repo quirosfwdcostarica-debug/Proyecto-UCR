@@ -12,6 +12,8 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import { Input } from "@/components/ui/input";
 import { useDialog } from "@/hooks/useDialog";
 
@@ -49,6 +51,8 @@ function Avatar({ nombre }: { nombre: string }) {
   );
 }
 
+const AUTO_REFRESH_MS = 8000;
+
 export default function AdminUsuariosPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -57,6 +61,7 @@ export default function AdminUsuariosPage() {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Filtros
   const [nombre, setNombre] = useState("");
@@ -73,8 +78,8 @@ export default function AdminUsuariosPage() {
     load();
   }, [status, session, tipo, statusFiltro, page]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     const qs = new URLSearchParams();
     if (nombre) qs.set("nombre", nombre);
     if (tipo) qs.set("tipo", tipo);
@@ -84,8 +89,21 @@ export default function AdminUsuariosPage() {
     const d = await res.json();
     setUsuarios(d.data ?? []);
     setTotal(d.total ?? 0);
-    setLoading(false);
+    setLastUpdated(new Date());
+    if (!opts?.silent) setLoading(false);
   }, [nombre, tipo, statusFiltro, page]);
+
+  // Auto-refresh: revisa cada pocos segundos si hay usuarios nuevos (registros
+  // desde celulares u otras PCs) sin que el admin tenga que refrescar a mano.
+  // Se pausa si la pestaña no está visible para no gastar requests de más.
+  useEffect(() => {
+    if (status !== "authenticated" || (session?.user as any)?.tipo !== "ADMIN") return;
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      load({ silent: true });
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, [status, session, load]);
 
   function buscar() { setPage(1); load(); }
 
@@ -147,15 +165,15 @@ export default function AdminUsuariosPage() {
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
@@ -163,15 +181,29 @@ export default function AdminUsuariosPage() {
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestión de Usuarios</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Gestión de Usuarios</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Busca, filtra y gestiona el estado de los usuarios registrados.
             </p>
           </div>
-          <button onClick={load} className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81]">
-            <RefreshCw className="w-4 h-4" /> Actualizar
-          </button>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              </span>
+              En vivo — se actualiza solo cada {AUTO_REFRESH_MS / 1000}s
+            </div>
+            <button onClick={() => load()} className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81]">
+              <RefreshCw className="w-4 h-4" /> Actualizar ahora
+              {lastUpdated && (
+                <span className="text-xs text-slate-400 font-normal">
+                  · {lastUpdated.toLocaleTimeString("es-CR")}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -206,7 +238,7 @@ export default function AdminUsuariosPage() {
               <option value="ACTIVO">Activo</option>
               <option value="SUSPENDIDO">Suspendido</option>
             </select>
-            <Button onClick={buscar} className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white h-10">
+            <Button onClick={buscar} className="bg-primary hover:bg-primary/90 text-primary-foreground h-10">
               <Search className="w-4 h-4 mr-2" /> Buscar
             </Button>
           </div>
@@ -447,6 +479,6 @@ export default function AdminUsuariosPage() {
           </>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

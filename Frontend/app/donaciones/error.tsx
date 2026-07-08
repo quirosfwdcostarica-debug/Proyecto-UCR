@@ -23,7 +23,7 @@ export default function DonacionesError({
       </pre>
       <button
         onClick={reset}
-        className="px-4 py-2 bg-[#0f4c81] text-white rounded hover:bg-[#0b3a63]"
+        className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
       >
         Intentar de nuevo
       </button>

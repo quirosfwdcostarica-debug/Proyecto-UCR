@@ -1,4 +1,5 @@
 import { AlumniDirectoryClient } from "@/components/directory/AlumniDirectoryClient";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
 
 export const metadata = {
   title: "Directorio de Exalumnos | Alumni UCR",
@@ -7,8 +8,8 @@ export const metadata = {
 
 export default function DirectorioExalumnosPage() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <ParallaxBackground className="min-h-screen">
       <AlumniDirectoryClient />
-    </div>
+    </ParallaxBackground>
   );
 }

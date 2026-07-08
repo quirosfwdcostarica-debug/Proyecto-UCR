@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search, FileText, Paperclip } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search, FileText, Paperclip, Award } from "lucide-react";
 import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
 import { AreasInteresSelector } from "@/components/forms/AreasInteresSelector";
 import { BecasInfoDialog } from "@/components/becas/BecasInfoDialog";
@@ -103,6 +103,35 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     setIdiomasList((p) => p.filter((_, idx) => idx !== i));
   }
 
+  // ── Exalumno: experiencia laboral y certificaciones ──────────────────────
+  function parseExperienciaLaboral(raw: any): { cargo: string; empresa: string; anio_inicio: string; anio_fin: string; descripcion: string }[] {
+    return Array.isArray(raw) ? raw : [];
+  }
+  function parseCertificaciones(raw: any): { nombre: string; institucion: string; anio: string }[] {
+    return Array.isArray(raw) ? raw : [];
+  }
+  const [experienciaList, setExperienciaList] = useState(parseExperienciaLaboral(initialData?.experiencia_laboral));
+  const [expForm, setExpForm] = useState({ cargo: "", empresa: "", anio_inicio: "", anio_fin: "", descripcion: "" });
+  function addExperienciaLaboral() {
+    if (!expForm.cargo.trim() || !expForm.empresa.trim()) return;
+    setExperienciaList((p) => [...p, { ...expForm }]);
+    setExpForm({ cargo: "", empresa: "", anio_inicio: "", anio_fin: "", descripcion: "" });
+  }
+  function removeExperienciaLaboral(i: number) {
+    setExperienciaList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  const [certificacionesList, setCertificacionesList] = useState(parseCertificaciones(initialData?.certificaciones));
+  const [certForm, setCertForm] = useState({ nombre: "", institucion: "", anio: "" });
+  function addCertificacion() {
+    if (!certForm.nombre.trim()) return;
+    setCertificacionesList((p) => [...p, { ...certForm }]);
+    setCertForm({ nombre: "", institucion: "", anio: "" });
+  }
+  function removeCertificacion(i: number) {
+    setCertificacionesList((p) => p.filter((_, idx) => idx !== i));
+  }
+
   const filteredSkills = SKILLS_BANK.find((c) => c.categoria === selectedCategory)?.skills.filter(
     (s) => !skillFilter || s.toLowerCase().includes(skillFilter.toLowerCase())
   ) ?? [];
@@ -182,6 +211,8 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           soft_skills: softSkillsList as any,
           idiomas: idiomasList as any,
           areas_interes: areasInteresList as any,
+          certificaciones: certificacionesList as any,
+          experiencia_laboral: experienciaList as any,
         } as any);
         if (result.success) {
           if (data.image) {
@@ -274,7 +305,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         </div>
 
         {/* Tarjeta 1: Información Personal */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <User className="w-6 h-6" />
@@ -329,7 +360,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                 <FormItem className="col-span-1 md:col-span-2">
                   <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Foto de Perfil</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                       <div className="shrink-0 w-20 h-20 rounded-full border-4 border-ucr-celeste/20 overflow-hidden bg-ucr-gris-1 dark:bg-slate-800 flex items-center justify-center relative">
                         {field.value ? (
                           <img src={field.value} alt="Profile" className="w-full h-full object-cover" />
@@ -342,7 +373,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                           </div>
                         )}
                       </div>
-                      <div className="relative group flex-1">
+                      <div className="relative group w-full sm:flex-1">
                         <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
                         <Input 
                           type="file"
@@ -426,7 +457,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         </div>
 
         {/* Tarjeta 2: Biografía */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <Briefcase className="w-6 h-6" />
@@ -462,7 +493,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         {isEstudiante ? (
           <>
             {/* DATOS DE ESTUDIANTE */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <GraduationCap className="w-6 h-6" />
@@ -649,7 +680,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                         </span>
                       </FormLabel>
                       <FormControl>
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                           {field.value ? (
                             <a
                               href={field.value}
@@ -666,7 +697,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                               Sin comprobante
                             </div>
                           )}
-                          <div className="relative group flex-1">
+                          <div className="relative group w-full sm:flex-1">
                             <Paperclip className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploadingComprobante ? "animate-pulse text-ucr-celeste" : ""}`} />
                             <Input
                               type="file"
@@ -712,7 +743,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* PROYECTO DE GRADUACIÓN */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <BookOpen className="w-6 h-6" />
@@ -804,7 +835,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* ══ IDIOMAS ══════════════════════════════════════════════════ */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
               <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-sky-50 rounded-xl text-sky-600">
                   <Globe2 className="w-6 h-6" />
@@ -822,7 +853,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   <select
                     value={idiomaInput}
                     onChange={(e) => setIdiomaInput(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 dark:text-slate-100 transition-all shadow-sm"
                   >
                     {IDIOMAS_OPTS.map((id) => <option key={id}>{id}</option>)}
                   </select>
@@ -832,7 +863,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   <select
                     value={nivelIdiomaInput}
                     onChange={(e) => setNivelIdiomaInput(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-slate-50 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 transition-all shadow-sm"
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 dark:text-slate-100 transition-all shadow-sm"
                   >
                     {NIVELES_IDIOMA.map((n) => <option key={n}>{n}</option>)}
                   </select>
@@ -867,7 +898,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* ══ HABILIDADES TÉCNICAS ══════════════════════════════════════ */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
               <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
                   <Code2 className="w-6 h-6" />
@@ -908,7 +939,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     placeholder="Filtrar en esta categoría..."
                     value={skillFilter}
                     onChange={(e) => setSkillFilter(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white border border-slate-200 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100"
+                    className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100 placeholder:text-slate-400"
                   />
                 </div>
 
@@ -960,9 +991,9 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tus habilidades ({hardSkills.length})</p>
                   <div className="space-y-2">
                     {hardSkills.map((s, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                      <div key={i} className="flex flex-wrap items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
                         <span className="flex-1 text-sm font-semibold text-slate-800 min-w-0 truncate">{s.skill}</span>
-                        <div className="flex gap-1 shrink-0">
+                        <div className="flex flex-wrap gap-1 shrink-0">
                           {SKILL_LEVELS.map((lv) => (
                             <button
                               key={lv}
@@ -992,7 +1023,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* ══ HABILIDADES BLANDAS ═══════════════════════════════════════ */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
               <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
                   <Star className="w-6 h-6" />
@@ -1003,7 +1034,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {SOFT_SKILLS_BANK.map((skill) => {
                   const active = softSkillsList.includes(skill);
                   return (
@@ -1031,7 +1062,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* ÁREAS DE INTERÉS (T-11) */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
               <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Globe2 className="w-6 h-6" />
@@ -1046,7 +1077,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* APOYO BUSCADO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Heart className="w-6 h-6" />
@@ -1087,7 +1118,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* Pausar perfil (T-12) */}
-            <div className="bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-amber-200/50 dark:border-amber-800 transition-all hover:shadow-2xl">
+            <div className="bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-amber-200/50 dark:border-amber-800 transition-all hover:shadow-2xl">
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-amber-100 dark:border-amber-800">
                 <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
                   <BookOpen className="w-6 h-6" />
@@ -1125,7 +1156,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         ) : (
           <>
             {/* DATOS DE EXALUMNO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <GraduationCap className="w-6 h-6" />
@@ -1280,8 +1311,205 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               </div>
             </div>
 
+            {/* HABILIDADES (visibles en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
+                  <Code2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades</h2>
+                  <p className="text-sm text-slate-500">Estas habilidades se muestran en tu perfil público para que los estudiantes las vean.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ej. Liderazgo de equipos, React, Gestión de proyectos..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(skillInput); } }}
+                  className="flex-1 h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-violet-400 focus:ring-2 focus:ring-violet-100 text-sm transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addHardSkill(skillInput)}
+                  className="h-11 px-5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {hardSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {hardSkills.map((s, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 border border-violet-200 rounded-full text-sm font-medium text-violet-800">
+                      {s.skill}
+                      <button type="button" onClick={() => removeHardSkill(i)} className="text-violet-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado habilidades.</p>
+              )}
+            </div>
+
+            {/* EXPERIENCIA LABORAL (visible en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Experiencia Laboral</h2>
+                  <p className="text-sm text-slate-500">Agrega tu trayectoria profesional. Se muestra en tu perfil público.</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Cargo (Ej. Arquitecto de Software)"
+                    value={expForm.cargo}
+                    onChange={(e) => setExpForm((p) => ({ ...p, cargo: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Empresa (Ej. Intel Costa Rica)"
+                    value={expForm.empresa}
+                    onChange={(e) => setExpForm((p) => ({ ...p, empresa: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Año inicio (Ej. 2020)"
+                    value={expForm.anio_inicio}
+                    onChange={(e) => setExpForm((p) => ({ ...p, anio_inicio: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Año fin (vacío si es tu puesto actual)"
+                    value={expForm.anio_fin}
+                    onChange={(e) => setExpForm((p) => ({ ...p, anio_fin: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                </div>
+                <Textarea
+                  placeholder="Descripción breve de tus funciones o logros (opcional)"
+                  value={expForm.descripcion}
+                  onChange={(e) => setExpForm((p) => ({ ...p, descripcion: e.target.value }))}
+                  className="min-h-[80px] resize-none bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all rounded-xl"
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={addExperienciaLaboral}
+                    className="h-11 px-5 bg-ucr-celeste-medium hover:brightness-105 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" /> Agregar experiencia
+                  </button>
+                </div>
+              </div>
+
+              {experienciaList.length > 0 ? (
+                <div className="space-y-3">
+                  {experienciaList.map((exp, i) => (
+                    <div key={i} className="flex items-start justify-between gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 text-sm">{exp.cargo}</p>
+                        <p className="text-xs text-ucr-celeste-medium font-medium">{exp.empresa}</p>
+                        {(exp.anio_inicio || exp.anio_fin) && (
+                          <p className="text-xs text-slate-400 mt-0.5">{exp.anio_inicio}{exp.anio_fin ? ` – ${exp.anio_fin}` : " – Presente"}</p>
+                        )}
+                        {exp.descripcion && <p className="text-xs text-slate-500 mt-1">{exp.descripcion}</p>}
+                      </div>
+                      <button type="button" onClick={() => removeExperienciaLaboral(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado experiencia laboral.</p>
+              )}
+            </div>
+
+            {/* CERTIFICACIONES (visible en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Award className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Certificaciones</h2>
+                  <p className="text-sm text-slate-500">Certificaciones profesionales que quieras mostrar en tu perfil público.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. AWS Certified Developer"
+                    value={certForm.nombre}
+                    onChange={(e) => setCertForm((p) => ({ ...p, nombre: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Institución</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Amazon Web Services"
+                    value={certForm.institucion}
+                    onChange={(e) => setCertForm((p) => ({ ...p, institucion: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <div className="w-28">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Año</label>
+                  <input
+                    type="text"
+                    placeholder="2023"
+                    value={certForm.anio}
+                    onChange={(e) => setCertForm((p) => ({ ...p, anio: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addCertificacion}
+                  className="h-11 px-5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {certificacionesList.length > 0 ? (
+                <div className="space-y-2 pt-1">
+                  {certificacionesList.map((cert, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 text-sm text-slate-700 bg-amber-50 px-3 py-2 rounded-lg">
+                      <span className="min-w-0 break-words">🏅 {cert.nombre}{cert.institucion ? ` – ${cert.institucion}` : ""}{cert.anio ? ` (${cert.anio})` : ""}</span>
+                      <button type="button" onClick={() => removeCertificacion(i)} className="text-amber-400 hover:text-red-500 transition-colors shrink-0">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado certificaciones.</p>
+              )}
+            </div>
+
             {/* ÁREAS DE INTERÉS (T-11/T-13) */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
               <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Globe2 className="w-6 h-6" />
@@ -1296,7 +1524,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* APOYO OFRECIDO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Heart className="w-6 h-6" />
@@ -1344,7 +1572,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         )}
 
         {/* Tarjeta 3: Redes Sociales */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <LinkIcon className="w-6 h-6" />
@@ -1445,7 +1673,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     )}
 
     {/* Tarjeta: Seguridad — formulario independiente para evitar form anidado */}
-    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
         <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
           <ShieldCheck className="w-6 h-6" />
@@ -1506,7 +1734,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           <Button
             type="submit"
             disabled={isChangingPassword || !passwordForm.current || !passwordForm.newPass || !passwordForm.confirm}
-            className="h-11 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-bold px-8 rounded-xl"
+            className="h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 rounded-xl"
           >
             {isChangingPassword ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Actualizando...</>

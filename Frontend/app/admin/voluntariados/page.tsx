@@ -6,9 +6,12 @@ import Link from "next/link";
 import {
   ArrowLeft, HeartHandshake, CheckCircle2, XCircle, Clock, Loader2, RefreshCw,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface Voluntariado {
   id: string;
@@ -136,22 +139,22 @@ export default function AdminVoluntariadosPage() {
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
-        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
+        <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] dark:hover:text-fu-blue-sky mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
         </Link>
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Voluntariado UCR</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Voluntariado UCR</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Revisa y decide sobre las ofertas de apoyo de los exalumnos ("Retribuye a la UCR").
             </p>
@@ -169,7 +172,7 @@ export default function AdminVoluntariadosPage() {
               onClick={() => setFiltroEstado(e)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 filtroEstado === e
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#0f4c81]"
               }`}
             >
@@ -202,12 +205,18 @@ export default function AdminVoluntariadosPage() {
             <p className="text-xs text-slate-400 font-medium mb-2">
               {ofertas.length} oferta{ofertas.length !== 1 ? "s" : ""} encontrada{ofertas.length !== 1 ? "s" : ""}
             </p>
-            {ofertas.map((o) => {
+            {ofertas.map((o, i) => {
               const cfg = ESTADO_CFG[o.estado];
               const { Icon } = cfg;
               const isWorking = working === o.id;
               return (
-                <Card key={o.id} className="p-5 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800">
+                <motion.div
+                  key={o.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.05, ease: [0.25, 1, 0.5, 1] }}
+                >
+                <Card className="p-5 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 hover:shadow-fu-lg transition-shadow">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="h-10 w-10 rounded-lg bg-[#005da4]/10 flex items-center justify-center shrink-0">
                       <HeartHandshake className="h-5 w-5 text-[#005da4]" />
@@ -263,6 +272,7 @@ export default function AdminVoluntariadosPage() {
                     )}
                   </div>
                 </Card>
+                </motion.div>
               );
             })}
           </div>
@@ -277,6 +287,6 @@ export default function AdminVoluntariadosPage() {
           onClose={() => setRechazando(null)}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

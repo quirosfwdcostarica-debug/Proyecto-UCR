@@ -7,11 +7,14 @@ import {
   GraduationCap, Award, Users, Clock, Loader2, X,
   CheckCircle2, XCircle, HourglassIcon, MoreHorizontal, MapPin, Video, Layers,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import { CATALOGO_VOLUNTARIADO, VoluntariadoCatalogItem } from "@/lib/voluntariado-catalog";
 import { ofrecerVoluntariado, getMisVoluntariados } from "@/actions/voluntariado.actions";
 import { crearTaller, getMisTalleres } from "@/actions/taller.actions";
@@ -170,9 +173,9 @@ function CrearTallerForm({ onSuccess }: { onSuccess: () => void }) {
                 key={opt.value}
                 type="button"
                 onClick={() => setModalidad(opt.value)}
-                className={`h-11 rounded-xl text-sm font-semibold border transition-all flex items-center justify-center gap-1.5 ${
+                className={`min-h-[44px] py-2 px-1 rounded-xl text-xs sm:text-sm font-semibold border transition-all flex items-center justify-center gap-1.5 text-center leading-tight ${
                   modalidad === opt.value
-                    ? "bg-[#005da4] text-white border-[#005da4]"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#005da4]/40"
                 }`}
               >
@@ -182,7 +185,7 @@ function CrearTallerForm({ onSuccess }: { onSuccess: () => void }) {
           </div>
         </div>
 
-        <Button type="submit" disabled={loading} className="w-full h-12 bg-[#005da4] hover:bg-[#004a83] text-white font-bold">
+        <Button type="submit" disabled={loading} className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
           {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           {loading ? "Enviando..." : "Enviar para aprobación"}
         </Button>
@@ -213,19 +216,19 @@ function OfrecerModal({ item, onClose, onSuccess }: { item: VoluntariadoCatalogI
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start gap-3">
+        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-start gap-3">
           <div className="h-11 w-11 rounded-xl bg-[#005da4]/10 flex items-center justify-center text-[#005da4] shrink-0">
             <Icon className="h-5 w-5" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-800 dark:text-slate-100">{item.titulo}</h3>
             <p className="text-xs text-slate-500 mt-0.5">{item.descripcion}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Cerrar">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 shrink-0" aria-label="Cerrar">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Mensaje para la Fundación (opcional)
@@ -243,9 +246,9 @@ function OfrecerModal({ item, onClose, onSuccess }: { item: VoluntariadoCatalogI
             Tu oferta quedará pendiente hasta que el equipo de la Fundación UCR la revise. Te notificaremos la decisión.
           </p>
         </div>
-        <div className="p-6 pt-0 flex justify-end gap-2">
+        <div className="p-4 sm:p-6 pt-0 flex flex-col sm:flex-row justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={loading} className="bg-[#005da4] hover:bg-[#004a83] text-white">
+          <Button onClick={handleSubmit} disabled={loading} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {loading ? "Enviando..." : "Ofrecer mi apoyo"}
           </Button>
@@ -286,27 +289,40 @@ export default function RetribuirPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 animate-spin text-[#005da4]" />
-      </div>
+      <ParallaxBackground className="min-h-full flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-[#005da4] dark:text-fu-blue-sky" />
+      </ParallaxBackground>
     );
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10">
+    <ParallaxBackground className="min-h-full p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-8">
-        <div>
-          <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Comunidad UCR</p>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Retribuye a la UCR</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Elige cómo quieres aportar tu tiempo y experiencia.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        >
+          <p className="text-xs font-bold text-[#005da4] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Comunidad UCR</p>
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl md:text-3xl">Retribuye a la UCR</AnimatedHeading>
+          <p className="fu-text-2 text-sm mt-1">Elige cómo quieres aportar tu tiempo y experiencia.</p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {CATALOGO_VOLUNTARIADO.map((item) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {CATALOGO_VOLUNTARIADO.map((item, i) => {
             const Icon = ICONOS[item.tipo] ?? Users;
             const yaPendiente = pendientePorTipo.has(item.tipo);
             return (
-              <Card key={item.tipo} className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <motion.div
+                key={item.tipo}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.35, delay: Math.min(i, 6) * 0.06, ease: [0.25, 1, 0.5, 1] }}
+                whileHover={{ y: -6 }}
+                className="h-full"
+              >
+              <Card className="h-full p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-fu-lg transition-shadow flex flex-col">
                 <div className="h-11 w-11 rounded-xl bg-[#005da4]/10 flex items-center justify-center text-[#005da4] mb-4">
                   <Icon className="h-5 w-5" />
                 </div>
@@ -321,11 +337,12 @@ export default function RetribuirPage() {
                 <Button
                   onClick={() => setModalItem(item)}
                   disabled={yaPendiente}
-                  className="w-full bg-[#005da4] hover:bg-[#004a83] text-white disabled:opacity-50"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
                 >
                   {yaPendiente ? "Oferta en revisión" : "Ofrecer mi apoyo"}
                 </Button>
               </Card>
+              </motion.div>
             );
           })}
         </div>
@@ -400,6 +417,6 @@ export default function RetribuirPage() {
           onSuccess={() => { setModalItem(null); load(); }}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

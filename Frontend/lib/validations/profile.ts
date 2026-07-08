@@ -81,6 +81,8 @@ export const userProfileUpdateSchema = z.object({
   anios_experiencia: z.coerce.number().optional().nullable(),
   linkedin_url: z.string().optional().nullable().refine(esLinkedinValido, LINKEDIN_ERROR),
   biografia: z.string().max(1000).optional().nullable(),
+  certificaciones: z.any().optional().nullable(),
+  experiencia_laboral: z.any().optional().nullable(),
   ofrece_mentoria: z.boolean().optional(),
   ofrece_empleo: z.boolean().optional(),
   ofrece_pasantia: z.boolean().optional(),

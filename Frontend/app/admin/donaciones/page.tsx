@@ -10,6 +10,8 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface ValidacionCheck {
   campo: string;
@@ -194,13 +196,13 @@ export default function AdminDonacionesPage() {
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
@@ -208,8 +210,8 @@ export default function AdminDonacionesPage() {
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestión de Donaciones</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Gestión de Donaciones</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Revisa comprobantes y aprueba o rechaza donaciones pendientes.
             </p>
@@ -227,7 +229,7 @@ export default function AdminDonacionesPage() {
               onClick={() => setFiltroEstado(e)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 filtroEstado === e
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#0f4c81]"
               }`}
             >
@@ -407,6 +409,6 @@ export default function AdminDonacionesPage() {
           onClose={() => setRechazando(null)}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

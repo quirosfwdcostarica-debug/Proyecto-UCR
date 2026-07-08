@@ -49,7 +49,7 @@ export function ExperienceForm({
     });
   };
 
-  const input = "w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400";
+  const input = "w-full text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400";
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
@@ -85,7 +85,7 @@ export function ExperienceForm({
       </div>
       <div className="flex gap-2 pt-1">
         <Button variant="outline" size="sm" onClick={onCancel}><X className="w-3.5 h-3.5 mr-1" />Cancelar</Button>
-        <Button size="sm" className="bg-[#0f4c81] text-white hover:bg-[#0b3a63]" onClick={handleSave}><Save className="w-3.5 h-3.5 mr-1" />Guardar</Button>
+        <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave}><Save className="w-3.5 h-3.5 mr-1" />Guardar</Button>
       </div>
     </div>
   );
@@ -176,7 +176,7 @@ export function StudentExperienceForm({
     });
   };
 
-  const input = "w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400";
+  const input = "w-full text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400";
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
@@ -191,7 +191,7 @@ export function StudentExperienceForm({
               onClick={() => setKind(k.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 kind === k.key
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white text-slate-600 border-slate-200 hover:border-[#0f4c81]/40"
               }`}
             >
@@ -239,7 +239,7 @@ export function StudentExperienceForm({
 
       <div className="flex gap-2 pt-1">
         <Button variant="outline" size="sm" onClick={onCancel}><X className="w-3.5 h-3.5 mr-1" />Cancelar</Button>
-        <Button size="sm" className="bg-[#0f4c81] text-white hover:bg-[#0b3a63] disabled:opacity-50" onClick={handleSave} disabled={!role.trim()}><Save className="w-3.5 h-3.5 mr-1" />Guardar</Button>
+        <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50" onClick={handleSave} disabled={!role.trim()}><Save className="w-3.5 h-3.5 mr-1" />Guardar</Button>
       </div>
     </div>
   );
@@ -274,7 +274,7 @@ export function SkillsEditor({
       </div>
       <div className="flex gap-2">
         <input
-          className="text-xs border border-dashed border-slate-300 rounded-full px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 w-40"
+          className="text-xs border border-dashed border-slate-300 dark:border-slate-600 rounded-full px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 w-40 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
           placeholder="Nueva habilidad..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -293,7 +293,7 @@ export function EducationForm({ onSave, onCancel }: { onSave: (e: { institution:
   const [institution, setInstitution] = useState("");
   const [degree, setDegree] = useState("");
   const [period, setPeriod] = useState("");
-  const inp = "w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  const inp = "w-full text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400";
   return (
     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3 mt-3">
       <input className={inp} placeholder="Institución *" value={institution} onChange={(e) => setInstitution(e.target.value)} />
@@ -301,7 +301,7 @@ export function EducationForm({ onSave, onCancel }: { onSave: (e: { institution:
       <input className={inp} placeholder="Período (ej. 2018 – 2022)" value={period} onChange={(e) => setPeriod(e.target.value)} />
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onCancel}><X className="w-3.5 h-3.5 mr-1" />Cancelar</Button>
-        <Button size="sm" className="bg-[#0f4c81] text-white hover:bg-[#0b3a63]" onClick={() => { if (institution && degree) onSave({ institution, degree, period }); }}>
+        <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { if (institution && degree) onSave({ institution, degree, period }); }}>
           <Save className="w-3.5 h-3.5 mr-1" />Guardar
         </Button>
       </div>

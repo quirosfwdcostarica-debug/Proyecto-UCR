@@ -15,9 +15,12 @@ import {
   Trash2,
   AlertCircle
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 export default function MisConexionesPage() {
   const { data: session, status } = useSession();
@@ -204,53 +207,58 @@ export default function MisConexionesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc]">
+      <ParallaxBackground className="min-h-screen">
         <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="h-12 w-12 animate-spin text-ucr-celeste-medium mb-4" />
-          <p className="text-slate-500 font-medium text-sm">Cargando tus conexiones...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-ucr-celeste-medium dark:text-fu-blue-sky mb-4" />
+          <p className="fu-text-2 font-medium text-sm">Cargando tus conexiones...</p>
         </div>
-      </div>
+      </ParallaxBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-12">
-      <div className="max-w-5xl mx-auto px-6 mt-8">
-        
+    <ParallaxBackground className="min-h-screen pb-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Red de Networking</h1>
-          <p className="text-slate-500 text-sm mt-1">Gestiona tus solicitudes de conexión y comunícate con otros profesionales de la UCR.</p>
-        </div>
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        >
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Red de Networking</AnimatedHeading>
+          <p className="fu-text-2 text-sm mt-1">Gestiona tus solicitudes de conexión y comunícate con otros profesionales de la UCR.</p>
+        </motion.div>
 
         {/* Tab System */}
         <Tabs defaultValue="contacts" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl mb-6 max-w-md border border-slate-200/50">
-            <TabsTrigger value="contacts" className="rounded-lg py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
-              <Users className="h-4 w-4" />
-              Contactos
+            <TabsTrigger value="contacts" className="rounded-lg px-1.5 sm:px-3 py-2.5 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-all">
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Contactos</span>
               {activeConnections.length > 0 && (
-                <span className="bg-ucr-celeste-medium text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                <span className="bg-ucr-celeste-medium text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0">
                   {activeConnections.length}
                 </span>
               )}
             </TabsTrigger>
-            
-            <TabsTrigger value="received" className="rounded-lg py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
-              <UserCheck className="h-4 w-4" />
-              Recibidas
+
+            <TabsTrigger value="received" className="rounded-lg px-1.5 sm:px-3 py-2.5 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-all">
+              <UserCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Recibidas</span>
               {pendingReceived.length > 0 && (
-                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0">
                   {pendingReceived.length}
                 </span>
               )}
             </TabsTrigger>
 
-            <TabsTrigger value="sent" className="rounded-lg py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
-              <Send className="h-4 w-4" />
-              Enviadas
+            <TabsTrigger value="sent" className="rounded-lg px-1.5 sm:px-3 py-2.5 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-all">
+              <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Enviadas</span>
               {sentRequests.length > 0 && (
-                <span className="bg-slate-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                <span className="bg-slate-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0">
                   {sentRequests.length}
                 </span>
               )}
@@ -260,7 +268,7 @@ export default function MisConexionesPage() {
           {/* TAB 1: Contacts (Established Connections) */}
           <TabsContent value="contacts">
             {activeConnections.length === 0 ? (
-              <Card className="p-10 text-center border-slate-200/60 shadow-sm bg-white">
+              <Card className="p-6 sm:p-10 text-center border-slate-200/60 shadow-sm bg-white">
                 <AlertCircle className="h-10 w-10 text-slate-400 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-lg">Aún no tienes conexiones</h3>
                 <p className="text-slate-400 text-sm max-w-sm mx-auto mt-1">Explora el directorio de exalumnos y envía solicitudes para expandir tu red profesional.</p>
@@ -270,14 +278,21 @@ export default function MisConexionesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeConnections.map((conn) => {
+                {activeConnections.map((conn, i) => {
                   // Figure out which user is the contact
                   const isSenderSelf = conn.sender_id === session?.user?.id;
                   const contactUser = isSenderSelf ? conn.Receiver : conn.Sender;
                   const alumniDetails = contactUser?.Exalumno || {};
-                  
+
                   return (
-                    <Card key={conn.id} className="p-4 border-slate-200 hover:border-slate-300 transition-all bg-white flex items-center gap-4 shadow-sm">
+                    <motion.div
+                      key={conn.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.05 }}
+                      whileHover={{ y: -4 }}
+                    >
+                    <Card className="p-4 border-slate-200 hover:border-ucr-celeste-medium/40 transition-all bg-white flex items-center gap-4 shadow-sm hover:shadow-fu-lg">
                       <div className="h-14 w-14 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                         <img 
                           src={contactUser.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(contactUser.nombre || "Contacto")}&background=random`} 
@@ -310,6 +325,7 @@ export default function MisConexionesPage() {
                         </Button>
                       </div>
                     </Card>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -319,18 +335,25 @@ export default function MisConexionesPage() {
           {/* TAB 2: Received Pending Requests */}
           <TabsContent value="received">
             {pendingReceived.length === 0 ? (
-              <Card className="p-10 text-center border-slate-200/60 shadow-sm bg-white">
+              <Card className="p-6 sm:p-10 text-center border-slate-200/60 shadow-sm bg-white">
                 <Clock className="h-10 w-10 text-slate-400 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-lg">No tienes solicitudes pendientes</h3>
                 <p className="text-slate-400 text-sm max-w-sm mx-auto mt-1">Cuando otros estudiantes o exalumnos soliciten conectar contigo, aparecerán aquí.</p>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingReceived.map((req) => {
+                {pendingReceived.map((req, i) => {
                   const senderUser = req.Sender || {};
                   const alumniDetails = senderUser.Exalumno || {};
                   return (
-                    <Card key={req.id} className="p-4 border-slate-200 bg-white flex items-center gap-4 shadow-sm">
+                    <motion.div
+                      key={req.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.05 }}
+                      whileHover={{ y: -4 }}
+                    >
+                    <Card className="p-4 border-slate-200 bg-white flex items-center gap-4 shadow-sm hover:shadow-fu-lg transition-shadow">
                       <div className="h-14 w-14 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                         <img 
                           src={senderUser.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(senderUser.nombre || "Remitente")}&background=random`} 
@@ -370,6 +393,7 @@ export default function MisConexionesPage() {
                         </Button>
                       </div>
                     </Card>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -379,18 +403,25 @@ export default function MisConexionesPage() {
           {/* TAB 3: Sent Pending Requests */}
           <TabsContent value="sent">
             {sentRequests.length === 0 ? (
-              <Card className="p-10 text-center border-slate-200/60 shadow-sm bg-white">
+              <Card className="p-6 sm:p-10 text-center border-slate-200/60 shadow-sm bg-white">
                 <Send className="h-10 w-10 text-slate-400 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-700 text-lg">No has enviado solicitudes pendientes</h3>
                 <p className="text-slate-400 text-sm max-w-sm mx-auto mt-1">Tus solicitudes enviadas que aún no han sido respondidas se listarán en esta pestaña.</p>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {sentRequests.map((req) => {
+                {sentRequests.map((req, i) => {
                   const receiverUser = req.Receiver || {};
                   const alumniDetails = receiverUser.Exalumno || {};
                   return (
-                    <Card key={req.id} className="p-4 border-slate-200 bg-white flex items-center gap-4 shadow-sm">
+                    <motion.div
+                      key={req.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.05 }}
+                      whileHover={{ y: -4 }}
+                    >
+                    <Card className="p-4 border-slate-200 bg-white flex items-center gap-4 shadow-sm hover:shadow-fu-lg transition-shadow">
                       <div className="h-14 w-14 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                         <img 
                           src={receiverUser.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverUser.nombre || "Destinatario")}&background=random`} 
@@ -423,6 +454,7 @@ export default function MisConexionesPage() {
                         </Button>
                       </div>
                     </Card>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -431,7 +463,7 @@ export default function MisConexionesPage() {
         </Tabs>
 
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }
 

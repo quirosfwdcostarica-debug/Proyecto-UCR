@@ -188,7 +188,7 @@ export function NotificationsDropdown() {
         <button
           onClick={e => handleAccept(e, notification)}
           disabled={acting}
-          className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-md bg-[#0f4c81] text-white hover:bg-blue-800 disabled:opacity-50 transition-colors font-medium"
+          className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-blue-800 disabled:opacity-50 transition-colors font-medium"
         >
           {acting ? (
             <span className="inline-block h-3 w-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -279,7 +279,7 @@ export function NotificationsDropdown() {
                         {!notification.read && !notification.actionable && (
                           <button
                             onClick={e => { e.stopPropagation(); markAsRead(notification.id); }}
-                            className="mt-1 h-6 w-6 shrink-0 flex items-center justify-center rounded-full bg-blue-100/50 text-[#0f4c81] hover:bg-[#0f4c81] hover:text-white transition-all z-10 relative"
+                            className="mt-1 h-6 w-6 shrink-0 flex items-center justify-center rounded-full bg-blue-100/50 text-[#0f4c81] hover:bg-primary hover:text-primary-foreground transition-all z-10 relative"
                             title="Marcar como leída"
                           >
                             <Check className="h-3.5 w-3.5" />
@@ -372,7 +372,7 @@ export function NotificationsDropdown() {
                         {!notification.read && !notification.actionable && (
                           <button
                             onClick={e => { e.stopPropagation(); markAsRead(notification.id); }}
-                            className="mt-1 h-8 w-8 shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-[#0f4c81] hover:bg-[#0f4c81] hover:text-white transition-all z-10 relative"
+                            className="mt-1 h-8 w-8 shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-[#0f4c81] hover:bg-primary hover:text-primary-foreground transition-all z-10 relative"
                             title="Marcar como leída"
                           >
                             <Check className="h-4 w-4" />
@@ -410,7 +410,7 @@ export function NotificationsDropdown() {
             <div className="p-4 border-t bg-slate-50 flex justify-end">
               <button
                 onClick={() => setInfoModalMessage("")}
-                className="px-5 py-2 bg-[#0f4c81] text-white rounded-md text-sm font-medium hover:bg-blue-800 transition-colors"
+                className="px-5 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-blue-800 transition-colors"
               >
                 Entendido
               </button>

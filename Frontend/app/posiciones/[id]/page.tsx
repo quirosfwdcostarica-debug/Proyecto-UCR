@@ -12,6 +12,8 @@ import { Card } from "@/components/ui/Card";
 import { useDialog } from "@/hooks/useDialog";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface Posicion {
   id: string;
@@ -118,13 +120,13 @@ export default function PosicionDetallePage() {
   }
 
   if (status === "loading" || loading) return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   if (!posicion) return (
-    <div className="min-h-full bg-[#f8fafc] p-8">
+    <ParallaxBackground className="min-h-full p-8">
       <div className="max-w-3xl mx-auto text-center py-24 text-slate-400">
         <AlertCircle className="w-10 h-10 mb-3 mx-auto opacity-40" />
         <p>Posición no encontrada.</p>
@@ -132,7 +134,7 @@ export default function PosicionDetallePage() {
           Volver al listado
         </Link>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 
   const estadoCls = ESTADO_CFG[posicion.estado?.toLowerCase()] ?? ESTADO_CFG.activa;
@@ -141,23 +143,25 @@ export default function PosicionDetallePage() {
   const isOwner = role === "EXALUMNO" && posicion.exalumno.id === userId;
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
-      <div className="max-w-3xl mx-auto">
-        <Link href="/posiciones" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
+    <ParallaxBackground className="min-h-full">
+      <div className="fu-hero-gradient animate-fu-gradient border-b border-white/10 text-white py-4 px-6 md:px-12 flex items-center shadow-md">
+        <Link href="/posiciones" className="inline-flex items-center gap-2 text-sm text-slate-200 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" /> Volver a posiciones
         </Link>
+      </div>
 
+      <div className="max-w-3xl mx-auto p-4 sm:p-8">
         {/* Encabezado */}
-        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-6 shadow-sm mb-5">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm mb-5">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="h-14 w-14 rounded-xl bg-[#0f4c81]/10 flex items-center justify-center shrink-0">
               <Briefcase className="h-7 w-7 text-[#0f4c81]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-start gap-2 mb-2">
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl leading-tight">
                   {posicion.titulo}
-                </h1>
+                </AnimatedHeading>
                 <Badge variant="outline" className={`text-xs shrink-0 ${estadoCls}`}>
                   {posicion.estado}
                 </Badge>
@@ -235,7 +239,7 @@ export default function PosicionDetallePage() {
           {isOwner && (
             <div className="mt-4 flex gap-3">
               <Link href={`/mis-posiciones/${posicion.id}/aplicantes`} className="flex-1">
-                <Button className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Users className="w-4 h-4 mr-2" />
                   Gestionar aplicantes ({posicion.aplicantes})
                 </Button>
@@ -249,7 +253,7 @@ export default function PosicionDetallePage() {
               <Button
                 disabled={applying}
                 onClick={aplicar}
-                className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-3 text-base"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base"
               >
                 {applying ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando aplicación...</>
@@ -286,9 +290,9 @@ export default function PosicionDetallePage() {
 
         {/* Publicado por */}
         {posicion.exalumno.nombre && (
-          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4 sm:p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Publicado por</p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               {posicion.exalumno.foto_url ? (
                 <Image
                   src={posicion.exalumno.foto_url}
@@ -304,13 +308,13 @@ export default function PosicionDetallePage() {
                   </span>
                 </div>
               )}
-              <div>
+              <div className="flex-1 min-w-0">
                 {posicion.exalumno.id ? (
-                  <Link href={`/perfil/${posicion.exalumno.id}`} className="font-semibold text-slate-800 dark:text-slate-100 hover:text-[#0f4c81]">
+                  <Link href={`/perfil/${posicion.exalumno.id}`} className="font-semibold text-slate-800 dark:text-slate-100 hover:text-[#0f4c81] break-words">
                     {posicion.exalumno.nombre}
                   </Link>
                 ) : (
-                  <p className="font-semibold text-slate-800 dark:text-slate-100">{posicion.exalumno.nombre}</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100 break-words">{posicion.exalumno.nombre}</p>
                 )}
                 {posicion.exalumno.cargo_actual && (
                   <p className="text-sm text-slate-500">{posicion.exalumno.cargo_actual}</p>
@@ -328,6 +332,6 @@ export default function PosicionDetallePage() {
           </Card>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

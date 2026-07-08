@@ -8,6 +8,7 @@ import { Landmark } from "lucide-react";
 
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { UserDropdown } from "./UserDropdown";
+import { ThemeToggle } from "@/components/fu/ThemeToggle";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
@@ -45,6 +46,31 @@ function ExchangeRateBadge() {
   );
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrador",
+  EXALUMNO: "Exalumno",
+  ESTUDIANTE: "Estudiante",
+};
+
+function RoleBadge() {
+  const { data: session } = useSession();
+  const tipo = (session?.user as any)?.tipo ?? (session?.user as any)?.role;
+  const role = typeof tipo === "string" ? tipo.toUpperCase() : null;
+  const label = role ? ROLE_LABELS[role] : null;
+
+  if (!label) return null;
+
+  return (
+    <span
+      className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white px-3 py-1.5 rounded-full shadow-sm"
+      style={{ backgroundColor: "var(--fu-sidebar)" }}
+      title={`Estás conectado como ${label}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function TopBar({ title, titleKey }: TopBarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -73,17 +99,20 @@ export function TopBar({ title, titleKey }: TopBarProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+
           {!session && (
             <Link href="/login">
               <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
-                {mounted && t("topbar.login" as any) !== "topbar.login" ? t("topbar.login" as any) : "Iniciar Sesión"}
+                {t("topbar.login")}
               </Button>
             </Link>
           )}
 
           {session && (
             <>
+              <RoleBadge />
               <ExchangeRateBadge />
               <NotificationsDropdown />
               <UserDropdown />

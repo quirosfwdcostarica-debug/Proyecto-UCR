@@ -7,10 +7,14 @@ import Link from "next/link";
 import {
   Heart, MessageCircle, Trash2, ImageIcon, Loader2, Send, X, User as UserIcon, Globe2,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/use-toast";
 import { useDialog } from "@/hooks/useDialog";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { SunflowerImage } from "@/components/fu/SunflowerImage";
 import {
   getFeed, crearPublicacion, eliminarPublicacion,
   toggleReaccion, getComentarios, agregarComentario, eliminarComentario,
@@ -138,8 +142,8 @@ function Composer({ onPublished }: { onPublished: () => void }) {
       />
 
       {imagenUrl && (
-        <div className="relative mt-3 inline-block">
-          <img src={imagenUrl} alt="Adjunto" className="max-h-52 rounded-xl border border-slate-200 dark:border-slate-700" />
+        <div className="relative mt-3 inline-block max-w-full">
+          <img src={imagenUrl} alt="Adjunto" className="max-h-52 max-w-full w-auto rounded-xl border border-slate-200 dark:border-slate-700" />
           <button
             onClick={() => { setImagenUrl(null); if (fileRef.current) fileRef.current.value = ""; }}
             className="absolute -top-2 -right-2 bg-slate-800 text-white rounded-full p-1 shadow-md hover:bg-slate-900"
@@ -159,7 +163,7 @@ function Composer({ onPublished }: { onPublished: () => void }) {
         <Button
           onClick={handlePublicar}
           disabled={publicando || subiendo || (!contenido.trim() && !imagenUrl)}
-          className="bg-[#005da4] hover:bg-[#004a83] text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {publicando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
           {publicando ? "Publicando..." : "Publicar"}
@@ -228,7 +232,7 @@ function Comentarios({ publicacionId, onCountChange }: { publicacionId: string; 
           maxLength={1000}
           className="flex-1 px-3 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none focus:border-[#005da4]"
         />
-        <Button size="sm" onClick={handleEnviar} disabled={enviando || !nuevo.trim()} className="bg-[#005da4] hover:bg-[#004a83] text-white rounded-full px-4">
+        <Button size="sm" onClick={handleEnviar} disabled={enviando || !nuevo.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-4">
           {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
@@ -334,20 +338,28 @@ function PublicacionCard({ pub, onChange }: { pub: Publicacion; onChange: () => 
         <p className="text-sm text-slate-700 dark:text-slate-300 mt-3 whitespace-pre-wrap break-words">{pub.contenido}</p>
       )}
       {pub.imagen_url && (
-        <img src={pub.imagen_url} alt="Publicación" className="mt-3 rounded-xl border border-slate-100 dark:border-slate-800 max-h-[500px] w-auto" />
+        <img src={pub.imagen_url} alt="Publicación" className="mt-3 rounded-xl border border-slate-100 dark:border-slate-800 max-h-[500px] max-w-full w-auto" />
       )}
 
       <div className="flex items-center gap-5 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-        <button
+        <motion.button
           onClick={handleLike}
+          whileTap={{ scale: 0.85 }}
           className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
             reaccionado ? "text-red-500" : "text-slate-500 hover:text-red-500"
           }`}
         >
-          <Heart className={`w-4 h-4 ${reaccionado ? "fill-red-500" : ""}`} />
+          <motion.span
+            key={reaccionado ? "on" : "off"}
+            initial={{ scale: reaccionado ? 0.6 : 1 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 15 }}
+          >
+            <Heart className={`w-4 h-4 ${reaccionado ? "fill-red-500" : ""}`} />
+          </motion.span>
           {totalReacciones > 0 && totalReacciones}
           <span className="hidden sm:inline">Me gusta</span>
-        </button>
+        </motion.button>
         <button
           onClick={() => setMostrarComentarios((v) => !v)}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-[#005da4] transition-colors"
@@ -405,39 +417,60 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-6 md:p-10">
+    <ParallaxBackground className="min-h-full p-6 md:p-10">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div>
-          <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1 flex items-center gap-1.5">
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        >
+          <p className="text-xs font-bold text-[#005da4] dark:text-fu-blue-sky tracking-wider uppercase mb-1 flex items-center gap-1.5">
             <Globe2 className="w-3.5 h-3.5" /> Comunidad UCR
           </p>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Feed de la Comunidad</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl md:text-3xl">
+            Feed de la Comunidad
+          </AnimatedHeading>
+          <p className="fu-text-2 text-sm mt-1">
             Conecta con estudiantes y exalumnos de la UCR: comparte logros, oportunidades y consejos.
           </p>
-        </div>
+        </motion.div>
 
         {puedePublicar && <Composer onPublished={load} />}
         {esAdmin && (
-          <div className="text-xs text-slate-500 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3">
+          <div className="text-xs text-slate-500 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3">
             Estás viendo el feed como <span className="font-semibold">administrador</span>. Puedes eliminar cualquier publicación o comentario para moderar la comunidad.
           </div>
         )}
 
         {publicaciones.length === 0 ? (
-          <div className="flex flex-col items-center py-20 text-center text-slate-400">
-            <UserIcon className="w-10 h-10 mb-3 opacity-30" />
-            <p className="font-semibold text-slate-500">Todavía no hay publicaciones.</p>
-            <p className="text-sm mt-1">¡Sé el primero en compartir algo con la comunidad!</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center py-14 text-center"
+          >
+            <SunflowerImage size={240} />
+            <p className="font-semibold fu-text mt-4">Todavía no hay publicaciones.</p>
+            <p className="text-sm mt-1 fu-muted">¡Sé el primero en compartir algo con la comunidad!</p>
+          </motion.div>
         ) : (
-          <div className="space-y-4">
-            {publicaciones.map((pub) => (
-              <PublicacionCard key={pub.id} pub={pub} onChange={load} />
-            ))}
-          </div>
+          <motion.div layout className="space-y-4">
+            <AnimatePresence initial={false}>
+              {publicaciones.map((pub, i) => (
+                <motion.div
+                  key={pub.id}
+                  layout
+                  initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -40, scale: 0.96 }}
+                  transition={{ duration: 0.35, delay: Math.min(i, 6) * 0.05, ease: [0.25, 1, 0.5, 1] }}
+                >
+                  <PublicacionCard pub={pub} onChange={load} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

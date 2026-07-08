@@ -23,6 +23,10 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { SunflowerImage } from "@/components/fu/SunflowerImage";
 // ============================================================
 // Constantes de pago (configurables)
 // ============================================================
@@ -199,7 +203,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
-          className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -213,7 +217,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
             <Clock className="w-4 h-4 mr-1.5" />
             Estado: En revisión
           </Badge>
-          <Button onClick={onClose} className="w-full mt-6 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white">
+          <Button onClick={onClose} className="w-full mt-6 bg-primary dark:bg-sky-600 hover:bg-primary/90 dark:hover:bg-sky-700 text-primary-foreground">
             Cerrar
           </Button>
         </div>
@@ -228,17 +232,17 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-          <div>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+          <div className="min-w-0">
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Solicitar Donación</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Proyecto: {proyecto.nombre}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">Proyecto: {proyecto.nombre}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
             <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5">
           {/* Monto + Moneda */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
@@ -340,15 +344,15 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
             {/* Método de pago */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Método de pago <span className="text-red-500">*</span></label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {([["SINPE", "SINPE Móvil", Smartphone], ["TRANSFERENCIA", "Transferencia (IBAN)", CreditCard]] as const).map(([val, label, Icon]) => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => setMetodo(val)}
-                    className={`h-11 rounded-lg text-sm font-semibold border flex items-center justify-center gap-2 transition-all ${
+                    className={`min-h-[44px] py-2 px-2 rounded-lg text-sm font-semibold border flex items-center justify-center gap-2 transition-all ${
                       metodo === val
-                        ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#0f4c81]/40"
                     }`}
                   >
@@ -399,7 +403,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
                 type="file"
                 accept="image/jpeg,image/png,image/webp,application/pdf"
                 onChange={handleFileChange}
-                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#0f4c81] file:text-white hover:file:bg-[#0b3a63] cursor-pointer"
+                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
               />
               {archivo && (
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1.5 flex items-center gap-1">
@@ -421,7 +425,7 @@ Condiciones: ${condiciones.trim() || 'Ninguna'}`;
           <Button
             type="submit"
             disabled={uploading}
-            className="w-full h-12 bg-[#0f4c81] dark:bg-sky-600 hover:bg-[#0b3a63] dark:hover:bg-sky-700 text-white font-semibold text-base"
+            className="w-full h-12 bg-primary dark:bg-sky-600 hover:bg-primary/90 dark:hover:bg-sky-700 text-primary-foreground font-semibold text-base"
           >
             {uploading ? (
               <>
@@ -491,16 +495,16 @@ export default function DonacionesPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-      </div>
+      <ParallaxBackground className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+      </ParallaxBackground>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
+    <ParallaxBackground className="min-h-screen">
 
-      <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-8">
         {/* ====== VISTA PARA ESTUDIANTES ====== */}
         {(!session || role === "ESTUDIANTE") && (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4">
@@ -525,64 +529,89 @@ export default function DonacionesPage() {
         {(role === "EXALUMNO" || role === "ADMIN") && (
           <>
             {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-[#0f4c81] dark:text-sky-400">Apoya Proyectos Estudiantiles</h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1">
+            <motion.div
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+            >
+              <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">
+                Comunidad UCR · Donaciones
+              </p>
+              <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">
+                Apoya Proyectos Estudiantiles
+              </AnimatedHeading>
+              <p className="fu-text-2 mt-1">
                 Tu donación impulsa el talento y la investigación de la UCR.
               </p>
-            </div>
+            </motion.div>
 
             {/* Grid de proyectos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {loadingProyectos ? (
-                <div className="col-span-full text-center py-10 text-slate-500">Cargando proyectos...</div>
+                <div className="col-span-full text-center py-10 fu-muted">Cargando proyectos...</div>
               ) : proyectos.length === 0 ? (
-                <div className="col-span-full text-center py-10 text-slate-500">No hay proyectos buscando financiamiento en este momento.</div>
-              ) : proyectos.map((proyecto) => (
-                <Card key={proyecto.id} className="bg-white dark:bg-slate-900 border-border dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
+                <div className="col-span-full flex flex-col items-center py-10 text-center">
+                  <SunflowerImage size={220} />
+                  <p className="fu-text-2 mt-4">No hay proyectos buscando financiamiento en este momento.</p>
+                </div>
+              ) : proyectos.map((proyecto, i) => (
+                <motion.div
+                  key={proyecto.id}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.4, delay: Math.min(i, 8) * 0.06, ease: [0.25, 1, 0.5, 1] }}
+                  whileHover={{ y: -6 }}
+                  className="h-full"
+                >
+                  <Card className="h-full flex flex-col bg-white dark:bg-slate-900 border-border dark:border-slate-800 shadow-sm hover:shadow-fu-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                            {proyecto.nombre}
+                          </CardTitle>
+                          <p className="text-xs text-[#0f4c81] dark:text-sky-400 font-semibold mt-1">{proyecto.carrera}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4 flex flex-col flex-1">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{proyecto.descripcion}</p>
                       <div>
-                        <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">
-                          {proyecto.nombre}
-                        </CardTitle>
-                        <p className="text-xs text-[#0f4c81] dark:text-sky-400 font-semibold mt-1">{proyecto.carrera}</p>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-slate-400 dark:text-slate-500">Avance del proyecto</span>
+                          <span className="font-bold text-[#0f4c81] dark:text-sky-400">{proyecto.avance}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <motion.div
+                            className="bg-gradient-to-r from-[#005da4] to-[#00c0f3] h-1.5 rounded-full"
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${proyecto.avance}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{proyecto.descripcion}</p>
-                    <div>
-                      <div className="flex justify-between text-xs mb-1.5">
-                        <span className="text-slate-400 dark:text-slate-500">Avance del proyecto</span>
-                        <span className="font-bold text-[#0f4c81] dark:text-sky-400">{proyecto.avance}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                        <div
-                          className="bg-[#0f4c81] dark:bg-sky-500 h-1.5 rounded-full transition-all"
-                          style={{ width: `${proyecto.avance}%` }}
+
+                      {proyecto.montoObjetivo > 0 && (
+                        <FundingProgressBar
+                          objetivo={proyecto.montoObjetivo}
+                          objetivoUsd={proyecto.montoObjetivoUsd}
+                          recaudado={proyecto.montoRecaudado}
+                          variant="donor"
                         />
-                      </div>
-                    </div>
+                      )}
 
-                    {proyecto.montoObjetivo > 0 && (
-                      <FundingProgressBar
-                        objetivo={proyecto.montoObjetivo}
-                        objetivoUsd={proyecto.montoObjetivoUsd}
-                        recaudado={proyecto.montoRecaudado}
-                        variant="donor"
-                      />
-                    )}
-
-                    <Button
-                      onClick={() => setProyectoSeleccionado(proyecto)}
-                      className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white"
-                    >
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Solicitar donar a este proyecto
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <Button
+                        onClick={() => setProyectoSeleccionado(proyecto)}
+                        className="w-full mt-auto text-white shiny-button bg-gradient-to-r from-[#0f4c81] to-[#00c0f3] hover:opacity-95"
+                      >
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Solicitar donar a este proyecto
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
 
@@ -691,6 +720,6 @@ export default function DonacionesPage() {
           }}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

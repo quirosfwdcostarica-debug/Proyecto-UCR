@@ -42,7 +42,7 @@ export function AppSidebar() {
 
   if (status === "loading" || role === null) {
     return (
-      <aside className="fixed top-0 left-0 h-screen w-20 bg-[#005da4] dark:bg-slate-950 border-none flex flex-col z-30 shadow-2xl">
+      <aside className="fixed top-0 left-0 h-screen w-20 bg-[var(--fu-sidebar)] border-none flex flex-col z-30 shadow-2xl">
         <div className="px-4 pt-5 pb-4 flex items-center justify-center border-b border-white/10">
           <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain brightness-0 invert" />
         </div>
@@ -109,23 +109,19 @@ export function AppSidebar() {
 
   // ── CLASSES ──────────────────────────────────────────────────────────────────
 
-  const isAdmin = role === "ADMIN";
-  
   // A much more obvious active state so the user can tell it changed
-  const activeCls = isAdmin 
-    ? "bg-white text-red-600 shadow-md font-bold scale-[1.02]" 
-    : "bg-white text-[#003b73] shadow-md font-bold scale-[1.02]";
+  const activeCls = "bg-white text-[var(--fu-sidebar)] shadow-md font-bold scale-[1.02]";
 
   const linkCls =
     "relative flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold text-white/70 hover:bg-white/10 transition-all duration-300 w-full group/link hover:translate-x-2";
 
-  // Admin accent color
-  const accentCls = isAdmin
-    ? "bg-red-900/40 border-b-2 border-red-500/30"
-    : "bg-transparent border-b-2 border-white/10";
+  const accentCls = "bg-black/10 border-b-2 border-white/15";
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-[#003b73] dark:bg-slate-950 backdrop-blur-2xl flex flex-col z-30 transition-all duration-500 ease-out group shadow-[8px_0_30px_rgba(0,0,0,0.15)] hover:shadow-[16px_0_40px_rgba(0,0,0,0.2)] overflow-hidden">
+    <aside
+      onMouseLeave={() => setOpenSubmenu(null)}
+      className="fixed top-0 left-0 h-screen w-20 hover:w-64 bg-[var(--fu-sidebar)] backdrop-blur-2xl flex flex-col z-30 transition-all duration-500 ease-out group shadow-[8px_0_30px_rgba(0,0,0,0.15)] hover:shadow-[16px_0_40px_rgba(0,0,0,0.2)] overflow-hidden"
+    >
       {/* Logo */}
       <div className={`px-4 group-hover:px-6 pt-6 pb-5 flex flex-col items-center group-hover:items-start gap-2 group-hover:gap-0 transition-all duration-300 ${accentCls}`}>
         <img
@@ -139,10 +135,15 @@ export function AppSidebar() {
               <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white">ADMIN UCR</h1>
               <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70">Panel Administrativo</p>
             </>
-          ) : (
+          ) : role === "EXALUMNO" ? (
             <>
               <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white">EXALUMNOS U</h1>
               <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70">Impacto y Legado</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-sm group-hover:text-base font-extrabold tracking-tight text-white">ESTUDIANTE UCR</h1>
+              <p className="text-[9px] group-hover:text-[10px] font-semibold text-white/70">Talento en Formación</p>
             </>
           )}
         </div>
@@ -161,14 +162,15 @@ export function AppSidebar() {
 
           if (item.children) {
             const anyChildActive = item.children.some((c) => pathname.startsWith(c.href));
+            const parentActive = anyChildActive || isSubmenuOpen;
             return (
               <div key={itemKey}>
                 <button
                   onClick={() => toggleSubmenu(itemKey)}
-                  className={`${linkCls} ${anyChildActive || isSubmenuOpen ? activeCls : ""}`}
+                  className={`${linkCls} ${parentActive ? activeCls : ""}`}
                 >
-                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? (isAdmin ? "text-red-600" : "text-[#003b73]") : "text-white/70 group-hover/link:text-white"}`} />
-                  <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left ${isActive ? "" : "group-hover/link:bg-clip-text group-hover/link:text-transparent group-hover/link:bg-gradient-to-r group-hover/link:from-cyan-400 group-hover/link:via-yellow-400 group-hover/link:to-pink-400 group-hover/link:font-extrabold"}`}>
+                  <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${parentActive ? "text-[var(--fu-sidebar)]" : "text-white/70 group-hover/link:text-white"}`} />
+                  <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden flex-1 text-left ${parentActive ? "text-[var(--fu-sidebar)] font-bold" : "group-hover/link:bg-clip-text group-hover/link:text-transparent group-hover/link:bg-gradient-to-r group-hover/link:from-cyan-400 group-hover/link:via-yellow-400 group-hover/link:to-pink-400 group-hover/link:font-extrabold"}`}>
                     {displayLabel}
                   </span>
                   <ChevronDown
@@ -176,7 +178,7 @@ export function AppSidebar() {
                   />
                 </button>
                 {isSubmenuOpen && (
-                  <div className="opacity-0 group-hover:opacity-100 h-0 group-hover:h-auto overflow-hidden transition-all duration-300 ml-4 mt-1 space-y-1 border-l-2 border-white/20 pl-3">
+                  <div className="overflow-hidden transition-all duration-300 ml-4 mt-1 space-y-1 border-l-2 border-white/20 pl-3">
                     {item.children.map((child) => {
                       const childLabel = child.label ?? t(child.labelKey!);
                       return (
@@ -185,7 +187,7 @@ export function AppSidebar() {
                           href={child.href}
                           className={`block text-xs font-semibold py-1.5 px-2 rounded-md whitespace-nowrap transition-colors group/subitem ${pathname === child.href ? "bg-white shadow-md" : "text-sky-100 hover:bg-white hover:shadow-md dark:hover:bg-slate-800"}`}
                         >
-                          <span className={pathname === child.href ? "font-bold text-[#003b73]" : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-400 group-hover/subitem:via-yellow-400 group-hover/subitem:to-pink-400 group-hover/subitem:font-extrabold"}>
+                          <span className={pathname === child.href ? "font-bold text-[var(--fu-sidebar)]" : "group-hover/subitem:bg-clip-text group-hover/subitem:text-transparent group-hover/subitem:bg-gradient-to-r group-hover/subitem:from-cyan-400 group-hover/subitem:via-yellow-400 group-hover/subitem:to-pink-400 group-hover/subitem:font-extrabold"}>
                             {childLabel}
                           </span>
                         </Link>
@@ -203,7 +205,7 @@ export function AppSidebar() {
               href={item.href!}
               className={`${linkCls} ${isActive ? activeCls : ""}`}
             >
-              <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? (isAdmin ? "text-red-600" : "text-[#003b73]") : "text-white/70 group-hover/link:text-white"}`} />
+              <item.icon className={`h-5 w-5 shrink-0 transition-all duration-300 group-hover/link:scale-110 ${isActive ? "text-[var(--fu-sidebar)]" : "text-white/70 group-hover/link:text-white"}`} />
               <span className={`opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto transition-all duration-300 whitespace-nowrap overflow-hidden ${isActive ? "" : "group-hover/link:bg-clip-text group-hover/link:text-transparent group-hover/link:bg-gradient-to-r group-hover/link:from-cyan-400 group-hover/link:via-yellow-400 group-hover/link:to-pink-400 group-hover/link:font-extrabold"}`}>
                 {displayLabel}
               </span>
