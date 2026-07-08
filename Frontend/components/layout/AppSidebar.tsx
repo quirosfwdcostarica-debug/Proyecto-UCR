@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Briefcase, Heart, UserCircle,
   Settings, HelpCircle, FolderOpen, ChevronDown, Handshake,
   FileBarChart2, Receipt, ClipboardList, FileText, HeartHandshake,
-  GraduationCap, Globe2,
+  GraduationCap, Globe2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
@@ -66,12 +66,14 @@ export function AppSidebar() {
     { label: "Voluntariado UCR",   href: "/admin/voluntariados", icon: HeartHandshake },
     { label: "Talleres",           href: "/admin/talleres",   icon: GraduationCap },
     { label: "Feed Comunidad",     href: "/feed",             icon: Globe2 },
+    { label: "Semana UCR",         href: "/semana-u",         icon: Sparkles },
     { label: "Reportes",           href: "/admin/reportes",   icon: FileBarChart2 },
   ];
 
     const exalumnoNav: NavItem[] = [
     { labelKey: "sidebar.dashboard",          href: "/",                       icon: LayoutDashboard },
     { labelKey: "sidebar.feed",               href: "/feed",                   icon: Globe2 },
+    { labelKey: "sidebar.semanaU",            href: "/semana-u",               icon: Sparkles },
     { labelKey: "sidebar.directory.student",  href: "/directorio/estudiantes", icon: Users },
     { labelKey: "sidebar.positions.own",      href: "/mis-posiciones",          icon: Briefcase },
     { labelKey: "sidebar.donations.exalumno", href: "/donaciones",              icon: Heart },
@@ -84,6 +86,7 @@ export function AppSidebar() {
   const estudianteNav: NavItem[] = [
     { labelKey: "sidebar.dashboard",            href: "/",                     icon: LayoutDashboard },
     { labelKey: "sidebar.feed",                 href: "/feed",                 icon: Globe2 },
+    { labelKey: "sidebar.semanaU",              href: "/semana-u",             icon: Sparkles },
     { labelKey: "sidebar.directory.exalumno",   href: "/directorio/exalumnos", icon: Users },
     { labelKey: "sidebar.positions.student",    href: "/posiciones",            icon: Briefcase },
     { labelKey: "sidebar.applications.student", href: "/mis-aplicaciones",      icon: ClipboardList },

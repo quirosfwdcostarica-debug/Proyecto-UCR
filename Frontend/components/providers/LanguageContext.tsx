@@ -36,6 +36,7 @@ export type TranslationKeys =
   | "sidebar.project.new"
   | "sidebar.project.view"
   | "sidebar.admin"
+  | "sidebar.semanaU"
   | "topbar.login"
   | "auth.tagline"
   | "auth.backToDashboard"
@@ -216,6 +217,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.help": "Ayuda",
     "sidebar.startProject": "Iniciar un Proyecto",
     "sidebar.admin": "Administración",
+    "sidebar.semanaU": "Semana UCR",
     "topbar.login": "Iniciar Sesión",
     "auth.tagline": "Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.",
     "auth.backToDashboard": "Volver al Dashboard",
@@ -395,6 +397,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.help": "Help",
     "sidebar.startProject": "Start a Project",
     "sidebar.admin": "Administration",
+    "sidebar.semanaU": "UCR Week",
     "topbar.login": "Log In",
     "auth.tagline": "Connecting talent, fostering legacy, and building the future of our university community.",
     "auth.backToDashboard": "Back to Dashboard",
@@ -574,6 +577,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.help": "Ajuda",
     "sidebar.startProject": "Iniciar um Projeto",
     "sidebar.admin": "Administração",
+    "sidebar.semanaU": "Semana UCR",
     "topbar.login": "Entrar",
     "auth.tagline": "Conectando talentos, promovendo o legado e construindo o futuro da nossa comunidade universitária.",
     "auth.backToDashboard": "Voltar ao Painel",
@@ -753,6 +757,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.help": "Aide",
     "sidebar.startProject": "Démarrer un Projet",
     "sidebar.admin": "Administration",
+    "sidebar.semanaU": "Semaine UCR",
     "topbar.login": "Se Connecter",
     "auth.tagline": "Connecter les talents, favoriser l'héritage et construire l'avenir de notre communauté universitaire.",
     "auth.backToDashboard": "Retour au Tableau de Bord",
