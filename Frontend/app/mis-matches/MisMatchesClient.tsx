@@ -67,9 +67,11 @@ function toBreakdown(d: Desglose | null) {
 export default function MisMatchesClient({
   matches: initial,
   posiciones = [],
+  currentUserId
 }: {
   matches: Match[];
   posiciones?: PosicionSugerida[];
+  currentUserId: string;
 }) {
   const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
@@ -230,7 +232,7 @@ export default function MisMatchesClient({
             const isClosed  = match.status === "CERRADO";
             // El exalumno ofreció ayuda: el estudiante debe aceptar/rechazar
             const exalumnoOfrece =
-              match.status === "CONTACTADO" && match.initiated_by === "exalumno";
+              match.status === "CONTACTADO" && match.initiated_by === currentUserId;
 
             return (
               <motion.div
