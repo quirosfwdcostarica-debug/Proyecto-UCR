@@ -18,11 +18,12 @@ function parseDesglose(tipoApoyo: string | null): Desglose | null {
 
 export default async function MatchesExalumnoPage() {
   let matches: any[] = [];
+  let userId = "";
 
   try {
     const session = await auth();
     if (session?.user?.id) {
-      const userId = session.user.id;
+      userId = session.user.id;
 
       const { createClient } = require("@supabase/supabase-js");
       const supabaseAdmin = createClient(
@@ -61,7 +62,7 @@ export default async function MatchesExalumnoPage() {
         estudiante: {
           user: { name: m.estudiante?.user?.nombre ?? null },
           carrera: m.estudiante?.carrera ?? "",
-          avanceProyecto: m.score_match ?? 0,
+          avanceProyecto: m.estudiante?.proyecto_porcentaje_avance ?? 0,
           apoyoBuscado: [
             m.estudiante?.busca_mentoria       ? "Mentoría"       : null,
             m.estudiante?.busca_empleo         ? "Empleo"         : null,
@@ -77,7 +78,7 @@ export default async function MatchesExalumnoPage() {
 
   return (
     <Suspense fallback={<div className="p-12 text-center text-muted-foreground">Cargando matches...</div>}>
-      <MatchesExalumnoClient matches={matches} />
+      <MatchesExalumnoClient matches={matches} currentUserId={userId} />
     </Suspense>
   );
 }

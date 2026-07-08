@@ -293,7 +293,7 @@ export default function DirectorioEstudiantes() {
     getMatchesForExalumno().then((matches: any[]) => {
       const offered: Record<string, string> = {};
       for (const m of matches) {
-        if (m.estado === "CONTACTADO" && m.initiated_by === "exalumno") {
+        if (m.estado === "CONTACTADO" && m.initiated_by === session?.user?.id) {
           offered[m.estudiante_id] = m.id;
         }
       }

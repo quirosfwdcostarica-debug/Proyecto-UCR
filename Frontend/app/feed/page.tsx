@@ -410,7 +410,7 @@ export default function FeedPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full flex items-center justify-center py-24">
+      <div className="min-h-[80vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#005da4]" />
       </div>
     );
@@ -433,6 +433,36 @@ export default function FeedPage() {
           <p className="fu-text-2 text-sm mt-1">
             Conecta con estudiantes y exalumnos de la UCR: comparte logros, oportunidades y consejos.
           </p>
+        </motion.div>
+
+        {/* Banner de Semana U */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="p-5 bg-gradient-to-r from-[#005da4] via-indigo-900 to-purple-950 text-white border-none shadow-md overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-400/20 to-transparent pointer-events-none rounded-full blur-xl group-hover:scale-110 transition-transform duration-700" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+              <div className="space-y-1">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
+                  🎉 ¡Próximamente!
+                </span>
+                <h2 className="text-base font-extrabold flex items-center gap-1.5">
+                  Semana UCR 2026
+                </h2>
+                <p className="text-xs text-white/80 max-w-md">
+                  Del 20 al 26 de abril de 2026. Conoce el cronograma de actividades, partidos tradicionales y el cartel de conciertos.
+                </p>
+              </div>
+              <Link href="/semana-u">
+                <Button size="sm" className="bg-white hover:bg-slate-100 text-[#005da4] font-bold rounded-xl flex items-center gap-1 text-xs shrink-0 shadow-sm transition-all hover:translate-x-1">
+                  Ver Cronograma
+                  <span className="text-xs">→</span>
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </motion.div>
 
         {puedePublicar && <Composer onPublished={load} />}

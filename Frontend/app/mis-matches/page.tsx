@@ -46,7 +46,16 @@ export default async function MisMatchesPage() {
           exalumno: {
             carrera: exa?.carrera,
             sector: exa?.sector,
-            apoyo_ofrecido: [],
+            apoyo_ofrecido: [
+              ...(exa?.ofrece_mentoria ? ["Mentoría"] : []),
+              ...(exa?.ofrece_empleo ? ["Empleo"] : []),
+              ...(exa?.ofrece_pasantia ? ["Pasantías"] : []),
+              ...(exa?.ofrece_donacion_dinero ? ["Financiamiento"] : []),
+              ...(exa?.ofrece_guest_speaking ? ["Charla"] : []),
+              ...(exa?.ofrece_volunteering ? ["Voluntariado"] : []),
+              ...(exa?.ofrece_career_advice ? ["Consejo de Carrera"] : []),
+              ...(exa?.ofrece_networking ? ["Networking"] : []),
+            ],
             user: usr ? { nombre: usr.nombre, foto_url: usr.foto_url, email: usr.email } : null
           }
         };
@@ -61,10 +70,20 @@ export default async function MisMatchesPage() {
 
 
     // Normalize for the client
-    matches = matches.map((m: any) => ({
-      id: m.id,
-      afinidad: m.score_match || 0,
-      desglose: m.desglose_score ? (typeof m.desglose_score === "string" ? JSON.parse(m.desglose_score) : m.desglose_score) : null,
+    matches = matches.map((m: any) => {
+      let parsedReasons = null;
+      if (typeof m.match_reasons === "string") {
+        try { parsedReasons = JSON.parse(m.match_reasons); } catch(e){}
+      } else if (m.match_reasons) {
+        parsedReasons = m.match_reasons;
+      }
+      
+      const desglose = (parsedReasons as any)?.desglose || null;
+
+      return {
+        id: m.id,
+        afinidad: m.score_match || 0,
+        desglose: desglose,
       status: m.estado,
       initiated_by: m.initiated_by,
       exalumno: m.exalumno ? {
@@ -80,10 +99,11 @@ export default async function MisMatchesPage() {
         apoyoBuscado: m.estudiante.apoyo_buscado || [],
         user: { name: m.estudiante.user?.nombre, image: m.estudiante.user?.foto_url }
       } : null,
-    }));
+      };
+    });
   } catch (error) {
     console.error("Error fetching matches:", error);
   }
 
-  return <MisMatchesClient matches={matches} posiciones={posiciones} />;
+  return <MisMatchesClient matches={matches} posiciones={posiciones} currentUserId={userId!} />;
 }

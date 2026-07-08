@@ -16,14 +16,14 @@ export async function POST(req: Request) {
     // T-18: activo=false → perfil pausado, no debe recibir nuevas sugerencias.
     const { data: estudiantesRaw } = await supabaseAdmin
       .from("ESTUDIANTES")
-      .select("user_id, carrera, proyecto_tipo, busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento")
+      .select("user_id, carrera, escuela_facultad, area_tematica, proyecto_tipo, habilidades, busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento")
       .eq("activo", true);
       
     // Traer exalumnos activos
     const { data: exalumnosRaw } = await supabaseAdmin
       .from("EXALUMNOS")
       .select(`
-        user_id, escuela_facultad, 
+        user_id, carrera, escuela_facultad, sector, habilidades,
         ofrece_mentoria, ofrece_empleo, ofrece_pasantia, ofrece_donacion_dinero, 
         ofrece_guest_speaking, ofrece_volunteering, ofrece_career_advice, ofrece_networking,
         user:USERS!EXALUMNOS_user_id_fkey!inner(activo, status)
@@ -34,8 +34,19 @@ export async function POST(req: Request) {
     const estudiantes = estudiantesRaw ?? [];
     const exalumnos = exalumnosRaw ?? [];
 
-    // T-11: áreas de interés desde la tabla relacional USUARIOS_AREAS (antes
-    // siempre quedaban como [] hardcodeado y nunca influían en el score).
+    const parseJsonArray = (val: any): string[] => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === "string") {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+      return [];
+    };
+
+    // T-11: áreas de interés desde la tabla relacional USUARIOS_AREAS
     const todosLosIds = [...estudiantes.map((e) => e.user_id), ...exalumnos.map((e) => e.user_id)];
     const { data: areasRaw } = await supabaseAdmin
       .from("USUARIOS_AREAS")
@@ -55,20 +66,24 @@ export async function POST(req: Request) {
       for (const exa of exalumnos) {
         const estCompat = {
           carrera: est.carrera || "",
+          escuela_facultad: est.escuela_facultad || "",
+          habilidades: parseJsonArray(est.habilidades),
           apoyoBuscado: [
             ...(est.busca_mentoria ? ["mentoria"] : []),
             ...(est.busca_empleo ? ["empleo"] : []),
             ...(est.busca_pasantia ? ["pasantia"] : []),
             ...(est.busca_financiamiento ? ["financiamiento"] : []),
           ],
-          areaProyecto: est.proyecto_tipo || null,
+          areaProyecto: est.proyecto_tipo || est.area_tematica || null,
           areasInteres: areasPorUsuario.get(est.user_id) ?? [],
         };
 
         const exaCompat = {
-          carrera: exa.escuela_facultad || "",
-          sector: null as string | null,
+          carrera: exa.carrera || "",
+          escuela_facultad: exa.escuela_facultad || "",
+          sector: exa.sector || null,
           areasInteres: areasPorUsuario.get(exa.user_id) ?? [],
+          habilidades: parseJsonArray(exa.habilidades),
           apoyoOfrecido: [
             ...(exa.ofrece_mentoria ? ["mentoria"] : []),
             ...(exa.ofrece_empleo ? ["empleo"] : []),

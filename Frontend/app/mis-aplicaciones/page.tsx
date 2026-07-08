@@ -88,7 +88,7 @@ export default function MisAplicacionesPage() {
   }
 
   if (status === "loading" || loading) return (
-    <ParallaxBackground className="min-h-full flex items-center justify-center">
+    <ParallaxBackground className="min-h-[80vh] flex items-center justify-center">
       <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
     </ParallaxBackground>
   );
