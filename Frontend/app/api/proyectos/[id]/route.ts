@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { extractMontoObjetivo } from "@/lib/funding";
+import { getExchangeRate, usdToCrc } from "@/lib/exchangeRate";
 
 // GET — vista pública del proyecto de un estudiante específico (por su user_id)
 export async function GET(
@@ -32,6 +34,20 @@ export async function GET(
     if (!estudiante.visible_en_directorio || !estudiante.proyecto_titulo)
       return NextResponse.json({ message: "Proyecto no disponible" }, { status: 404 });
 
+    const montoObjetivoUsd = extractMontoObjetivo(estudiante.proyecto_necesidades);
+    let montoObjetivo = 0;
+    let montoRecaudado = 0;
+    if (estudiante.busca_financiamiento && montoObjetivoUsd > 0) {
+      const rate = await getExchangeRate();
+      montoObjetivo = usdToCrc(montoObjetivoUsd, rate);
+      const { data: donaciones } = await supabaseAdmin
+        .from("DONACIONES")
+        .select("monto")
+        .eq("proyecto_estudiante_id", params.id)
+        .eq("estado", "CONFIRMADA");
+      montoRecaudado = (donaciones ?? []).reduce((sum, d: any) => sum + Number(d.monto), 0);
+    }
+
     return NextResponse.json({
       studentId: params.id,
       nombre: u?.nombre,
@@ -49,6 +65,9 @@ export async function GET(
       busca_mentoria: !!estudiante.busca_mentoria,
       busca_empleo: !!estudiante.busca_empleo,
       busca_pasantia: !!estudiante.busca_pasantia,
+      montoObjetivo,
+      montoObjetivoUsd,
+      montoRecaudado,
     });
   } catch (error) {
     console.error("[GET /api/proyectos/[id]]", error);

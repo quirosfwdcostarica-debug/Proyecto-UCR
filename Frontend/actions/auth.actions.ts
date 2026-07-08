@@ -7,15 +7,17 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import prisma from "@/lib/prisma";
 import {
   sendMagicLinkEmail,
-  sendAlumniPendingEmail,
   sendPasswordResetEmail,
   sendPasswordResetEmailJS,
-  sendAlumniApprovedEmail,
 } from "@/lib/email";
 
 type ActionResult =
   | { success: true; message: string; userId?: string }
   | { success: false; message: string };
+
+// Antes de producción: poner NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN=true en .env
+// (por ahora no hay correos @ucr.ac.cr reales disponibles para probar el registro).
+const REQUIRE_UCR_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_REQUIRE_UCR_EMAIL_DOMAIN === "true";
 
 const isValidPassword = (password: string) => {
   if (!password || password.length < 8) return false;
@@ -54,12 +56,23 @@ export async function registerStudentAction(data: {
   anio_ingreso?: number;
   nivel_academico?: string;
   promedio_ponderado?: number;
+  aceptaPrivacidad: boolean;
 }): Promise<ActionResult> {
   if (!data.nombre || data.nombre.trim().length < 3) {
     return { success: false, message: "El nombre debe tener al menos 3 caracteres." };
   }
   if (!isValidPassword(data.password)) {
     return { success: false, message: "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número." };
+  }
+  if (!data.aceptaPrivacidad) {
+    return { success: false, message: "Debes aceptar la política de privacidad para registrarte." };
+  }
+
+  if (REQUIRE_UCR_EMAIL_DOMAIN && !data.email.trim().toLowerCase().endsWith("@ucr.ac.cr")) {
+    return {
+      success: false,
+      message: "Los estudiantes deben registrarse con su correo institucional @ucr.ac.cr",
+    };
   }
 
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -97,6 +110,7 @@ export async function registerStudentAction(data: {
       cedula: data.cedula,
       fecha_nacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null,
       genero: data.genero,
+      acepta_privacidad_at: new Date(),
     },
   });
 
@@ -146,12 +160,16 @@ export async function registerAlumniAction(data: {
   cedula?: string;
   fecha_nacimiento?: string;
   genero?: string;
+  aceptaPrivacidad: boolean;
 }): Promise<ActionResult> {
   if (!data.nombre || data.nombre.trim().length < 3) {
     return { success: false, message: "El nombre debe tener al menos 3 caracteres." };
   }
   if (!isValidPassword(data.password)) {
     return { success: false, message: "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número." };
+  }
+  if (!data.aceptaPrivacidad) {
+    return { success: false, message: "Debes aceptar la política de privacidad para registrarte." };
   }
   const currentYear = new Date().getFullYear();
   if (!data.anio_graduacion || data.anio_graduacion < 1940 || data.anio_graduacion > currentYear) {
@@ -173,7 +191,7 @@ export async function registerAlumniAction(data: {
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: data.email,
     password: data.password,
-    email_confirm: true,
+    email_confirm: false,
     user_metadata: { nombre: data.nombre, tipo: "EXALUMNO" },
   });
 
@@ -188,11 +206,12 @@ export async function registerAlumniAction(data: {
       email: data.email,
       nombre: data.nombre.trim(),
       tipo: "EXALUMNO",
-      email_verified: true,
+      email_verified: false,
       activo: true,
       cedula: data.cedula,
       fecha_nacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null,
       genero: data.genero,
+      acepta_privacidad_at: new Date(),
     },
   });
 
@@ -205,11 +224,23 @@ export async function registerAlumniAction(data: {
     },
   });
 
-  await sendAlumniPendingEmail(data.email, data.nombre.trim());
+  const callbackUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/auth/callback?email=${encodeURIComponent(data.email)}`;
+  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: "signup",
+    email: data.email,
+    password: data.password,
+    options: { redirectTo: callbackUrl },
+  });
+
+  if (!linkError && linkData?.properties?.action_link) {
+    await sendMagicLinkEmail(data.email, linkData.properties.action_link, data.nombre.trim());
+  } else {
+    console.error("[registerAlumni] Error generando magic link:", linkError);
+  }
 
   return {
     success: true,
-    message: "Registro exitoso. Tu perfil está siendo verificado. Te notificaremos en máximo 48 horas.",
+    message: "Registro exitoso. Revisa tu correo para verificar tu cuenta.",
     userId: authData.user.id,
   };
 }
@@ -292,26 +323,6 @@ export async function forgotPasswordAction(email: string): Promise<ActionResult>
     success: true,
     message: "Si existe una cuenta con ese correo, recibirás tu contraseña temporal por email.",
   };
-}
-
-// ─── Aprobar Exalumno (Admin) ─────────────────────────────────────────────
-
-export async function approveAlumniAction(userId: string): Promise<ActionResult> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, tipo: "EXALUMNO" },
-  });
-  if (!user) {
-    return { success: false, message: "Exalumno no encontrado." };
-  }
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { activo: true },
-  });
-
-  await sendAlumniApprovedEmail(user.email, user.nombre);
-
-  return { success: true, message: "Perfil de exalumno aprobado y correo enviado." };
 }
 
 // ─── Verificar Email (callback de Supabase) ───────────────────────────────

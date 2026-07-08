@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Send, User, MessageCircle, X } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 type Message = {
   id: string;
@@ -339,15 +341,25 @@ export default function MensajesPage() {
 
       <div className="min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 transition-colors duration-300 flex flex-col p-4 md:p-8">
         <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#0f4c81] dark:text-sky-400">Mensajes</h1>
+          <motion.div
+            className="mb-6"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+          >
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl text-[#0f4c81] dark:text-sky-400">Mensajes</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Chat con tus matches activos</p>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col md:flex-row bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 min-h-[600px] max-h-[800px] transition-colors duration-300">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
+            className="flex flex-col md:flex-row bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 min-h-[600px] max-h-[800px] transition-colors duration-300"
+          >
 
             {/* Sidebar */}
-            <div className="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-800/50">
+            <div className="w-full md:w-80 h-56 md:h-auto shrink-0 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-800/50">
               <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <p className="text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">Conversaciones activas</p>
               </div>
@@ -374,7 +386,7 @@ export default function MensajesPage() {
                         `}
                       >
                         <div className={`h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold border shadow-sm shrink-0
-                          ${isSelected ? "bg-[#0f4c81] dark:bg-sky-600 text-white border-[#0f4c81] dark:border-sky-600" : "bg-blue-50 dark:bg-slate-800 text-[#0f4c81] dark:text-sky-400 border-blue-100 dark:border-slate-700"}
+                          ${isSelected ? "bg-primary dark:bg-sky-600 text-primary-foreground border-primary dark:border-sky-600" : "bg-blue-50 dark:bg-slate-800 text-[#0f4c81] dark:text-sky-400 border-blue-100 dark:border-slate-700"}
                         `}>
                           {conv.avatarLetter}
                         </div>
@@ -397,11 +409,11 @@ export default function MensajesPage() {
                 <>
                   {/* Header */}
                   <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shadow-sm z-10 transition-colors">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-800 flex items-center justify-center text-[#0f4c81] dark:text-sky-400 font-bold border dark:border-slate-700 shadow-sm">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-slate-800 flex items-center justify-center text-[#0f4c81] dark:text-sky-400 font-bold border dark:border-slate-700 shadow-sm shrink-0">
                       {activeConv.avatarLetter}
                     </div>
-                    <div>
-                      <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{activeConv.contactName}</h2>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate">{activeConv.contactName}</h2>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{activeConv.contactRole}</p>
                     </div>
                   </div>
@@ -433,7 +445,7 @@ export default function MensajesPage() {
                           <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-4 shadow-sm
                               ${isMe
-                                ? "bg-[#0f4c81] dark:bg-sky-600 text-white rounded-tr-sm"
+                                ? "bg-primary dark:bg-sky-600 text-primary-foreground rounded-tr-sm"
                                 : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-sm"}
                               ${isWA ? "min-w-[200px]" : ""}
                             `}>
@@ -476,7 +488,7 @@ export default function MensajesPage() {
                       <button
                         type="submit"
                         disabled={!inputText.trim() || sending}
-                        className="bg-[#0f4c81] dark:bg-sky-600 text-white h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-800 dark:hover:bg-sky-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        className="bg-primary dark:bg-sky-600 text-primary-foreground h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-800 dark:hover:bg-sky-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                         aria-label="Enviar"
                       >
                         <Send className="h-5 w-5 ml-0.5" />
@@ -493,7 +505,7 @@ export default function MensajesPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </>

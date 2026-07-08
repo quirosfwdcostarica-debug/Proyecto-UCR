@@ -179,7 +179,8 @@ export async function POST(request: NextRequest) {
         id: crypto.randomUUID(),
         posicion_id: body.posicion_id,
         estudiante_id: userId,
-        estado: "PENDIENTE",
+        estado: "ENVIADA",
+        updated_at: new Date().toISOString(),
       })
       .select("*")
       .single();

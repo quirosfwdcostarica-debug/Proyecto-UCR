@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
       .select(`
         id, monto, destino, moneda, metodo_pago, estado,
         comprobante_url, motivo_rechazo, created_at, updated_at,
+        fecha_transferencia, numero_referencia,
+        validacion_estado, validacion_confianza, validacion_detalle, validacion_at,
         exalumno:EXALUMNOS!DONACIONES_exalumno_id_fkey(user:USERS!EXALUMNOS_user_id_fkey(id, nombre, email)),
         estudiante:ESTUDIANTES!DONACIONES_proyecto_estudiante_id_fkey(proyecto_titulo, user:USERS!ESTUDIANTES_user_id_fkey(nombre))
       `, { count: "exact" })
@@ -56,6 +58,12 @@ export async function GET(request: NextRequest) {
         motivo_rechazo: d.motivo_rechazo ?? null,
         created_at: d.created_at,
         updated_at: d.updated_at,
+        fecha_transferencia: d.fecha_transferencia ?? null,
+        numero_referencia: d.numero_referencia ?? null,
+        validacion_estado: d.validacion_estado ?? null,
+        validacion_confianza: d.validacion_confianza ?? null,
+        validacion_detalle: d.validacion_detalle ?? null,
+        validacion_at: d.validacion_at ?? null,
         exalumno_nombre: u?.nombre ?? null,
         exalumno_email: u?.email ?? null,
         exalumno_id: u?.id ?? null,

@@ -5,7 +5,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { useTheme } from "@/components/providers/ThemeContext";
-import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, PauseCircle, CheckCircle2, Loader2, Bell, BellRing, BellOff, Lock } from "lucide-react";
+import { Settings, Globe, Moon, Sun, ShieldCheck, HelpCircle, ChevronDown, CheckCircle, Mail, MessageSquare, User, Loader2, Bell, BellRing, BellOff, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
@@ -20,7 +20,6 @@ function AjustesContent() {
   const { data: session } = useSession();
 
   const userId = (session?.user as any)?.id as string | undefined;
-  const userRole = (session?.user as any)?.tipo || (session?.user as any)?.role;
 
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -30,13 +29,6 @@ function AjustesContent() {
   // Password state
   const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  // Estado de la cuenta
-  const [cuentaPausada, setCuentaPausada] = useState(false);
-  const [proyectoFinalizado, setProyectoFinalizado] = useState(false);
-  const [savingStatus, setSavingStatus] = useState(false);
-  const [statusSaved, setStatusSaved] = useState(false);
-
 
   // Contact form state
   const [name, setName] = useState("");
@@ -52,41 +44,6 @@ function AjustesContent() {
     }
   }, [searchParams]);
 
-  // Cargar estado actual de la cuenta
-  useEffect(() => {
-    if (!userId) return;
-    fetch(`/api/users/${userId}/status`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data) {
-          setCuentaPausada(data.cuentaPausada ?? false);
-          setProyectoFinalizado(data.proyectoFinalizado ?? false);
-        }
-      })
-      .catch(() => {});
-  }, [userId]);
-
-  const handleSaveStatus = async () => {
-    if (!userId) return;
-    setSavingStatus(true);
-    setStatusSaved(false);
-    try {
-      const body: Record<string, boolean> = { cuentaPausada };
-      if (userRole === "ESTUDIANTE" || userRole === "ADMIN") {
-        body.proyectoFinalizado = proyectoFinalizado;
-      }
-      const res = await fetch(`/api/users/${userId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        setStatusSaved(true);
-        setTimeout(() => setStatusSaved(false), 3000);
-      }
-    } catch {}
-    finally { setSavingStatus(false); }
-  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,7 +213,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
       </div>
 
       {/* Hero Header Estilizado con la Imagen de Fondo */}
-      <div className="w-full bg-[#e0f2fe] dark:bg-slate-950 pt-16 pb-24 px-8 relative shadow-sm overflow-hidden transition-colors duration-300">
+      <div className="w-full bg-[#e0f2fe] dark:bg-slate-950 pt-16 pb-24 px-4 sm:px-6 md:px-8 relative shadow-sm overflow-hidden transition-colors duration-300">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-35 mix-blend-multiply pointer-events-none select-none" 
           style={{ backgroundImage: "url('/login-pattern.png')" }}
@@ -265,15 +222,15 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
         <div className="absolute inset-0 bg-gradient-to-r from-sky-200/80 via-sky-100/40 to-transparent dark:from-slate-950 dark:via-slate-900/40 dark:to-transparent z-0"></div>
         <div className="absolute inset-0 bg-white/10 dark:bg-black/10 backdrop-blur-[0.5px] z-0"></div>
 
-        <div className="max-w-5xl mx-auto relative z-10 flex items-center gap-6">
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
           <div className="p-4 bg-white/70 dark:bg-slate-800/80 rounded-2xl backdrop-blur-md border border-white/60 dark:border-slate-700/50 shadow-sm transition-colors duration-300">
             <Settings className="w-10 h-10 text-[#005eb8] dark:text-sky-400" />
           </div>
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] dark:text-sky-400 drop-shadow-sm font-display">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] dark:text-sky-400 drop-shadow-sm font-display">
               {t("settings.title")}
             </h1>
-            <p className="text-[#005eb8]/90 dark:text-sky-300/80 font-medium text-lg mt-2 flex items-center gap-2 font-body">
+            <p className="text-[#005eb8]/90 dark:text-sky-300/80 font-medium text-lg mt-2 flex items-center justify-center sm:justify-start gap-2 font-body">
               <span className="w-8 h-[2px] bg-[#005eb8] dark:bg-sky-400 rounded-full"></span>
               {t("settings.subtitle")}
             </p>
@@ -284,12 +241,12 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
       {/* Main Content Area */}
       <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-12 relative z-20 pb-20">
         {/* Navigation Tabs */}
-        <div className="flex gap-2 p-1.5 bg-white/80 dark:bg-slate-800/85 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-lg mb-8 max-w-lg transition-colors duration-300">
+        <div className="flex gap-1 sm:gap-2 p-1 sm:p-1.5 bg-white/80 dark:bg-slate-800/85 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-lg mb-6 sm:mb-8 max-w-lg transition-colors duration-300">
           {(["general", "terms", "help"] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 relative font-body ${
+              className={`flex-1 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 relative font-body ${
                 activeTab === tab 
                   ? "text-[#02477B] dark:text-white" 
                   : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -302,7 +259,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
-              <span className="relative z-10 flex items-center justify-center gap-2 font-semibold">
+              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-2 font-semibold">
                 {tab === "general" && <Globe className="w-4 h-4" />}
                 {tab === "terms" && <ShieldCheck className="w-4 h-4" />}
                 {tab === "help" && <HelpCircle className="w-4 h-4" />}
@@ -323,9 +280,9 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
               transition={{ duration: 0.25 }}
             >
               {activeTab === "general" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   {/* Language Card */}
-                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                         <Globe className="w-6 h-6" />
@@ -385,7 +342,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                   </div>
 
                   {/* Theme Card */}
-                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                         {theme === "dark" ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
@@ -423,7 +380,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                   </div>
 
                   {/* Notifications Card — Andy */}
-                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                  <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                         <Bell className="w-6 h-6" />
@@ -463,68 +420,9 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                     </div>
                   </div>
 
-                  {/* Account Status Card */}
-                  {userId && (
-                    <div className="md:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
-                      <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
-                        <PauseCircle className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-ucr-azul-2 dark:text-sky-400 font-display">
-                          Estado de mi cuenta
-                        </h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 font-body">
-                          Controla la visibilidad de tu perfil en la plataforma.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-5">
-                      {/* Toggle: Pausar perfil */}
-                      <div className="flex items-start justify-between gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-800 dark:text-slate-100 font-body">Pausar mi perfil temporalmente</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-body">Tu perfil quedará oculto en los directorios y no aparecerás en nuevas búsquedas.</p>
-                        </div>
-                        <button type="button" onClick={() => setCuentaPausada(!cuentaPausada)}
-                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0f4c81] focus:ring-offset-2 ${cuentaPausada ? "bg-yellow-400" : "bg-slate-200 dark:bg-slate-600"}`}
-                          role="switch" aria-checked={cuentaPausada}>
-                          <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${cuentaPausada ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
-                      </div>
-                      {/* Toggle: Proyecto finalizado (solo ESTUDIANTE) */}
-                      {(userRole === "ESTUDIANTE" || userRole === "ADMIN") && (
-                        <div className="flex items-start justify-between gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
-                          <div className="flex-1">
-                            <p className="font-semibold text-slate-800 dark:text-slate-100 font-body">Marcar proyecto como finalizado</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-body">Muestra un badge "Proyecto Finalizado" en tu tarjeta del directorio estudiantil.</p>
-                          </div>
-                          <button type="button" onClick={() => setProyectoFinalizado(!proyectoFinalizado)}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0f4c81] focus:ring-offset-2 ${proyectoFinalizado ? "bg-green-500" : "bg-slate-200 dark:bg-slate-600"}`}
-                            role="switch" aria-checked={proyectoFinalizado}>
-                            <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${proyectoFinalizado ? "translate-x-6" : "translate-x-1"}`} />
-                          </button>
-                        </div>
-                      )}
-                      {/* Botón guardar */}
-                      <div className="flex items-center gap-3 pt-2">
-                        <Button onClick={handleSaveStatus} disabled={savingStatus}
-                          className="bg-gradient-to-r from-[#02477B] to-[#005eb8] text-white font-bold rounded-xl px-6 h-11 hover:brightness-110 transition-all">
-                          {savingStatus ? (<span className="flex items-center gap-1 text-sm"><Loader2 className="w-4 h-4 animate-spin" />Guardando...</span>) : "Guardar cambios"}
-                        </Button>
-                        {statusSaved && (
-                          <span className="flex items-center gap-1.5 text-green-600 text-sm font-semibold font-body">
-                            <CheckCircle2 className="w-4 h-4" />¡Guardado!
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  )}
-
                   {/* Password Change Card */}
                   {userId && (
-                    <div className="md:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                    <div className="md:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                         <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                           <Lock className="w-6 h-6" />
@@ -605,7 +503,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
               )}
 
               {activeTab === "terms" && (
-                <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
+                <div className="bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 hover:shadow-2xl transition-all duration-300">
                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                     <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                       <ShieldCheck className="w-6 h-6" />
@@ -625,9 +523,9 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
               )}
 
               {activeTab === "help" && (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
                   {/* FAQs Section */}
-                  <div className="lg:col-span-3 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 transition-all duration-300">
+                  <div className="lg:col-span-3 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                         <HelpCircle className="w-6 h-6" />
@@ -646,13 +544,13 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                         >
                           <button
                             onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                            className="w-full py-4 px-6 text-left font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between gap-4 font-body hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                            className="w-full py-4 px-4 sm:px-6 text-left font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between gap-4 font-body hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
                           >
                             <span>{faq.q}</span>
-                            <ChevronDown 
-                              className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${
+                            <ChevronDown
+                              className={`w-5 h-5 shrink-0 text-slate-500 transition-transform duration-300 ${
                                 openFaq === index ? "rotate-180" : ""
-                              }`} 
+                              }`}
                             />
                           </button>
                           <AnimatePresence initial={false}>
@@ -675,7 +573,7 @@ Votre confidentialité est très importante pour nous. En conséquence, nous avo
                   </div>
 
                   {/* Contact Form Section */}
-                  <div className="lg:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800/40 transition-all duration-300">
+                  <div className="lg:col-span-2 bg-white/90 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-xl border border-white/50 dark:border-slate-800/40 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/40">
                       <div className="p-3 bg-ucr-celeste/10 dark:bg-sky-400/10 rounded-xl text-ucr-celeste dark:text-sky-400">
                         <Mail className="w-6 h-6" />

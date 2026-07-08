@@ -8,13 +8,17 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, ArrowLeft, GraduationCap, Briefcase, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowLeft, GraduationCap, Briefcase, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ThemeToggle } from "@/components/fu/ThemeToggle";
+import { useLanguage } from "@/components/providers/LanguageContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Determinar vista inicial según parámetro de URL
   const initialView = searchParams?.get("view") === "registro" ? "registro" : "login";
@@ -42,15 +46,30 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Mostrar confirmación tras verificar el correo (redirigido desde /auth/callback)
+  useEffect(() => {
+    if (searchParams?.get("verified") === "1") {
+      toast({
+        title: "¡Correo verificado!",
+        description: "Ya puedes iniciar sesión con tu cuenta.",
+      });
+      const verifiedEmail = searchParams.get("email");
+      if (verifiedEmail) {
+        setFormData((prev) => ({ ...prev, email: verifiedEmail }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const getErrorMessage = (errorCode: string): string => {
     const messages: Record<string, string> = {
-      "CredentialsSignin": "Correo o contraseña incorrectos.",
-      "Credenciales inválidas": "Correo o contraseña incorrectos.",
-      "Configuration": "Error de configuración del servidor. Intenta de nuevo.",
-      "AccessDenied": "Acceso denegado. Tu cuenta puede estar pendiente de verificación.",
-      "Email no verificado": "Debes verificar tu correo antes de iniciar sesión.",
+      "CredentialsSignin": t("auth.login.errorCredentials"),
+      "Credenciales inválidas": t("auth.login.errorCredentials"),
+      "Configuration": t("auth.login.errorConfiguration"),
+      "AccessDenied": t("auth.login.errorAccessDenied"),
+      "Email no verificado": t("auth.login.errorEmailNotVerified"),
     };
-    return messages[errorCode] || errorCode || "Error al iniciar sesión.";
+    return messages[errorCode] || errorCode || t("auth.login.errorGeneric");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,19 +83,19 @@ export default function LoginPage() {
       });
       if (result?.error) {
         const errorMessage = getErrorMessage(result.error);
-        const isEmailNotVerified = /verificar|verificado/i.test(errorMessage);
+        const isEmailNotVerified = /verificar|verificado|verify|verified/i.test(errorMessage);
         toast({
-          title: "Error de autenticación" + (isEmailNotVerified ? " (Correo no verificado)" : ""),
+          title: t("auth.login.toastErrorTitle") + (isEmailNotVerified ? t("auth.login.toastErrorUnverifiedSuffix") : ""),
           description: errorMessage,
           variant: "destructive",
         });
       } else {
-        toast({ title: "Inicio de sesión exitoso", description: "Redirigiendo a tu panel..." });
+        toast({ title: t("auth.login.toastSuccessTitle"), description: t("auth.login.toastSuccessDesc") });
         router.push("/");
         router.refresh();
       }
     } catch (error: any) {
-      toast({ title: "Error", description: "Ocurrió un error inesperado.", variant: "destructive" });
+      toast({ title: t("auth.login.toastGenericErrorTitle"), description: t("auth.login.toastUnexpectedError"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +200,7 @@ export default function LoginPage() {
           </div>
           <div>
             <p className="text-lg text-sky-100 max-w-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
-              Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
+              {t("auth.tagline")}
             </p>
           </div>
         </div>
@@ -214,14 +233,17 @@ export default function LoginPage() {
 
           <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.08] bg-cover bg-bottom mix-blend-overlay pointer-events-none z-0" />
 
-          {/* Volver al Dashboard */}
-          <Link
-            href="/"
-            className="absolute top-8 right-8 sm:top-10 sm:right-10 lg:right-16 z-50 flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Volver al Dashboard</span>
-          </Link>
+          {/* Volver al Dashboard + Toggle de tema */}
+          <div className="absolute top-8 right-8 sm:top-10 sm:right-10 lg:right-16 z-50 flex items-center gap-4">
+            <ThemeToggle />
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">{t("auth.backToDashboard")}</span>
+            </Link>
+          </div>
 
           {/* ===== CONTENIDO: LOGIN ===== */}
           <div
@@ -240,16 +262,16 @@ export default function LoginPage() {
                   role="img"
                 />
                 <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
-                  Bienvenido de vuelta
+                  {t("auth.login.title")}
                 </h2>
                 <p className="text-orange-100 font-medium font-body">
-                  Ingresa a la plataforma de Exalumnos UCR
+                  {t("auth.login.subtitle")}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="font-bold text-white">Correo Electrónico</Label>
+                  <Label htmlFor="email" className="font-bold text-white">{t("auth.login.emailLabel")}</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-slate-400" />
@@ -269,9 +291,9 @@ export default function LoginPage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="font-bold text-white">Contraseña</Label>
+                    <Label htmlFor="password" className="font-bold text-white">{t("auth.login.passwordLabel")}</Label>
                     <Link href="/forgot-password" className="text-sm font-semibold text-white/80 hover:text-white hover:underline transition-colors font-body">
-                      ¿Olvidaste tu contraseña?
+                      {t("auth.login.forgotPassword")}
                     </Link>
                   </div>
                   <div className="relative">
@@ -281,13 +303,21 @@ export default function LoginPage() {
                     <Input
                       id="password"
                       name="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="pl-11 h-14 rounded-[10px] border-slate-200 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white text-base text-slate-900"
+                      className="pl-11 pr-11 h-14 rounded-[10px] border-slate-200 focus:ring-ucr-celeste focus:border-ucr-celeste bg-white text-base text-slate-900"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? t("auth.login.hidePassword") : t("auth.login.showPassword")}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
 
@@ -299,21 +329,21 @@ export default function LoginPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Iniciando sesión...
+                      {t("auth.login.submitting")}
                     </>
                   ) : (
-                    "Iniciar sesión"
+                    t("auth.login.submit")
                   )}
                 </Button>
               </form>
 
               <div className="mt-10 text-center text-white/80 font-medium font-body">
-                ¿No tienes cuenta?{" "}
+                {t("auth.login.noAccount")}{" "}
                 <button
                   onClick={switchToRegistro}
                   className="font-bold text-white hover:text-orange-100 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0"
                 >
-                  Regístrate aquí
+                  {t("auth.login.registerHere")}
                 </button>
               </div>
             </div>
@@ -336,10 +366,10 @@ export default function LoginPage() {
                   role="img"
                 />
                 <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
-                  Únete a la Comunidad
+                  {t("auth.registroSelect.title")}
                 </h2>
                 <p className="text-orange-100 font-medium font-body">
-                  Selecciona cómo deseas participar en la plataforma.
+                  {t("auth.registroSelect.subtitle")}
                 </p>
               </div>
 
@@ -352,12 +382,12 @@ export default function LoginPage() {
                       <div className="bg-ucr-celeste-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
                         <GraduationCap className="h-10 w-10 text-ucr-esmeralda" />
                       </div>
-                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Estudiante</h3>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">{t("auth.registroSelect.studentTitle")}</h3>
                       <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
-                        Busco mentoría, pasantías o apoyo para mi proyecto de graduación.
+                        {t("auth.registroSelect.studentDesc")}
                       </p>
                       <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-esmeralda font-body">
-                        Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        {t("auth.registroSelect.cta")} <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </div>
@@ -371,12 +401,12 @@ export default function LoginPage() {
                       <div className="bg-ucr-beige-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
                         <Briefcase className="h-10 w-10 text-ucr-amarillo" />
                       </div>
-                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Exalumno</h3>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">{t("auth.registroSelect.alumniTitle")}</h3>
                       <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
-                        Deseo ofrecer mentoría, empleo o apoyar proyectos de nuevos talentos.
+                        {t("auth.registroSelect.alumniDesc")}
                       </p>
                       <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-amarillo font-body">
-                        Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        {t("auth.registroSelect.cta")} <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </div>
@@ -384,12 +414,12 @@ export default function LoginPage() {
               </div>
 
               <div className="mt-6 text-center text-white/80 font-medium font-body">
-                ¿Ya tienes una cuenta?{" "}
+                {t("auth.hasAccount")}{" "}
                 <button
                   onClick={switchToLogin}
                   className="font-bold text-white hover:text-orange-100 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0"
                 >
-                  Inicia sesión aquí
+                  {t("auth.loginHere")}
                 </button>
               </div>
             </div>

@@ -16,7 +16,7 @@ import { CVDrawer } from "@/components/cv/CVDrawer";
 
 interface Aplicante {
   id: string;
-  estado: "PENDIENTE" | "SELECCIONADO" | "DESCARTADO";
+  estado: "ENVIADA" | "EN_REVISION" | "SELECCIONADO" | "DESCARTADO";
   created_at: string;
   estudiante_id: string | null;
   posicion: { id: string; titulo: string; empresa: string | null } | null;
@@ -30,10 +30,13 @@ interface Aplicante {
 }
 
 const ESTADO_CFG = {
-  PENDIENTE:    { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
+  ENVIADA:      { label: "Nueva",           cls: "bg-blue-50 text-blue-700 border-blue-200",       Icon: Clock },
+  EN_REVISION:  { label: "En revisión",     cls: "bg-yellow-50 text-yellow-700 border-yellow-200", Icon: Clock },
   SELECCIONADO: { label: "Seleccionado",    cls: "bg-green-50 text-green-700 border-green-200",   Icon: CheckCircle2 },
   DESCARTADO:   { label: "No seleccionado", cls: "bg-slate-100 text-slate-500 border-slate-200",   Icon: XCircle },
 };
+
+const ESTADOS_SIN_DECIDIR = ["ENVIADA", "EN_REVISION"] as const;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" });
@@ -91,7 +94,7 @@ export default function AplicantesPage() {
         setAplicantes((prev) =>
           prev.map((a) => {
             if (a.id === aplicanteId) return { ...a, estado: "SELECCIONADO" };
-            if (cerrarPosicion && a.estado === "PENDIENTE") return { ...a, estado: "DESCARTADO" };
+            if (cerrarPosicion && (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado)) return { ...a, estado: "DESCARTADO" };
             return a;
           })
         );
@@ -104,6 +107,26 @@ export default function AplicantesPage() {
       await showAlert(err.message || "Error al procesar la acción.", { title: "Error", variant: "error" });
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  // T-14: al abrir el CV desde ENVIADA, pasa automáticamente a EN_REVISION.
+  function handleVerCV(a: Aplicante) {
+    setCvUserId(a.estudiante_id);
+    setCvStudentName(a.estudiante?.nombre ?? undefined);
+    if (a.estado === "ENVIADA") {
+      fetch(`/api/aplicaciones/${a.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "marcar_revision" }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.estado) {
+            setAplicantes((prev) => prev.map((x) => (x.id === a.id ? { ...x, estado: data.estado } : x)));
+          }
+        })
+        .catch(() => {});
     }
   }
 
@@ -145,8 +168,8 @@ export default function AplicantesPage() {
     if (ok) handleAction(aplicanteId, "descartar");
   }
 
-  const pendientes = aplicantes.filter((a) => a.estado === "PENDIENTE");
-  const procesados = aplicantes.filter((a) => a.estado !== "PENDIENTE");
+  const pendientes = aplicantes.filter((a) => (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado));
+  const procesados = aplicantes.filter((a) => !(ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado));
 
   if (status === "loading" || loading) {
     return (
@@ -157,7 +180,7 @@ export default function AplicantesPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-4 sm:p-8">
       <CVDrawer
         userId={cvUserId}
         studentName={cvStudentName}
@@ -174,7 +197,7 @@ export default function AplicantesPage() {
 
         <div className="mb-8">
           <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Gestión de aplicantes</p>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white break-words">
             {posicionTitulo || "Aplicantes"}
           </h1>
           <p className="text-slate-500 text-sm mt-1">
@@ -217,7 +240,7 @@ export default function AplicantesPage() {
                       onSeleccionar={(nombre) => seleccionarConConfirmacion(a.id, nombre)}
                       onDescartar={() => handleDescartarConConfirmacion(a.id)}
                       onContactar={() => handleContactar(a.id)}
-                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
+                      onVerCV={a.estudiante_id ? () => handleVerCV(a) : undefined}
                     />
                   ))}
                 </div>
@@ -239,7 +262,7 @@ export default function AplicantesPage() {
                       a={a}
                       actionLoading={actionLoading}
                       onContactar={() => handleContactar(a.id)}
-                      onVerCV={a.estudiante_id ? () => { setCvUserId(a.estudiante_id); setCvStudentName(a.estudiante?.nombre ?? undefined); } : undefined}
+                      onVerCV={a.estudiante_id ? () => handleVerCV(a) : undefined}
                     />
                   ))}
                 </div>
@@ -270,12 +293,12 @@ function AplicanteCard({
   const cfg    = ESTADO_CFG[a.estado];
   const { Icon } = cfg;
   const nombre    = a.estudiante?.nombre ?? "Estudiante";
-  const isPending = a.estado === "PENDIENTE";
+  const isPending = (ESTADOS_SIN_DECIDIR as readonly string[]).includes(a.estado);
   const anyLoading = !!actionLoading?.startsWith(a.id);
 
   return (
     <Card className="p-4 border-slate-200 bg-white dark:bg-slate-900 shadow-sm">
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 flex-wrap">
         {/* Avatar */}
         <div className="w-10 h-10 rounded-full bg-[#005da4]/10 flex items-center justify-center shrink-0 overflow-hidden">
           {a.estudiante?.foto_url ? (
@@ -288,7 +311,7 @@ function AplicanteCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{nombre}</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm break-words">{nombre}</p>
             <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${cfg.cls}`}>
               <Icon className="w-3 h-3" /> {cfg.label}
             </Badge>
@@ -321,7 +344,7 @@ function AplicanteCard({
 
           {/* Ver CV + Enviar mensaje */}
           {a.estudiante_id && (
-            <div className="mt-2.5 flex items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               {onVerCV && (
                 <button
                   onClick={onVerCV}
@@ -336,7 +359,7 @@ function AplicanteCard({
                 <button
                   onClick={onContactar}
                   disabled={anyLoading}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-white bg-[#005da4] hover:bg-[#003d6e] rounded-md px-2.5 py-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md px-2.5 py-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {actionLoading === a.id + "contactar" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -350,9 +373,9 @@ function AplicanteCard({
           )}
         </div>
 
-        {/* Actions (only for PENDIENTE) */}
+        {/* Actions (solo para ENVIADA/EN_REVISION) */}
         {isPending && onSeleccionar && onDescartar && (
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 w-full sm:w-auto justify-end mt-2 sm:mt-0">
             <Button
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white text-xs"

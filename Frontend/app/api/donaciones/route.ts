@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { dispararValidacionComprobante } from "@/lib/n8n";
 
 // ─── GET /api/donaciones ──────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -102,9 +103,12 @@ export async function POST(request: NextRequest) {
   let body: {
     exalumnoId: string;
     monto: number;
+    moneda?: "CRC" | "USD";
     comprobanteUrl: string;
     destino: string;
     metodoPago?: string;
+    fechaTransferencia?: string | null;
+    numeroReferencia?: string | null;
     proyectoEstudianteId?: string;
   };
 
@@ -114,7 +118,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Cuerpo inválido" }, { status: 400 });
   }
 
-  const { exalumnoId, monto, comprobanteUrl, destino, metodoPago, proyectoEstudianteId } = body;
+  const { exalumnoId, monto, moneda, comprobanteUrl, destino, metodoPago, fechaTransferencia, numeroReferencia, proyectoEstudianteId } = body;
 
   if (!exalumnoId || !monto || !destino) {
     return NextResponse.json(
@@ -142,6 +146,7 @@ export async function POST(request: NextRequest) {
         tipo: "EXALUMNO",
         activo: true,
         email_verified: true,
+        updated_at: new Date().toISOString(),
       });
     } catch (e: any) {
       console.error("Fallo auto-creando usuario:", e);
@@ -150,20 +155,27 @@ export async function POST(request: NextRequest) {
 
   const { data: exalumno } = await supabaseAdmin.from("EXALUMNOS").select("user_id").eq("user_id", exalumnoId).maybeSingle();
   if (!exalumno) {
-    const { error: exErr } = await supabaseAdmin.from("EXALUMNOS").insert({ user_id: exalumnoId });
+    const { error: exErr } = await supabaseAdmin
+      .from("EXALUMNOS")
+      .insert({ user_id: exalumnoId, updated_at: new Date().toISOString() });
     if (exErr) return NextResponse.json({ message: "Error interno creando perfil: " + exErr.message }, { status: 500 });
   }
 
   try {
+    const monedaFinal = moneda === "USD" ? "USD" : "CRC";
     const { data: donacion, error } = await supabaseAdmin
       .from("DONACIONES")
       .insert({
         id: crypto.randomUUID(),
         exalumno_id: exalumnoId,
         monto,
+        moneda: monedaFinal,
         destino,
         estado: "PENDIENTE",
         comprobante_url: comprobanteUrl || null,
+        fecha_transferencia: fechaTransferencia || null,
+        numero_referencia: numeroReferencia || null,
+        updated_at: new Date().toISOString(),
         ...(metodoPago ? { metodo_pago: metodoPago } : {}),
         ...(proyectoEstudianteId ? { proyecto_estudiante_id: proyectoEstudianteId } : {}),
       })
@@ -171,6 +183,23 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // Dispara la verificación OCR en n8n (best-effort). Solo si hay comprobante
+    // y datos suficientes para comparar. No bloquea la respuesta si n8n falla.
+    if (comprobanteUrl) {
+      await dispararValidacionComprobante({
+        donacion_id: donacion.id,
+        comprobante_url: comprobanteUrl,
+        formulario: {
+          monto: Number(monto),
+          moneda: monedaFinal,
+          metodo_pago: metodoPago || "",
+          fecha_transferencia: fechaTransferencia || null,
+          numero_referencia: numeroReferencia || null,
+        },
+      });
+    }
+
     return NextResponse.json(donacion, { status: 201 });
   } catch (error) {
     console.error("[POST /api/donaciones]", error);

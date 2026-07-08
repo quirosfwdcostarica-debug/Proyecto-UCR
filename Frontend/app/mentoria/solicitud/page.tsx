@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UserCircle, ArrowLeft, CheckCircle2, Coffee } from "lucide-react";
 import Link from "next/link";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 const MODALIDADES = ["Virtual (videollamada)", "Presencial", "Híbrida"];
 const DURACIONES = ["30 minutos", "45 minutos", "1 hora", "1.5 horas"];
@@ -42,32 +44,30 @@ function SolicitudForm() {
   };
 
   return (
-    <div className="min-h-full bg-[#f8fafc]">
+    <ParallaxBackground className="min-h-full">
+      <div className="fu-hero-gradient animate-fu-gradient border-b border-white/10 text-white py-4 px-6 md:px-12 flex items-center gap-2 shadow-md">
+        <Link
+          href="/"
+          className="flex items-center gap-1 text-sm text-slate-200 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Tablero
+        </Link>
+        <span className="text-slate-300">/</span>
+        <span className="text-white font-medium text-sm">Solicitar Café Virtual</span>
+      </div>
 
-      <div className="p-8 max-w-2xl mx-auto space-y-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Link
-            href="/"
-            className="flex items-center gap-1 hover:text-[#0f4c81] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Tablero
-          </Link>
-          <span>/</span>
-          <span className="text-[#0f4c81] font-medium">Solicitar Café Virtual</span>
-        </div>
-
+      <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-6">
         {/* Encabezado */}
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-sm">
+          <div className="h-12 w-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-sm shrink-0">
             <Coffee className="h-6 w-6 text-[#0f4c81]" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
+          <div className="min-w-0">
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl">
               Solicitar Café Virtual
-            </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            </AnimatedHeading>
+            <p className="text-sm fu-text-2 mt-0.5">
               Agenda una sesión de mentoría con un exalumno UCR.
             </p>
           </div>
@@ -78,16 +78,16 @@ function SolicitudForm() {
           <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
             <UserCircle className="h-10 w-10 text-slate-400" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
               Mentor seleccionado
             </p>
-            <h2 className="text-lg font-bold text-[#0f4c81]">{mentorNombre}</h2>
+            <h2 className="text-lg font-bold text-[#0f4c81] break-words">{mentorNombre}</h2>
           </div>
         </Card>
 
         {/* Formulario */}
-        <Card className="p-8 border-border shadow-sm bg-white">
+        <Card className="p-5 sm:p-8 border-border shadow-sm bg-white">
           {enviado ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <CheckCircle2 className="h-16 w-16 text-green-500" />
@@ -197,15 +197,15 @@ function SolicitudForm() {
               </div>
 
               {/* Acciones */}
-              <div className="flex gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 <Button
                   type="submit"
-                  className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white px-8"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 w-full sm:w-auto"
                 >
                   Enviar Solicitud
                 </Button>
-                <Link href="/">
-                  <Button type="button" variant="outline" className="border-slate-300">
+                <Link href="/" className="w-full sm:w-auto">
+                  <Button type="button" variant="outline" className="border-slate-300 w-full sm:w-auto">
                     Cancelar
                   </Button>
                 </Link>
@@ -214,7 +214,7 @@ function SolicitudForm() {
           )}
         </Card>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }
 

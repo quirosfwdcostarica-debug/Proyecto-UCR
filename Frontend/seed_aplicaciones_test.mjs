@@ -68,7 +68,7 @@ async function main() {
       data: {
         posicion_id: pos.id,
         estudiante_id: user.id,
-        estado: "PENDIENTE",
+        estado: "ENVIADA",
       },
       select: { id: true },
     });

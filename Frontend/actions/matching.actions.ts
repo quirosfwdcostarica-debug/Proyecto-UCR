@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { calcularAfinidad } from "@/lib/matching";
+import { calcularAfinidad, calcularScorePosicion, toApoyoBuscado, toApoyoOfrecido } from "@/lib/matching";
 import {
   sendMatchAceptado,
   sendMatchRechazado,
@@ -15,32 +15,28 @@ export type MatchEstado = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toApoyoBuscado(est: any): string[] {
-  const a: string[] = [];
-  if (est.busca_mentoria) a.push("mentoria");
-  if (est.busca_empleo) a.push("empleo");
-  if (est.busca_pasantia) a.push("pasantia");
-  if (est.busca_financiamiento) a.push("financiamiento");
-  return a;
-}
-
-function toApoyoOfrecido(exa: any): string[] {
-  const a: string[] = [];
-  if (exa.ofrece_mentoria) a.push("mentoria");
-  if (exa.ofrece_empleo) a.push("empleo");
-  if (exa.ofrece_pasantia) a.push("pasantia");
-  if (exa.ofrece_donacion_dinero) a.push("financiamiento");
-  if (exa.ofrece_guest_speaking) a.push("guest speaking");
-  if (exa.ofrece_volunteering) a.push("volunteering");
-  if (exa.ofrece_career_advice) a.push("career advice");
-  if (exa.ofrece_networking) a.push("networking");
-  return a;
+// T-11: las áreas de interés viven en la tabla relacional USUARIOS_AREAS
+// (catálogo fijo de 14 códigos), no en el campo Json `areas_interes`.
+async function getAreasInteresCodigos(userId: string): Promise<string[]> {
+  const rows = await prisma.usuarioArea.findMany({
+    where: { user_id: userId },
+    select: { area_codigo: true },
+  });
+  return rows.map((r) => r.area_codigo);
 }
 
 function parseJsonArray(val: any): string[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val as string[];
-  try { return JSON.parse(val as string) as string[]; } catch { return []; }
+  let arr: any;
+  if (Array.isArray(val)) {
+    arr = val;
+  } else {
+    try { arr = JSON.parse(val as string); } catch { return []; }
+  }
+  if (!Array.isArray(arr)) return [];
+  // Los campos Json son de texto libre; algunos registros reales tienen
+  // elementos no-string (null, objetos) que rompen .toLowerCase() aguas abajo.
+  return arr.filter((x): x is string => typeof x === "string");
 }
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@alumni.ucr.ac.cr";
@@ -190,7 +186,12 @@ export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | 
   if (match.initiated_by === userId) throw new Error("No puedes rechazar tu propia solicitud");
 
   const { error: updateError } = await supabaseAdmin.from('MATCHES')
-    .update({ estado: "CERRADO", rejected_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({
+      estado: "CERRADO",
+      rejected_at: new Date().toISOString(),
+      rechazado_por_estudiante: rejectedBy === "estudiante",
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', matchId);
 
   if (updateError) throw updateError;
@@ -271,23 +272,25 @@ export async function ofrecerApoyo(estudianteId: string) {
   // CERRADO match exists → will re-open via upsert below (fall through)
 
   // Compute affinity score con los 4 criterios completos (T-18)
-  const [estudianteData, exalumnoData] = await Promise.all([
+  const [estudianteData, exalumnoData, areasEstudiante, areasExalumno] = await Promise.all([
     prisma.estudiante.findUnique({
       where: { user_id: estudianteId },
       select: {
-        carrera: true, area_tematica: true, areas_interes: true, proyecto_tipo: true,
+        carrera: true, area_tematica: true, proyecto_tipo: true,
         busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
       },
     }),
     prisma.exalumno.findUnique({
       where: { user_id: exalumnoId },
       select: {
-        carrera: true, escuela_facultad: true, sector: true, areas_interes: true,
+        carrera: true, escuela_facultad: true, sector: true,
         ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
         ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
         ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
       },
     }),
+    getAreasInteresCodigos(estudianteId),
+    getAreasInteresCodigos(exalumnoId),
   ]);
 
   const { score, reasons, breakdown } = calcularAfinidad(
@@ -295,13 +298,13 @@ export async function ofrecerApoyo(estudianteId: string) {
       carrera: estudianteData?.carrera,
       apoyoBuscado: toApoyoBuscado(estudianteData ?? {}),
       areaProyecto: estudianteData?.area_tematica ?? estudianteData?.proyecto_tipo ?? null,
-      areasInteres: parseJsonArray(estudianteData?.areas_interes),
+      areasInteres: areasEstudiante,
     },
     {
       carrera: exalumnoData?.carrera ?? exalumnoData?.escuela_facultad ?? null,
       sector: exalumnoData?.sector ?? null,
       apoyoOfrecido: toApoyoOfrecido(exalumnoData ?? {}),
-      areasInteres: parseJsonArray(exalumnoData?.areas_interes),
+      areasInteres: areasExalumno,
     }
   );
 
@@ -351,7 +354,7 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
   const estudianteData = await prisma.estudiante.findUnique({
     where: { user_id: estudianteId },
     select: {
-      carrera: true, area_tematica: true, areas_interes: true, proyecto_tipo: true,
+      carrera: true, area_tematica: true, proyecto_tipo: true,
       busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
     },
   });
@@ -365,18 +368,32 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
     },
     select: {
       user_id: true,
-      carrera: true, escuela_facultad: true, sector: true, areas_interes: true,
+      carrera: true, escuela_facultad: true, sector: true,
       ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
       ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
       ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
     },
   });
 
+  const [areasEstudiante, areasExalumnosRows] = await Promise.all([
+    getAreasInteresCodigos(estudianteId),
+    prisma.usuarioArea.findMany({
+      where: { user_id: { in: exalumnos.map((e) => e.user_id) } },
+      select: { user_id: true, area_codigo: true },
+    }),
+  ]);
+  const areasPorExalumno = new Map<string, string[]>();
+  for (const row of areasExalumnosRows) {
+    const actuales = areasPorExalumno.get(row.user_id) ?? [];
+    actuales.push(row.area_codigo);
+    areasPorExalumno.set(row.user_id, actuales);
+  }
+
   const estCompat = {
     carrera: estudianteData.carrera,
     apoyoBuscado: toApoyoBuscado(estudianteData),
     areaProyecto: estudianteData.area_tematica ?? estudianteData.proyecto_tipo ?? null,
-    areasInteres: parseJsonArray(estudianteData.areas_interes),
+    areasInteres: areasEstudiante,
   };
 
   const results = await Promise.allSettled(
@@ -391,7 +408,7 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
         carrera: exa.carrera ?? exa.escuela_facultad ?? null,
         sector: exa.sector ?? null,
         apoyoOfrecido: toApoyoOfrecido(exa),
-        areasInteres: parseJsonArray(exa.areas_interes),
+        areasInteres: areasPorExalumno.get(exa.user_id) ?? [],
       });
 
       if (score === 0) return null;
@@ -415,4 +432,67 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
 
   revalidatePath("/mis-matches");
   return results.flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
+}
+
+/**
+ * Calcula el score estudiante ↔ posición para todas las posiciones activas
+ * y devuelve solo las que superan 50 puntos, ordenadas de mayor a menor.
+ * Se calcula al vuelo (sin cache) — el volumen de posiciones activas no
+ * justifica todavía una tabla de cache tipo POSICION_SCORES.
+ */
+export async function generarScoresPosiciones(estudianteId?: string) {
+  const session = await auth();
+  const id = estudianteId ?? session?.user?.id;
+  if (!id) throw new Error("No autenticado");
+
+  const estudianteData = await prisma.estudiante.findUnique({
+    where: { user_id: id },
+    select: {
+      carrera: true, escuela_facultad: true, habilidades: true, soft_skills: true,
+      busca_empleo: true, busca_pasantia: true,
+    },
+  });
+  if (!estudianteData) return [];
+
+  const posiciones = await prisma.posicion.findMany({
+    where: { estado: "activa" },
+    select: {
+      id: true, titulo: true, empresa: true, tipo: true, modalidad: true, jornada: true,
+      area_estudio: true, hard_skills: true, soft_skills: true, estado: true, fecha_limite: true,
+    },
+  });
+
+  const estCompat = {
+    carrera: estudianteData.carrera,
+    escuela_facultad: estudianteData.escuela_facultad,
+    habilidades: parseJsonArray(estudianteData.habilidades),
+    soft_skills: parseJsonArray(estudianteData.soft_skills),
+    busca_empleo: estudianteData.busca_empleo,
+    busca_pasantia: estudianteData.busca_pasantia,
+  };
+
+  return posiciones
+    .map((p) => {
+      const { score, breakdown, reasons } = calcularScorePosicion(estCompat, {
+        tipo: p.tipo,
+        area_estudio: p.area_estudio,
+        hard_skills: parseJsonArray(p.hard_skills),
+        soft_skills: parseJsonArray(p.soft_skills),
+        estado: p.estado,
+      });
+      return {
+        id: p.id,
+        titulo: p.titulo,
+        empresa: p.empresa,
+        tipo: p.tipo,
+        modalidad: p.modalidad,
+        jornada: p.jornada,
+        fecha_limite: p.fecha_limite,
+        score,
+        breakdown,
+        reasons,
+      };
+    })
+    .filter((p) => p.score > 50)
+    .sort((a, b) => b.score - a.score);
 }

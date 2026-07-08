@@ -22,9 +22,6 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-
 interface DashboardMetrics {
   students: number;
   graduates: number;
@@ -51,8 +48,7 @@ export function DashboardImpact() {
       try {
         setLoading(true);
         setError(null);
-        // Uses the next.config.mjs rewrite: /api/backend -> http://localhost:3001/api
-        const res = await fetch("/api/backend/dashboard/metrics");
+        const res = await fetch("/api/dashboard/metrics");
         if (!res.ok) throw new Error("Error al obtener métricas del servidor");
         const data = await res.json();
         setMetrics(data);
@@ -69,6 +65,10 @@ export function DashboardImpact() {
     if (!printRef.current) return;
     try {
       setExporting(true);
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
       const element = printRef.current;
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
@@ -102,7 +102,7 @@ export function DashboardImpact() {
 
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center justify-center">
+      <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 flex items-center justify-center">
         <XCircle className="w-6 h-6 mr-2" />
         <span className="font-semibold">{error}</span>
       </div>
@@ -128,23 +128,23 @@ export function DashboardImpact() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard de Impacto</h2>
-          <p className="text-sm text-slate-500">Métricas principales de la plataforma en tiempo real.</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Dashboard de Impacto</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Métricas principales de la plataforma en tiempo real.</p>
         </div>
         <Button
           onClick={handleExportPDF}
           disabled={exporting}
-          className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
         >
           {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           Exportar PDF
         </Button>
       </div>
 
-      <div ref={printRef} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="mb-6 border-b border-slate-100 pb-4">
-          <h3 className="text-xl font-bold text-slate-800">Resumen de Métricas - Alumni UCR</h3>
-          <p className="text-sm text-slate-500">Generado: {new Date().toLocaleString("es-CR")}</p>
+      <div ref={printRef} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Resumen de Métricas - Alumni UCR</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Generado: {new Date().toLocaleString("es-CR")}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -153,7 +153,7 @@ export function DashboardImpact() {
             return (
               <Card key={index} className="border-border shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <CardTitle className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {kpi.label}
                   </CardTitle>
                   <div className={`p-1.5 rounded-md ${kpi.color}`}>
@@ -161,7 +161,7 @@ export function DashboardImpact() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-slate-800">{kpi.value.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{kpi.value.toLocaleString()}</div>
                 </CardContent>
               </Card>
             );

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   GraduationCap, 
   Briefcase, 
@@ -23,6 +24,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IntroVideo } from "@/components/layout/IntroVideo";
+import { ThemeToggle } from "@/components/fu/ThemeToggle";
 
 const FAQS = [
   {
@@ -126,12 +128,13 @@ export default function LandingPage() {
 
       {/* Header/Navbar (Absolute overlay) */}
       <header className="absolute top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent border-none">
-        <div className="max-w-7xl mx-auto px-6 h-28 flex items-center justify-between relative">
-          
-          {/* Mobile Left: Login Link */}
-          <div className="md:hidden flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-24 sm:h-28 flex items-center justify-between relative">
+
+          {/* Mobile Left: Theme Toggle + Login Link */}
+          <div className="md:hidden flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             <Link href="/login">
-              <span className="text-white text-sm font-bold uppercase tracking-wider hover:text-slate-200">
+              <span className="text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:text-slate-200">
                 Ingresar
               </span>
             </Link>
@@ -140,6 +143,7 @@ export default function LandingPage() {
           {/* Left Navigation Links (Desktop) */}
           <nav className="hidden md:flex items-center gap-8 flex-1 justify-end pr-10">
             <div className="flex items-center gap-4 border-r border-white/20 pr-8 mr-2">
+              <ThemeToggle />
               <Link href="/login">
                 <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-extrabold text-sm uppercase tracking-wider rounded-[8px] h-10 px-5 border-none transition-all shadow-md">
                   Ingresar
@@ -157,10 +161,10 @@ export default function LandingPage() {
           {/* Center Logo (Desktop & Mobile) */}
           <div className="flex flex-col items-center justify-center z-10 shrink-0 mx-auto md:mx-0">
             <Link href="/" className="flex flex-col items-center gap-1 group">
-              <img 
-                src="/logo.png" 
-                alt="Logo U" 
-                className="h-16 w-auto object-contain dark:brightness-110 group-hover:scale-105 transition-transform duration-300"
+              <img
+                src="/logo.png"
+                alt="Logo U"
+                className="h-12 sm:h-16 w-auto object-contain dark:brightness-110 group-hover:scale-105 transition-transform duration-300"
               />
               <div className="text-center">
                 <span className="text-sm sm:text-base font-bold tracking-widest text-white font-display block leading-none">EXALUMNOS U</span>
@@ -189,7 +193,7 @@ export default function LandingPage() {
           {/* Mobile Right: Register Link */}
           <div className="md:hidden flex items-center">
             <Link href="/registro">
-              <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-bold text-xs uppercase tracking-wider rounded-[8px] h-9 px-4 border-none shadow-sm">
+              <Button className="bg-[#006AD3] hover:bg-[#0056ab] text-white font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-[8px] h-8 px-3 sm:h-9 sm:px-4 border-none shadow-sm">
                 Registro
               </Button>
             </Link>
@@ -199,7 +203,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-screen min-h-[680px] flex items-center pb-44 text-white overflow-hidden bg-ucr-negro w-full">
+      <section className="relative h-screen min-h-[680px] flex items-center pb-24 sm:pb-32 md:pb-44 text-white overflow-hidden bg-ucr-negro w-full">
         <video 
           autoPlay 
           loop 
@@ -216,7 +220,7 @@ export default function LandingPage() {
 
 
         {/* Content Container */}
-        <div className="max-w-5xl mx-auto px-6 relative z-20 w-full flex flex-col items-center text-center pt-48 pb-12">
+        <div className="max-w-5xl mx-auto px-6 relative z-20 w-full flex flex-col items-center text-center pt-28 sm:pt-36 md:pt-48 pb-12">
           {/* Centered Content */}
           <div className="space-y-6 flex flex-col items-center relative w-full">
             {/* Very subtle background star watermark behind text */}
@@ -339,7 +343,7 @@ export default function LandingPage() {
           <Card className="border-slate-200/60 dark:border-slate-850 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 relative overflow-hidden group backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-ucr-celeste transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-20"></div>
             <div className="h-48 w-full overflow-hidden relative">
-              <img src="/mentor_landing.png" alt="Mentoría" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/mentor_landing.png" alt="Mentoría" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute bottom-4 left-4 bg-ucr-celeste-tint dark:bg-ucr-celeste/20 text-ucr-esmeralda dark:text-sky-400 w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md shadow-sm">
                 <Coffee className="h-5 w-5" />
               </div>
@@ -363,7 +367,7 @@ export default function LandingPage() {
           <Card className="border-slate-200/60 dark:border-slate-850 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 relative overflow-hidden group backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-ucr-esmeralda transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-20"></div>
             <div className="h-48 w-full overflow-hidden relative">
-              <img src="/jobs_landing.png" alt="Empleo" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/jobs_landing.png" alt="Empleo" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute bottom-4 left-4 bg-ucr-turquesa-tint dark:bg-ucr-esmeralda/20 text-[#004C63] dark:text-sky-300 w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md shadow-sm">
                 <Briefcase className="h-5 w-5" />
               </div>
@@ -387,7 +391,7 @@ export default function LandingPage() {
           <Card className="border-slate-200/60 dark:border-slate-850 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 relative overflow-hidden group backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-1 bg-ucr-naranja transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 z-20"></div>
             <div className="h-48 w-full overflow-hidden relative">
-              <img src="/scholarship_landing.png" alt="Becas" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/scholarship_landing.png" alt="Becas" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute bottom-4 left-4 bg-ucr-rosa-tint dark:bg-ucr-naranja/20 text-ucr-naranja w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-md shadow-sm">
                 <Heart className="h-5 w-5" />
               </div>
@@ -502,8 +506,8 @@ export default function LandingPage() {
             </div>
 
             {/* Grid right */}
-            <div className="lg:col-span-7 grid grid-cols-2 gap-6">
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Users className="h-6 w-6" />
                 </div>
@@ -511,7 +515,7 @@ export default function LandingPage() {
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Exalumnos Activos</p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Coffee className="h-6 w-6" />
                 </div>
@@ -519,7 +523,7 @@ export default function LandingPage() {
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Horas de Mentoría</p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Award className="h-6 w-6" />
                 </div>
@@ -527,7 +531,7 @@ export default function LandingPage() {
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Fondos Recaudados</p>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
+              <div className="bg-white/10 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-[15px] text-center space-y-2 hover:border-white/40 transition-all duration-300 shadow-lg">
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <GraduationCap className="h-6 w-6" />
                 </div>
@@ -657,32 +661,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-ucr-footer-bg text-slate-400 py-12 border-t border-slate-900 transition-colors relative overflow-hidden">
-        {/* Solid brand slanted bar in Celeste on the right background */}
-        <UCRSlantedBarElement color="#4BA5D9" className="absolute -right-16 -bottom-16 w-80 h-44 opacity-40 lg:opacity-50 transition-opacity duration-300 z-0" />
-
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/logo.png" 
-              alt="Logo U" 
-              className="h-10 w-auto object-contain brightness-90 dark:brightness-110"
-            />
-            <div>
-              <span className="text-sm font-medium tracking-tight text-white font-display block">La Universidad</span>
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-0.5 font-body">Fundación Exalumnos U</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-8 text-xs font-semibold font-body">
-            <a href="#" className="hover:text-white transition-colors">CONTACTO</a>
-            <a href="#" className="hover:text-white transition-colors">TÉRMINOS</a>
-            <a href="#" className="hover:text-white transition-colors">PRIVACIDAD</a>
-          </div>
-
-
-        </div>
-      </footer>
     </div>
   );
 }

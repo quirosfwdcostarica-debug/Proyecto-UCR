@@ -13,8 +13,12 @@ import {
   BookOpen, Lightbulb, Globe, ExternalLink, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import { CATALOGO_AREAS, TIPOS_APOYO, CATALOGO_CARRERAS } from "@/lib/constants";
 import { ofrecerApoyo, getMatchesForExalumno, rechazarMatch } from "@/actions/matching.actions";
+import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
 
 interface EstudianteItem {
   id: string;
@@ -27,6 +31,9 @@ interface EstudianteItem {
   sede: string | null;
   nivelAcademico: string | null;
   apoyoBuscado: string[];
+  matchScore?: number;
+  matchBreakdown?: { carrera: number; intereses: number; sector: number; apoyo: number };
+  matchReasons?: string[];
   user: {
     id: string;
     name: string | null;
@@ -111,6 +118,9 @@ function ProyectoModal({
           >
             <X className="w-5 h-5" />
           </button>
+          {student.matchScore !== undefined && (
+            <MatchScoreBadge score={student.matchScore} breakdown={student.matchBreakdown} reasons={student.matchReasons} size="sm" className="absolute top-3 right-14" />
+          )}
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
               <Icon className="w-5 h-5 text-white" />
@@ -209,7 +219,7 @@ function ProyectoModal({
               ) : (
                 <Button
                   onClick={onOfrecer}
-                  className="flex-1 bg-[#005da4] hover:bg-[#004a83] text-white text-sm font-bold"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold"
                 >
                   <HeartIcon className="w-4 h-4 mr-1" /> Ofrecer Apoyo
                 </Button>
@@ -343,7 +353,7 @@ export default function DirectorioEstudiantes() {
   const hasFilters = nombre || carrera || areaProyecto || apoyoBuscado;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950">
+    <ParallaxBackground className="min-h-screen">
       {/* Modal */}
       {modalStudent && (
         <ProyectoModal
@@ -359,20 +369,20 @@ export default function DirectorioEstudiantes() {
         />
       )}
 
-      <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-xs font-bold text-[#005da4] tracking-wider uppercase mb-1">Directorio</p>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <p className="text-xs font-bold text-[#005da4] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Directorio</p>
+          <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl mb-2">
             Directorio de Estudiantes
-          </h1>
+          </AnimatedHeading>
           <p className="text-slate-500 dark:text-slate-400 text-base max-w-2xl">
             Conoce a los estudiantes y futuros profesionales de la UCR. Encuentra talento, ofrece mentoría y conecta con perfiles prometedores.
           </p>
         </div>
 
         {/* Búsqueda */}
-        <div className="flex gap-3 mb-2">
+        <div className="flex flex-col sm:flex-row gap-3 mb-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
             <Input
@@ -382,19 +392,21 @@ export default function DirectorioEstudiantes() {
               className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-base"
             />
           </div>
-          <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant={showFilters ? "default" : "outline"}
-            className={`h-12 px-5 ${showFilters ? "bg-[#005da4] text-white border-none" : "border-slate-300 text-slate-700 dark:text-slate-300"}`}
-          >
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            Filtros {hasFilters && "(activos)"}
-          </Button>
-          {hasFilters && (
-            <Button aria-label="Limpiar filtros" variant="outline" onClick={() => { setNombre(""); setCarrera(""); setAreaProyecto(""); setApoyoBuscado(""); }} className="h-12 px-4 border-slate-300 text-slate-500">
-              <X className="h-4 w-4" />
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant={showFilters ? "default" : "outline"}
+              className={`h-12 px-5 flex-1 sm:flex-none ${showFilters ? "bg-primary text-primary-foreground border-none" : "border-slate-300 text-slate-700 dark:text-slate-300"}`}
+            >
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filtros {hasFilters && "(activos)"}
             </Button>
-          )}
+            {hasFilters && (
+              <Button aria-label="Limpiar filtros" variant="outline" onClick={() => { setNombre(""); setCarrera(""); setAreaProyecto(""); setApoyoBuscado(""); }} className="h-12 px-4 border-slate-300 text-slate-500 shrink-0">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filtros expandibles */}
@@ -459,7 +471,7 @@ export default function DirectorioEstudiantes() {
         ) : (
           <>
             <p className="text-sm text-slate-500 font-medium">
-              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> estudiante{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}{role === "EXALUMNO" && " · ordenados por mayor afinidad"}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -472,7 +484,16 @@ export default function DirectorioEstudiantes() {
                 const hasProject = !!student.proyectoTitulo;
 
                 return (
-                  <Card key={student.id} className="overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg transition-shadow group flex flex-col">
+                  <motion.div
+                    key={student.id}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+                    whileHover={{ y: -6 }}
+                    className="h-full"
+                  >
+                  <Card className="h-full overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-fu-lg transition-shadow group flex flex-col">
                     {/* Imagen / cabecera del proyecto */}
                     <div className={`bg-gradient-to-br ${theme.bg} h-36 flex items-center justify-center relative overflow-hidden`}>
                       {/* Patrón decorativo */}
@@ -491,9 +512,13 @@ export default function DirectorioEstudiantes() {
 
                       {/* Badge verificado si tiene proyecto */}
                       {hasProject && (
-                        <span className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span className={`absolute right-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${student.matchScore !== undefined ? "top-16" : "top-3"}`}>
                           <CheckCircle2 className="w-3 h-3" /> Verificado
                         </span>
+                      )}
+
+                      {student.matchScore !== undefined && (
+                        <MatchScoreBadge score={student.matchScore} breakdown={student.matchBreakdown} reasons={student.matchReasons} size="sm" className="absolute top-3 right-3 z-10" />
                       )}
                     </div>
 
@@ -599,13 +624,14 @@ export default function DirectorioEstudiantes() {
                       </div>
                     </div>
                   </Card>
+                  </motion.div>
                 );
               })}
             </div>
 
             {/* Paginación */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 mt-8">
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
                 <Button variant="outline" onClick={() => fetchEstudiantes(page - 1)} disabled={page <= 1 || loading}
                   className="h-9 px-3 border-slate-300 gap-1">
                   <ChevronLeft className="w-4 h-4" /> Anterior
@@ -622,7 +648,7 @@ export default function DirectorioEstudiantes() {
           </>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }
 

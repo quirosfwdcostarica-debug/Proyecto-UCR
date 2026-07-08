@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Swal from "sweetalert2";
-import { 
-  Briefcase, 
-  GraduationCap, 
-  MapPin, 
-  Mail, 
-  Linkedin, 
-  Github, 
-  Globe, 
+import {
+  Briefcase,
+  GraduationCap,
+  MapPin,
+  Mail,
+  Linkedin,
+  Github,
+  Globe,
   UserPlus,
   Check,
   X,
@@ -18,10 +19,16 @@ import {
   ArrowLeft,
   Calendar,
   Award,
-  Flag
+  Flag,
+  FolderOpen,
+  ArrowUpRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Progress } from "@/components/ui/Progress";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface ProfileDetailsClientProps {
   exalumno: any;
@@ -38,6 +45,7 @@ export function ProfileDetailsClient({ exalumno, currentUser, accessToken, apiUr
 
   const user = exalumno.User || {};
   const isOwnProfile = currentUser?.id === user.id;
+  const isEstudianteProfile = exalumno.tipo === "ESTUDIANTE";
 
   // ── Reportar perfil (RF-09 / T-53) ──────────────────────────────────────────
   const MOTIVOS_REPORTE = [
@@ -347,32 +355,41 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 pb-12 transition-colors duration-300">
+    <ParallaxBackground className="min-h-screen pb-12">
       {/* Top Banner and Back button */}
-      <div className="bg-ucr-celeste-medium dark:bg-slate-900 border-b dark:border-slate-800 text-white py-4 px-6 md:px-12 flex items-center justify-between shadow-md transition-colors duration-300">
+      <div className="fu-hero-gradient animate-fu-gradient border-b border-white/10 text-white py-4 px-4 md:px-12 flex flex-wrap items-center justify-between gap-2 shadow-md">
         <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-200 hover:text-white transition-colors">
           <ArrowLeft className="h-4 w-4" />
           Volver al directorio
         </button>
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">Perfil de Exalumno</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">{isEstudianteProfile ? "Perfil de Estudiante" : "Perfil de Exalumno"}</span>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 mt-8 flex flex-col lg:flex-row gap-8">
         
         {/* Left Card: Main Details */}
-        <div className="w-full lg:w-1/3 shrink-0">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 flex flex-col items-center text-center relative overflow-hidden transition-colors duration-300">
-            <div className="absolute top-0 left-0 right-0 h-24 bg-ucr-celeste-medium"></div>
-            
-            <div className="h-32 w-32 rounded-full border-4 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 overflow-hidden shadow-md mt-8 z-10 relative">
-              <img 
-                src={user.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre || "Exalumno")}&background=random`} 
-                alt={user.nombre} 
+        <motion.div
+          className="w-full lg:w-1/3 shrink-0"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 90, damping: 18 }}
+        >
+          <div className="fu-card p-6 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-24 fu-hero-gradient animate-fu-gradient"></div>
+
+            <motion.div
+              className="h-32 w-32 rounded-full border-4 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 overflow-hidden shadow-md mt-8 z-10 relative"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            >
+              <img
+                src={user.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre || "Exalumno")}&background=random`}
+                alt={user.nombre}
                 className="h-full w-full object-cover"
               />
-            </div>
+            </motion.div>
 
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-white mt-4 leading-tight">{user.nombre}</h1>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl mt-4 leading-tight">{user.nombre}</AnimatedHeading>
             <p className="text-sm font-semibold text-ucr-celeste-medium mt-1">{exalumno.cargo_actual || "Profesional"} en {exalumno.empresa_actual || "Empresa"}</p>
             
             <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-3 pb-4 border-b border-slate-100 w-full justify-center">
@@ -429,7 +446,7 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
 
           {/* Supports Card */}
           {supportTypes.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 mt-6 transition-colors duration-300">
+            <div className="fu-card p-6 mt-6 transition-colors duration-300">
               <h3 className="font-bold text-slate-800 dark:text-white text-sm tracking-wide mb-4 uppercase">Tipos de apoyo que ofrece</h3>
               <div className="flex flex-wrap gap-2.5">
                 {supportTypes.map((sup, idx) => (
@@ -440,13 +457,56 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Right Section: Detailed professional info */}
-        <div className="flex-1 space-y-6">
-          
+        <div className="flex-1 space-y-6 animate-fu-fade-up">
+
+          {/* Proyecto de Graduación — solo para perfiles de estudiante */}
+          {isEstudianteProfile && (
+            <div className="fu-card p-6 md:p-8 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white border-b dark:border-slate-800 pb-3 mb-4 flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-ucr-celeste-medium" />
+                Proyecto de Graduación
+              </h2>
+
+              {exalumno.proyecto_titulo ? (
+                <>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <h3 className="font-bold text-slate-800 dark:text-white text-lg leading-snug">{exalumno.proyecto_titulo}</h3>
+                    {exalumno.proyecto_tipo && (
+                      <span className="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full bg-ucr-celeste-tint dark:bg-sky-900/40 text-ucr-celeste-medium dark:text-sky-400">
+                        {exalumno.proyecto_tipo}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed line-clamp-3 mb-4">
+                    {exalumno.proyecto_descripcion || "El estudiante aún no ha agregado una descripción de su proyecto."}
+                  </p>
+                  {typeof exalumno.proyecto_porcentaje_avance === "number" && (
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
+                        <span className="text-slate-500 dark:text-slate-400">Avance del proyecto</span>
+                        <span className="text-ucr-celeste-medium font-bold">{exalumno.proyecto_porcentaje_avance}%</span>
+                      </div>
+                      <Progress value={exalumno.proyecto_porcentaje_avance} tone="#005da4" />
+                    </div>
+                  )}
+                  <Link href={`/proyectos/${user.id}`}>
+                    <Button className="w-full bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white font-semibold">
+                      <ArrowUpRight className="mr-2 h-4 w-4" />
+                      Abrir proyecto completo
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <p className="text-slate-500 text-sm italic">Este estudiante aún no ha registrado su proyecto de graduación.</p>
+              )}
+            </div>
+          )}
+
           {/* Biography */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 md:p-8 transition-colors duration-300">
+          <div className="fu-card p-6 md:p-8 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-white border-b dark:border-slate-800 pb-3 mb-4">Biografía Profesional</h2>
             <p className="text-slate-600 dark:text-slate-300 text-base leading-relaxed whitespace-pre-line">
               {exalumno.biografia || "El exalumno no ha registrado una biografía profesional todavía."}
@@ -454,7 +514,7 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
           </div>
 
           {/* Work Experience */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 md:p-8 transition-colors duration-300">
+          <div className="fu-card p-6 md:p-8 transition-colors duration-300">
             <h2 className="text-xl font-bold text-slate-800 dark:text-white border-b dark:border-slate-800 pb-3 mb-5 flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-ucr-celeste-medium" />
               Experiencia Laboral
@@ -490,23 +550,29 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Skills */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 transition-colors duration-300">
+            <div className="fu-card p-6 transition-colors duration-300">
               <h3 className="font-bold text-slate-800 dark:text-white text-lg border-b dark:border-slate-800 pb-2 mb-4">Habilidades</h3>
               {skills.length === 0 ? (
                 <p className="text-slate-500 text-sm italic">Sin habilidades registradas.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {skills.map((skill: string, idx: number) => (
-                    <Badge key={idx} variant="secondary" className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-0 py-1.5 px-3 rounded-lg text-xs font-semibold">
-                      {skill}
-                    </Badge>
-                  ))}
+                  {skills.map((skill: any, idx: number) => {
+                    // Los estudiantes guardan habilidades como { skill, level }; los
+                    // exalumnos, como texto simple. Se soportan ambos formatos.
+                    const label = typeof skill === "string" ? skill : skill?.skill ?? String(skill ?? "");
+                    const level = typeof skill === "object" ? skill?.level : null;
+                    return (
+                      <Badge key={idx} variant="secondary" className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-0 py-1.5 px-3 rounded-lg text-xs font-semibold">
+                        {label}{level ? ` · ${level}` : ""}
+                      </Badge>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Certifications */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 transition-colors duration-300">
+            <div className="fu-card p-6 transition-colors duration-300">
               <h3 className="font-bold text-slate-800 dark:text-white text-lg border-b dark:border-slate-800 pb-2 mb-4 flex items-center gap-2">
                 <Award className="h-5 w-5 text-ucr-celeste-medium" />
                 Certificaciones
@@ -592,6 +658,6 @@ if (exalumno.ofrece_networking)     supportTypes.push({ label: "Networking",    
           </div>
         </div>
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

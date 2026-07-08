@@ -10,7 +10,15 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
+interface ValidacionCheck {
+  campo: string;
+  esperado: any;
+  detectado: any;
+  estado: "ok" | "fail" | "indeterminado" | "no_aplica";
+}
 interface Donacion {
   id: string;
   monto: number;
@@ -22,11 +30,26 @@ interface Donacion {
   motivo_rechazo: string | null;
   created_at: string;
   updated_at: string;
+  fecha_transferencia: string | null;
+  numero_referencia: string | null;
+  validacion_estado: "pre_validada" | "discrepancia" | "revision_manual" | null;
+  validacion_confianza: number | null;
+  validacion_detalle: { checks?: ValidacionCheck[]; motivos?: string[] } | null;
+  validacion_at: string | null;
   exalumno_nombre: string | null;
   exalumno_email: string | null;
   proyecto_titulo: string;
   estudiante_nombre: string | null;
 }
+
+// Semáforo de verificación OCR (n8n). El OCR pre-valida; el admin confirma.
+const VALIDACION_CFG = {
+  pre_validada:    { label: "Pre-validada por OCR", cls: "bg-green-100 text-green-700 border-green-200",  Icon: CheckCircle2 },
+  discrepancia:    { label: "Discrepancia OCR",     cls: "bg-red-100 text-red-700 border-red-200",        Icon: AlertTriangle },
+  revision_manual: { label: "Revisión manual",      cls: "bg-amber-100 text-amber-700 border-amber-200",  Icon: Eye },
+};
+const CAMPO_LABEL: Record<string, string> = { monto: "Monto", moneda: "Moneda", fecha: "Fecha", referencia: "Referencia" };
+const CHECK_ICON: Record<string, string> = { ok: "✅", fail: "❌", indeterminado: "❔", no_aplica: "➖" };
 
 const ESTADO_CFG = {
   PENDIENTE:  { label: "Pendiente",  cls: "bg-yellow-100 text-yellow-700 border-yellow-200", Icon: Clock },
@@ -173,13 +196,13 @@ export default function AdminDonacionesPage() {
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
@@ -187,8 +210,8 @@ export default function AdminDonacionesPage() {
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestión de Donaciones</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Gestión de Donaciones</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Revisa comprobantes y aprueba o rechaza donaciones pendientes.
             </p>
@@ -206,7 +229,7 @@ export default function AdminDonacionesPage() {
               onClick={() => setFiltroEstado(e)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 filtroEstado === e
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#0f4c81]"
               }`}
             >
@@ -266,6 +289,16 @@ export default function AdminDonacionesPage() {
                             <AlertTriangle className="w-3 h-3" /> +24h pendiente
                           </span>
                         )}
+                        {d.validacion_estado && (() => {
+                          const v = VALIDACION_CFG[d.validacion_estado];
+                          const VIcon = v.Icon;
+                          return (
+                            <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${v.cls}`}>
+                              <VIcon className="h-3 w-3" /> {v.label}
+                              {typeof d.validacion_confianza === "number" && ` · ${d.validacion_confianza}%`}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
                         <p>
@@ -300,6 +333,33 @@ export default function AdminDonacionesPage() {
                           <span className="text-xs text-slate-400 italic">Sin comprobante adjunto</span>
                         )}
                       </div>
+
+                      {/* Detalle de la verificación OCR (n8n) — el admin decide igual */}
+                      {d.validacion_detalle?.checks && d.validacion_detalle.checks.length > 0 && (
+                        <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Comprobante vs. formulario (OCR)</p>
+                          <div className="space-y-1">
+                            {d.validacion_detalle.checks.map((c, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs">
+                                <span>{CHECK_ICON[c.estado] ?? "•"}</span>
+                                <span className="font-semibold text-slate-600 dark:text-slate-300 w-20 shrink-0">{CAMPO_LABEL[c.campo] ?? c.campo}</span>
+                                <span className="text-slate-500 dark:text-slate-400 truncate">
+                                  form: <span className="font-mono">{String(c.esperado ?? "—")}</span>
+                                  {" · "}OCR: <span className="font-mono">{String(c.detectado ?? "—")}</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          {d.validacion_detalle.motivos && d.validacion_detalle.motivos.length > 0 && (
+                            <ul className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-0.5">
+                              {d.validacion_detalle.motivos.map((m, i) => (
+                                <li key={i} className="text-[11px] text-amber-700 dark:text-amber-400">⚠ {m}</li>
+                              ))}
+                            </ul>
+                          )}
+                          <p className="text-[10px] text-slate-400 mt-2 italic">La verificación es automática y referencial. La confirmación final es tuya.</p>
+                        </div>
+                      )}
                     </div>
                     <div className="shrink-0 text-right flex flex-col items-end gap-3">
                       <div>
@@ -349,6 +409,6 @@ export default function AdminDonacionesPage() {
           onClose={() => setRechazando(null)}
         />
       )}
-    </div>
+    </ParallaxBackground>
   );
 }

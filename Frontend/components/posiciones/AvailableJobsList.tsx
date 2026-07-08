@@ -264,7 +264,7 @@ export function AvailableJobsList() {
                         <Button
                           onClick={() => handleApply(job.id)}
                           disabled={isApplying}
-                          className="bg-[#005da4] hover:bg-[#004a85] dark:bg-sky-600 dark:hover:bg-sky-700 text-white"
+                          className="bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-700 text-primary-foreground"
                         >
                           {isApplying ? (
                             <>
@@ -294,7 +294,7 @@ export function AvailableJobsList() {
                     <Button
                       onClick={() => setSelectedJobId(job.id)}
                       variant="default"
-                      className="bg-[#005da4] hover:bg-[#004a85] dark:bg-sky-600 dark:hover:bg-sky-700 text-white"
+                      className="bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-700 text-primary-foreground"
                     >
                       Aplicar Ahora
                     </Button>

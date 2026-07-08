@@ -25,6 +25,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import LandingPage from "@/components/landing/LandingPage";
+import { BecasInfoDialog } from "@/components/becas/BecasInfoDialog";
+import { FundingProgressBar } from "@/components/donaciones/FundingProgressBar";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { useLanguage } from "@/components/providers/LanguageContext";
 
 export default function RootPage() {
   const { data: session, status } = useSession();
@@ -50,6 +54,7 @@ export default function RootPage() {
 function Dashboard() {
   const { toast } = useToast();
   const { data: session } = useSession();
+  const { t } = useLanguage();
 
   const role = (session?.user as any)?.tipo?.toUpperCase() || "ESTUDIANTE";
   const isEstudiante = role === "ESTUDIANTE";
@@ -115,25 +120,23 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-900 relative flex flex-col">
       {/* Portada Superior (Hero con Carrusel) */}
-      <div className="relative overflow-hidden bg-slate-950 h-[480px] w-full border-b border-white/10 flex flex-col justify-between">
+      <div className="relative overflow-hidden bg-slate-950 h-[320px] sm:h-[400px] md:h-[480px] w-full border-b border-white/10 flex flex-col justify-between">
         <WelcomeCarousel className="absolute inset-0 w-full h-full z-0 bg-slate-950" />
         <IntroVideo />
         <div id="dashboard-main-content" className="relative z-10 h-full flex flex-col justify-between">
-          <div className="px-8 pb-6 mt-auto">
+          <div className="px-5 sm:px-8 pb-6 mt-auto">
             <h1 className="text-2xl font-bold text-white drop-shadow-md">
-              {isEstudiante ? "Comunidad Exalumnos UCR" : "Portal de Mentoría y Filantropía"}
+              {isEstudiante ? t("dashboard.title.student") : t("dashboard.title.exalumno")}
             </h1>
             <p className="text-xs text-white/80 drop-shadow-sm font-medium">
-              {isEstudiante 
-                ? "Conectando generaciones de la Universidad de Costa Rica" 
-                : "Apoya a la comunidad estudiantil y comparte tu experiencia profesional"}
+              {isEstudiante ? t("dashboard.subtitle.student") : t("dashboard.subtitle.exalumno")}
             </p>
           </div>
         </div>
       </div>
 
       {/* Sección Inferior (Contenido con Fondo Sólido) */}
-      <div className="p-8 max-w-7xl mx-auto space-y-6 w-full flex-1">
+      <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 w-full flex-1">
         
         {isEstudiante ? (
           <>
@@ -142,16 +145,16 @@ function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
               
               {/* Main Welcome Card */}
-              <Card className="lg:col-span-2 p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex relative overflow-hidden">
+              <Card className="lg:col-span-2 p-5 sm:p-6 md:p-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex relative overflow-hidden">
                 <div className="w-full relative z-10 text-foreground flex flex-col justify-center min-h-[200px]">
                   <p className="text-sm font-semibold tracking-wider text-[#0f4c81] dark:text-sky-400 mb-2 uppercase">Bienvenido de nuevo, {userName}</p>
-                  <h1 className="text-4xl font-extrabold text-foreground mb-4 leading-tight">
+                  <AnimatedHeading as="h1" className="text-3xl sm:text-4xl mb-4 leading-tight">
                     {proyectoTitulo !== "Proyecto de Graduación" ? (
                       <>{proyectoTitulo}<br/><span className="text-[#22c55e]">{carrera}</span></>
                     ) : (
                       <>Tu comunidad de Exalumnos UCR<br/><span className="text-[#22c55e]">te espera.</span></>
                     )}
-                  </h1>
+                  </AnimatedHeading>
                   <p className="text-muted-foreground mb-6 text-sm md:text-base leading-relaxed max-w-md">
                     {matchesActivos > 0
                       ? `Tienes ${matchesActivos} match${matchesActivos > 1 ? "es" : ""} activo${matchesActivos > 1 ? "s" : ""}. Continúa conectando con la red de exalumnos.`
@@ -159,12 +162,12 @@ function Dashboard() {
                         ? `Tienes ${matchesPendientes} match${matchesPendientes > 1 ? "es" : ""} sugerido${matchesPendientes > 1 ? "s" : ""}. ¡Revísalos y conecta con exalumnos!`
                         : "Explora el directorio de exalumnos y conecta con mentores que te ayudarán a avanzar en tu carrera."}
                   </p>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     <Link href="/proyecto/hitos">
-                      <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white border-0">Ver Hitos</Button>
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground border-0">{t("dashboard.welcome.btn.milestones")}</Button>
                     </Link>
                     <Link href="/proyecto/bitacora">
-                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">Bitácora</Button>
+                      <Button variant="outline" className="border-slate-300 dark:border-slate-700">{t("dashboard.welcome.btn.logbook")}</Button>
                     </Link>
                   </div>
                 </div>
@@ -173,8 +176,8 @@ function Dashboard() {
               {/* Project Status */}
               <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-foreground">Estado del Proyecto</h3>
-                  <Badge className="bg-[#dcfce7] text-[#166534] hover:bg-[#dcfce7] border-0">EN CAMINO</Badge>
+                  <AnimatedHeading as="h3" className="text-lg">{t("dashboard.status.title")}</AnimatedHeading>
+                  <Badge className="bg-[#dcfce7] text-[#166534] hover:bg-[#dcfce7] border-0">{t("dashboard.status.ontrack")}</Badge>
                 </div>
                 
                 <div className="mb-6">
@@ -213,45 +216,70 @@ function Dashboard() {
 
               {/* Support & Resources */}
               <div className="space-y-6">
-                <h3 className="text-lg font-bold text-foreground">Apoyo y Recursos</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-                    <div className="h-10 w-10 rounded-lg bg-[#0f4c81] flex items-center justify-center text-white mb-4">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Fondos de Beca</p>
-                    <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
-                    <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
-                  </Card>
+                <h3 className="text-lg font-bold text-foreground">{t("dashboard.support.title")}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <BecasInfoDialog
+                    trigger={
+                      <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer hover:shadow-md hover:border-[#00c0f3]/40 transition-all">
+                        <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground mb-4">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">{t("dashboard.support.funds")}</p>
+                        <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">Disponible</h4>
+                        <p className="text-xs font-semibold text-slate-400">Fondo de Excelencia Exalumnos</p>
+                        <p className="text-xs font-bold text-[#005da4] mt-2 hover:underline">Ver categorías de becas →</p>
+                      </Card>
+                    }
+                  />
                   <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
                     <div className="h-10 w-10 rounded-lg bg-green-700 flex items-center justify-center text-white mb-4">
                       <Users className="h-5 w-5" />
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">Mentorías Activas</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 font-medium">{t("dashboard.support.mentorships")}</p>
                     <h4 className="text-2xl font-bold text-[#0f4c81] dark:text-sky-400 mb-2">
                       {mentorCount === null ? "..." : `${mentorCount} Mentor${mentorCount !== 1 ? "es" : ""}`}
                     </h4>
                     <p className="text-xs font-medium text-slate-500">Exalumnos en la plataforma</p>
                   </Card>
                 </div>
-                <Card className="p-5 border-dashed border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950/40 backdrop-blur-md flex items-center justify-between shadow-md">
+                <Card className="p-5 border-dashed border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950/40 backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
                   <div className="flex gap-4 items-center">
                     <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
                       <Sparkles className="h-5 w-5 text-[#0f4c81] dark:text-sky-400" />
                     </div>
                     <div>
-                      <h5 className="font-bold text-foreground">Beca de Carrera Disponible</h5>
-                      <p className="text-sm text-slate-500">Tu perfil califica para el fondo de Excelencia de Exalumnos.</p>
+                      <h5 className="font-bold text-foreground">{t("dashboard.support.available")}</h5>
+                      <p className="text-sm text-slate-500">{t("dashboard.support.available.desc")}</p>
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => setIsBecaOpen(true)}
-                    variant="outline" 
-                    className="border-[#0f4c81] text-[#0f4c81] dark:border-sky-400 dark:text-sky-400"
+                    variant="outline"
+                    className="w-full sm:w-auto border-[#0f4c81] text-[#0f4c81] dark:border-sky-400 dark:text-sky-400"
                   >
-                    Aplicar Ahora
+                    {t("dashboard.support.apply")}
                   </Button>
                 </Card>
+
+                {profile?.financiamiento?.busca && (
+                  <Card className="p-5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                        <DollarSign className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Recaudación de tu Proyecto</p>
+                        <p className="text-xs text-slate-400">Fondos recibidos de exalumnos donantes</p>
+                      </div>
+                    </div>
+                    <FundingProgressBar
+                      objetivo={profile.financiamiento.objetivo}
+                      objetivoUsd={profile.financiamiento.objetivoUsd}
+                      recaudado={profile.financiamiento.recaudado}
+                      variant="self"
+                    />
+                  </Card>
+                )}
               </div>
 
               {/* Recommended Opportunities / Next Steps */}
@@ -268,10 +296,10 @@ function Dashboard() {
                       <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                         <Briefcase className="h-6 w-6 text-[#0f4c81] dark:text-sky-400" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#0f4c81] dark:group-hover:text-sky-400 transition-colors">Pasantía en Análisis de Datos</h4>
-                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-2 py-0 border-0">NUEVO</Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#0f4c81] dark:group-hover:text-sky-400 transition-colors break-words">Pasantía en Análisis de Datos</h4>
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-2 py-0 border-0 shrink-0">NUEVO</Badge>
                         </div>
                         <p className="text-xs text-slate-500 mb-3">Ofrecida por <span className="font-semibold text-slate-700 dark:text-slate-300">Intel Costa Rica</span> (Red de Exalumnos)</p>
                         <div className="flex gap-2">
@@ -288,10 +316,10 @@ function Dashboard() {
                       <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/30">
                         <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Mentoría: Preparación para Entrevistas</h4>
-                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0 border-0">SUGERIDO</Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors break-words">Mentoría: Preparación para Entrevistas</h4>
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] px-2 py-0 border-0 shrink-0">SUGERIDO</Badge>
                         </div>
                         <p className="text-xs text-slate-500 mb-3">Mentor: <span className="font-semibold text-slate-700 dark:text-slate-300">Carlos Méndez</span> (Ingeniería UCR)</p>
                         <div className="flex gap-2">
@@ -315,7 +343,7 @@ function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
               
               {/* Welcome Exalumno Card - Premium Redesign */}
-              <Card className="lg:col-span-2 p-8 border-0 bg-gradient-to-br from-[#0f4c81] to-[#003b6d] dark:from-slate-900 dark:to-slate-950 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out group flex relative overflow-hidden">
+              <Card className="lg:col-span-2 p-5 sm:p-6 md:p-8 border-0 bg-gradient-to-br from-[#0f4c81] to-[#003b6d] dark:from-slate-900 dark:to-slate-950 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out group flex relative overflow-hidden">
                 {/* Background decorative elements */}
                 <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity duration-500 transform group-hover:scale-110 group-hover:rotate-6">
                   <Sparkles className="w-48 h-48 text-white" />
@@ -326,23 +354,23 @@ function Dashboard() {
                 <div className="w-full relative z-10 text-white flex flex-col justify-center min-h-[200px]">
                   <div className="inline-flex items-center gap-2 mb-3">
                     <Badge className="bg-white/20 hover:bg-white/30 text-white border-0 px-3 py-1 backdrop-blur-md">
-                      Tablero del Exalumno
+                      {t("dashboard.welcome.exalumno")}
                     </Badge>
                   </div>
-                  <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight tracking-tight">
+                  <AnimatedHeading as="h1" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white mb-4 leading-tight tracking-tight">
                     Hola de nuevo, {session?.user?.name || "Graduado"}. <br/>
-                    <span className="text-sky-300 drop-shadow-[0_0_15px_rgba(125,211,252,0.3)]">Tu red está activa.</span>
-                  </h1>
+                    <span className="text-sky-300 drop-shadow-[0_0_15px_rgba(125,211,252,0.3)]">{t("dashboard.welcome.title.exalumno")}</span>
+                  </AnimatedHeading>
                   <p className="text-sky-100/90 mb-8 text-sm md:text-base leading-relaxed max-w-lg font-medium">
                     Gracias por apoyar al talento de la UCR.{" "}
                     {profile?.matchesContactados > 0
                       ? `Tienes ${profile.matchesContactados} solicitud${profile.matchesContactados !== 1 ? "es" : ""} de estudiantes esperando tu respuesta.`
                       : "Sigue conectando con estudiantes de la red UCR y deja tu legado."}
                   </p>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     <Link href="/directorio/estudiantes">
                       <Button className="bg-white text-[#0f4c81] hover:bg-slate-100 font-bold border-0 shadow-[0_4px_14px_0_rgba(255,255,255,0.2)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.3)] transition-all hover:-translate-y-0.5">
-                        Ver Estudiantes
+                        {t("dashboard.welcome.btn.students")}
                       </Button>
                     </Link>
                     <Link href="/mis-posiciones">
@@ -355,7 +383,7 @@ function Dashboard() {
               </Card>
 
               {/* Impact Card - Premium Redesign */}
-              <Card className="p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+              <Card className="p-5 sm:p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
                 {/* Subtle background glow */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/5 rounded-full blur-3xl group-hover:bg-emerald-400/10 transition-colors duration-500"></div>
                 
@@ -365,16 +393,16 @@ function Dashboard() {
                       <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
                         <Heart className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">Tu Impacto</h3>
+                      <AnimatedHeading as="h3" className="text-xl">{t("dashboard.impact.title")}</AnimatedHeading>
                     </div>
                     <Badge className="bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold px-3 py-1">
-                      FILÁNTROPO UCR
+                      {t("dashboard.impact.badge")}
                     </Badge>
                   </div>
                   
                   <div className="space-y-8">
                     <div className="bg-slate-50 dark:bg-slate-950/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/50">
-                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">Donación Total Confirmada</span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t("dashboard.impact.total")}</span>
                       <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#005da4] to-[#00a3e0] dark:from-sky-400 dark:to-emerald-400 drop-shadow-sm">
                         {profile?.donacionTotalConfirmada != null
                           ? `₡${Number(profile.donacionTotalConfirmada).toLocaleString("es-CR")}`
@@ -385,7 +413,7 @@ function Dashboard() {
                     <div className="pt-2">
                       <div className="flex items-center gap-2 mb-4">
                         <DollarSign className="w-4 h-4 text-slate-400" />
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Proyectos Patrocinados</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t("dashboard.impact.sponsored")}</span>
                       </div>
                       {Array.isArray(profile?.proyectosPatrocinados) && profile.proyectosPatrocinados.length > 0 ? (
                         <div className="space-y-4">
@@ -398,6 +426,15 @@ function Dashboard() {
                                 <span className="font-extrabold text-[#005da4] dark:text-sky-400 ml-1">{p.avance ?? 0}%</span>
                               </div>
                               <Progress value={p.avance ?? 0} className="h-2 bg-slate-100 dark:bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-[#005da4] [&>div]:to-[#00a3e0]" />
+                              {p.montoObjetivo > 0 && (
+                                <FundingProgressBar
+                                  objetivo={p.montoObjetivo}
+                                  objetivoUsd={p.montoObjetivoUsd}
+                                  recaudado={p.montoRecaudado ?? 0}
+                                  variant="donor"
+                                  className="mt-3"
+                                />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -498,10 +535,10 @@ function Dashboard() {
           </>
         )}
       </div>
-    
+
     {/* Modal Beca */}
     <Dialog open={isBecaOpen} onOpenChange={setIsBecaOpen}>
-      <DialogContent className="max-w-md bg-white border border-slate-200 shadow-xl rounded-lg p-6">
+      <DialogContent className="max-w-md w-[92vw] sm:w-full bg-white border border-slate-200 shadow-xl rounded-lg p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-[#0f4c81] flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-500 fill-amber-500" />
@@ -537,7 +574,7 @@ function Dashboard() {
             <DialogClose asChild>
               <Button type="button" variant="outline" className="text-xs font-semibold">Cancelar</Button>
             </DialogClose>
-            <Button type="submit" className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs font-semibold">
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold">
               Enviar Postulación
             </Button>
           </DialogFooter>
@@ -547,7 +584,7 @@ function Dashboard() {
 
     {/* Modal Café Virtual */}
     <Dialog open={isCoffeeOpen} onOpenChange={setIsCoffeeOpen}>
-      <DialogContent className="max-w-md bg-white border border-slate-200 shadow-xl rounded-lg p-6">
+      <DialogContent className="max-w-md w-[92vw] sm:w-full bg-white border border-slate-200 shadow-xl rounded-lg p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-[#0f4c81] flex items-center gap-2">
             <Coffee className="h-5 w-5 text-amber-700" />
@@ -600,7 +637,7 @@ function Dashboard() {
             <DialogClose asChild>
               <Button type="button" variant="outline" className="text-xs font-semibold">Cancelar</Button>
             </DialogClose>
-            <Button type="submit" className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs font-semibold gap-2">
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold gap-2">
               <Send className="h-3 w-3" />
               Confirmar Solicitud
             </Button>

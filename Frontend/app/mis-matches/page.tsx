@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { generarScoresPosiciones } from "@/actions/matching.actions";
 import MisMatchesClient from "./MisMatchesClient";
 
 export default async function MisMatchesPage() {
@@ -13,6 +14,7 @@ export default async function MisMatchesPage() {
   const userId = session.user.id;
 
   let matches: any[] = [];
+  let posiciones: any[] = [];
 
   try {
     const { createClient } = require("@supabase/supabase-js");
@@ -30,7 +32,7 @@ export default async function MisMatchesPage() {
         .from('MATCHES')
         .select('*')
         .eq('estudiante_id', userId)
-        .order('created_at', { ascending: false });
+        .order('score_match', { ascending: false });
 
       const exalumnoIds = rawMatches?.map((m: any) => m.exalumno_id) || [];
       const { data: exalumnos } = await supabaseAdmin.from('EXALUMNOS').select('*').in('user_id', exalumnoIds);
@@ -49,6 +51,12 @@ export default async function MisMatchesPage() {
           }
         };
       });
+
+      try {
+        posiciones = await generarScoresPosiciones(userId);
+      } catch (posError) {
+        console.error("Error generando scores de posiciones:", posError);
+      }
     }
 
 
@@ -77,16 +85,5 @@ export default async function MisMatchesPage() {
     console.error("Error fetching matches:", error);
   }
 
-  return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Mis Matches</h1>
-        <p className="text-slate-600 dark:text-slate-400">
-          Gestiona tus conexiones con la red de exalumnos UCR.
-        </p>
-      </div>
-
-      <MisMatchesClient matches={matches} currentUserId={userId} />
-    </div>
-  );
+  return <MisMatchesClient matches={matches} posiciones={posiciones} currentUserId={userId} />;
 }

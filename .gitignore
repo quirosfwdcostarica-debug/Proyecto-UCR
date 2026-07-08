@@ -16,3 +16,9 @@ backend/test_db_passwords.js
 
 # Caché de build de TypeScript (generado)
 Frontend/tsconfig.tsbuildinfo
+
+# Configuración local de Claude Code (no compartir con el equipo)
+.claude/
+
+# Plan de implementación personal (no subir al repo)
+plan_implementacion_john.md

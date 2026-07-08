@@ -649,11 +649,11 @@ async function main() {
   /* 7. Aplicaciones ───────────────────────────────────────────── */
   console.log('\n── Aplicaciones ────────────────────────────────────────');
   const APLICACIONES = [
-    { est: 'pablo.araya.seed@ucr.ac.cr',    pos: 'Pasante en Desarrollo de Software',  estado: 'PENDIENTE' },
-    { est: 'marcos.leon.seed@ucr.ac.cr',    pos: 'Pasante en Desarrollo de Software',  estado: 'PENDIENTE' },
+    { est: 'pablo.araya.seed@ucr.ac.cr',    pos: 'Pasante en Desarrollo de Software',  estado: 'ENVIADA' },
+    { est: 'marcos.leon.seed@ucr.ac.cr',    pos: 'Pasante en Desarrollo de Software',  estado: 'ENVIADA' },
     { est: 'kevin.ulate.seed@ucr.ac.cr',    pos: 'Analista Financiero Junior',          estado: 'SELECCIONADO' },
     { est: 'natalia.rios.seed@ucr.ac.cr',   pos: 'Analista Financiero Junior',          estado: 'DESCARTADO' },
-    { est: 'camila.chaves.seed@ucr.ac.cr',  pos: 'Asistente de Marketing Digital',      estado: 'PENDIENTE' },
+    { est: 'camila.chaves.seed@ucr.ac.cr',  pos: 'Asistente de Marketing Digital',      estado: 'ENVIADA' },
   ];
 
   for (const a of APLICACIONES) {

@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { aceptarMatch, cerrarMatch, rechazarMatch } from "@/actions/matching.actions";
 import { Loader2, CheckCircle2, Clock, Handshake, XCircle, Sparkles, BookOpen, MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
 
 type MatchStatus = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
@@ -41,6 +44,13 @@ const FILTER_TABS: { key: MatchStatus | "TODOS"; label: string }[] = [
   { key: "CERRADO",    label: "Cerrados"    },
 ];
 
+// El desglose de matches usa {C,I,A,S}; MatchScoreBadge (el mismo componente
+// del Directorio de Exalumnos) usa {carrera,intereses,sector,apoyo}.
+function toBreakdown(d: Desglose | null) {
+  if (!d) return undefined;
+  return { carrera: d.C, intereses: d.I, sector: d.A, apoyo: d.S };
+}
+
 export default function MatchesExalumnoClient({ matches: initial, currentUserId }: { matches: Match[], currentUserId: string }) {
   const router = useRouter();
   const [matches, setMatches]   = useState<Match[]>(initial);
@@ -48,7 +58,9 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
   const [loadingId, setLoading] = useState<string | null>(null);
   const [error, setError]       = useState<string | null>(null);
 
-  const visible = filter === "TODOS" ? matches : matches.filter(m => m.status === filter);
+  const visible = (filter === "TODOS" ? matches : matches.filter(m => m.status === filter))
+    .slice()
+    .sort((a, b) => b.afinidad - a.afinidad);
   const counts  = FILTER_TABS.reduce((acc, t) => {
     acc[t.key] = t.key === "TODOS" ? matches.length : matches.filter(m => m.status === t.key).length;
     return acc;
@@ -93,12 +105,18 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+    <ParallaxBackground className="min-h-screen">
+      <div className="container mx-auto py-8 sm:py-12 px-4">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+      >
+        <h1 className="text-3xl font-extrabold tracking-tight fu-text-gradient">
           Mis Matches
         </h1>
-        <p className="mt-2 text-muted-foreground text-lg">
+        <p className="mt-2 fu-text-2 text-lg">
           Estudiantes que la plataforma sugirió como compatibles con tu perfil.
         </p>
         {pendientes > 0 && (
@@ -107,7 +125,7 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
             {pendientes} estudiante{pendientes > 1 ? "s" : ""} esperando tu respuesta
           </div>
         )}
-      </div>
+      </motion.div>
 
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
@@ -143,7 +161,7 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visible.map(match => {
+          {visible.map((match, i) => {
             const cfg       = STATUS_CONFIG[match.status];
             const isLoading = loadingId === match.id;
             const isClosed  = match.status === "CERRADO";
@@ -155,50 +173,30 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
               match.status === "CONTACTADO" && match.initiated_by !== currentUserId;
 
             return (
-              <Card
+              <motion.div
                 key={match.id}
-                className={`relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-primary/10
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.05, ease: [0.25, 1, 0.5, 1] }}
+                className="h-full"
+              >
+              <Card
+                className={`relative h-full overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-primary/10
                   ${isClosed ? "opacity-60" : ""}
                   ${estudianteContacto ? "ring-2 ring-yellow-300/60" : ""}
                 `}
               >
-                {/* Score con tooltip de desglose */}
-                <div className="absolute top-4 right-4 group/score z-20">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-bold text-lg shadow-lg cursor-help select-none">
-                    {match.afinidad}
-                  </div>
-                  {match.desglose && (
-                    <div className="absolute top-0 right-full mr-2 hidden group-hover/score:block w-48 bg-slate-900 text-white text-xs rounded-lg px-3 py-2.5 shadow-2xl pointer-events-none">
-                      <p className="font-semibold text-slate-300 mb-1.5 text-[11px]">Puntuación</p>
-                      <div className="space-y-1 text-[11px]">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Carrera UCR</span>
-                          <span className={match.desglose.C > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.C}/30</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Intereses</span>
-                          <span className={match.desglose.I > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.I}/30</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Área proyecto</span>
-                          <span className={match.desglose.A > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.A}/20</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Tipo apoyo</span>
-                          <span className={match.desglose.S > 0 ? "text-green-400 font-bold" : "text-slate-500"}>{match.desglose.S}/20</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 pt-1.5 border-t border-slate-700 flex justify-between">
-                        <span className="text-slate-300 font-semibold">Total</span>
-                        <span className="text-white font-bold">{match.afinidad}/100</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* Score con desglose — mismo componente que el Directorio de Exalumnos */}
+                <MatchScoreBadge
+                  score={match.afinidad}
+                  breakdown={toBreakdown(match.desglose)}
+                  className="absolute top-4 right-4 z-20"
+                />
 
                 <CardHeader className="pr-16">
-                  <CardTitle className="text-xl">{match.estudiante.user.name ?? "Estudiante"}</CardTitle>
-                  <CardDescription className="text-sm">{match.estudiante.carrera}</CardDescription>
+                  <CardTitle className="text-xl break-words">{match.estudiante.user.name ?? "Estudiante"}</CardTitle>
+                  <CardDescription className="text-sm break-words">{match.estudiante.carrera}</CardDescription>
                 </CardHeader>
 
                 <CardContent>
@@ -296,10 +294,12 @@ export default function MatchesExalumnoClient({ matches: initial, currentUserId 
                   )}
                 </CardFooter>
               </Card>
+              </motion.div>
             );
           })}
         </div>
       )}
-    </div>
+      </div>
+    </ParallaxBackground>
   );
 }

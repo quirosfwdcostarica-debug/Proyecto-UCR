@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { Landmark } from "lucide-react";
 
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { UserDropdown } from "./UserDropdown";
+import { ThemeToggle } from "@/components/fu/ThemeToggle";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useLanguage, TranslationKeys } from "@/components/providers/LanguageContext";
@@ -16,13 +18,66 @@ interface TopBarProps {
   titleKey?: TranslationKeys;
 }
 
+function ExchangeRateBadge() {
+  const [rate, setRate] = useState<{ venta: number; compra: number; date: string } | null>(null);
+
+  useEffect(() => {
+    const load = () => {
+      fetch("/api/tipo-cambio")
+        .then((r) => r.json())
+        .then((d) => { if (d?.venta) setRate(d); })
+        .catch(() => {});
+    };
+    load();
+    const interval = setInterval(load, 30 * 60 * 1000); // refresca cada 30 min
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!rate) return null;
+
+  return (
+    <div
+      title={`Tipo de cambio del dólar (BCCR)${rate.date ? ` — actualizado ${rate.date}` : ""}. Venta: ₡${rate.venta} · Compra: ₡${rate.compra}`}
+      className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full shadow-sm"
+    >
+      <Landmark className="h-3.5 w-3.5 text-[#005da4] dark:text-sky-400" />
+      ₡{rate.venta.toLocaleString("es-CR")} / $1
+    </div>
+  );
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrador",
+  EXALUMNO: "Exalumno",
+  ESTUDIANTE: "Estudiante",
+};
+
+function RoleBadge() {
+  const { data: session } = useSession();
+  const tipo = (session?.user as any)?.tipo ?? (session?.user as any)?.role;
+  const role = typeof tipo === "string" ? tipo.toUpperCase() : null;
+  const label = role ? ROLE_LABELS[role] : null;
+
+  if (!label) return null;
+
+  return (
+    <span
+      className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white px-3 py-1.5 rounded-full shadow-sm"
+      style={{ backgroundColor: "var(--fu-sidebar)" }}
+      title={`Estás conectado como ${label}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function TopBar({ title, titleKey }: TopBarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const isHome = pathname === "/";
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -34,7 +89,7 @@ export function TopBar({ title, titleKey }: TopBarProps) {
       {/* Decorative gradient line */}
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#005da4] via-sky-400 to-emerald-400 opacity-90 z-10" />
       
-      <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative border-b border-slate-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl shadow-sm">
+      <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative bg-transparent">
         <div className="flex items-center gap-4">
           {displayTitle && (
             <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-500">
@@ -44,17 +99,21 @@ export function TopBar({ title, titleKey }: TopBarProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+
           {!session && (
             <Link href="/login">
               <Button variant="outline" size="sm" className="border-ucr-celeste text-ucr-celeste-medium dark:text-sky-400 hover:bg-ucr-celeste/10 dark:hover:bg-sky-400/10 font-body font-semibold">
-                {mounted && t("topbar.login" as any) !== "topbar.login" ? t("topbar.login" as any) : "Iniciar Sesión"}
+                {t("topbar.login")}
               </Button>
             </Link>
           )}
-          
+
           {session && (
             <>
+              <RoleBadge />
+              <ExchangeRateBadge />
               <NotificationsDropdown />
               <UserDropdown />
             </>

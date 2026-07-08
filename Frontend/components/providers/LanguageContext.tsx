@@ -23,6 +23,9 @@ export type TranslationKeys =
   | "sidebar.editProfile"
   | "sidebar.connections"
   | "sidebar.matches"
+  | "sidebar.retribuye"
+  | "sidebar.talleres"
+  | "sidebar.feed"
   | "sidebar.messages"
   | "sidebar.settings"
   | "sidebar.help"
@@ -33,6 +36,89 @@ export type TranslationKeys =
   | "sidebar.project.new"
   | "sidebar.project.view"
   | "sidebar.admin"
+  | "topbar.login"
+  | "auth.tagline"
+  | "auth.backToDashboard"
+  | "auth.back"
+  | "auth.hasAccount"
+  | "auth.loginHere"
+  | "auth.login.title"
+  | "auth.login.subtitle"
+  | "auth.login.emailLabel"
+  | "auth.login.passwordLabel"
+  | "auth.login.forgotPassword"
+  | "auth.login.showPassword"
+  | "auth.login.hidePassword"
+  | "auth.login.submitting"
+  | "auth.login.submit"
+  | "auth.login.noAccount"
+  | "auth.login.registerHere"
+  | "auth.login.toastSuccessTitle"
+  | "auth.login.toastSuccessDesc"
+  | "auth.login.toastErrorTitle"
+  | "auth.login.toastErrorUnverifiedSuffix"
+  | "auth.login.toastGenericErrorTitle"
+  | "auth.login.toastUnexpectedError"
+  | "auth.login.errorCredentials"
+  | "auth.login.errorConfiguration"
+  | "auth.login.errorAccessDenied"
+  | "auth.login.errorEmailNotVerified"
+  | "auth.login.errorGeneric"
+  | "auth.registroSelect.title"
+  | "auth.registroSelect.subtitle"
+  | "auth.registroSelect.studentTitle"
+  | "auth.registroSelect.studentDesc"
+  | "auth.registroSelect.alumniTitle"
+  | "auth.registroSelect.alumniDesc"
+  | "auth.registroSelect.cta"
+  | "auth.registroEstudiante.title"
+  | "auth.registroEstudiante.subtitle"
+  | "auth.registroExalumno.title"
+  | "auth.registroExalumno.subtitle"
+  | "auth.forgotPassword.title"
+  | "auth.forgotPassword.subtitle"
+  | "auth.forgotPassword.emailLabel"
+  | "auth.forgotPassword.submit"
+  | "auth.forgotPassword.submitting"
+  | "auth.forgotPassword.backToLogin"
+  | "auth.forgotPassword.goToLogin"
+  | "auth.forgotPassword.successTitle"
+  | "auth.forgotPassword.successDescPrefix"
+  | "auth.forgotPassword.successDescSuffix"
+  | "auth.forgotPassword.stepsTitle"
+  | "auth.forgotPassword.step1"
+  | "auth.forgotPassword.step2"
+  | "auth.forgotPassword.step3"
+  | "auth.forgotPassword.toastSuccessTitle"
+  | "footer.tagline"
+  | "footer.brandSubtitle"
+  | "footer.platform"
+  | "footer.impact"
+  | "footer.contact"
+  | "footer.contactAddress"
+  | "footer.rights"
+  | "footer.madeWith"
+  | "footer.madeWithSuffix"
+  | "footer.link.jobs"
+  | "footer.link.directory"
+  | "footer.link.workshops"
+  | "footer.link.feed"
+  | "footer.link.donations"
+  | "footer.link.giveback"
+  | "footer.link.matches"
+  | "footer.link.privacy"
+  | "footer.link.legal"
+  | "footer.link.help"
+  | "a11y.title"
+  | "a11y.largeText"
+  | "a11y.highContrast"
+  | "a11y.grayscale"
+  | "a11y.highlightLinks"
+  | "a11y.textToSpeech"
+  | "a11y.reset"
+  | "a11y.ttsEnabled"
+  | "a11y.openPanel"
+  | "a11y.closePanel"
   | "settings.title"
   | "settings.subtitle"
   | "settings.tab.general"
@@ -122,11 +208,97 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.connections": "Mis Conexiones",
     "sidebar.matches": "Mis Matches",
+    "sidebar.retribuye": "Retribuye a la UCR",
+    "sidebar.talleres": "Talleres",
+    "sidebar.feed": "Feed Comunidad",
     "sidebar.messages": "Mis Chats",
     "sidebar.settings": "Ajustes",
     "sidebar.help": "Ayuda",
     "sidebar.startProject": "Iniciar un Proyecto",
     "sidebar.admin": "Administración",
+    "topbar.login": "Iniciar Sesión",
+    "auth.tagline": "Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.",
+    "auth.backToDashboard": "Volver al Dashboard",
+    "auth.back": "Volver",
+    "auth.hasAccount": "¿Ya tienes una cuenta?",
+    "auth.loginHere": "Inicia sesión aquí",
+    "auth.login.title": "Bienvenido de vuelta",
+    "auth.login.subtitle": "Ingresa a la plataforma de Exalumnos UCR",
+    "auth.login.emailLabel": "Correo Electrónico",
+    "auth.login.passwordLabel": "Contraseña",
+    "auth.login.forgotPassword": "¿Olvidaste tu contraseña?",
+    "auth.login.showPassword": "Mostrar contraseña",
+    "auth.login.hidePassword": "Ocultar contraseña",
+    "auth.login.submitting": "Iniciando sesión...",
+    "auth.login.submit": "Iniciar sesión",
+    "auth.login.noAccount": "¿No tienes cuenta?",
+    "auth.login.registerHere": "Regístrate aquí",
+    "auth.login.toastSuccessTitle": "Inicio de sesión exitoso",
+    "auth.login.toastSuccessDesc": "Redirigiendo a tu panel...",
+    "auth.login.toastErrorTitle": "Error de autenticación",
+    "auth.login.toastErrorUnverifiedSuffix": " (Correo no verificado)",
+    "auth.login.toastGenericErrorTitle": "Error",
+    "auth.login.toastUnexpectedError": "Ocurrió un error inesperado.",
+    "auth.login.errorCredentials": "Correo o contraseña incorrectos.",
+    "auth.login.errorConfiguration": "Error de configuración del servidor. Intenta de nuevo.",
+    "auth.login.errorAccessDenied": "Acceso denegado. Tu cuenta puede estar pendiente de verificación.",
+    "auth.login.errorEmailNotVerified": "Debes verificar tu correo antes de iniciar sesión.",
+    "auth.login.errorGeneric": "Error al iniciar sesión.",
+    "auth.registroSelect.title": "Únete a la Comunidad",
+    "auth.registroSelect.subtitle": "Selecciona cómo deseas participar en la plataforma.",
+    "auth.registroSelect.studentTitle": "Soy Estudiante",
+    "auth.registroSelect.studentDesc": "Busco mentoría, pasantías o apoyo para mi proyecto de graduación.",
+    "auth.registroSelect.alumniTitle": "Soy Exalumno",
+    "auth.registroSelect.alumniDesc": "Deseo ofrecer mentoría, empleo o apoyar proyectos de nuevos talentos.",
+    "auth.registroSelect.cta": "Registrarme",
+    "auth.registroEstudiante.title": "Únete como Estudiante",
+    "auth.registroEstudiante.subtitle": "Crea tu cuenta institucional para recibir mentoría, pasantías y apoyo en tu proyecto de graduación.",
+    "auth.registroExalumno.title": "Registro de Exalumno",
+    "auth.registroExalumno.subtitle": "Crea tu cuenta profesional para conectar con estudiantes y ofrecer oportunidades o mentoría.",
+    "auth.forgotPassword.title": "Recuperar Contraseña",
+    "auth.forgotPassword.subtitle": "Ingresa tu correo electrónico y te enviaremos una contraseña temporal para que puedas ingresar.",
+    "auth.forgotPassword.emailLabel": "Correo electrónico",
+    "auth.forgotPassword.submit": "Enviar contraseña temporal",
+    "auth.forgotPassword.submitting": "Enviando...",
+    "auth.forgotPassword.backToLogin": "Volver a inicio de sesión",
+    "auth.forgotPassword.goToLogin": "Ir a inicio de sesión",
+    "auth.forgotPassword.successTitle": "Revisa tu correo",
+    "auth.forgotPassword.successDescPrefix": "Si existe una cuenta asociada a",
+    "auth.forgotPassword.successDescSuffix": "recibirás una contraseña temporal para ingresar.",
+    "auth.forgotPassword.stepsTitle": "Pasos a seguir:",
+    "auth.forgotPassword.step1": "Abre el correo y copia la contraseña temporal.",
+    "auth.forgotPassword.step2": "Inicia sesión con esa contraseña.",
+    "auth.forgotPassword.step3": "Ve a Configuración → Cambiar contraseña para elegir una nueva.",
+    "auth.forgotPassword.toastSuccessTitle": "Solicitud procesada",
+    "footer.tagline": "La plataforma que conecta a estudiantes y exalumnos de la Universidad de Costa Rica para impulsar mentorías, empleo, donaciones y proyectos de graduación.",
+    "footer.brandSubtitle": "Impacto y Legado",
+    "footer.platform": "Plataforma",
+    "footer.impact": "Impacto",
+    "footer.contact": "Contacto",
+    "footer.contactAddress": "San Pedro de Montes de Oca, San José, Costa Rica",
+    "footer.rights": "Todos los derechos reservados.",
+    "footer.madeWith": "Hecho con",
+    "footer.madeWithSuffix": "para la comunidad UCR",
+    "footer.link.jobs": "Bolsa de Empleo",
+    "footer.link.directory": "Directorio de Exalumnos",
+    "footer.link.workshops": "Talleres",
+    "footer.link.feed": "Feed de la Comunidad",
+    "footer.link.donations": "Donaciones",
+    "footer.link.giveback": "Retribuye a la U",
+    "footer.link.matches": "Mis Matches",
+    "footer.link.privacy": "Política de Privacidad",
+    "footer.link.legal": "Aviso Legal",
+    "footer.link.help": "Ayuda",
+    "a11y.title": "Accesibilidad",
+    "a11y.largeText": "Texto Grande",
+    "a11y.highContrast": "Alto Contraste",
+    "a11y.grayscale": "Escala de Grises",
+    "a11y.highlightLinks": "Resaltar Enlaces",
+    "a11y.textToSpeech": "Lectura por Voz",
+    "a11y.reset": "Restablecer",
+    "a11y.ttsEnabled": "Lectura por voz activada.",
+    "a11y.openPanel": "Abrir panel de accesibilidad",
+    "a11y.closePanel": "Cerrar panel de accesibilidad",
     "settings.title": "Ajustes de la Plataforma",
     "settings.subtitle": "Configura tus preferencias de idioma, tema y accede al soporte legal y técnico.",
     "settings.tab.general": "General",
@@ -182,7 +354,7 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "dashboard.mentors.explore": "Explorar Directorio",
     "dashboard.impact.title": "Tu Impacto",
     "dashboard.impact.badge": "FILÁNTROPO UCR",
-    "dashboard.impact.total": "Donación Total Acumulada",
+    "dashboard.impact.total": "Donación Total Confirmada",
     "dashboard.impact.sponsored": "Proyectos Patrocinados",
     "dashboard.applicants.title": "Postulantes a tus Vacantes",
     "dashboard.applicants.viewall": "Ver Todas",
@@ -215,11 +387,97 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Edit Profile",
     "sidebar.connections": "My Connections",
     "sidebar.matches": "My Matches",
+    "sidebar.retribuye": "Give Back to UCR",
+    "sidebar.talleres": "Workshops",
+    "sidebar.feed": "Community Feed",
     "sidebar.messages": "My Chats",
     "sidebar.settings": "Settings",
     "sidebar.help": "Help",
     "sidebar.startProject": "Start a Project",
     "sidebar.admin": "Administration",
+    "topbar.login": "Log In",
+    "auth.tagline": "Connecting talent, fostering legacy, and building the future of our university community.",
+    "auth.backToDashboard": "Back to Dashboard",
+    "auth.back": "Back",
+    "auth.hasAccount": "Already have an account?",
+    "auth.loginHere": "Log in here",
+    "auth.login.title": "Welcome back",
+    "auth.login.subtitle": "Sign in to the UCR Alumni platform",
+    "auth.login.emailLabel": "Email Address",
+    "auth.login.passwordLabel": "Password",
+    "auth.login.forgotPassword": "Forgot your password?",
+    "auth.login.showPassword": "Show password",
+    "auth.login.hidePassword": "Hide password",
+    "auth.login.submitting": "Signing in...",
+    "auth.login.submit": "Log In",
+    "auth.login.noAccount": "Don't have an account?",
+    "auth.login.registerHere": "Sign up here",
+    "auth.login.toastSuccessTitle": "Successfully signed in",
+    "auth.login.toastSuccessDesc": "Redirecting to your dashboard...",
+    "auth.login.toastErrorTitle": "Authentication error",
+    "auth.login.toastErrorUnverifiedSuffix": " (Email not verified)",
+    "auth.login.toastGenericErrorTitle": "Error",
+    "auth.login.toastUnexpectedError": "An unexpected error occurred.",
+    "auth.login.errorCredentials": "Incorrect email or password.",
+    "auth.login.errorConfiguration": "Server configuration error. Please try again.",
+    "auth.login.errorAccessDenied": "Access denied. Your account may be pending verification.",
+    "auth.login.errorEmailNotVerified": "You must verify your email before signing in.",
+    "auth.login.errorGeneric": "Error signing in.",
+    "auth.registroSelect.title": "Join the Community",
+    "auth.registroSelect.subtitle": "Select how you want to participate in the platform.",
+    "auth.registroSelect.studentTitle": "I'm a Student",
+    "auth.registroSelect.studentDesc": "I'm looking for mentorship, internships, or support for my graduation project.",
+    "auth.registroSelect.alumniTitle": "I'm an Alumnus",
+    "auth.registroSelect.alumniDesc": "I want to offer mentorship, jobs, or support projects from new talent.",
+    "auth.registroSelect.cta": "Sign Up",
+    "auth.registroEstudiante.title": "Join as a Student",
+    "auth.registroEstudiante.subtitle": "Create your institutional account to receive mentorship, internships, and support for your graduation project.",
+    "auth.registroExalumno.title": "Alumni Registration",
+    "auth.registroExalumno.subtitle": "Create your professional account to connect with students and offer opportunities or mentorship.",
+    "auth.forgotPassword.title": "Recover Password",
+    "auth.forgotPassword.subtitle": "Enter your email address and we'll send you a temporary password to sign in.",
+    "auth.forgotPassword.emailLabel": "Email address",
+    "auth.forgotPassword.submit": "Send temporary password",
+    "auth.forgotPassword.submitting": "Sending...",
+    "auth.forgotPassword.backToLogin": "Back to sign in",
+    "auth.forgotPassword.goToLogin": "Go to sign in",
+    "auth.forgotPassword.successTitle": "Check your email",
+    "auth.forgotPassword.successDescPrefix": "If an account exists for",
+    "auth.forgotPassword.successDescSuffix": "you will receive a temporary password to sign in.",
+    "auth.forgotPassword.stepsTitle": "Next steps:",
+    "auth.forgotPassword.step1": "Open the email and copy the temporary password.",
+    "auth.forgotPassword.step2": "Sign in with that password.",
+    "auth.forgotPassword.step3": "Go to Settings → Change Password to choose a new one.",
+    "auth.forgotPassword.toastSuccessTitle": "Request processed",
+    "footer.tagline": "The platform that connects students and alumni of the University of Costa Rica to boost mentorships, jobs, donations, and graduation projects.",
+    "footer.brandSubtitle": "Impact and Legacy",
+    "footer.platform": "Platform",
+    "footer.impact": "Impact",
+    "footer.contact": "Contact",
+    "footer.contactAddress": "San Pedro de Montes de Oca, San José, Costa Rica",
+    "footer.rights": "All rights reserved.",
+    "footer.madeWith": "Made with",
+    "footer.madeWithSuffix": "for the UCR community",
+    "footer.link.jobs": "Job Board",
+    "footer.link.directory": "Alumni Directory",
+    "footer.link.workshops": "Workshops",
+    "footer.link.feed": "Community Feed",
+    "footer.link.donations": "Donations",
+    "footer.link.giveback": "Give Back to UCR",
+    "footer.link.matches": "My Matches",
+    "footer.link.privacy": "Privacy Policy",
+    "footer.link.legal": "Legal Notice",
+    "footer.link.help": "Help",
+    "a11y.title": "Accessibility",
+    "a11y.largeText": "Large Text",
+    "a11y.highContrast": "High Contrast",
+    "a11y.grayscale": "Grayscale",
+    "a11y.highlightLinks": "Highlight Links",
+    "a11y.textToSpeech": "Text to Speech",
+    "a11y.reset": "Reset",
+    "a11y.ttsEnabled": "Text to speech enabled.",
+    "a11y.openPanel": "Open accessibility panel",
+    "a11y.closePanel": "Close accessibility panel",
     "settings.title": "Platform Settings",
     "settings.subtitle": "Configure your language and theme preferences, and access legal and technical support.",
     "settings.tab.general": "General",
@@ -308,11 +566,97 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Editar Perfil",
     "sidebar.connections": "Minhas Conexões",
     "sidebar.matches": "Meus Matches",
+    "sidebar.retribuye": "Retribua à UCR",
+    "sidebar.talleres": "Workshops",
+    "sidebar.feed": "Feed da Comunidade",
     "sidebar.messages": "Meus Chats",
     "sidebar.settings": "Configurações",
     "sidebar.help": "Ajuda",
     "sidebar.startProject": "Iniciar um Projeto",
     "sidebar.admin": "Administração",
+    "topbar.login": "Entrar",
+    "auth.tagline": "Conectando talentos, promovendo o legado e construindo o futuro da nossa comunidade universitária.",
+    "auth.backToDashboard": "Voltar ao Painel",
+    "auth.back": "Voltar",
+    "auth.hasAccount": "Já tem uma conta?",
+    "auth.loginHere": "Entre aqui",
+    "auth.login.title": "Bem-vindo de volta",
+    "auth.login.subtitle": "Acesse a plataforma de Ex-alunos UCR",
+    "auth.login.emailLabel": "E-mail",
+    "auth.login.passwordLabel": "Senha",
+    "auth.login.forgotPassword": "Esqueceu sua senha?",
+    "auth.login.showPassword": "Mostrar senha",
+    "auth.login.hidePassword": "Ocultar senha",
+    "auth.login.submitting": "Entrando...",
+    "auth.login.submit": "Entrar",
+    "auth.login.noAccount": "Não tem uma conta?",
+    "auth.login.registerHere": "Cadastre-se aqui",
+    "auth.login.toastSuccessTitle": "Login realizado com sucesso",
+    "auth.login.toastSuccessDesc": "Redirecionando para o seu painel...",
+    "auth.login.toastErrorTitle": "Erro de autenticação",
+    "auth.login.toastErrorUnverifiedSuffix": " (E-mail não verificado)",
+    "auth.login.toastGenericErrorTitle": "Erro",
+    "auth.login.toastUnexpectedError": "Ocorreu um erro inesperado.",
+    "auth.login.errorCredentials": "E-mail ou senha incorretos.",
+    "auth.login.errorConfiguration": "Erro de configuração do servidor. Tente novamente.",
+    "auth.login.errorAccessDenied": "Acesso negado. Sua conta pode estar pendente de verificação.",
+    "auth.login.errorEmailNotVerified": "Você deve verificar seu e-mail antes de entrar.",
+    "auth.login.errorGeneric": "Erro ao entrar.",
+    "auth.registroSelect.title": "Junte-se à Comunidade",
+    "auth.registroSelect.subtitle": "Selecione como deseja participar da plataforma.",
+    "auth.registroSelect.studentTitle": "Sou Estudante",
+    "auth.registroSelect.studentDesc": "Procuro mentoria, estágios ou apoio para meu projeto de graduação.",
+    "auth.registroSelect.alumniTitle": "Sou Ex-aluno",
+    "auth.registroSelect.alumniDesc": "Quero oferecer mentoria, empregos ou apoiar projetos de novos talentos.",
+    "auth.registroSelect.cta": "Cadastrar-se",
+    "auth.registroEstudiante.title": "Junte-se como Estudante",
+    "auth.registroEstudiante.subtitle": "Crie sua conta institucional para receber mentoria, estágios e apoio para seu projeto de graduação.",
+    "auth.registroExalumno.title": "Cadastro de Ex-aluno",
+    "auth.registroExalumno.subtitle": "Crie sua conta profissional para se conectar com estudantes e oferecer oportunidades ou mentoria.",
+    "auth.forgotPassword.title": "Recuperar Senha",
+    "auth.forgotPassword.subtitle": "Digite seu e-mail e enviaremos uma senha temporária para você entrar.",
+    "auth.forgotPassword.emailLabel": "E-mail",
+    "auth.forgotPassword.submit": "Enviar senha temporária",
+    "auth.forgotPassword.submitting": "Enviando...",
+    "auth.forgotPassword.backToLogin": "Voltar ao login",
+    "auth.forgotPassword.goToLogin": "Ir para o login",
+    "auth.forgotPassword.successTitle": "Verifique seu e-mail",
+    "auth.forgotPassword.successDescPrefix": "Se existir uma conta associada a",
+    "auth.forgotPassword.successDescSuffix": "você receberá uma senha temporária para entrar.",
+    "auth.forgotPassword.stepsTitle": "Próximos passos:",
+    "auth.forgotPassword.step1": "Abra o e-mail e copie a senha temporária.",
+    "auth.forgotPassword.step2": "Entre com essa senha.",
+    "auth.forgotPassword.step3": "Vá em Configurações → Alterar senha para escolher uma nova.",
+    "auth.forgotPassword.toastSuccessTitle": "Solicitação processada",
+    "footer.tagline": "A plataforma que conecta estudantes e ex-alunos da Universidade de Costa Rica para impulsionar mentorias, empregos, doações e projetos de graduação.",
+    "footer.brandSubtitle": "Impacto e Legado",
+    "footer.platform": "Plataforma",
+    "footer.impact": "Impacto",
+    "footer.contact": "Contato",
+    "footer.contactAddress": "San Pedro de Montes de Oca, San José, Costa Rica",
+    "footer.rights": "Todos os direitos reservados.",
+    "footer.madeWith": "Feito com",
+    "footer.madeWithSuffix": "para a comunidade UCR",
+    "footer.link.jobs": "Vagas de Emprego",
+    "footer.link.directory": "Diretório de Ex-alunos",
+    "footer.link.workshops": "Workshops",
+    "footer.link.feed": "Feed da Comunidade",
+    "footer.link.donations": "Doações",
+    "footer.link.giveback": "Retribua à UCR",
+    "footer.link.matches": "Meus Matches",
+    "footer.link.privacy": "Política de Privacidade",
+    "footer.link.legal": "Aviso Legal",
+    "footer.link.help": "Ajuda",
+    "a11y.title": "Acessibilidade",
+    "a11y.largeText": "Texto Grande",
+    "a11y.highContrast": "Alto Contraste",
+    "a11y.grayscale": "Escala de Cinza",
+    "a11y.highlightLinks": "Destacar Links",
+    "a11y.textToSpeech": "Leitura em Voz Alta",
+    "a11y.reset": "Restaurar",
+    "a11y.ttsEnabled": "Leitura em voz alta ativada.",
+    "a11y.openPanel": "Abrir painel de acessibilidade",
+    "a11y.closePanel": "Fechar painel de acessibilidade",
     "settings.title": "Configurações da Plataforma",
     "settings.subtitle": "Configure suas preferências de idioma, tema e acesse o suporte legal e técnico.",
     "settings.tab.general": "Geral",
@@ -401,11 +745,97 @@ const translations: Record<Language, Record<TranslationKeys, string>> = {
     "sidebar.editProfile": "Modifier le Profil",
     "sidebar.connections": "Mes Connexions",
     "sidebar.matches": "Mes Matches",
+    "sidebar.retribuye": "Redonner à l'UCR",
+    "sidebar.talleres": "Ateliers",
+    "sidebar.feed": "Fil Communautaire",
     "sidebar.messages": "Mes Chats",
     "sidebar.settings": "Paramètres",
     "sidebar.help": "Aide",
     "sidebar.startProject": "Démarrer un Projet",
     "sidebar.admin": "Administration",
+    "topbar.login": "Se Connecter",
+    "auth.tagline": "Connecter les talents, favoriser l'héritage et construire l'avenir de notre communauté universitaire.",
+    "auth.backToDashboard": "Retour au Tableau de Bord",
+    "auth.back": "Retour",
+    "auth.hasAccount": "Vous avez déjà un compte ?",
+    "auth.loginHere": "Connectez-vous ici",
+    "auth.login.title": "Bon retour",
+    "auth.login.subtitle": "Connectez-vous à la plateforme des Anciens de l'UCR",
+    "auth.login.emailLabel": "Adresse E-mail",
+    "auth.login.passwordLabel": "Mot de Passe",
+    "auth.login.forgotPassword": "Mot de passe oublié ?",
+    "auth.login.showPassword": "Afficher le mot de passe",
+    "auth.login.hidePassword": "Masquer le mot de passe",
+    "auth.login.submitting": "Connexion en cours...",
+    "auth.login.submit": "Se Connecter",
+    "auth.login.noAccount": "Vous n'avez pas de compte ?",
+    "auth.login.registerHere": "Inscrivez-vous ici",
+    "auth.login.toastSuccessTitle": "Connexion réussie",
+    "auth.login.toastSuccessDesc": "Redirection vers votre tableau de bord...",
+    "auth.login.toastErrorTitle": "Erreur d'authentification",
+    "auth.login.toastErrorUnverifiedSuffix": " (E-mail non vérifié)",
+    "auth.login.toastGenericErrorTitle": "Erreur",
+    "auth.login.toastUnexpectedError": "Une erreur inattendue s'est produite.",
+    "auth.login.errorCredentials": "E-mail ou mot de passe incorrect.",
+    "auth.login.errorConfiguration": "Erreur de configuration du serveur. Veuillez réessayer.",
+    "auth.login.errorAccessDenied": "Accès refusé. Votre compte est peut-être en attente de vérification.",
+    "auth.login.errorEmailNotVerified": "Vous devez vérifier votre e-mail avant de vous connecter.",
+    "auth.login.errorGeneric": "Erreur de connexion.",
+    "auth.registroSelect.title": "Rejoignez la Communauté",
+    "auth.registroSelect.subtitle": "Sélectionnez comment vous souhaitez participer à la plateforme.",
+    "auth.registroSelect.studentTitle": "Je suis Étudiant",
+    "auth.registroSelect.studentDesc": "Je recherche du mentorat, des stages ou un soutien pour mon projet de fin d'études.",
+    "auth.registroSelect.alumniTitle": "Je suis Ancien Élève",
+    "auth.registroSelect.alumniDesc": "Je souhaite offrir du mentorat, des emplois ou soutenir des projets de nouveaux talents.",
+    "auth.registroSelect.cta": "S'inscrire",
+    "auth.registroEstudiante.title": "Rejoignez en tant qu'Étudiant",
+    "auth.registroEstudiante.subtitle": "Créez votre compte institutionnel pour recevoir du mentorat, des stages et un soutien pour votre projet de fin d'études.",
+    "auth.registroExalumno.title": "Inscription des Anciens Élèves",
+    "auth.registroExalumno.subtitle": "Créez votre compte professionnel pour vous connecter avec des étudiants et offrir des opportunités ou du mentorat.",
+    "auth.forgotPassword.title": "Récupérer le Mot de Passe",
+    "auth.forgotPassword.subtitle": "Entrez votre adresse e-mail et nous vous enverrons un mot de passe temporaire pour vous connecter.",
+    "auth.forgotPassword.emailLabel": "Adresse e-mail",
+    "auth.forgotPassword.submit": "Envoyer un mot de passe temporaire",
+    "auth.forgotPassword.submitting": "Envoi en cours...",
+    "auth.forgotPassword.backToLogin": "Retour à la connexion",
+    "auth.forgotPassword.goToLogin": "Aller à la connexion",
+    "auth.forgotPassword.successTitle": "Vérifiez votre e-mail",
+    "auth.forgotPassword.successDescPrefix": "Si un compte existe pour",
+    "auth.forgotPassword.successDescSuffix": "vous recevrez un mot de passe temporaire pour vous connecter.",
+    "auth.forgotPassword.stepsTitle": "Étapes suivantes :",
+    "auth.forgotPassword.step1": "Ouvrez l'e-mail et copiez le mot de passe temporaire.",
+    "auth.forgotPassword.step2": "Connectez-vous avec ce mot de passe.",
+    "auth.forgotPassword.step3": "Allez dans Paramètres → Changer le mot de passe pour en choisir un nouveau.",
+    "auth.forgotPassword.toastSuccessTitle": "Demande traitée",
+    "footer.tagline": "La plateforme qui connecte étudiants et anciens élèves de l'Université du Costa Rica pour stimuler le mentorat, l'emploi, les dons et les projets de fin d'études.",
+    "footer.brandSubtitle": "Impact et Héritage",
+    "footer.platform": "Plateforme",
+    "footer.impact": "Impact",
+    "footer.contact": "Contact",
+    "footer.contactAddress": "San Pedro de Montes de Oca, San José, Costa Rica",
+    "footer.rights": "Tous droits réservés.",
+    "footer.madeWith": "Fait avec",
+    "footer.madeWithSuffix": "pour la communauté UCR",
+    "footer.link.jobs": "Offres d'Emploi",
+    "footer.link.directory": "Annuaire des Anciens",
+    "footer.link.workshops": "Ateliers",
+    "footer.link.feed": "Fil Communautaire",
+    "footer.link.donations": "Dons",
+    "footer.link.giveback": "Redonner à l'UCR",
+    "footer.link.matches": "Mes Matches",
+    "footer.link.privacy": "Politique de Confidentialité",
+    "footer.link.legal": "Mentions Légales",
+    "footer.link.help": "Aide",
+    "a11y.title": "Accessibilité",
+    "a11y.largeText": "Texte Agrandi",
+    "a11y.highContrast": "Contraste Élevé",
+    "a11y.grayscale": "Niveaux de Gris",
+    "a11y.highlightLinks": "Surligner les Liens",
+    "a11y.textToSpeech": "Synthèse Vocale",
+    "a11y.reset": "Réinitialiser",
+    "a11y.ttsEnabled": "Synthèse vocale activée.",
+    "a11y.openPanel": "Ouvrir le panneau d'accessibilité",
+    "a11y.closePanel": "Fermer le panneau d'accessibilité",
     "settings.title": "Paramètres de la Plateforme",
     "settings.subtitle": "Configurez vos préférences de langue, de thème et accédez à l'assistance juridique et technique.",
     "settings.tab.general": "Général",
@@ -488,6 +918,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const savedLang = localStorage.getItem("language") as Language | null;
     if (savedLang === "es" || savedLang === "en" || savedLang === "pt" || savedLang === "fr") {
       setLanguageState(savedLang);
+    } else {
+      // Sin preferencia guardada: usar el idioma del navegador (como YouTube
+      // detecta el país/idioma para el doblaje automático) en vez de forzar español.
+      const browserLang = navigator.language?.slice(0, 2).toLowerCase();
+      if (browserLang === "en" || browserLang === "pt" || browserLang === "fr") {
+        setLanguageState(browserLang);
+      }
     }
     setMounted(true);
   }, []);
@@ -498,7 +935,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: TranslationKeys): string => {
-    if (!mounted) return key;
+    // Antes de montar no se conoce el idioma detectado del navegador todavía,
+    // así que se muestra español (el default del servidor) en vez de la clave cruda.
+    if (!mounted) return translations.es[key] || key;
     return translations[language][key] || key;
   };
 

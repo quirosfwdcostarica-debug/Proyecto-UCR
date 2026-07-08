@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, RefreshCw, BarChart, Users, DollarSign, HeartHandshake, Printer, FolderHeart, UserPlus, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import { 
   BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -61,50 +62,50 @@ export default function AdminReportesPage() {
   if (!data) return <div className="p-8 text-center text-red-500">Error cargando dashboard</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 print:bg-white print:p-0">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 print:bg-white print:p-0">
       <div className="max-w-7xl mx-auto space-y-8">
         
         <div className="print:hidden">
-          <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
+          <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0f4c81] mb-6">
             <ArrowLeft className="w-4 h-4" /> Volver al panel
           </Link>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Dashboard de Impacto</h1>
-              <p className="text-slate-500">Métricas y estadísticas globales de la plataforma.</p>
+              <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl text-slate-900 dark:text-white">Dashboard de Impacto</AnimatedHeading>
+              <p className="text-slate-500 dark:text-slate-400">Métricas y estadísticas globales de la plataforma.</p>
             </div>
-            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-[#0f4c81] text-white rounded-lg hover:bg-[#0f4c81]/90 shadow-sm transition-colors font-medium text-sm">
+            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-sm transition-colors font-medium text-sm">
               <Printer className="w-4 h-4" /> Exportar a PDF
             </button>
           </div>
 
           {/* Filtro de rango de fechas */}
-          <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
-            <div className="flex items-center gap-2 text-slate-400">
+          <div className="mt-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
               <Calendar className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wide">Periodo</span>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-500">Desde</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Desde</label>
               <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm" />
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-500">Hasta</label>
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Hasta</label>
               <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white text-sm" />
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm" />
             </div>
             <button onClick={loadStats}
-              className="px-4 py-2 bg-[#0f4c81] text-white rounded-lg hover:bg-[#0f4c81]/90 shadow-sm transition-colors font-medium text-sm">
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-sm transition-colors font-medium text-sm">
               Aplicar
             </button>
             {(desde || hasta) && (
               <button onClick={limpiarRango}
-                className="px-3 py-2 text-sm text-slate-500 hover:text-[#0f4c81] font-medium">
+                className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0f4c81] font-medium">
                 Limpiar
               </button>
             )}
-            <p className="text-xs text-slate-400 sm:ml-auto sm:self-center">
+            <p className="text-xs text-slate-400 dark:text-slate-500 sm:ml-auto sm:self-center">
               Sin filtro: últimos 12 meses.
             </p>
           </div>
@@ -118,87 +119,87 @@ export default function AdminReportesPage() {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Total Donado</p>
-              <p className="text-2xl font-bold text-slate-900">₡{(data.kpis?.totalDonado || 0).toLocaleString("es-CR")}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Donado</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">₡{(data.kpis?.totalDonado || 0).toLocaleString("es-CR")}</p>
             </div>
           </Card>
-          
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <HeartHandshake className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Matches Activos</p>
-              <p className="text-2xl font-bold text-slate-900">{data.kpis?.matchesActivos || 0}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Matches Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.matchesActivos || 0}</p>
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Estudiantes Activos</p>
-              <p className="text-2xl font-bold text-slate-900">{data.kpis?.estudiantesActivos || 0}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Estudiantes Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.estudiantesActivos || 0}</p>
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Exalumnos Activos</p>
-              <p className="text-2xl font-bold text-slate-900">{data.kpis?.exalumnosActivos || 0}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Exalumnos Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.exalumnosActivos || 0}</p>
             </div>
           </Card>
         </div>
 
         {/* KPIs del periodo seleccionado */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Donado (periodo)</p>
-              <p className="text-2xl font-bold text-slate-900">₡{(data.kpis?.totalDonadoPeriodo || 0).toLocaleString("es-CR")}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Donado (periodo)</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">₡{(data.kpis?.totalDonadoPeriodo || 0).toLocaleString("es-CR")}</p>
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
               <FolderHeart className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Proyectos Apoyados</p>
-              <p className="text-2xl font-bold text-slate-900">{data.kpis?.proyectosApoyados || 0}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Proyectos Apoyados</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.proyectosApoyados || 0}</p>
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
               <HeartHandshake className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Matches Cerrados</p>
-              <p className="text-2xl font-bold text-slate-900">{data.kpis?.matchesCerrados || 0}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Matches Cerrados</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.matchesCerrados || 0}</p>
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
               <UserPlus className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500">Donantes (nuevos / recurr.)</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {data.kpis?.donantesNuevos || 0} <span className="text-slate-300">/</span> {data.kpis?.donantesRecurrentes || 0}
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Donantes (nuevos / recurr.)</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {data.kpis?.donantesNuevos || 0} <span className="text-slate-300 dark:text-slate-600">/</span> {data.kpis?.donantesRecurrentes || 0}
               </p>
             </div>
           </Card>
@@ -207,8 +208,8 @@ export default function AdminReportesPage() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
           
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <BarChart className="w-5 h-5 text-[#0f4c81]" /> Evolución de Donaciones
             </h3>
             <div className="h-[300px] w-full">
@@ -228,8 +229,8 @@ export default function AdminReportesPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <BarChart className="w-5 h-5 text-[#0f4c81]" /> Distribución de Matches por Carrera
             </h3>
             <div className="h-[300px] w-full">
@@ -256,8 +257,8 @@ export default function AdminReportesPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-[#0f4c81]" /> Donantes: Nuevos vs. Recurrentes
             </h3>
             <div className="h-[300px] w-full">
@@ -284,8 +285,8 @@ export default function AdminReportesPage() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-white shadow-sm border border-slate-200 print:break-inside-avoid">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <Users className="w-5 h-5 text-[#0f4c81]" /> Estudiantes por Sede UCR
             </h3>
             <div className="h-[300px] w-full">

@@ -37,7 +37,7 @@ const VARIANT_CFG = {
 };
 
 const BTN: Record<string, string> = {
-  primary:   "bg-[#005da4] hover:bg-[#003d6e] text-white",
+  primary:   "bg-primary hover:bg-primary/90 text-primary-foreground",
   secondary: "border border-slate-200 hover:bg-slate-50 text-slate-700",
   danger:    "bg-red-600 hover:bg-red-700 text-white",
   ghost:     "hover:bg-slate-100 text-slate-600",

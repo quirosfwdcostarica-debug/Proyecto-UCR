@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { getToken } from "next-auth/jwt";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { MAPA_AREAS_KEYWORDS } from "@/lib/constants";
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from("POSICIONES")
       .select("*, APLICACIONES(count), exalumno:EXALUMNOS!inner(user:USERS!inner(id, nombre, foto_url))", { count: "exact" })
-      .eq("estado", "activa");
+      .eq("estado", "activa")
+      .is("deleted_at", null);
 
     if (tipo) query = query.ilike("tipo", `%${tipo}%`);
     if (modalidad) query = query.ilike("modalidad", `%${modalidad}%`);
@@ -119,6 +121,7 @@ export async function POST(request: NextRequest) {
     const { data: posicion, error } = await supabaseAdmin
       .from("POSICIONES")
       .insert({
+        id: randomUUID(),
         exalumno_id: token.id as string,
         titulo,
         tipo: tipo || null,
@@ -137,6 +140,8 @@ export async function POST(request: NextRequest) {
         idiomas_requeridos: idiomas_requeridos || null,
         soft_skills: soft_skills || null,
         matching_weights: matching_weights || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
