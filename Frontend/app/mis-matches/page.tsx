@@ -78,7 +78,7 @@ export default async function MisMatchesPage() {
         parsedReasons = m.match_reasons;
       }
       
-      const desglose = parsedReasons?.desglose || null;
+      const desglose = (parsedReasons as any)?.desglose || null;
 
       return {
         id: m.id,
@@ -105,5 +105,5 @@ export default async function MisMatchesPage() {
     console.error("Error fetching matches:", error);
   }
 
-  return <MisMatchesClient matches={matches} posiciones={posiciones} currentUserId={userId} />;
+  return <MisMatchesClient matches={matches} posiciones={posiciones} currentUserId={userId!} />;
 }

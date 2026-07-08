@@ -435,8 +435,8 @@ export default function PublicarProyectoPage() {
           to   { opacity:1; transform:scale(1); }
         }
         @keyframes pulseGlow {
-          0%,100% { box-shadow: 0 0 0 0 rgba(0,93,164,0);
-          50%  { box-shadow: 0 0 14px 4px rgba(0,193,243,0.35); }}
+          0%,100% { box-shadow: 0 0 0 0 rgba(0,93,164,0); }
+          50%  { box-shadow: 0 0 14px 4px rgba(0,193,243,0.35); }
         }
         @keyframes floatBob {
           0%,100% { transform:translateY(0px) rotate(0deg); }
@@ -1142,7 +1142,7 @@ export default function PublicarProyectoPage() {
                 )}
               </div>
                 </div>
-              </div>
+
               <StepNav step={step} onPrev={prevStep} onNext={nextStep} onSave={guardarBorrador} saving={saving}/>
             </div>
           )}

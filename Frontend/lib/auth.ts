@@ -4,11 +4,9 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import prisma from "@/lib/prisma";
 
 class InvalidCredentials extends CredentialsSignin {
-  type: string;
   constructor(message?: string) {
     super(message);
     this.code = message || "Credenciales inválidas";
-    this.type = message || "Credenciales inválidas";
   }
 }
 

@@ -6,6 +6,15 @@ export interface MatchScoreDetails {
   desglose: { C: number; I: number; A: number; S: number };
 }
 
+function parseArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value === "string") {
+    try { return JSON.parse(value); } catch { return [value]; }
+  }
+  return [];
+}
+
 export function calculateMatchScore(estudiante: Estudiante, exalumno: Exalumno): MatchScoreDetails {
   const reasons: string[] = [];
   const desglose = { C: 0, I: 0, A: 0, S: 0 }; // C: Carrera, I: Intereses, A: Sector/Area (Alineacion), S: Apoyo (Support)
