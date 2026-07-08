@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendPerfilAutoSuspendido } from "@/lib/email";
 
 const REPORTES_PARA_SUSPENSION = 3;
 
@@ -22,31 +23,32 @@ export async function POST(request: NextRequest) {
   const { reportadoId, motivo } = body;
 
   if (!reportadoId || !motivo) {
-    return NextResponse.json(
-      { message: "Faltan campos: reportadoId, motivo" },
-      { status: 400 }
-    );
+    return NextResponse.json({ message: "Faltan campos: reportadoId, motivo" }, { status: 400 });
   }
 
   if (reportadorId === reportadoId) {
-    return NextResponse.json(
-      { message: "No puedes reportarte a ti mismo" },
-      { status: 400 }
-    );
+    return NextResponse.json({ message: "No puedes reportarte a ti mismo" }, { status: 400 });
   }
 
-  // Verificar que el usuario reportado existe (tabla USERS)
-  const reportado = await prisma.user.findUnique({
-    where: { id: reportadoId },
-  });
+  // Verificar que el usuario reportado existe
+  const { data: reportado } = await supabaseAdmin
+    .from("USERS")
+    .select("id, nombre, email, status")
+    .eq("id", reportadoId)
+    .maybeSingle();
+
   if (!reportado) {
     return NextResponse.json({ message: "Usuario reportado no encontrado" }, { status: 404 });
   }
 
   // Verificar que el reportador no haya reportado ya al mismo usuario
-  const reportePrevio = await prisma.reportePerfil.findFirst({
-    where: { reportado_por: reportadorId, perfil_reportado: reportadoId },
-  });
+  const { data: reportePrevio } = await supabaseAdmin
+    .from("REPORTES_PERFIL")
+    .select("id")
+    .eq("reportado_por", reportadorId)
+    .eq("perfil_reportado", reportadoId)
+    .maybeSingle();
+
   if (reportePrevio) {
     return NextResponse.json(
       { message: "Ya has reportado a este usuario anteriormente" },
@@ -55,48 +57,67 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Crear el reporte en REPORTES_PERFIL
-    const reporte = await prisma.reportePerfil.create({
-      data: {
+    // Insertar el reporte
+    const { error: insertError } = await supabaseAdmin
+      .from("REPORTES_PERFIL")
+      .insert({
+        id: crypto.randomUUID(),
         reportado_por: reportadorId,
         perfil_reportado: reportadoId,
         motivo,
-      },
-    });
-
-    // Contar todos los reportes del usuario reportado
-    const totalReportes = await prisma.reportePerfil.count({
-      where: { perfil_reportado: reportadoId },
-    });
-
-    let suspendidoAuto = false;
-
-    // Auto-suspensión si llega a 3 o más reportes
-    if (totalReportes >= REPORTES_PARA_SUSPENSION && reportado.status !== "SUSPENDIDO") {
-      await prisma.user.update({
-        where: { id: reportadoId },
-        data: { status: "SUSPENDIDO" },
       });
-      suspendidoAuto = true;
+    if (insertError) throw insertError;
+
+    // Contar total de reportes
+    const { count: totalReportes } = await supabaseAdmin
+      .from("REPORTES_PERFIL")
+      .select("id", { count: "exact", head: true })
+      .eq("perfil_reportado", reportadoId);
+
+    const total = totalReportes ?? 0;
+    const yaSuspendido = reportado.status === "SUSPENDIDO";
+    const debeSuspender = total >= REPORTES_PARA_SUSPENSION && !yaSuspendido;
+
+    // Actualizar contador y suspender si aplica
+    const updateData: any = { reportes_recibidos: total };
+    if (debeSuspender) {
+      updateData.status = "SUSPENDIDO";
+      updateData.activo = false;
+    }
+    await supabaseAdmin.from("USERS").update(updateData).eq("id", reportadoId);
+
+    // Notificar a admins si hubo auto-suspensión
+    if (debeSuspender) {
+      try {
+        const { data: admins } = await supabaseAdmin
+          .from("USERS")
+          .select("email")
+          .eq("tipo", "ADMIN");
+        await Promise.all(
+          (admins ?? [])
+            .filter((a: any) => a.email)
+            .map((a: any) =>
+              sendPerfilAutoSuspendido(a.email, reportado.nombre, reportado.email, total)
+            )
+        );
+      } catch (mailErr) {
+        console.error("[POST /api/reportes] Falló el email a admins:", mailErr);
+      }
     }
 
     return NextResponse.json(
       {
-        message: suspendidoAuto
+        message: debeSuspender
           ? "Reporte registrado. El usuario fue suspendido automáticamente."
           : "Reporte registrado exitosamente.",
-        reporte,
-        totalReportes,
-        suspendidoAuto,
+        totalReportes: total,
+        suspendidoAuto: debeSuspender,
       },
       { status: 201 }
     );
   } catch (error) {
     console.error("[POST /api/reportes]", error);
-    return NextResponse.json(
-      { message: "Error al registrar el reporte" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Error al registrar el reporte" }, { status: 500 });
   }
 }
 
@@ -110,40 +131,44 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    // Agrupar por usuario reportado
-    const reportesAgrupados = await prisma.reportePerfil.groupBy({
-      by: ["perfil_reportado"],
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-    });
+    // Obtener todos los reportes
+    const { data: todosReportes, error } = await supabaseAdmin
+      .from("REPORTES_PERFIL")
+      .select("id, perfil_reportado, motivo, created_at")
+      .order("created_at", { ascending: false });
 
-    const reportadoIds = reportesAgrupados.map((r) => r.perfil_reportado);
+    if (error) throw error;
 
-    const usuarios = await prisma.user.findMany({
-      where: { id: { in: reportadoIds } },
-      select: { id: true, nombre: true, email: true, status: true, tipo: true },
-    });
+    // Agrupar por perfil_reportado
+    const grouped = new Map<string, { motivos: string[]; count: number }>();
+    for (const r of (todosReportes ?? [])) {
+      const entry = grouped.get(r.perfil_reportado) ?? { motivos: [], count: 0 };
+      entry.count++;
+      entry.motivos.push(r.motivo);
+      grouped.set(r.perfil_reportado, entry);
+    }
 
-    const ultimosReportes = await prisma.reportePerfil.findMany({
-      where: { perfil_reportado: { in: reportadoIds } },
-      orderBy: { created_at: "desc" },
-      select: { perfil_reportado: true, motivo: true, created_at: true },
-    });
+    const reportadoIds = Array.from(grouped.keys());
+    if (reportadoIds.length === 0) return NextResponse.json([]);
 
-    const result = reportesAgrupados.map((grupo) => {
-      const usuario = usuarios.find((u) => u.id === grupo.perfil_reportado);
-      const motivos = ultimosReportes
-        .filter((r) => r.perfil_reportado === grupo.perfil_reportado)
-        .map((r) => r.motivo);
+    const { data: usuarios } = await supabaseAdmin
+      .from("USERS")
+      .select("id, nombre, email, status, tipo")
+      .in("id", reportadoIds);
 
-      return {
-        usuario: usuario
-          ? { ...usuario, name: usuario.nombre, role: usuario.tipo }
-          : null,
-        totalReportes: grupo._count.id,
-        motivos,
-      };
-    });
+    const result = reportadoIds
+      .map((id) => {
+        const grupo = grouped.get(id)!;
+        const usuario = (usuarios ?? []).find((u: any) => u.id === id);
+        return {
+          usuario: usuario
+            ? { ...usuario, name: usuario.nombre, role: usuario.tipo }
+            : null,
+          totalReportes: grupo.count,
+          motivos: grupo.motivos,
+        };
+      })
+      .sort((a, b) => b.totalReportes - a.totalReportes);
 
     return NextResponse.json(result);
   } catch (error) {

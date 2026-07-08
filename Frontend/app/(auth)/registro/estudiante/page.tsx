@@ -1,51 +1,58 @@
+"use client";
+
 import { EstudianteRegisterForm } from "@/components/forms/EstudianteRegisterForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { ThemeToggle } from "@/components/fu/ThemeToggle";
+import { useLanguage } from "@/components/providers/LanguageContext";
 
 export default function RegistroEstudiantePage() {
+  const { t } = useLanguage();
   return (
-    <div className="flex min-h-screen bg-ucr-gris-fondo dark:bg-ucr-negro font-body">
-      {/* Panel Izquierdo (Imagen y Texto) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/pretilUCR.png')" }}
-        />
-        <div className="absolute inset-0 bg-ucr-esmeralda/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ucr-esmeralda/90 via-ucr-esmeralda/30 to-transparent" />
-        
-        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-12 py-16">
-          <p className="text-lg md:text-xl text-sky-100 max-w-lg font-medium drop-shadow-md text-center mt-10">
-            Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
-          </p>
-        </div>
-      </div>
+    <div className="flex min-h-screen bg-ucr-naranja font-body relative overflow-hidden justify-center items-center">
 
       {/* Panel Derecho (Formulario) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto bg-ucr-gris-fondo dark:bg-ucr-negro lg:bg-transparent">
-        <Link href="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 lg:top-10 lg:left-10 z-50 flex items-center gap-2 text-slate-500 hover:text-ucr-naranja transition-colors font-bold">
-          <ArrowLeft className="w-5 h-5" />
-          <span className="hidden sm:inline">Volver al Dashboard</span>
-        </Link>
-        <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.12] dark:opacity-[0.05] bg-cover bg-bottom mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"></div>
+      <div className="w-full flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto z-20">
+        <div className="absolute inset-0 bg-ucr-naranja z-0" />
         
-        <div className="w-full max-w-xl bg-white dark:bg-slate-950 p-6 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 relative z-10 my-8">
+
+
+        <div className="absolute inset-0 bg-[url('/login-pattern-gemini.png')] opacity-[0.08] bg-cover bg-bottom mix-blend-overlay pointer-events-none z-0" />
+
+        <div className="absolute top-8 left-8 sm:top-10 sm:left-10 z-50 flex items-center gap-4">
+          <Link
+            href="/login?view=registro"
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="hidden sm:inline">{t("auth.back")}</span>
+          </Link>
+          <ThemeToggle />
+        </div>
+
+        {/* Logo superior fuera de la tarjeta */}
+        <img 
+          src="/logo.png" 
+          alt="Logo" 
+          className="h-16 w-auto brightness-0 invert relative z-10 mb-2 mt-8" 
+        />
+        
+        <div className="w-full max-w-3xl bg-white/95 backdrop-blur-sm p-6 sm:p-10 rounded-[2rem] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.15)] relative z-10 my-4">
           <div className="text-center mb-8">
-            <img src="/logo.png" alt="Logo Estudiantes U" className="w-24 h-24 mx-auto mb-6 object-contain" />
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-display mb-3">
-              Únete como Estudiante
+            <h2 className="text-3xl font-medium tracking-tight text-slate-800 font-display mb-3 uppercase">
+              {t("auth.registroEstudiante.title")}
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">
-              Crea tu cuenta institucional para recibir mentoría, pasantías y apoyo en tu proyecto de graduación.
+            <p className="text-slate-500 font-medium font-body">
+              {t("auth.registroEstudiante.subtitle")}
             </p>
           </div>
 
           <EstudianteRegisterForm />
 
-          <div className="mt-8 text-center text-slate-500 font-medium">
-            ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="font-bold text-ucr-celeste hover:text-sky-500 hover:underline transition-colors">
-              Inicia sesión aquí
+          <div className="mt-8 text-center text-slate-500 font-medium font-body">
+            {t("auth.hasAccount")}{" "}
+            <Link href="/login" className="font-bold text-ucr-celeste hover:underline transition-colors">
+              {t("auth.loginHere")}
             </Link>
           </div>
         </div>

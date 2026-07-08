@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, DollarSign, CheckCircle2, XCircle, Clock,
-  FileText, ExternalLink, Loader2, RefreshCw, Eye,
+  FileText, ExternalLink, Loader2, RefreshCw, Eye, AlertTriangle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
+interface ValidacionCheck {
+  campo: string;
+  esperado: any;
+  detectado: any;
+  estado: "ok" | "fail" | "indeterminado" | "no_aplica";
+}
 interface Donacion {
   id: string;
   monto: number;
@@ -19,13 +27,29 @@ interface Donacion {
   metodo_pago: string | null;
   estado: "PENDIENTE" | "CONFIRMADA" | "RECHAZADA";
   comprobante_url: string | null;
+  motivo_rechazo: string | null;
   created_at: string;
   updated_at: string;
+  fecha_transferencia: string | null;
+  numero_referencia: string | null;
+  validacion_estado: "pre_validada" | "discrepancia" | "revision_manual" | null;
+  validacion_confianza: number | null;
+  validacion_detalle: { checks?: ValidacionCheck[]; motivos?: string[] } | null;
+  validacion_at: string | null;
   exalumno_nombre: string | null;
   exalumno_email: string | null;
   proyecto_titulo: string;
   estudiante_nombre: string | null;
 }
+
+// Semáforo de verificación OCR (n8n). El OCR pre-valida; el admin confirma.
+const VALIDACION_CFG = {
+  pre_validada:    { label: "Pre-validada por OCR", cls: "bg-green-100 text-green-700 border-green-200",  Icon: CheckCircle2 },
+  discrepancia:    { label: "Discrepancia OCR",     cls: "bg-red-100 text-red-700 border-red-200",        Icon: AlertTriangle },
+  revision_manual: { label: "Revisión manual",      cls: "bg-amber-100 text-amber-700 border-amber-200",  Icon: Eye },
+};
+const CAMPO_LABEL: Record<string, string> = { monto: "Monto", moneda: "Moneda", fecha: "Fecha", referencia: "Referencia" };
+const CHECK_ICON: Record<string, string> = { ok: "✅", fail: "❌", indeterminado: "❔", no_aplica: "➖" };
 
 const ESTADO_CFG = {
   PENDIENTE:  { label: "Pendiente",  cls: "bg-yellow-100 text-yellow-700 border-yellow-200", Icon: Clock },
@@ -38,6 +62,63 @@ function fdt(iso: string) {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
+}
+
+// Horas transcurridas desde una fecha ISO
+function horasDesde(iso: string): number {
+  return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
+}
+
+function RechazoModal({
+  donacion, working, onConfirm, onClose,
+}: {
+  donacion: Donacion;
+  working: boolean;
+  onConfirm: (motivo: string) => void;
+  onClose: () => void;
+}) {
+  const [motivo, setMotivo] = useState("");
+  const trimmed = motivo.trim();
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+            <XCircle className="w-5 h-5 text-red-500" />
+          </div>
+          <h3 className="font-bold text-slate-800 dark:text-slate-100">Rechazar donación</h3>
+        </div>
+        <div className="p-4 space-y-3">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Vas a rechazar la donación de <span className="font-semibold">₡{donacion.monto.toLocaleString("es-CR")}</span> de{" "}
+            {donacion.exalumno_nombre ?? "—"}. Indica el motivo (se enviará al donante).
+          </p>
+          <textarea
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            rows={3}
+            autoFocus
+            placeholder="Ej: El comprobante no es legible / el monto no coincide con la transferencia..."
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none"
+          />
+        </div>
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={working} className="text-xs">
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            disabled={working || !trimmed}
+            onClick={() => onConfirm(trimmed)}
+            className="bg-red-600 hover:bg-red-700 text-white text-xs disabled:opacity-50"
+          >
+            {working ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+            &nbsp;Confirmar rechazo
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ComprobanteModal({ url, onClose }: { url: string; onClose: () => void }) {
@@ -77,6 +158,7 @@ export default function AdminDonacionesPage() {
   const [working, setWorking] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [visorUrl, setVisorUrl] = useState<string | null>(null);
+  const [rechazando, setRechazando] = useState<Donacion | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") { router.replace("/login"); return; }
@@ -94,31 +176,33 @@ export default function AdminDonacionesPage() {
     setLoading(false);
   }
 
-  async function accion(id: string, nuevoEstado: "CONFIRMADA" | "RECHAZADA") {
+  async function accion(id: string, nuevoEstado: "CONFIRMADA" | "RECHAZADA", motivo?: string) {
     setWorking(id);
     setMsg(null);
     const res = await fetch(`/api/admin/donaciones/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: nuevoEstado }),
+      body: JSON.stringify({ status: nuevoEstado, motivo_rechazo: motivo }),
     });
     if (res.ok) {
       setMsg({ type: "ok", text: `Donación ${nuevoEstado === "CONFIRMADA" ? "confirmada" : "rechazada"} correctamente.` });
+      setRechazando(null);
       load();
     } else {
-      setMsg({ type: "err", text: "Error al actualizar. Intenta de nuevo." });
+      const d = await res.json().catch(() => ({}));
+      setMsg({ type: "err", text: d.message || "Error al actualizar. Intenta de nuevo." });
     }
     setWorking(null);
   }
 
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-5xl mx-auto">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
@@ -126,8 +210,8 @@ export default function AdminDonacionesPage() {
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestión de Donaciones</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Gestión de Donaciones</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Revisa comprobantes y aprueba o rechaza donaciones pendientes.
             </p>
@@ -145,7 +229,7 @@ export default function AdminDonacionesPage() {
               onClick={() => setFiltroEstado(e)}
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
                 filtroEstado === e
-                  ? "bg-[#0f4c81] text-white border-[#0f4c81]"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#0f4c81]"
               }`}
             >
@@ -185,8 +269,9 @@ export default function AdminDonacionesPage() {
               const cfg = ESTADO_CFG[d.estado];
               const { Icon } = cfg;
               const isWorking = working === d.id;
+              const vencida = d.estado === "PENDIENTE" && horasDesde(d.created_at) > 24;
               return (
-                <Card key={d.id} className="p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
+                <Card key={d.id} className={`p-5 bg-white dark:bg-slate-900 shadow-sm ${vencida ? "border-red-300 dark:border-red-800 ring-1 ring-red-200 dark:ring-red-900/40" : "border-slate-200 dark:border-slate-800"}`}>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                       <DollarSign className="h-5 w-5 text-emerald-500" />
@@ -199,6 +284,21 @@ export default function AdminDonacionesPage() {
                         <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${cfg.cls}`}>
                           <Icon className="h-3 w-3" /> {cfg.label}
                         </Badge>
+                        {vencida && (
+                          <span title="Pendiente por más de 24 horas. Requiere atención (SLA)." className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full animate-pulse">
+                            <AlertTriangle className="w-3 h-3" /> +24h pendiente
+                          </span>
+                        )}
+                        {d.validacion_estado && (() => {
+                          const v = VALIDACION_CFG[d.validacion_estado];
+                          const VIcon = v.Icon;
+                          return (
+                            <Badge variant="outline" className={`text-xs px-2 py-0.5 flex items-center gap-1 ${v.cls}`}>
+                              <VIcon className="h-3 w-3" /> {v.label}
+                              {typeof d.validacion_confianza === "number" && ` · ${d.validacion_confianza}%`}
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
                         <p>
@@ -216,6 +316,9 @@ export default function AdminDonacionesPage() {
                         {d.estado !== "PENDIENTE" && (
                           <p><span className="font-semibold">Procesado:</span> {fdt(d.updated_at)}</p>
                         )}
+                        {d.estado === "RECHAZADA" && d.motivo_rechazo && (
+                          <p className="text-red-600"><span className="font-semibold">Motivo de rechazo:</span> {d.motivo_rechazo}</p>
+                        )}
                       </div>
                       <div className="mt-2">
                         {d.comprobante_url ? (
@@ -230,6 +333,33 @@ export default function AdminDonacionesPage() {
                           <span className="text-xs text-slate-400 italic">Sin comprobante adjunto</span>
                         )}
                       </div>
+
+                      {/* Detalle de la verificación OCR (n8n) — el admin decide igual */}
+                      {d.validacion_detalle?.checks && d.validacion_detalle.checks.length > 0 && (
+                        <div className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3">
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Comprobante vs. formulario (OCR)</p>
+                          <div className="space-y-1">
+                            {d.validacion_detalle.checks.map((c, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs">
+                                <span>{CHECK_ICON[c.estado] ?? "•"}</span>
+                                <span className="font-semibold text-slate-600 dark:text-slate-300 w-20 shrink-0">{CAMPO_LABEL[c.campo] ?? c.campo}</span>
+                                <span className="text-slate-500 dark:text-slate-400 truncate">
+                                  form: <span className="font-mono">{String(c.esperado ?? "—")}</span>
+                                  {" · "}OCR: <span className="font-mono">{String(c.detectado ?? "—")}</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          {d.validacion_detalle.motivos && d.validacion_detalle.motivos.length > 0 && (
+                            <ul className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-0.5">
+                              {d.validacion_detalle.motivos.map((m, i) => (
+                                <li key={i} className="text-[11px] text-amber-700 dark:text-amber-400">⚠ {m}</li>
+                              ))}
+                            </ul>
+                          )}
+                          <p className="text-[10px] text-slate-400 mt-2 italic">La verificación es automática y referencial. La confirmación final es tuya.</p>
+                        </div>
+                      )}
                     </div>
                     <div className="shrink-0 text-right flex flex-col items-end gap-3">
                       <div>
@@ -243,11 +373,11 @@ export default function AdminDonacionesPage() {
                           <Button
                             size="sm"
                             disabled={isWorking}
-                            onClick={() => accion(d.id, "RECHAZADA")}
+                            onClick={() => setRechazando(d)}
                             variant="outline"
                             className="border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 text-xs"
                           >
-                            {isWorking ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                            <XCircle className="w-3 h-3" />
                             &nbsp;Rechazar
                           </Button>
                           <Button
@@ -271,6 +401,14 @@ export default function AdminDonacionesPage() {
       </div>
 
       {visorUrl && <ComprobanteModal url={visorUrl} onClose={() => setVisorUrl(null)} />}
-    </div>
+      {rechazando && (
+        <RechazoModal
+          donacion={rechazando}
+          working={working === rechazando.id}
+          onConfirm={(motivo) => accion(rechazando.id, "RECHAZADA", motivo)}
+          onClose={() => setRechazando(null)}
+        />
+      )}
+    </ParallaxBackground>
   );
 }

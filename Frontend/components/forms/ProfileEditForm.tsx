@@ -1,18 +1,30 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useState } from "react";
+import { useTransition, useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { userProfileUpdateSchema, type UserProfileUpdateValues } from "@/lib/validations/profile";
 import { updateUserProfile } from "@/actions/profile.actions";
+import { calcularCompletitudEstudiante, calcularCompletitudExalumno } from "@/lib/profile-completeness";
 import { changePasswordWithVerificationAction } from "@/actions/auth.actions";
+import {
+  CATALOGO_CARRERAS,
+  CATALOGO_AREAS,
+  SEDES_UCR,
+  NIVELES_ACADEMICOS
+} from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
-import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck } from "lucide-react";
+import { Loader2, User, Phone, ImageIcon, LinkIcon, Save, Briefcase, GraduationCap, BookOpen, Heart, Lock, ShieldCheck, Code2, Globe2, Star, Plus, X, ChevronDown, Search, FileText, Paperclip, Award } from "lucide-react";
+import { SKILLS_BANK, SOFT_SKILLS_BANK, IDIOMAS_OPTS, NIVELES_IDIOMA, SKILL_LEVELS } from "@/lib/skills-bank";
+import { AreasInteresSelector } from "@/components/forms/AreasInteresSelector";
+import { BecasInfoDialog } from "@/components/becas/BecasInfoDialog";
+import { Progress } from "@/components/ui/Progress";
 import {
   Form,
   FormControl,
@@ -31,11 +43,98 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
   const [isPending, startTransition] = useTransition();
   const { data: session, update } = useSession();
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingComprobante, setIsUploadingComprobante] = useState(false);
+  // El botón flotante se porta a document.body: SidebarWrapper aplica
+  // backdrop-blur al <main>, y eso crea un "containing block" propio para
+  // los descendientes con position:fixed (se pegan al fondo del contenido
+  // en vez de a la ventana). Solo se monta tras el primer render en cliente.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const isEstudiante = initialData?.tipo?.toUpperCase() === "ESTUDIANTE";
+
+  // ── Skills state (fuera de react-hook-form para UI compleja) ────────────────
+  function parseHardSkills(raw: any): { skill: string; level: string }[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.map((r) => typeof r === "string" ? { skill: r, level: "Intermedio" } : r);
+    return [];
+  }
+  const [hardSkills, setHardSkills] = useState<{ skill: string; level: string }[]>(
+    parseHardSkills(initialData?.habilidades)
+  );
+  const [softSkillsList, setSoftSkillsList] = useState<string[]>(
+    Array.isArray(initialData?.soft_skills) ? initialData.soft_skills : []
+  );
+  const [idiomasList, setIdiomasList] = useState<{ idioma: string; nivel: string }[]>(
+    Array.isArray(initialData?.idiomas) ? initialData.idiomas : []
+  );
+  const [areasInteresList, setAreasInteresList] = useState<string[]>(
+    Array.isArray(initialData?.areas_interes) ? initialData.areas_interes : []
+  );
+  const [skillInput, setSkillInput] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(SKILLS_BANK[0].categoria);
+  const [idiomaInput, setIdiomaInput] = useState("Inglés");
+  const [nivelIdiomaInput, setNivelIdiomaInput] = useState("B1 – Intermedio");
+
+  function addHardSkill(skillName: string) {
+    const name = skillName.trim();
+    if (!name || hardSkills.find((s) => s.skill.toLowerCase() === name.toLowerCase())) return;
+    setHardSkills((p) => [...p, { skill: name, level: "Intermedio" }]);
+    setSkillInput("");
+  }
+  function updateSkillLevel(i: number, level: string) {
+    setHardSkills((p) => p.map((s, idx) => idx === i ? { ...s, level } : s));
+  }
+  function removeHardSkill(i: number) {
+    setHardSkills((p) => p.filter((_, idx) => idx !== i));
+  }
+  function toggleSoftSkill(s: string) {
+    setSoftSkillsList((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
+  }
+  function addIdioma() {
+    if (idiomasList.find((id) => id.idioma === idiomaInput)) return;
+    setIdiomasList((p) => [...p, { idioma: idiomaInput, nivel: nivelIdiomaInput }]);
+  }
+  function removeIdioma(i: number) {
+    setIdiomasList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  // ── Exalumno: experiencia laboral y certificaciones ──────────────────────
+  function parseExperienciaLaboral(raw: any): { cargo: string; empresa: string; anio_inicio: string; anio_fin: string; descripcion: string }[] {
+    return Array.isArray(raw) ? raw : [];
+  }
+  function parseCertificaciones(raw: any): { nombre: string; institucion: string; anio: string }[] {
+    return Array.isArray(raw) ? raw : [];
+  }
+  const [experienciaList, setExperienciaList] = useState(parseExperienciaLaboral(initialData?.experiencia_laboral));
+  const [expForm, setExpForm] = useState({ cargo: "", empresa: "", anio_inicio: "", anio_fin: "", descripcion: "" });
+  function addExperienciaLaboral() {
+    if (!expForm.cargo.trim() || !expForm.empresa.trim()) return;
+    setExperienciaList((p) => [...p, { ...expForm }]);
+    setExpForm({ cargo: "", empresa: "", anio_inicio: "", anio_fin: "", descripcion: "" });
+  }
+  function removeExperienciaLaboral(i: number) {
+    setExperienciaList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  const [certificacionesList, setCertificacionesList] = useState(parseCertificaciones(initialData?.certificaciones));
+  const [certForm, setCertForm] = useState({ nombre: "", institucion: "", anio: "" });
+  function addCertificacion() {
+    if (!certForm.nombre.trim()) return;
+    setCertificacionesList((p) => [...p, { ...certForm }]);
+    setCertForm({ nombre: "", institucion: "", anio: "" });
+  }
+  function removeCertificacion(i: number) {
+    setCertificacionesList((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  const filteredSkills = SKILLS_BANK.find((c) => c.categoria === selectedCategory)?.skills.filter(
+    (s) => !skillFilter || s.toLowerCase().includes(skillFilter.toLowerCase())
+  ) ?? [];
 
   const form = useForm<UserProfileUpdateValues>({
     resolver: zodResolver(userProfileUpdateSchema) as any,
@@ -56,6 +155,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       
       // Estudiante fields
       nivel_beca: (initialData as any)?.nivel_beca || "",
+      comprobante_beca_url: (initialData as any)?.comprobante_beca_url || "",
       carnet_ucr: initialData?.carnet_ucr || "",
       carrera: initialData?.carrera || "",
       escuela_facultad: initialData?.escuela_facultad || "",
@@ -72,6 +172,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       busca_mentoria: !!initialData?.busca_mentoria,
       busca_empleo: !!initialData?.busca_empleo,
       busca_pasantia: !!initialData?.busca_pasantia,
+      perfil_pausado: !!initialData?.perfil_pausado,
 
       // Exalumno fields
       anio_graduacion: initialData?.anio_graduacion || "",
@@ -94,10 +195,25 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     },
   });
 
+  // T-13: completitud recalculada en vivo mientras el usuario escribe, sin esperar al guardado.
+  const watchedValues = useWatch({ control: form.control });
+  const liveCompletitud = useMemo(() => {
+    const data = { ...watchedValues, areas_interes: areasInteresList };
+    return isEstudiante ? calcularCompletitudEstudiante(data) : calcularCompletitudExalumno(data);
+  }, [watchedValues, areasInteresList, isEstudiante]);
+
   const onSubmit = (data: UserProfileUpdateValues) => {
     startTransition(async () => {
       try {
-        const result = await updateUserProfile(data);
+        const result = await updateUserProfile({
+          ...data,
+          habilidades: hardSkills as any,
+          soft_skills: softSkillsList as any,
+          idiomas: idiomasList as any,
+          areas_interes: areasInteresList as any,
+          certificaciones: certificacionesList as any,
+          experiencia_laboral: experienciaList as any,
+        } as any);
         if (result.success) {
           if (data.image) {
             await update({ user: { image: data.image } });
@@ -107,6 +223,28 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             description: "Tus datos se han guardado correctamente.",
             className: "bg-ucr-azul-1 text-white border-none",
           });
+          // T-17: si el avance llegó al 100%, preguntar si el proyecto finalizó
+          if ((result as any).proyectoCompleto) {
+            const { isConfirmed } = await import("sweetalert2").then(m =>
+              m.default.fire({
+                title: "¿Tu proyecto está finalizado?",
+                text: "El avance llegó al 100%. ¿Deseas marcar el proyecto como finalizado? Esto lo retirará del directorio activo.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, finalizar",
+                cancelButtonText: "No, mantener activo",
+                confirmButtonColor: "#005da4",
+              })
+            );
+            if (isConfirmed) {
+              await updateUserProfile({ ...data, proyecto_activo: false } as any);
+              toast({
+                title: "Proyecto marcado como finalizado",
+                description: "Ya no aparecerá en el directorio activo de estudiantes.",
+                className: "bg-ucr-azul-1 text-white border-none",
+              });
+            }
+          }
         }
       } catch (error: any) {
         toast({
@@ -144,9 +282,30 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
     <div className="space-y-8">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-        
+
+        {/* Completitud del perfil (T-13) — se recalcula en vivo con cada cambio.
+            sticky (no fixed): permanece pegada al hacer scroll sin necesitar un
+            portal, ya que --a diferencia de fixed-- no la rompe el backdrop-blur
+            de los contenedores padre (ver SidebarWrapper). */}
+        <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/50 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+              {liveCompletitud.completo ? "¡Tu perfil está completo!" : "Completitud de tu perfil"}
+            </p>
+            <span className="text-sm font-extrabold text-ucr-celeste-medium">
+              {liveCompletitud.porcentaje}%
+            </span>
+          </div>
+          <Progress value={liveCompletitud.porcentaje} tone="#005da4" />
+          {!liveCompletitud.completo && (
+            <p className="text-xs text-slate-500 mt-2">
+              Los perfiles solo aparecen en el directorio cuando llegan al 100%. Guarda tus cambios para que este porcentaje quede registrado.
+            </p>
+          )}
+        </div>
+
         {/* Tarjeta 1: Información Personal */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <User className="w-6 h-6" />
@@ -175,8 +334,6 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             />
 
-
-
             <FormField
               control={form.control}
               name="phone"
@@ -194,55 +351,71 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               )}
             />
 
+
+
             <FormField
               control={form.control}
               name="image"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-1 md:col-span-2">
                   <FormLabel className="font-semibold text-ucr-azul-1 dark:text-sky-400">Foto de Perfil</FormLabel>
                   <FormControl>
-                    <div className="relative group">
-                      <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
-                      <Input 
-                        type="file"
-                        accept="image/*"
-                        disabled={isUploading}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            try {
-                              setIsUploading(true);
-                              const formData = new FormData();
-                              formData.append("file", file);
-                              formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
-                              const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
-                              
-                              const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                                method: "POST",
-                                body: formData,
-                              });
-                              if (!res.ok) throw new Error("Error subiendo imagen");
-                              const data = await res.json();
-                              field.onChange(data.secure_url);
-                              toast({ title: "Imagen subida", description: "Tu foto de perfil ha sido actualizada." });
-                            } catch (error) {
-                              toast({ title: "Error", description: "No se pudo subir la imagen", variant: "destructive" });
-                            } finally {
-                              setIsUploading(false);
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                      <div className="shrink-0 w-20 h-20 rounded-full border-4 border-ucr-celeste/20 overflow-hidden bg-ucr-gris-1 dark:bg-slate-800 flex items-center justify-center relative">
+                        {field.value ? (
+                          <img src={field.value} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-ucr-gris-2 dark:text-slate-500" />
+                        )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative group w-full sm:flex-1">
+                        <ImageIcon className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploading ? "animate-pulse text-ucr-celeste" : ""}`} />
+                        <Input 
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                setIsUploading(true);
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+                                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
+                                
+                                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                                  method: "POST",
+                                  body: formData,
+                                });
+                                if (!res.ok) throw new Error("Error subiendo imagen");
+                                const data = await res.json();
+                                field.onChange(data.secure_url);
+                                toast({ title: "Imagen subida", description: "La imagen está lista. Recuerda presionar 'Guardar Cambios' al final." });
+                              } catch (error) {
+                                toast({ title: "Error", description: "No se pudo subir la imagen", variant: "destructive" });
+                              } finally {
+                                setIsUploading(false);
+                              }
                             }
-                          }
-                        }}
-                        ref={field.ref}
-                        name={field.name}
-                        onBlur={field.onBlur}
-                        className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer" 
-                      />
+                          }}
+                          className="pl-10 h-12 pt-2.5 bg-ucr-gris-1/50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer" 
+                        />
+                      </div>
                     </div>
                   </FormControl>
+                  <p className="text-xs text-ucr-gris-2 mt-2">Formatos recomendados: JPG, PNG. Recuerda guardar los cambios al final de la página.</p>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+
 
             <FormField
               control={form.control}
@@ -284,7 +457,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         </div>
 
         {/* Tarjeta 2: Biografía */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <Briefcase className="w-6 h-6" />
@@ -320,7 +493,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         {isEstudiante ? (
           <>
             {/* DATOS DE ESTUDIANTE */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <GraduationCap className="w-6 h-6" />
@@ -353,7 +526,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Carrera</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Ingeniería Eléctrica" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione una carrera</option>
+                          {CATALOGO_CARRERAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -381,7 +561,16 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Sede</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Sede Rodrigo Facio" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="w-full h-12 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 rounded-xl text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm"
+                        >
+                          <option value="">Seleccione una Sede...</option>
+                          {SEDES_UCR.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -409,7 +598,16 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Nivel Académico</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Bachillerato" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="w-full h-12 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 rounded-xl text-sm text-slate-700 dark:text-slate-300 px-3 outline-none focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm"
+                        >
+                          <option value="">Seleccione un Grado...</option>
+                          {NIVELES_ACADEMICOS.map((n) => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -448,15 +646,95 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                           className="w-full h-12 px-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm text-sm"
                         >
                           <option value="">Sin beca</option>
-                          <option value="Socioeconómica">Socioeconómica</option>
-                          <option value="Excelencia Académica">Excelencia Académica</option>
-                          <option value="Deporte">Deporte</option>
-                          <option value="Arte y Cultura">Arte y Cultura</option>
-                          <option value="Estímulo">Estímulo</option>
-                          <option value="Otra">Otra</option>
+                          <option value="Beca 1">Beca 1</option>
+                          <option value="Beca 2">Beca 2</option>
+                          <option value="Beca 3">Beca 3</option>
+                          <option value="Beca 4">Beca 4</option>
+                          <option value="Beca 5">Beca 5</option>
                         </select>
                       </FormControl>
-                      <p className="text-xs text-slate-400 mt-1">Solo tú y el equipo UCR pueden ver este dato.</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-slate-400">Solo tú y el equipo UCR pueden ver este dato.</p>
+                        <BecasInfoDialog
+                          trigger={
+                            <button type="button" className="text-xs font-bold text-[#005da4] hover:underline shrink-0 ml-2">
+                              ¿Qué incluye cada beca?
+                            </button>
+                          }
+                        />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={"comprobante_beca_url" as any}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-semibold text-slate-700 flex items-center gap-2">
+                        Comprobante de Beca
+                        <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                          🔒 Privado
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                          {field.value ? (
+                            <a
+                              href={field.value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 flex items-center gap-2 h-12 px-4 rounded-xl bg-[#005da4]/10 text-[#005da4] font-semibold text-sm hover:bg-[#005da4]/20 transition-colors"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Ver comprobante actual
+                            </a>
+                          ) : (
+                            <div className="shrink-0 flex items-center gap-2 h-12 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-sm">
+                              <FileText className="w-4 h-4" />
+                              Sin comprobante
+                            </div>
+                          )}
+                          <div className="relative group w-full sm:flex-1">
+                            <Paperclip className={`absolute left-3 top-3 h-5 w-5 text-ucr-gris-2 dark:text-slate-400 group-focus-within:text-ucr-celeste transition-colors ${isUploadingComprobante ? "animate-pulse text-ucr-celeste" : ""}`} />
+                            <Input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              disabled={isUploadingComprobante}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  setIsUploadingComprobante(true);
+                                  const formData = new FormData();
+                                  formData.append("file", file);
+                                  formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "imagenes");
+                                  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dd69q4ba3";
+
+                                  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+                                    method: "POST",
+                                    body: formData,
+                                  });
+                                  if (!res.ok) throw new Error("Error subiendo el comprobante");
+                                  const data = await res.json();
+                                  field.onChange(data.secure_url);
+                                  toast({ title: "Comprobante subido", description: "Recuerda presionar 'Guardar Cambios' al final." });
+                                } catch (error) {
+                                  toast({ title: "Error", description: "No se pudo subir el comprobante", variant: "destructive" });
+                                } finally {
+                                  setIsUploadingComprobante(false);
+                                }
+                              }}
+                              className="pl-10 h-12 pt-2.5 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-ucr-celeste-medium file:text-white hover:file:bg-ucr-celeste-medium/90 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Foto o PDF de tu comprobante de beca. Solo tú, el equipo UCR y el exalumno con quien tengas un match activo podrán verlo.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -465,7 +743,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
             </div>
 
             {/* PROYECTO DE GRADUACIÓN */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <BookOpen className="w-6 h-6" />
@@ -512,7 +790,14 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                     <FormItem>
                       <FormLabel className="font-semibold text-slate-700">Área Temática</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Energías renovables, IA, Salud" {...field} value={field.value || ""} className="h-12 bg-slate-50 dark:bg-slate-950/50 border-transparent focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-ucr-celeste-medium/20 transition-all shadow-sm rounded-xl" />
+                        <select
+                          {...field}
+                          value={field.value || ""}
+                          className="flex h-12 w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 dark:bg-slate-950/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:border-ucr-celeste-medium focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-ucr-celeste-medium/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Seleccione un área</option>
+                          {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -549,8 +834,250 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               </div>
             </div>
 
+            {/* ══ IDIOMAS ══════════════════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-sky-50 rounded-xl text-sky-600">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Idiomas</h2>
+                  <p className="text-sm text-slate-500">Agrega los idiomas que manejas y tu nivel de dominio.</p>
+                </div>
+              </div>
+
+              {/* Selector */}
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Idioma</label>
+                  <select
+                    value={idiomaInput}
+                    onChange={(e) => setIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 dark:text-slate-100 transition-all shadow-sm"
+                  >
+                    {IDIOMAS_OPTS.map((id) => <option key={id}>{id}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nivel</label>
+                  <select
+                    value={nivelIdiomaInput}
+                    onChange={(e) => setNivelIdiomaInput(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-transparent focus:border-sky-400 focus:ring-2 focus:ring-sky-100 text-sm text-slate-700 dark:text-slate-100 transition-all shadow-sm"
+                  >
+                    {NIVELES_IDIOMA.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={addIdioma}
+                  className="h-11 px-5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Chips */}
+              {idiomasList.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {idiomasList.map((id, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-sm font-medium text-sky-800">
+                      <Globe2 className="w-3.5 h-3.5 text-sky-500" />
+                      {id.idioma}
+                      <span className="text-sky-500 text-xs ml-1">{id.nivel}</span>
+                      <button type="button" onClick={() => removeIdioma(i)} className="ml-1 text-sky-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {idiomasList.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado idiomas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES TÉCNICAS ══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
+                  <Code2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Técnicas</h2>
+                  <p className="text-sm text-slate-500">Selecciona del banco predefinido o escribe una habilidad propia. Indica tu nivel en cada una.</p>
+                </div>
+              </div>
+
+              {/* Banco de habilidades */}
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banco de habilidades</p>
+
+                {/* Categorías */}
+                <div className="flex flex-wrap gap-1.5">
+                  {SKILLS_BANK.map((cat) => (
+                    <button
+                      key={cat.categoria}
+                      type="button"
+                      onClick={() => { setSelectedCategory(cat.categoria); setSkillFilter(""); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                        selectedCategory === cat.categoria
+                          ? "bg-violet-600 text-white border-violet-600 shadow"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                      }`}
+                    >
+                      {cat.icon} {cat.categoria}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filtro de skills en categoría */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar en esta categoría..."
+                    value={skillFilter}
+                    onChange={(e) => setSkillFilter(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-100 placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* Grilla de skills */}
+                <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+                  {filteredSkills.map((skill) => {
+                    const already = hardSkills.some((s) => s.skill.toLowerCase() === skill.toLowerCase());
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        disabled={already}
+                        onClick={() => addHardSkill(skill)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                          already
+                            ? "bg-violet-100 text-violet-500 border-violet-200 cursor-default"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-violet-50 hover:border-violet-400 hover:text-violet-700"
+                        }`}
+                      >
+                        {already ? "✓ " : "+ "}{skill}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Input manual */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="O escribe una habilidad propia..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(skillInput); } }}
+                  className="flex-1 h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-violet-400 focus:ring-2 focus:ring-violet-100 text-sm transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addHardSkill(skillInput)}
+                  className="h-11 px-5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {/* Habilidades seleccionadas + nivel */}
+              {hardSkills.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tus habilidades ({hardSkills.length})</p>
+                  <div className="space-y-2">
+                    {hardSkills.map((s, i) => (
+                      <div key={i} className="flex flex-wrap items-center gap-3 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                        <span className="flex-1 text-sm font-semibold text-slate-800 min-w-0 truncate">{s.skill}</span>
+                        <div className="flex flex-wrap gap-1 shrink-0">
+                          {SKILL_LEVELS.map((lv) => (
+                            <button
+                              key={lv}
+                              type="button"
+                              onClick={() => updateSkillLevel(i, lv)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                s.level === lv
+                                  ? "bg-violet-600 text-white border-violet-600"
+                                  : "bg-white text-slate-500 border-slate-200 hover:border-violet-300"
+                              }`}
+                            >
+                              {lv}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => removeHardSkill(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {hardSkills.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Selecciona del banco o escribe tus propias habilidades técnicas.</p>
+              )}
+            </div>
+
+            {/* ══ HABILIDADES BLANDAS ═══════════════════════════════════════ */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Star className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades Blandas</h2>
+                  <p className="text-sm text-slate-500">Selecciona las competencias interpersonales que mejor te describen.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {SOFT_SKILLS_BANK.map((skill) => {
+                  const active = softSkillsList.includes(skill);
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => toggleSoftSkill(skill)}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium border text-left transition-all ${
+                        active
+                          ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+                      }`}
+                    >
+                      {active ? "✓ " : ""}{skill}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {softSkillsList.length > 0 && (
+                <p className="text-xs text-amber-700 font-semibold pt-1">
+                  {softSkillsList.length} habilidad{softSkillsList.length !== 1 ? "es" : ""} seleccionada{softSkillsList.length !== 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
+
+            {/* ÁREAS DE INTERÉS (T-11) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Áreas de Interés</h2>
+                  <p className="text-sm text-slate-500">Selecciona las áreas del catálogo que mejor describen tus intereses — mejora la calidad de tus matches.</p>
+                </div>
+              </div>
+
+              <AreasInteresSelector value={areasInteresList} onChange={setAreasInteresList} />
+            </div>
+
             {/* APOYO BUSCADO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Heart className="w-6 h-6" />
@@ -589,11 +1116,47 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
                 ))}
               </div>
             </div>
+
+            {/* Pausar perfil (T-12) */}
+            <div className="bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-amber-200/50 dark:border-amber-800 transition-all hover:shadow-2xl">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-amber-100 dark:border-amber-800">
+                <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Visibilidad del Perfil</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Controla si apareces en el directorio y recibes solicitudes de contacto.</p>
+                </div>
+              </div>
+              <FormField
+                control={form.control}
+                name="perfil_pausado"
+                render={({ field }) => (
+                  <FormItem className="flex items-start gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-1 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                      />
+                    </FormControl>
+                    <div>
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                        Pausar mi perfil temporalmente
+                      </FormLabel>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Tu perfil no aparecerá en el directorio y no recibirás nuevas solicitudes de contacto. Puedes reactivarlo en cualquier momento.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </>
         ) : (
           <>
             {/* DATOS DE EXALUMNO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <GraduationCap className="w-6 h-6" />
@@ -748,8 +1311,220 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
               </div>
             </div>
 
+            {/* HABILIDADES (visibles en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-violet-50 rounded-xl text-violet-600">
+                  <Code2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Habilidades</h2>
+                  <p className="text-sm text-slate-500">Estas habilidades se muestran en tu perfil público para que los estudiantes las vean.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ej. Liderazgo de equipos, React, Gestión de proyectos..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHardSkill(skillInput); } }}
+                  className="flex-1 h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-violet-400 focus:ring-2 focus:ring-violet-100 text-sm transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => addHardSkill(skillInput)}
+                  className="h-11 px-5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {hardSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {hardSkills.map((s, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 border border-violet-200 rounded-full text-sm font-medium text-violet-800">
+                      {s.skill}
+                      <button type="button" onClick={() => removeHardSkill(i)} className="text-violet-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado habilidades.</p>
+              )}
+            </div>
+
+            {/* EXPERIENCIA LABORAL (visible en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Experiencia Laboral</h2>
+                  <p className="text-sm text-slate-500">Agrega tu trayectoria profesional. Se muestra en tu perfil público.</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Cargo (Ej. Arquitecto de Software)"
+                    value={expForm.cargo}
+                    onChange={(e) => setExpForm((p) => ({ ...p, cargo: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Empresa (Ej. Intel Costa Rica)"
+                    value={expForm.empresa}
+                    onChange={(e) => setExpForm((p) => ({ ...p, empresa: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Año inicio (Ej. 2020)"
+                    value={expForm.anio_inicio}
+                    onChange={(e) => setExpForm((p) => ({ ...p, anio_inicio: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Año fin (vacío si es tu puesto actual)"
+                    value={expForm.anio_fin}
+                    onChange={(e) => setExpForm((p) => ({ ...p, anio_fin: e.target.value }))}
+                    className="h-11 px-4 rounded-xl bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all"
+                  />
+                </div>
+                <Textarea
+                  placeholder="Descripción breve de tus funciones o logros (opcional)"
+                  value={expForm.descripcion}
+                  onChange={(e) => setExpForm((p) => ({ ...p, descripcion: e.target.value }))}
+                  className="min-h-[80px] resize-none bg-white border border-slate-200 focus:border-ucr-celeste-medium focus:ring-2 focus:ring-ucr-celeste-medium/20 text-sm transition-all rounded-xl"
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={addExperienciaLaboral}
+                    className="h-11 px-5 bg-ucr-celeste-medium hover:brightness-105 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" /> Agregar experiencia
+                  </button>
+                </div>
+              </div>
+
+              {experienciaList.length > 0 ? (
+                <div className="space-y-3">
+                  {experienciaList.map((exp, i) => (
+                    <div key={i} className="flex items-start justify-between gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 text-sm">{exp.cargo}</p>
+                        <p className="text-xs text-ucr-celeste-medium font-medium">{exp.empresa}</p>
+                        {(exp.anio_inicio || exp.anio_fin) && (
+                          <p className="text-xs text-slate-400 mt-0.5">{exp.anio_inicio}{exp.anio_fin ? ` – ${exp.anio_fin}` : " – Presente"}</p>
+                        )}
+                        {exp.descripcion && <p className="text-xs text-slate-500 mt-1">{exp.descripcion}</p>}
+                      </div>
+                      <button type="button" onClick={() => removeExperienciaLaboral(i)} className="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado experiencia laboral.</p>
+              )}
+            </div>
+
+            {/* CERTIFICACIONES (visible en el perfil público para estudiantes) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Award className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Certificaciones</h2>
+                  <p className="text-sm text-slate-500">Certificaciones profesionales que quieras mostrar en tu perfil público.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. AWS Certified Developer"
+                    value={certForm.nombre}
+                    onChange={(e) => setCertForm((p) => ({ ...p, nombre: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Institución</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Amazon Web Services"
+                    value={certForm.institucion}
+                    onChange={(e) => setCertForm((p) => ({ ...p, institucion: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <div className="w-28">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Año</label>
+                  <input
+                    type="text"
+                    placeholder="2023"
+                    value={certForm.anio}
+                    onChange={(e) => setCertForm((p) => ({ ...p, anio: e.target.value }))}
+                    className="w-full h-11 px-4 rounded-xl bg-slate-50 border border-transparent focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-sm transition-all shadow-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addCertificacion}
+                  className="h-11 px-5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Agregar
+                </button>
+              </div>
+
+              {certificacionesList.length > 0 ? (
+                <div className="space-y-2 pt-1">
+                  {certificacionesList.map((cert, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 text-sm text-slate-700 bg-amber-50 px-3 py-2 rounded-lg">
+                      <span className="min-w-0 break-words">🏅 {cert.nombre}{cert.institucion ? ` – ${cert.institucion}` : ""}{cert.anio ? ` (${cert.anio})` : ""}</span>
+                      <button type="button" onClick={() => removeCertificacion(i)} className="text-amber-400 hover:text-red-500 transition-colors shrink-0">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Aún no has agregado certificaciones.</p>
+              )}
+            </div>
+
+            {/* ÁREAS DE INTERÉS (T-11/T-13) */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-5">
+              <div className="flex items-center gap-3 mb-2 pb-4 border-b border-gray-100">
+                <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
+                  <Globe2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Áreas de Interés</h2>
+                  <p className="text-sm text-slate-500">Selecciona las áreas del catálogo que mejor describen tus intereses — mejora la calidad de tus matches.</p>
+                </div>
+              </div>
+
+              <AreasInteresSelector value={areasInteresList} onChange={setAreasInteresList} />
+            </div>
+
             {/* APOYO OFRECIDO */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl space-y-6">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                 <div className="p-3 bg-[#e0f2fe] rounded-xl text-ucr-celeste-medium">
                   <Heart className="w-6 h-6" />
@@ -797,7 +1572,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         )}
 
         {/* Tarjeta 3: Redes Sociales */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
               <LinkIcon className="w-6 h-6" />
@@ -864,37 +1639,41 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           </div>
         </div>
 
-        {/* Botón de Guardado (Barra Inferior Flotante) */}
-        <div className="sticky bottom-8 z-50 flex justify-end mt-8">
-          <div className="bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-gray-200 flex items-center justify-between w-full md:w-auto md:min-w-[400px]">
-            <p className="text-sm text-ucr-gris-2 dark:text-slate-400 font-medium px-4 hidden md:block">
-              Revisa tus cambios antes de guardar.
-            </p>
-            <Button 
-              type="submit" 
-              disabled={isPending}
-              className="w-full md:w-auto h-14 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-ucr-blanco shadow-lg hover:shadow-ucr-celeste-medium/30 transition-all px-10 rounded-2xl font-bold text-lg group"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                  Guardar Cambios
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Espaciado para que el botón fijo no tape contenido */}
+        <div className="h-28" />
 
       </form>
     </Form>
 
+    {/* Botón de guardar, siempre visible mientras se hace scroll.
+        Se porta a document.body para escapar del backdrop-blur del <main>
+        (ver nota junto a `mounted` más arriba) y así quedar fijo respecto
+        a la ventana real, no al contenido de la página. */}
+    {mounted && createPortal(
+      <div className="fixed bottom-6 right-6 md:right-8 z-50">
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
+            Revisa tus cambios antes de guardar.
+          </p>
+          <Button
+            type="button"
+            disabled={isPending}
+            onClick={() => form.handleSubmit(onSubmit)()}
+            className="h-12 shrink-0 bg-gradient-to-r from-ucr-celeste-medium to-ucr-celeste-medium/80 hover:brightness-105 text-white shadow-lg transition-all px-6 rounded-xl font-bold text-sm md:text-base group"
+          >
+            {isPending ? (
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Guardando...</>
+            ) : (
+              <><Save className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Guardar Cambios</>
+            )}
+          </Button>
+        </div>
+      </div>,
+      document.body
+    )}
+
     {/* Tarjeta: Seguridad — formulario independiente para evitar form anidado */}
-    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
+    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
         <div className="p-3 bg-ucr-celeste/10 rounded-xl text-ucr-celeste">
           <ShieldCheck className="w-6 h-6" />
@@ -955,7 +1734,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
           <Button
             type="submit"
             disabled={isChangingPassword || !passwordForm.current || !passwordForm.newPass || !passwordForm.confirm}
-            className="h-11 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-bold px-8 rounded-xl"
+            className="h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 rounded-xl"
           >
             {isChangingPassword ? (
               <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Actualizando...</>

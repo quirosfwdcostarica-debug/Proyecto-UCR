@@ -152,24 +152,24 @@ export default function HitosPage() {
     <div className="min-h-screen bg-[#f8fafc] pb-12">
       {/* Header Bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2 text-slate-600 hover:text-slate-900">
                 <ArrowLeft className="h-4 w-4" />
                 <span>Volver al Tablero</span>
               </Button>
             </Link>
-            <div className="h-6 w-px bg-slate-200" />
-            <h1 className="text-lg font-bold text-[#0f4c81]">Hitos del Proyecto</h1>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <h1 className="text-base sm:text-lg font-bold text-[#0f4c81] truncate">Hitos del Proyecto</h1>
           </div>
-          <Badge className="bg-blue-50 text-[#0f4c81] hover:bg-blue-50 border-0 font-medium px-3 py-1">
+          <Badge className="bg-blue-50 text-[#0f4c81] hover:bg-blue-50 border-0 font-medium px-3 py-1 text-xs sm:text-sm">
             Gabriel Solano • Estudiante UCR
           </Badge>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 mt-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-8 space-y-6">
         
         {/* Project Header Info Card */}
         <Card className="bg-white border-border shadow-sm p-6 overflow-hidden relative">
@@ -243,10 +243,10 @@ export default function HitosPage() {
                     className="p-5 flex items-center justify-between cursor-pointer select-none"
                     onClick={() => setExpandedId(isExpanded ? null : m.id)}
                   >
-                    <div className="space-y-1 pr-4">
+                    <div className="space-y-1 pr-4 min-w-0 flex-1">
                       <div className="flex items-center flex-wrap gap-2">
                         <span className="text-xs font-semibold text-slate-400">Hito {m.id}</span>
-                        <h3 className={`text-base font-bold text-slate-800 transition-colors ${
+                        <h3 className={`text-base font-bold text-slate-800 transition-colors break-words ${
                           isInProgress ? "text-blue-700" : ""
                         }`}>
                           {m.title}
@@ -272,7 +272,7 @@ export default function HitosPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5 text-slate-400" />
                           {isCompleted ? `Entregado: ${m.completedDate}` : `Entrega esperada: ${m.expectedDate}`}
@@ -341,7 +341,7 @@ export default function HitosPage() {
                       {isInProgress && (
                         <div className="pt-2 flex flex-col sm:flex-row gap-3 border-t border-slate-100">
                           <Button 
-                            className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs font-semibold gap-2"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold gap-2"
                             onClick={() => handleRequestReview(m.id)}
                           >
                             <Send className="h-3.5 w-3.5" />
@@ -390,7 +390,7 @@ export default function HitosPage() {
         </div>
 
         {/* Floating summary */}
-        <div className="bg-[#0f4c81] text-white p-6 rounded-2xl shadow-lg border border-blue-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-primary text-primary-foreground p-6 rounded-2xl shadow-lg border border-blue-900 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <h4 className="font-bold text-lg flex items-center justify-center sm:justify-start gap-2">
               <Sparkles className="h-5 w-5 text-amber-400 fill-amber-400" />

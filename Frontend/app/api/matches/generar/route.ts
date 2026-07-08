@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { calcularAfinidad } from "@/lib/matching";
+import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
@@ -11,22 +12,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // Only existing DB columns
-    const estudiantes = await prisma.estudiante.findMany({
-      select: {
-        user_id: true, carrera: true, proyecto_tipo: true,
-        busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
-      },
-    });
-    const exalumnos = await prisma.exalumno.findMany({
-      where: { escuela_facultad: { not: null }, empresa_actual: { not: null }, user: { status: { not: "SUSPENDIDO" } } },
-      select: {
-        user_id: true, escuela_facultad: true,
-        ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
-        ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
-        ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
-      },
-    });
+    // Traer todos los estudiantes con su proyecto y preferencias.
+    // T-18: activo=false → perfil pausado, no debe recibir nuevas sugerencias.
+    const { data: estudiantesRaw } = await supabaseAdmin
+      .from("ESTUDIANTES")
+      .select("user_id, carrera, proyecto_tipo, busca_mentoria, busca_empleo, busca_pasantia, busca_financiamiento")
+      .eq("activo", true);
+      
+    // Traer exalumnos activos
+    const { data: exalumnosRaw } = await supabaseAdmin
+      .from("EXALUMNOS")
+      .select(`
+        user_id, escuela_facultad, 
+        ofrece_mentoria, ofrece_empleo, ofrece_pasantia, ofrece_donacion_dinero, 
+        ofrece_guest_speaking, ofrece_volunteering, ofrece_career_advice, ofrece_networking,
+        user:USERS!EXALUMNOS_user_id_fkey!inner(activo, status)
+      `)
+      .eq("user.activo", true)
+      .neq("user.status", "SUSPENDIDO");
+
+    const estudiantes = estudiantesRaw ?? [];
+    const exalumnos = exalumnosRaw ?? [];
+
+    // T-11: áreas de interés desde la tabla relacional USUARIOS_AREAS (antes
+    // siempre quedaban como [] hardcodeado y nunca influían en el score).
+    const todosLosIds = [...estudiantes.map((e) => e.user_id), ...exalumnos.map((e) => e.user_id)];
+    const { data: areasRaw } = await supabaseAdmin
+      .from("USUARIOS_AREAS")
+      .select("user_id, area_codigo")
+      .in("user_id", todosLosIds);
+    const areasPorUsuario = new Map<string, string[]>();
+    for (const row of areasRaw ?? []) {
+      const actuales = areasPorUsuario.get(row.user_id) ?? [];
+      actuales.push(row.area_codigo);
+      areasPorUsuario.set(row.user_id, actuales);
+    }
 
     let creados = 0;
     let actualizados = 0;
@@ -42,13 +62,13 @@ export async function POST(req: Request) {
             ...(est.busca_financiamiento ? ["financiamiento"] : []),
           ],
           areaProyecto: est.proyecto_tipo || null,
-          areasInteres: [] as string[],
+          areasInteres: areasPorUsuario.get(est.user_id) ?? [],
         };
 
         const exaCompat = {
           carrera: exa.escuela_facultad || "",
           sector: null as string | null,
-          areasInteres: [] as string[],
+          areasInteres: areasPorUsuario.get(exa.user_id) ?? [],
           apoyoOfrecido: [
             ...(exa.ofrece_mentoria ? ["mentoria"] : []),
             ...(exa.ofrece_empleo ? ["empleo"] : []),
@@ -64,27 +84,29 @@ export async function POST(req: Request) {
         const { score, reasons } = calcularAfinidad(estCompat, exaCompat);
 
         if (score > 0) {
-          const existingMatch = await prisma.match.findUnique({
-            where: { estudiante_id_exalumno_id: { estudiante_id: est.user_id, exalumno_id: exa.user_id } },
-          });
+          const { data: existingMatch } = await supabaseAdmin
+            .from("MATCHES")
+            .select("id, score_match")
+            .eq("estudiante_id", est.user_id)
+            .eq("exalumno_id", exa.user_id)
+            .maybeSingle();
 
           if (existingMatch) {
             if (existingMatch.score_match !== score) {
-              await prisma.match.update({
-                where: { id: existingMatch.id },
-                data: { score_match: score, match_reasons: reasons },
-              });
+              await supabaseAdmin
+                .from("MATCHES")
+                .update({ score_match: score, match_reasons: reasons })
+                .eq("id", existingMatch.id);
               actualizados++;
             }
           } else {
-            await prisma.match.create({
-              data: {
-                estudiante_id: est.user_id,
-                exalumno_id: exa.user_id,
-                score_match: score,
-                estado: "SUGERIDO",
-                match_reasons: reasons,
-              },
+            await supabaseAdmin.from("MATCHES").insert({
+              id: randomUUID(),
+              estudiante_id: est.user_id,
+              exalumno_id: exa.user_id,
+              score_match: score,
+              estado: "SUGERIDO",
+              match_reasons: reasons,
             });
             creados++;
           }

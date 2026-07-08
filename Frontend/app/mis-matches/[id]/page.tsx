@@ -3,9 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useDialog } from "@/hooks/useDialog";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import {
   Loader2,
   ArrowLeft,
@@ -20,6 +24,9 @@ import {
   Clock,
   ShieldAlert,
   Handshake,
+  Award,
+  FileText,
+  Lock,
 } from "lucide-react";
 
 export default function MatchDetailPage() {
@@ -30,6 +37,7 @@ export default function MatchDetailPage() {
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showAlert, showConfirm } = useDialog();
 
   const role = (session?.user as any)?.tipo;
   const isEstudiante = role === "ESTUDIANTE";
@@ -65,7 +73,7 @@ export default function MatchDetailPage() {
         setMatch({ ...match, ...updated });
       } else {
         const err = await res.json();
-        alert(err.message || "Error al procesar la acción");
+        await showAlert(err.message || "Error al procesar la acción", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -89,14 +97,15 @@ export default function MatchDetailPage() {
   const isActivo = match.status === "ACTIVO";
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-20">
-      
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        <Button variant="ghost" className="mb-4 pl-0 text-slate-500 hover:text-slate-800" onClick={() => router.push("/mis-matches")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <ParallaxBackground className="min-h-screen pb-20">
+      <div className="fu-hero-gradient animate-fu-gradient border-b border-white/10 text-white py-4 px-6 md:px-12 flex items-center shadow-md">
+        <button onClick={() => router.push("/mis-matches")} className="flex items-center gap-2 text-sm text-slate-200 hover:text-white transition-colors">
+          <ArrowLeft className="h-4 w-4" />
           Volver a Mis Matches
-        </Button>
+        </button>
+      </div>
 
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 mt-2 space-y-6">
         {/* Status Banner */}
         {match.status === "CERRADO" && (
           <div className="bg-slate-200 text-slate-700 p-4 rounded-xl flex items-center gap-3">
@@ -113,9 +122,14 @@ export default function MatchDetailPage() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Columna Izquierda: Perfil */}
-          <div className="md:col-span-1 space-y-6">
+          <motion.div
+            className="md:col-span-1 space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 18 }}
+          >
             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden text-center">
-              <div className="bg-gradient-to-br from-[#0f4c81] to-[#1a7abf] h-24" />
+              <div className="fu-hero-gradient animate-fu-gradient h-24" />
               <div className="px-6 pb-6">
                 <div className="w-24 h-24 rounded-full border-4 border-white mx-auto -mt-12 bg-white flex items-center justify-center overflow-hidden">
                   {userData.image ? (
@@ -124,7 +138,7 @@ export default function MatchDetailPage() {
                     <UserIcon className="w-12 h-12 text-slate-300" />
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 mt-4">{userData.name}</h2>
+                <AnimatedHeading as="h2" hoverColor="#F37021" className="text-xl mt-4 break-words">{userData.name}</AnimatedHeading>
                 <p className="text-sm text-slate-500 mb-4">{otherUser.carrera}</p>
 
                 {isActivo ? (
@@ -157,7 +171,7 @@ export default function MatchDetailPage() {
             {/* Actions */}
             {match.status === "SUGERIDO" && (
               <Button
-                className="w-full bg-[#0f4c81] hover:bg-[#0b3a63] text-white py-6 text-lg"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
                 disabled={actionLoading === "CONTACTAR"}
                 onClick={() => handleAction("CONTACTAR")}
               >
@@ -198,22 +212,30 @@ export default function MatchDetailPage() {
                 variant="outline"
                 className="w-full border-slate-300 text-slate-600 hover:bg-slate-50"
                 disabled={actionLoading === "CERRAR"}
-                onClick={() => {
-                  if (confirm("¿Estás seguro de cerrar este match? Ya no podrás interactuar con él.")) {
-                    handleAction("CERRAR");
-                  }
+                onClick={async () => {
+                  const ok = await showConfirm("¿Cerrar este match? Ya no podrás interactuar con él.", {
+                    title: "Cerrar match",
+                    confirmLabel: "Cerrar match",
+                    variant: "warning",
+                  });
+                  if (ok) handleAction("CERRAR");
                 }}
               >
                 {actionLoading === "CERRAR" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cerrar Match"}
               </Button>
             )}
-          </div>
+          </motion.div>
 
           {/* Columna Derecha: Detalles de Afinidad */}
-          <div className="md:col-span-2 space-y-6">
+          <motion.div
+            className="md:col-span-2 space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 90, damping: 18, delay: 0.1 }}
+          >
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardContent className="p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                   <h3 className="text-xl font-bold text-slate-800">Afinidad Calculada</h3>
                   <div className="flex items-center gap-3">
                     <div className="text-3xl font-extrabold text-[#0f4c81]">{match.afinidad}%</div>
@@ -307,9 +329,44 @@ export default function MatchDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+
+            {!isEstudiante && (
+              <Card className="bg-white border-slate-200 shadow-sm">
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Award className="w-5 h-5 text-[#005da4]" />
+                    <h3 className="text-xl font-bold text-slate-800">Beca del Estudiante</h3>
+                  </div>
+                  {isActivo && otherUser.nivel_beca ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge className="bg-[#005da4]/10 text-[#005da4] border border-[#005da4]/20 font-bold px-3 py-1.5">
+                        {otherUser.nivel_beca}
+                      </Badge>
+                      {otherUser.comprobante_beca_url ? (
+                        <a
+                          href={otherUser.comprobante_beca_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-[#005da4] hover:underline"
+                        >
+                          <FileText className="w-4 h-4" /> Ver comprobante
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400">Sin comprobante adjunto</span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <Lock className="w-4 h-4" />
+                      Esta información se mostrará cuando el match esté Activo.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
         </div>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

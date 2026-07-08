@@ -160,4 +160,38 @@ async function sendAlumniApprovedEmail(to, nombre) {
   }
 }
 
-module.exports = { sendMagicLink, sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail };
+/**
+ * Envía correo de notificación al administrador sobre una suspensión automática.
+ */
+async function sendAccountSuspendedEmail(to, nombreReportado, emailReportado, reportesTotales) {
+  try {
+    return resend.emails.send({
+      from: FROM,
+      to,
+      subject: '🚨 Acción Requerida: Perfil Auto-Suspendido por Reportes',
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#f8fafc;border-radius:8px">
+          <h2 style="color:#b91c1c">Perfil Suspendido Automáticamente</h2>
+          <p style="color:#475569;line-height:1.6">
+            El siguiente perfil ha sido suspendido automáticamente tras alcanzar el límite de reportes:
+          </p>
+          <ul style="color:#475569">
+            <li><strong>Nombre:</strong> ${nombreReportado}</li>
+            <li><strong>Email:</strong> ${emailReportado}</li>
+            <li><strong>Total de reportes:</strong> ${reportesTotales}</li>
+          </ul>
+          <p style="color:#475569;line-height:1.6">
+            Por favor ingresa al panel administrativo para revisar los motivos de los reportes y decidir si reactivar o eliminar permanentemente la cuenta.
+          </p>
+          <a href="${FRONTEND}/admin/usuarios" style="display:inline-block;margin:24px 0;padding:14px 28px;background:#b91c1c;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold">
+            Revisar en Panel Admin
+          </a>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error('Error sending account suspended email:', error);
+  }
+}
+
+module.exports = { sendMagicLink, sendMagicLinkEmailJS, sendAlumniPendingEmail, sendPasswordReset, sendAlumniApprovedEmail, sendAccountSuspendedEmail };

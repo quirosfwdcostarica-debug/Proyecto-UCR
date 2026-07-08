@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(_request: NextRequest) {
   const session = await auth();
@@ -19,27 +19,15 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    const donaciones = await prisma.donacion.findMany({
-      where: {
-        exalumno_id: userId,
-      },
-      orderBy: {
-        created_at: "desc",
-      },
-      select: {
-        id: true,
-        monto: true,
-        estado: true,
-        destino: true,
-        metodo_pago: true,
-        moneda: true,
-        created_at: true,
-        updated_at: true,
-      },
-    });
+    const { data: donaciones, error } = await supabaseAdmin
+      .from("DONACIONES")
+      .select("id, monto, estado, destino, metodo_pago, moneda, created_at, updated_at")
+      .eq("exalumno_id", userId)
+      .order("created_at", { ascending: false });
 
-    // Normalize field names for frontend compatibility
-    const normalized = donaciones.map((d) => ({
+    if (error) throw error;
+
+    const normalized = (donaciones || []).map((d: any) => ({
       ...d,
       status: d.estado,
       createdAt: d.created_at,

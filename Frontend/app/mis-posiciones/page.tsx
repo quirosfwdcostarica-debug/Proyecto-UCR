@@ -8,9 +8,14 @@ import {
   Briefcase, Loader2, Plus, Calendar, MapPin, Clock,
   Pencil, Trash2, X, Check, ChevronDown, Users,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useDialog } from "@/hooks/useDialog";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { SunflowerImage } from "@/components/fu/SunflowerImage";
 
 interface Posicion {
   id: string;
@@ -29,6 +34,7 @@ const ESTADO_COLORS: Record<string, string> = {
   activa: "bg-green-100 text-green-700 border-green-200",
   cubierta: "bg-slate-100 text-slate-600 border-slate-200",
   cancelada: "bg-red-100 text-red-600 border-red-200",
+  vencida: "bg-amber-100 text-amber-700 border-amber-200",
 };
 
 const TIPOS = ["EMPLEO", "PASANTIA", "PRACTICA", "VOLUNTARIADO"];
@@ -66,6 +72,7 @@ export default function MisPosicionesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ titulo: "", tipo: "", modalidad: "", jornada: "", empresa: "", estado: "", fecha_limite: "" });
   const [saving, setSaving] = useState(false);
+  const { showAlert } = useDialog();
 
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -120,7 +127,7 @@ export default function MisPosicionesPage() {
       } : p));
       setEditingId(null);
     } catch {
-      alert("Error al guardar cambios.");
+      await showAlert("Error al guardar cambios.", { title: "Error", variant: "error" });
     } finally {
       setSaving(false);
     }
@@ -134,7 +141,7 @@ export default function MisPosicionesPage() {
       setPosiciones((prev) => prev.filter((p) => p.id !== id));
       setConfirmDeleteId(null);
     } catch {
-      alert("Error al eliminar la posición.");
+      await showAlert("Error al eliminar la posición.", { title: "Error", variant: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -142,25 +149,25 @@ export default function MisPosicionesPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-      </div>
+      <ParallaxBackground className="min-h-screen flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+      </ParallaxBackground>
     );
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-screen p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Exalumno</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Mis Posiciones</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Exalumno</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-2xl sm:text-3xl">Mis Posiciones</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-2">
               Gestiona las posiciones laborales y de pasantía que has publicado.
             </p>
           </div>
           <Link href="/posiciones/nueva">
-            <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="w-4 h-4 mr-2" /> Nueva posición
             </Button>
           </Link>
@@ -171,16 +178,14 @@ export default function MisPosicionesPage() {
         )}
 
         {posiciones.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6">
-              <Briefcase className="w-10 h-10 text-blue-400" />
-            </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-3">Sin posiciones publicadas</h2>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <SunflowerImage size={220} />
+            <h2 className="text-xl font-bold fu-text mt-4 mb-3">Sin posiciones publicadas</h2>
             <p className="text-slate-500 dark:text-slate-400 max-w-sm text-sm mb-6">
               Publica oportunidades laborales y de pasantía para conectar con el talento estudiantil de la UCR.
             </p>
             <Link href="/posiciones/nueva">
-              <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="w-4 h-4 mr-2" /> Publicar mi primera posición
               </Button>
             </Link>
@@ -191,23 +196,30 @@ export default function MisPosicionesPage() {
               <span className="font-bold text-slate-700 dark:text-slate-300">{posiciones.length}</span> posici{posiciones.length !== 1 ? "ones" : "ón"} publicada{posiciones.length !== 1 ? "s" : ""}
             </p>
 
-            {posiciones.map((p) => {
+            {posiciones.map((p, i) => {
               const estadoLower = (p.estado ?? "activa").toLowerCase();
               const estadoCls = ESTADO_COLORS[estadoLower] ?? ESTADO_COLORS.activa;
               const isEditing = editingId === p.id;
               const isConfirmingDelete = confirmDeleteId === p.id;
 
               return (
-                <Card key={p.id} className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.05 }}
+                >
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-fu-lg transition-shadow overflow-hidden">
                   {/* Main row */}
-                  <div className="p-5">
+                  <div className="p-4 sm:p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="h-10 w-10 rounded-lg bg-[#0f4c81]/10 flex items-center justify-center shrink-0">
                         <Briefcase className="h-5 w-5 text-[#0f4c81]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h3 className="font-semibold text-slate-800 dark:text-slate-100">{p.titulo ?? "Posición sin título"}</h3>
+                          <h3 className="font-semibold text-slate-800 dark:text-slate-100 break-words">{p.titulo ?? "Posición sin título"}</h3>
                           <Badge variant="outline" className={`text-xs px-2 py-0.5 ${estadoCls}`}>
                             {p.estado ?? "Activa"}
                           </Badge>
@@ -249,7 +261,7 @@ export default function MisPosicionesPage() {
 
                   {/* Edit form */}
                   {isEditing && (
-                    <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-5">
+                    <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5">
                       <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-4">Editar posición</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2">
@@ -311,7 +323,7 @@ export default function MisPosicionesPage() {
                       </div>
                       <div className="flex gap-3 mt-4 justify-end">
                         <Button variant="outline" onClick={() => setEditingId(null)} className="text-sm">Cancelar</Button>
-                        <Button onClick={saveEdit} disabled={saving} className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-sm">
+                        <Button onClick={saveEdit} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm">
                           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
                           Guardar cambios
                         </Button>
@@ -321,7 +333,7 @@ export default function MisPosicionesPage() {
 
                   {/* Delete confirm */}
                   {isConfirmingDelete && (
-                    <div className="border-t border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 px-5 py-4 flex items-center justify-between gap-4">
+                    <div className="border-t border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <p className="text-sm text-red-700 dark:text-red-400 font-medium">
                         ¿Eliminar esta posición permanentemente? Esta acción no se puede deshacer.
                       </p>
@@ -340,11 +352,12 @@ export default function MisPosicionesPage() {
                     </div>
                   )}
                 </Card>
+                </motion.div>
               );
             })}
           </div>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

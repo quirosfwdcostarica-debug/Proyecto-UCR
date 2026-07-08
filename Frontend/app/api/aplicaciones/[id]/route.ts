@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import {
   sendAplicacionSeleccionada,
   sendAplicacionDescartada,
 } from "@/lib/email";
 
-// ─── PATCH — exalumno selecciona o descarta un aplicante ─────────────────────
-// Body: { action: "seleccionar" | "descartar", cerrarPosicion?: boolean }
+// PATCH — exalumno selecciona o descarta un aplicante
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -27,107 +26,124 @@ export async function PATCH(
   }
 
   const { action, cerrarPosicion = false } = body;
-  if (!["seleccionar", "descartar"].includes(action))
-    return NextResponse.json({ message: "Acción inválida. Use 'seleccionar' o 'descartar'" }, { status: 400 });
+  if (!["seleccionar", "descartar", "marcar_revision"].includes(action))
+    return NextResponse.json({ message: "Acción inválida. Use 'seleccionar', 'descartar' o 'marcar_revision'" }, { status: 400 });
 
-  // Fetch the application with full context
-  const aplicacion = await prisma.aplicacion.findUnique({
-    where: { id: params.id },
-    select: {
-      id: true, estado: true, posicion_id: true, estudiante_id: true,
-      posicion: {
-        select: {
-          id: true, titulo: true, empresa: true, exalumno_id: true,
-          estado: true,
-        },
-      },
-      estudiante: {
-        select: {
-          user: { select: { nombre: true, email: true } },
-        },
-      },
-    },
-  });
+  // Fetch the application with context
+  const { data: aplicacion, error: apErr } = await supabaseAdmin
+    .from("APLICACIONES")
+    .select(`
+      id, estado, posicion_id, estudiante_id,
+      posicion:POSICIONES!APLICACIONES_posicion_id_fkey(id, titulo, empresa, exalumno_id, estado),
+      estudiante:ESTUDIANTES!APLICACIONES_estudiante_id_fkey(
+        user:USERS!ESTUDIANTES_user_id_fkey(nombre, email)
+      )
+    `)
+    .eq("id", params.id)
+    .maybeSingle();
 
-  if (!aplicacion)
+  if (apErr || !aplicacion)
     return NextResponse.json({ message: "Aplicación no encontrada" }, { status: 404 });
 
-  // Verify ownership (exalumno must own the position)
-  if (tipo !== "ADMIN" && aplicacion.posicion.exalumno_id !== userId)
+  const pos = Array.isArray(aplicacion.posicion) ? aplicacion.posicion[0] : aplicacion.posicion;
+  const estArr = aplicacion.estudiante;
+  const est = Array.isArray(estArr) ? estArr[0] : estArr;
+  const estUser = Array.isArray(est?.user) ? est.user[0] : est?.user;
+
+  if (tipo !== "ADMIN" && pos?.exalumno_id !== userId)
     return NextResponse.json({ message: "No tienes permiso para gestionar esta aplicación" }, { status: 403 });
 
-  if (aplicacion.estado !== "PENDIENTE")
+  // T-14: marcar_revision es idempotente y solo aplica desde ENVIADA — se
+  // resuelve antes de la validación genérica de "ya fue procesada", que es
+  // específica de seleccionar/descartar.
+  if (action === "marcar_revision") {
+    if (aplicacion.estado !== "ENVIADA") {
+      return NextResponse.json({ ok: true, estado: aplicacion.estado });
+    }
+    const { data: updated, error } = await supabaseAdmin
+      .from("APLICACIONES")
+      .update({ estado: "EN_REVISION", updated_at: new Date().toISOString() })
+      .eq("id", params.id)
+      .select("id, estado")
+      .single();
+    if (error) return NextResponse.json({ message: "Error al actualizar la aplicación" }, { status: 500 });
+    return NextResponse.json({ ok: true, estado: updated.estado });
+  }
+
+  if (!["ENVIADA", "EN_REVISION"].includes(aplicacion.estado))
     return NextResponse.json({ message: "Esta aplicación ya fue procesada" }, { status: 400 });
 
-  const estudianteEmail  = aplicacion.estudiante.user.email;
-  const estudianteNombre = aplicacion.estudiante.user.nombre ?? "Estudiante";
-  const posicionTitulo   = aplicacion.posicion.titulo ?? "la posición";
-  const empresa          = aplicacion.posicion.empresa ?? undefined;
+  // Get exalumno user data for emails
+  const { data: exaUser } = await supabaseAdmin
+    .from("USERS")
+    .select("nombre, email")
+    .eq("id", pos?.exalumno_id)
+    .maybeSingle();
+
+  const estudianteEmail  = estUser?.email ?? null;
+  const estudianteNombre = estUser?.nombre ?? "Estudiante";
+  const posicionTitulo   = pos?.titulo ?? "la posición";
+  const exalumnoNombre   = exaUser?.nombre ?? "";
+  const exalumnoEmail    = exaUser?.email ?? "";
 
   try {
     if (action === "seleccionar") {
-      // 1. Mark this application as SELECCIONADO
-      const updated = await prisma.aplicacion.update({
-        where: { id: params.id },
-        data: { estado: "SELECCIONADO" },
-        select: { id: true, estado: true },
-      });
+      const { data: updated, error } = await supabaseAdmin
+        .from("APLICACIONES")
+        .update({ estado: "SELECCIONADO", updated_at: new Date().toISOString() })
+        .eq("id", params.id)
+        .select("id, estado")
+        .single();
+      if (error) throw error;
 
-      // 2. Send success email to selected student
       if (estudianteEmail) {
-        await sendAplicacionSeleccionada(estudianteEmail, estudianteNombre, posicionTitulo, empresa);
+        await sendAplicacionSeleccionada(estudianteEmail, estudianteNombre, posicionTitulo, exalumnoNombre, exalumnoEmail);
       }
 
-      // 3. If requested: close position + reject all other PENDIENTE applicants
       if (cerrarPosicion) {
-        const otrosPendientes = await prisma.aplicacion.findMany({
-          where: {
-            posicion_id: aplicacion.posicion_id,
-            id: { not: params.id },
-            estado: "PENDIENTE",
-          },
-          select: {
-            id: true,
-            estudiante: { select: { user: { select: { email: true, nombre: true } } } },
-          },
-        });
+        // Get other pending applicants to notify them (ENVIADA o EN_REVISION, ambos "no decididos")
+        const { data: otrosPendientes } = await supabaseAdmin
+          .from("APLICACIONES")
+          .select(`id, estudiante:ESTUDIANTES!APLICACIONES_estudiante_id_fkey(user:USERS!ESTUDIANTES_user_id_fkey(email, nombre))`)
+          .eq("posicion_id", aplicacion.posicion_id)
+          .neq("id", params.id)
+          .in("estado", ["ENVIADA", "EN_REVISION"]);
 
-        // Batch update to DESCARTADO
-        await prisma.aplicacion.updateMany({
-          where: {
-            posicion_id: aplicacion.posicion_id,
-            id: { not: params.id },
-            estado: "PENDIENTE",
-          },
-          data: { estado: "DESCARTADO" },
-        });
+        // Batch reject
+        await supabaseAdmin
+          .from("APLICACIONES")
+          .update({ estado: "DESCARTADO", updated_at: new Date().toISOString() })
+          .eq("posicion_id", aplicacion.posicion_id)
+          .neq("id", params.id)
+          .in("estado", ["ENVIADA", "EN_REVISION"]);
 
-        // Send rejection emails to other applicants (anonymous — "posición fue cubierta")
+        // Close position
+        await supabaseAdmin
+          .from("POSICIONES")
+          .update({ estado: "cubierta" })
+          .eq("id", aplicacion.posicion_id);
+
+        // Send rejection emails
         await Promise.allSettled(
-          otrosPendientes.map((a) => {
-            const email = a.estudiante.user.email;
-            const nombre = a.estudiante.user.nombre ?? "Estudiante";
-            if (email) return sendAplicacionDescartada(email, nombre, posicionTitulo);
+          (otrosPendientes ?? []).map((a: any) => {
+            const u = Array.isArray(a.estudiante) ? a.estudiante[0]?.user : a.estudiante?.user;
+            const userInfo = Array.isArray(u) ? u[0] : u;
+            if (userInfo?.email) return sendAplicacionDescartada(userInfo.email, userInfo.nombre ?? "Estudiante", posicionTitulo);
           })
         );
-
-        // Mark position as cubierta
-        await prisma.posicion.update({
-          where: { id: aplicacion.posicion_id },
-          data: { estado: "cubierta" },
-          select: { id: true },
-        });
       }
 
       return NextResponse.json({ ok: true, estado: updated.estado });
     }
 
     if (action === "descartar") {
-      const updated = await prisma.aplicacion.update({
-        where: { id: params.id },
-        data: { estado: "DESCARTADO" },
-        select: { id: true, estado: true },
-      });
+      const { data: updated, error } = await supabaseAdmin
+        .from("APLICACIONES")
+        .update({ estado: "DESCARTADO" })
+        .eq("id", params.id)
+        .select("id, estado")
+        .single();
+      if (error) throw error;
 
       if (estudianteEmail) {
         await sendAplicacionDescartada(estudianteEmail, estudianteNombre, posicionTitulo);
@@ -141,7 +157,7 @@ export async function PATCH(
   }
 }
 
-// ─── DELETE — estudiante retira su aplicación (solo si PENDIENTE) ─────────────
+// DELETE — estudiante retira su aplicación (solo si ENVIADA)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -155,20 +171,22 @@ export async function DELETE(
   if (tipo !== "ESTUDIANTE")
     return NextResponse.json({ message: "Solo estudiantes pueden retirar aplicaciones" }, { status: 403 });
 
-  const aplicacion = await prisma.aplicacion.findUnique({
-    where: { id: params.id },
-    select: { id: true, estado: true, estudiante_id: true },
-  });
+  const { data: aplicacion } = await supabaseAdmin
+    .from("APLICACIONES")
+    .select("id, estado, estudiante_id")
+    .eq("id", params.id)
+    .maybeSingle();
 
   if (!aplicacion)
     return NextResponse.json({ message: "Aplicación no encontrada" }, { status: 404 });
   if (aplicacion.estudiante_id !== userId)
     return NextResponse.json({ message: "No tienes permiso para retirar esta aplicación" }, { status: 403 });
-  if (aplicacion.estado !== "PENDIENTE")
-    return NextResponse.json({ message: "Solo puedes retirar aplicaciones en estado 'En revisión'" }, { status: 400 });
+  if (aplicacion.estado !== "ENVIADA")
+    return NextResponse.json({ message: "Solo puedes retirar aplicaciones que aún no han sido revisadas por el exalumno." }, { status: 400 });
 
   try {
-    await prisma.aplicacion.delete({ where: { id: params.id } });
+    const { error } = await supabaseAdmin.from("APLICACIONES").delete().eq("id", params.id);
+    if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[DELETE /api/aplicaciones/[id]]", error);

@@ -110,7 +110,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={isLoading || !form.newPassword || !form.confirm}
-              className="w-full h-11 bg-[#0f4c81] hover:bg-[#0b3a63] text-white font-bold"
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
             >
               {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</> : "Guardar nueva contraseña"}
             </Button>

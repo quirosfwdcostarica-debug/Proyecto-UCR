@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useDialog } from "@/hooks/useDialog";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -42,8 +43,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { DashboardImpact } from "@/components/admin/DashboardImpact";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { motion } from "framer-motion";
 
 // ============================================================
 // Tipos
@@ -99,26 +99,35 @@ function KpiCard({
   icon: Icon,
   color,
   sub,
+  index = 0,
 }: {
   title: string;
   value: string | number;
   icon: React.ElementType;
   color: string;
   sub?: string;
+  index?: number;
 }) {
   return (
-    <Card className="bg-white border-border shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${color}`}>
-          <Icon className="w-4 h-4 text-white" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-slate-800">{value}</div>
-        {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: index * 0.08, ease: [0.25, 1, 0.5, 1] }}
+      whileHover={{ y: -4, scale: 1.02 }}
+    >
+      <Card className="bg-white dark:bg-slate-900 border-border shadow-sm transition-shadow hover:shadow-fu-lg">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">{title}</CardTitle>
+          <div className={`p-2 rounded-lg ${color}`}>
+            <Icon className="w-4 h-4 text-white" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</div>
+          {sub && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{sub}</p>}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -128,13 +137,13 @@ function ComprobanteViewer({ url, onClose }: { url: string; onClose: () => void 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="font-bold text-slate-800">Comprobante de Pago</h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg">
-            <XCircle className="w-5 h-5 text-slate-500" />
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="font-bold text-slate-800 dark:text-slate-100">Comprobante de Pago</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <XCircle className="w-5 h-5 text-slate-500 dark:text-slate-400" />
           </button>
         </div>
         <div className="flex-1 overflow-auto p-4">
@@ -144,7 +153,7 @@ function ComprobanteViewer({ url, onClose }: { url: string; onClose: () => void 
             <img src={url} alt="Comprobante" className="max-w-full h-auto rounded-lg mx-auto" />
           )}
         </div>
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <a
             href={url}
             target="_blank"
@@ -193,6 +202,7 @@ export default function AdminDashboardPage() {
 
   // ---- Acciones en vuelo ----
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showAlert } = useDialog();
   const [comprobanteUrl, setComprobanteUrl] = useState<string | null>(null);
 
   // ---- Generación de matches ----
@@ -254,7 +264,7 @@ export default function AdminDashboardPage() {
         fetchStats(); // Refrescar donaciones pendientes y KPIs
       } else {
         const d = await res.json();
-        alert(d.message || "Error al actualizar");
+        await showAlert(d.message || "Error al actualizar", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -274,7 +284,7 @@ export default function AdminDashboardPage() {
         fetchStats();
       } else {
         const d = await res.json();
-        alert(d.message || "Error al actualizar usuario");
+        await showAlert(d.message || "Error al actualizar usuario", { title: "Error", variant: "error" });
       }
     } finally {
       setActionLoading(null);
@@ -333,6 +343,10 @@ export default function AdminDashboardPage() {
     if (!adminRef.current) return;
     try {
       setDownloadingPDF(true);
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
       const canvas = await html2canvas(adminRef.current, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
 
@@ -344,7 +358,7 @@ export default function AdminDashboardPage() {
       pdf.save(`Admin_Report_${new Date().getTime()}.pdf`);
     } catch (err) {
       console.error("Error al exportar PDF:", err);
-      alert("Hubo un error al generar el PDF.");
+      await showAlert("Hubo un error al generar el PDF.", { title: "Error al exportar", variant: "error" });
     } finally {
       setDownloadingPDF(false);
     }
@@ -354,32 +368,32 @@ export default function AdminDashboardPage() {
   // Colores de status
   // ============================================================
   const MATCH_STATUS_COLORS: Record<string, string> = {
-    SUGERIDO: "bg-slate-100 text-slate-700",
-    CONTACTADO: "bg-yellow-100 text-yellow-700",
-    ACTIVO: "bg-green-100 text-green-700",
-    RECHAZADO: "bg-red-100 text-red-700",
-    CERRADO: "bg-slate-200 text-slate-500",
+    SUGERIDO: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+    CONTACTADO: "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400",
+    ACTIVO: "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400",
+    RECHAZADO: "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400",
+    CERRADO: "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400",
   };
 
   if ((status as string) === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-sky-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div ref={adminRef} className="min-h-full bg-[#f8fafc] print:bg-white">
+    <div ref={adminRef} className="min-h-full bg-[#f8fafc] dark:bg-slate-950 print:bg-white">
 
-      <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* ---- Header ---- */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">
               Panel de Administración
             </h1>
-            <p className="text-slate-500 mt-1">
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
               Métricas en tiempo real, gestión de matches, donaciones y moderación.
             </p>
           </div>
@@ -387,7 +401,7 @@ export default function AdminDashboardPage() {
             <Button
               onClick={handleGenerarMatches}
               disabled={generatingMatches}
-              className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
               {generatingMatches ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Generar Matches
@@ -400,21 +414,21 @@ export default function AdminDashboardPage() {
         </div>
 
         {generationResult && (
-          <div className={`px-4 py-3 rounded-lg text-sm font-medium ${generationResult.startsWith("✅") ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+          <div className={`px-4 py-3 rounded-lg text-sm font-medium ${generationResult.startsWith("✅") ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"}`}>
             {generationResult}
           </div>
         )}
 
         {/* ---- Navegación de secciones ---- */}
-        <div className="flex gap-1 p-1 bg-white border border-slate-200 rounded-xl shadow-sm w-fit">
+        <div className="flex gap-1 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full sm:w-fit overflow-x-auto">
           {(["dashboard", "impacto", "matches", "donaciones", "reportes"] as const).map((sec) => (
             <button
               key={sec}
               onClick={() => setActiveSection(sec)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize whitespace-nowrap shrink-0 ${
                 activeSection === sec
-                  ? "bg-[#0f4c81] text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
               {sec === "donaciones" ? "Cola Donaciones" : sec === "reportes" ? "Perfiles Reportados" : sec === "matches" ? "Gestión Matches" : sec === "impacto" ? "Impacto" : "Dashboard"}
@@ -429,12 +443,13 @@ export default function AdminDashboardPage() {
           <div className="space-y-6 print:block" id="dashboard-print">
             {/* KPI Cards */}
             {loadingStats ? (
-              <div className="flex items-center gap-2 py-6 text-slate-500">
+              <div className="flex items-center gap-2 py-6 text-slate-500 dark:text-slate-400">
                 <Loader2 className="w-5 h-5 animate-spin" /> Cargando métricas...
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 <KpiCard
+                  index={0}
                   title="Total Donado (Aprobadas)"
                   value={`₡${(stats?.kpis.totalDonado || 0).toLocaleString("es-CR")}`}
                   icon={DollarSign}
@@ -442,18 +457,21 @@ export default function AdminDashboardPage() {
                   sub={`${stats?.kpis.donacionesAprobadas || 0} donaciones aprobadas`}
                 />
                 <KpiCard
+                  index={1}
                   title="Matches Activos"
                   value={stats?.kpis.matchesActivos || 0}
                   icon={Link2}
                   color="bg-[#0f4c81]"
                 />
                 <KpiCard
+                  index={2}
                   title="Estudiantes Activos"
                   value={stats?.kpis.estudiantesActivos || 0}
                   icon={Users}
                   color="bg-indigo-500"
                 />
                 <KpiCard
+                  index={3}
                   title="Exalumnos Activos"
                   value={stats?.kpis.exalumnosActivos || 0}
                   icon={HeartHandshake}
@@ -463,7 +481,7 @@ export default function AdminDashboardPage() {
             )}
 
             {/* Gráfico de barras */}
-            <Card className="bg-white border-border shadow-sm">
+            <Card className="bg-white dark:bg-slate-900 border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <TrendingUp className="w-5 h-5 text-[#0f4c81]" />
@@ -472,7 +490,7 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 {!stats?.graficoDonaciones?.length ? (
-                  <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+                  <div className="flex items-center justify-center h-48 text-slate-400 dark:text-slate-500 text-sm">
                     Sin datos de donaciones aún.
                   </div>
                 ) : (
@@ -517,7 +535,7 @@ export default function AdminDashboardPage() {
             {/* Filtros */}
             <div className="flex flex-wrap gap-3 items-center">
               <div className="relative flex-1 min-w-[220px]">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <Input
                   value={matchNombre}
                   onChange={(e) => setMatchNombre(e.target.value)}
@@ -528,7 +546,7 @@ export default function AdminDashboardPage() {
               <select
                 value={matchStatus}
                 onChange={(e) => setMatchStatus(e.target.value)}
-                className="h-10 border border-slate-200 rounded-lg text-sm text-slate-700 px-3 outline-none focus:border-[#0f4c81] bg-white"
+                className="h-10 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-100 px-3 outline-none focus:border-[#0f4c81] bg-white dark:bg-slate-800"
               >
                 <option value="">Todos los estados</option>
                 <option value="SUGERIDO">Sugerido</option>
@@ -544,41 +562,41 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Tabla */}
-            <Card className="bg-white border-border shadow-sm overflow-hidden">
+            <Card className="bg-white dark:bg-slate-900 border-border shadow-sm overflow-hidden">
               {loadingMatches ? (
-                <div className="flex items-center gap-2 p-8 text-slate-500">
+                <div className="flex items-center gap-2 p-8 text-slate-500 dark:text-slate-400">
                   <Loader2 className="w-5 h-5 animate-spin" /> Cargando matches...
                 </div>
               ) : matches.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-sm">
+                <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-sm">
                   No se encontraron matches con los filtros seleccionados.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Estudiante</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Exalumno</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Afinidad</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Fecha</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Razones</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estudiante</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Exalumno</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Afinidad</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estado</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Fecha</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Razones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {matches.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                           <td className="px-4 py-3">
-                            <p className="font-medium text-slate-800">{m.estudiante.user.name || "—"}</p>
-                            <p className="text-xs text-slate-400">{m.estudiante.user.email}</p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">{m.estudiante.user.name || "—"}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">{m.estudiante.user.email}</p>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="font-medium text-slate-800">{m.exalumno.user.name || "—"}</p>
-                            <p className="text-xs text-slate-400">{m.exalumno.user.email}</p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">{m.exalumno.user.name || "—"}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">{m.exalumno.user.email}</p>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <div className={`inline-flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm ${m.afinidad >= 70 ? "bg-green-100 text-green-700" : m.afinidad >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-600"}`}>
+                            <div className={`inline-flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm ${m.afinidad >= 70 ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400" : m.afinidad >= 40 ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}>
                               {m.afinidad}
                             </div>
                           </td>
@@ -587,20 +605,20 @@ export default function AdminDashboardPage() {
                               {m.status}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3 text-slate-500 text-xs">
+                          <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">
                             {new Date(m.createdAt).toLocaleDateString("es-CR")}
                           </td>
                           <td className="px-4 py-3">
                             {m.matchReasons && m.matchReasons.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
                                 {m.matchReasons.map((r, i) => (
-                                  <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 whitespace-nowrap">
+                                  <span key={i} className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-800 whitespace-nowrap">
                                     {r}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-xs text-slate-400">—</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
                             )}
                           </td>
                         </tr>
@@ -610,7 +628,7 @@ export default function AdminDashboardPage() {
                 </div>
               )}
             </Card>
-            <p className="text-xs text-slate-400 text-right">{matches.length} matches encontrados</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 text-right">{matches.length} matches encontrados</p>
           </div>
         )}
 
@@ -619,11 +637,11 @@ export default function AdminDashboardPage() {
         {/* =========================================== */}
         {activeSection === "donaciones" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                 Cola de Donaciones Pendientes
                 {stats?.donacionesPendientes?.length ? (
-                  <Badge className="ml-2 bg-yellow-100 text-yellow-700 border-yellow-200">
+                  <Badge className="ml-2 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800">
                     {stats.donacionesPendientes.length}
                   </Badge>
                 ) : null}
@@ -635,51 +653,51 @@ export default function AdminDashboardPage() {
             </div>
 
             {loadingStats ? (
-              <div className="flex items-center gap-2 py-6 text-slate-500">
+              <div className="flex items-center gap-2 py-6 text-slate-500 dark:text-slate-400">
                 <Loader2 className="w-5 h-5 animate-spin" /> Cargando...
               </div>
             ) : !stats?.donacionesPendientes?.length ? (
-              <Card className="bg-white border-border shadow-sm">
+              <Card className="bg-white dark:bg-slate-900 border-border shadow-sm">
                 <CardContent className="flex flex-col items-center py-12 text-center">
-                  <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl mb-3">✅</div>
-                  <p className="font-semibold text-slate-700">Bandeja limpia</p>
-                  <p className="text-sm text-slate-400 mt-1">Todas las donaciones han sido procesadas.</p>
+                  <div className="w-14 h-14 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-2xl mb-3">✅</div>
+                  <p className="font-semibold text-slate-700 dark:text-slate-300">Bandeja limpia</p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Todas las donaciones han sido procesadas.</p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="bg-white border-border shadow-sm overflow-hidden">
+              <Card className="bg-white dark:bg-slate-900 border-border shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Exalumno</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Monto</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Destino</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Fecha</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Comprobante</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Acciones</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Exalumno</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Monto</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Destino</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Fecha</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Comprobante</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {stats.donacionesPendientes.map((d) => {
                         const isLoading = actionLoading?.startsWith(d.id);
                         return (
-                          <tr key={d.id} className="hover:bg-slate-50">
+                          <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                             <td className="px-4 py-3">
-                              <p className="font-medium text-slate-800">{d.exalumno.user.name || "—"}</p>
-                              <p className="text-xs text-slate-400">{d.exalumno.user.email}</p>
+                              <p className="font-medium text-slate-800 dark:text-slate-100">{d.exalumno.user.name || "—"}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{d.exalumno.user.email}</p>
                             </td>
-                            <td className="px-4 py-3 font-bold text-slate-800">
+                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">
                               ₡{d.monto.toLocaleString("es-CR")}
                             </td>
-                            <td className="px-4 py-3 text-slate-600 max-w-[160px] truncate">{d.destino}</td>
-                            <td className="px-4 py-3 text-slate-500 text-xs">
+                            <td className="px-4 py-3 text-slate-600 dark:text-slate-300 max-w-[160px] truncate">{d.destino}</td>
+                            <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">
                               {new Date(d.createdAt).toLocaleDateString("es-CR")}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <button
                                 onClick={() => setComprobanteUrl(d.comprobanteUrl)}
-                                className="inline-flex items-center gap-1 text-[#0f4c81] hover:underline text-xs font-medium"
+                                className="inline-flex items-center gap-1 text-[#0f4c81] dark:text-sky-400 hover:underline text-xs font-medium"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 Ver
@@ -699,7 +717,7 @@ export default function AdminDashboardPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="border-red-200 text-red-600 hover:bg-red-50 text-xs h-8"
+                                  className="border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs h-8"
                                   disabled={!!isLoading}
                                   onClick={() => handleDonacion(d.id, "RECHAZADA")}
                                 >
@@ -724,8 +742,8 @@ export default function AdminDashboardPage() {
         {/* =========================================== */}
         {activeSection === "reportes" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-800">Perfiles Reportados</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Perfiles Reportados</h2>
               <Button onClick={fetchReportes} variant="outline" size="sm" className="gap-2">
                 <RefreshCw className="w-3.5 h-3.5" />
                 Refrescar
@@ -733,41 +751,41 @@ export default function AdminDashboardPage() {
             </div>
 
             {loadingReportes ? (
-              <div className="flex items-center gap-2 py-6 text-slate-500">
+              <div className="flex items-center gap-2 py-6 text-slate-500 dark:text-slate-400">
                 <Loader2 className="w-5 h-5 animate-spin" /> Cargando reportes...
               </div>
             ) : reportes.length === 0 ? (
-              <Card className="bg-white border-border shadow-sm">
+              <Card className="bg-white dark:bg-slate-900 border-border shadow-sm">
                 <CardContent className="flex flex-col items-center py-12 text-center">
-                  <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-2xl mb-3">🛡️</div>
-                  <p className="font-semibold text-slate-700">Sin reportes pendientes</p>
-                  <p className="text-sm text-slate-400 mt-1">La comunidad está en orden.</p>
+                  <div className="w-14 h-14 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center text-2xl mb-3">🛡️</div>
+                  <p className="font-semibold text-slate-700 dark:text-slate-300">Sin reportes pendientes</p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">La comunidad está en orden.</p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="bg-white border-border shadow-sm overflow-hidden">
+              <Card className="bg-white dark:bg-slate-900 border-border shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Usuario Reportado</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Rol</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Reportes</th>
-                        <th className="text-left px-4 py-3 font-semibold text-slate-600">Motivos</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
-                        <th className="text-center px-4 py-3 font-semibold text-slate-600">Acciones</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Usuario Reportado</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Rol</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Reportes</th>
+                        <th className="text-left px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Motivos</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Estado</th>
+                        <th className="text-center px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {reportes.map((r, i) => {
                         if (!r.usuario) return null;
                         const isSuspended = r.usuario.status === "SUSPENDIDO";
                         const isLoading = actionLoading?.startsWith(r.usuario.id);
                         return (
-                          <tr key={i} className={`hover:bg-slate-50 ${isSuspended ? "bg-red-50/40" : ""}`}>
+                          <tr key={i} className={`hover:bg-slate-50 dark:hover:bg-slate-800 ${isSuspended ? "bg-red-50/40 dark:bg-red-900/10" : ""}`}>
                             <td className="px-4 py-3">
-                              <p className="font-medium text-slate-800">{r.usuario.name || "—"}</p>
-                              <p className="text-xs text-slate-400">{r.usuario.email}</p>
+                              <p className="font-medium text-slate-800 dark:text-slate-100">{r.usuario.name || "—"}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{r.usuario.email}</p>
                             </td>
                             <td className="px-4 py-3">
                               <Badge variant="outline" className="text-xs">
@@ -775,19 +793,19 @@ export default function AdminDashboardPage() {
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${r.totalReportes >= 3 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+                              <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${r.totalReportes >= 3 ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400" : "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"}`}>
                                 {r.totalReportes}
                               </div>
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex flex-wrap gap-1">
                                 {r.motivos.slice(0, 2).map((m, j) => (
-                                  <span key={j} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full truncate max-w-[140px]">
+                                  <span key={j} className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full truncate max-w-[140px]">
                                     {m}
                                   </span>
                                 ))}
                                 {r.motivos.length > 2 && (
-                                  <span className="text-xs text-slate-400">+{r.motivos.length - 2}</span>
+                                  <span className="text-xs text-slate-400 dark:text-slate-500">+{r.motivos.length - 2}</span>
                                 )}
                               </div>
                             </td>
@@ -795,9 +813,9 @@ export default function AdminDashboardPage() {
                               {isSuspended ? (
                                 <Badge variant="destructive" className="text-xs">SUSPENDIDO</Badge>
                               ) : r.totalReportes >= 3 ? (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">Auto-suspendido</Badge>
+                                <Badge variant="outline" className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800 text-xs">Auto-suspendido</Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">En revisión</Badge>
+                                <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800 text-xs">En revisión</Badge>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -806,7 +824,7 @@ export default function AdminDashboardPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="border-green-200 text-green-700 hover:bg-green-50 text-xs h-8"
+                                    className="border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-xs h-8"
                                     disabled={!!isLoading}
                                     onClick={() => handleUserStatus(r.usuario!.id, "ACTIVO")}
                                   >
@@ -817,7 +835,7 @@ export default function AdminDashboardPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="border-red-200 text-red-600 hover:bg-red-50 text-xs h-8"
+                                    className="border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs h-8"
                                     disabled={!!isLoading}
                                     onClick={() => handleUserStatus(r.usuario!.id, "SUSPENDIDO")}
                                   >

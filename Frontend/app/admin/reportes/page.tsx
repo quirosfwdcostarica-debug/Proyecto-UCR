@@ -1,5 +1,312 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, RefreshCw, BarChart, Users, DollarSign, HeartHandshake, Printer, FolderHeart, UserPlus, Calendar } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
+import { 
+  BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from "recharts";
+
+const COLORS = ['#0f4c81', '#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 export default function AdminReportesPage() {
-  redirect("/admin");
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login");
+    if (status === "authenticated") {
+      if ((session?.user as any)?.tipo !== "ADMIN") router.replace("/");
+      else loadStats();
+    }
+  }, [status, session]);
+
+  async function loadStats() {
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams();
+      if (desde) qs.set("desde", desde);
+      if (hasta) qs.set("hasta", hasta);
+      const res = await fetch(`/api/admin/stats${qs.toString() ? `?${qs}` : ""}`);
+      const d = await res.json();
+      setData(d);
+    } catch (error) {
+      console.error("Error loading stats:", error);
+    }
+    setLoading(false);
+  }
+
+  function limpiarRango() {
+    setDesde(""); setHasta("");
+    // recargar sin rango en el siguiente tick
+    setTimeout(loadStats, 0);
+  }
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (status === "loading" || loading) {
+    return <div className="flex h-screen items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-[#0f4c81]" /></div>;
+  }
+
+  if (!data) return <div className="p-8 text-center text-red-500">Error cargando dashboard</div>;
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 print:bg-white print:p-0">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        <div className="print:hidden">
+          <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0f4c81] mb-6">
+            <ArrowLeft className="w-4 h-4" /> Volver al panel
+          </Link>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl text-slate-900 dark:text-white">Dashboard de Impacto</AnimatedHeading>
+              <p className="text-slate-500 dark:text-slate-400">Métricas y estadísticas globales de la plataforma.</p>
+            </div>
+            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-sm transition-colors font-medium text-sm">
+              <Printer className="w-4 h-4" /> Exportar a PDF
+            </button>
+          </div>
+
+          {/* Filtro de rango de fechas */}
+          <div className="mt-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+              <Calendar className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Periodo</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Desde</label>
+              <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Hasta</label>
+              <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f4c81]/20 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm" />
+            </div>
+            <button onClick={loadStats}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 shadow-sm transition-colors font-medium text-sm">
+              Aplicar
+            </button>
+            {(desde || hasta) && (
+              <button onClick={limpiarRango}
+                className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0f4c81] font-medium">
+                Limpiar
+              </button>
+            )}
+            <p className="text-xs text-slate-400 dark:text-slate-500 sm:ml-auto sm:self-center">
+              Sin filtro: últimos 12 meses.
+            </p>
+          </div>
+        </div>
+
+        {/* Print Header */}
+        <div className="hidden print:block text-center border-b border-slate-200 pb-4 mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Reporte de Impacto - Fundación Exalumnos UCR</h1>
+          <p className="text-slate-500">Generado el {new Date().toLocaleDateString()}</p>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Donado</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">₡{(data.kpis?.totalDonado || 0).toLocaleString("es-CR")}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <HeartHandshake className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Matches Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.matchesActivos || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Estudiantes Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.estudiantesActivos || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Exalumnos Activos</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.exalumnosActivos || 0}</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* KPIs del periodo seleccionado */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Donado (periodo)</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">₡{(data.kpis?.totalDonadoPeriodo || 0).toLocaleString("es-CR")}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <FolderHeart className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Proyectos Apoyados</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.proyectosApoyados || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+              <HeartHandshake className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Matches Cerrados</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis?.matchesCerrados || 0}</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <UserPlus className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Donantes (nuevos / recurr.)</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {data.kpis?.donantesNuevos || 0} <span className="text-slate-300 dark:text-slate-600">/</span> {data.kpis?.donantesRecurrentes || 0}
+              </p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
+          
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <BarChart className="w-5 h-5 text-[#0f4c81]" /> Evolución de Donaciones
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={data.graficoDonaciones || []}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} tickFormatter={(value) => `₡${value >= 1000 ? (value/1000) + 'k' : value}`} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                    formatter={(value: number) => [`₡${value.toLocaleString("es-CR")}`, 'Total']}
+                  />
+                  <Bar dataKey="total" fill="#0f4c81" radius={[4, 4, 0, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <BarChart className="w-5 h-5 text-[#0f4c81]" /> Distribución de Matches por Carrera
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.graficoMatchesCarrera || []}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  >
+                    {(data.graficoMatchesCarrera || []).map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-[#0f4c81]" /> Donantes: Nuevos vs. Recurrentes
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.graficoDonantes || []}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {(data.graficoDonantes || []).map((_entry: any, index: number) => (
+                      <Cell key={`cell-don-${index}`} fill={index === 0 ? '#f37021' : '#0f4c81'} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 print:break-inside-avoid">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#0f4c81]" /> Estudiantes por Sede UCR
+            </h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={data.graficoSedes || []} layout="vertical" margin={{ left: 100 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                  <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#334155', fontSize: 12}} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                  />
+                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+        </div>
+      </div>
+    </div>
+  );
 }

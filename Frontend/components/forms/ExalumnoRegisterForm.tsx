@@ -8,6 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -17,11 +18,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, GraduationCap, BookOpen, AlertTriangle } from "lucide-react";
+import { Loader2, GraduationCap, BookOpen, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { registerAlumniAction } from "@/actions/auth.actions";
 
-// "ya_graduado" eliminado del schema — se maneja con estado local ucrStatus
 const registerSchema = z.object({
   tipo_identificacion: z.string().min(1, "Seleccione un tipo de identificación"),
   cedula: z.string().min(9, "La identificación debe tener al menos 9 caracteres"),
@@ -35,19 +35,24 @@ const registerSchema = z.object({
   carrera: z.string().min(3, "Indica la carrera de la cual te graduaste"),
   escuela_facultad: z.string().min(3, "Indica la escuela o facultad"),
   anio_graduacion: z.coerce.number().min(1940, "Año inválido").max(new Date().getFullYear(), "Año inválido"),
+  aceptaPrivacidad: z.boolean().refine((v) => v === true, {
+    message: "Debes aceptar la política de privacidad para continuar",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
-
-// Estado de selección cuando el correo es @ucr.ac.cr
 type UCRStatus = "graduado" | "estudiante_activo" | null;
 
 export function ExalumnoRegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [ucrStatus, setUcrStatus] = useState<UCRStatus>(null);
+  const [cedulaLoading, setCedulaLoading] = useState(false);
+  const [cedulaHint, setCedulaHint] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -63,13 +68,13 @@ export function ExalumnoRegisterForm() {
       carrera: "",
       escuela_facultad: "",
       anio_graduacion: new Date().getFullYear(),
+      aceptaPrivacidad: false,
     },
   });
 
   const emailValue = form.watch("email");
   const isUCREmail = emailValue?.toLowerCase().endsWith("@ucr.ac.cr");
 
-  // Resetear selección si el usuario cambia el email a uno que no sea UCR
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.value.toLowerCase().endsWith("@ucr.ac.cr")) {
       setUcrStatus(null);
@@ -86,23 +91,39 @@ export function ExalumnoRegisterForm() {
 
   const handleCedulaBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cedula = e.target.value;
-    if (cedula.length >= 9) {
-      try {
-        const response = await fetch(`https://api.hacienda.go.cr/fe/ae?identificacion=${cedula}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.nombre) {
-            form.setValue("nombre", data.nombre, { shouldValidate: true });
-          }
+    if (cedula.length < 9) return;
+
+    setCedulaLoading(true);
+    setCedulaHint(null);
+
+    const timeoutId = setTimeout(() => {
+      setCedulaLoading(false);
+      setCedulaHint("Está tardando. Puede ingresar el nombre manualmente si lo prefiere.");
+    }, 3000);
+
+    try {
+      const response = await fetch(`/api/hacienda?identificacion=${encodeURIComponent(cedula)}`);
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.nombre) {
+          form.setValue("nombre", data.nombre, { shouldValidate: true });
+          setCedulaHint("Nombre cargado automáticamente desde Hacienda.");
+        } else {
+          setCedulaHint("No se encontró el nombre. Ingréselo manualmente.");
         }
-      } catch (error) {
-        console.error("Error fetching name from Hacienda API:", error);
+      } else {
+        setCedulaHint("No se encontró el nombre. Ingréselo manualmente.");
       }
+    } catch {
+      clearTimeout(timeoutId);
+      setCedulaHint("No se pudo verificar la cédula. Ingrese el nombre manualmente.");
+    } finally {
+      setCedulaLoading(false);
     }
   };
 
   const onSubmit = async (data: RegisterFormValues) => {
-    // Bloquear si es correo UCR y no ha confirmado que es graduado
     if (isUCREmail && ucrStatus !== "graduado") {
       toast({
         title: "Confirma tu estado",
@@ -122,22 +143,26 @@ export function ExalumnoRegisterForm() {
         escuela_facultad: data.escuela_facultad,
         anio_graduacion: data.anio_graduacion,
         cedula: data.cedula,
+        aceptaPrivacidad: data.aceptaPrivacidad,
       });
 
       if (result.success) {
         toast({
           title: "Registro exitoso",
-          description: "Tu perfil ha sido creado y está pendiente de aprobación por parte de la Fundación.",
+          description: "Revisa tu correo para verificar tu cuenta.",
         });
-        router.push("/login");
+        router.push(`/verificar-correo?email=${encodeURIComponent(data.email)}`);
       } else {
-        toast({
-          title: "Error en el registro",
-          description: result.message,
-          variant: "destructive",
-        });
+        // Errores de duplicado → error inline en el campo correspondiente
+        if (result.message?.toLowerCase().includes("correo")) {
+          form.setError("email", { message: result.message });
+        } else if (result.message?.toLowerCase().includes("cédula")) {
+          form.setError("cedula", { message: result.message });
+        } else {
+          toast({ title: "Error en el registro", description: result.message, variant: "destructive" });
+        }
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error inesperado",
         description: "Ocurrió un error al registrarse. Intenta de nuevo.",
@@ -148,7 +173,6 @@ export function ExalumnoRegisterForm() {
     }
   };
 
-  // Card de selección cuando se detecta correo @ucr.ac.cr
   const UCREmailSelector = () => (
     <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-5">
       <div className="flex items-start gap-3 mb-4">
@@ -164,7 +188,6 @@ export function ExalumnoRegisterForm() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Opción: Graduado */}
         <button
           type="button"
           onClick={handleSelectGraduado}
@@ -175,9 +198,7 @@ export function ExalumnoRegisterForm() {
           }`}
         >
           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-            ucrStatus === "graduado"
-              ? "bg-ucr-celeste-medium/20"
-              : "bg-slate-100 dark:bg-slate-800"
+            ucrStatus === "graduado" ? "bg-ucr-celeste-medium/20" : "bg-slate-100 dark:bg-slate-800"
           }`}>
             <GraduationCap className={`w-5 h-5 ${ucrStatus === "graduado" ? "text-ucr-celeste-medium" : "text-slate-500"}`} />
           </div>
@@ -185,9 +206,7 @@ export function ExalumnoRegisterForm() {
             <p className={`font-semibold text-sm ${ucrStatus === "graduado" ? "text-ucr-celeste-medium" : "text-slate-800 dark:text-slate-200"}`}>
               Soy graduado
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Ya obtuve mi título en la UCR
-            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ya obtuve mi título en la UCR</p>
           </div>
           {ucrStatus === "graduado" && (
             <div className="ml-auto w-5 h-5 rounded-full bg-ucr-celeste-medium flex items-center justify-center">
@@ -198,7 +217,6 @@ export function ExalumnoRegisterForm() {
           )}
         </button>
 
-        {/* Opción: Estudiante activo */}
         <button
           type="button"
           onClick={handleSelectEstudianteActivo}
@@ -208,12 +226,8 @@ export function ExalumnoRegisterForm() {
             <BookOpen className="w-5 h-5 text-slate-500" />
           </div>
           <div>
-            <p className="font-semibold text-sm text-slate-800 dark:text-slate-200">
-              Soy estudiante activo
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Aún estoy cursando mi carrera
-            </p>
+            <p className="font-semibold text-sm text-slate-800 dark:text-slate-200">Soy estudiante activo</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aún estoy cursando mi carrera</p>
           </div>
         </button>
       </div>
@@ -226,9 +240,7 @@ export function ExalumnoRegisterForm() {
     </div>
   );
 
-  // Si es correo UCR y no ha seleccionado nada, mostrar selector antes del resto del form
   const showUCRSelector = isUCREmail;
-  // Bloquear campos del form mientras no confirme (si es UCR y no eligió graduado)
   const formBlocked = isUCREmail && ucrStatus !== "graduado";
 
   return (
@@ -268,13 +280,28 @@ export function ExalumnoRegisterForm() {
           name="cedula"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cédula</FormLabel>
+              <FormLabel>Número de Identificación</FormLabel>
               <FormControl>
-                <Input placeholder="Ej. 101110111" {...field} onBlur={(e) => {
-                  field.onBlur();
-                  handleCedulaBlur(e);
-                }} />
+                <div className="relative">
+                  <Input
+                    placeholder="Ej. 101110111"
+                    {...field}
+                    onBlur={(e) => { field.onBlur(); handleCedulaBlur(e); }}
+                  />
+                  {cedulaLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400" />
+                  )}
+                </div>
               </FormControl>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Ingrese su número de identificación y haga clic fuera del campo para cargar el nombre automáticamente.
+                Si demora más de 3 segundos o no se carga, ingréselo manualmente.
+              </p>
+              {cedulaHint && (
+                <p className={`text-xs mt-1 ${cedulaHint.includes("cargado") ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}`}>
+                  {cedulaHint}
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -305,10 +332,7 @@ export function ExalumnoRegisterForm() {
                   placeholder="correo@ejemplo.com"
                   type="email"
                   {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    handleEmailChange(e);
-                  }}
+                  onChange={(e) => { field.onChange(e); handleEmailChange(e); }}
                 />
               </FormControl>
               <FormMessage />
@@ -316,10 +340,8 @@ export function ExalumnoRegisterForm() {
           )}
         />
 
-        {/* Selector UCR aparece inmediatamente después del campo email */}
         {showUCRSelector && <UCREmailSelector />}
 
-        {/* El resto del formulario se muestra pero inhabilitado hasta confirmar estado UCR */}
         <fieldset disabled={formBlocked} className="contents">
           <FormField
             control={form.control}
@@ -328,7 +350,17 @@ export function ExalumnoRegisterForm() {
               <FormItem className={formBlocked ? "opacity-40 pointer-events-none" : ""}>
                 <FormLabel>Contraseña</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••" type="password" {...field} />
+                  <div className="relative">
+                    <Input placeholder="••••••••" type={showPassword ? "text" : "password"} {...field} />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -342,7 +374,17 @@ export function ExalumnoRegisterForm() {
               <FormItem className={formBlocked ? "opacity-40 pointer-events-none" : ""}>
                 <FormLabel>Confirmar Contraseña</FormLabel>
                 <FormControl>
-                  <Input placeholder="••••••••" type="password" {...field} />
+                  <div className="relative">
+                    <Input placeholder="••••••••" type={showConfirmPassword ? "text" : "password"} {...field} />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -386,11 +428,42 @@ export function ExalumnoRegisterForm() {
             name="anio_graduacion"
             render={({ field }) => (
               <FormItem className={`md:col-span-2 w-1/2 pr-3 ${formBlocked ? "opacity-40 pointer-events-none" : ""}`}>
-                <FormLabel>Año de Graduación</FormLabel>
+                <FormLabel>Fecha de Graduación</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej. 2018" type="number" {...field} />
+                  <Input
+                    type="date"
+                    min="1940-01-01"
+                    max={`${new Date().getFullYear()}-12-31`}
+                    value={field.value ? `${field.value}-06-15` : ""}
+                    onChange={(e) => {
+                      const year = e.target.value ? new Date(e.target.value).getFullYear() : "";
+                      field.onChange(year);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="aceptaPrivacidad"
+            render={({ field }) => (
+              <FormItem className={`md:col-span-2 flex items-start gap-2 space-y-0 ${formBlocked ? "opacity-40 pointer-events-none" : ""}`}>
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+                </FormControl>
+                <div>
+                  <FormLabel className="font-normal text-sm text-slate-600 dark:text-slate-400">
+                    Acepto la{" "}
+                    <Link href="/politica-privacidad" target="_blank" className="underline text-ucr-celeste-medium">
+                      política de privacidad
+                    </Link>{" "}
+                    y el tratamiento de mis datos conforme a la Ley 8968.
+                  </FormLabel>
+                  <FormMessage />
+                </div>
               </FormItem>
             )}
           />
@@ -404,14 +477,11 @@ export function ExalumnoRegisterForm() {
               {isLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registrando...</>
               ) : (
-                "Crear cuenta y solicitar aprobación"
+                "Crear cuenta"
               )}
             </Button>
-            <div className="text-center mt-4 text-sm text-slate-600 dark:text-slate-400">
-              ¿Ya tienes cuenta? <Link href="/login" className="text-ucr-celeste-medium dark:text-ucr-celeste hover:underline font-medium">Volver al login</Link>
-            </div>
             <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-4">
-              Al registrarte, tu perfil entrará en estado pendiente y será verificado por el equipo de la Fundación.
+              Te enviaremos un correo para confirmar tu cuenta antes de poder iniciar sesión.
             </p>
           </div>
         </fieldset>

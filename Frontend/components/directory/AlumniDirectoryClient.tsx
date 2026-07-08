@@ -1,53 +1,73 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { GraduationCap, UserPlus, Search, LayoutGrid, List, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
+import { CATALOGO_AREAS } from "@/lib/constants";
+import { MatchScoreBadge } from "@/components/directory/MatchScoreBadge";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 interface AlumniItem {
   user_id: string;
-  carrera: string;          // escuela_facultad
+  carrera: string;
   escuela_facultad: string;
+  sector: string | null;
   empresa_actual: string;
   cargo_actual: string;
   pais_ciudad: string | null;
   anio_graduacion: number | null;
   ofrece_mentoria: boolean;
   ofrece_empleo: boolean;
+  ofrece_pasantia: boolean;
+  ofrece_proyecto: boolean;
+  ofrece_donacion_dinero: boolean;
   ofrece_guest_speaking: boolean;
   ofrece_volunteering: boolean;
   ofrece_career_advice: boolean;
   ofrece_networking: boolean;
+  matchScore?: number;
+  matchBreakdown?: { carrera: number; intereses: number; sector: number; apoyo: number };
+  matchReasons?: string[];
   User: { id: string; nombre: string; foto_url: string | null; email: string | null };
 }
 
 const SUPPORT_CATEGORIES = [
-  { key: "mentoria", label: "Mentorship" },
-  { key: "empleo", label: "Hiring" },
-  { key: "guest_speaking", label: "Guest Speaking" },
-  { key: "volunteering", label: "Volunteering" },
-  { key: "career_advice", label: "Career Advice" },
-  { key: "networking", label: "Networking" },
+  { key: "mentoria",       label: "Mentoría" },
+  { key: "empleo",         label: "Empleo" },
+  { key: "pasantia",       label: "Pasantía" },
+  { key: "guest_speaking", label: "Charla / Conferencia" },
+  { key: "career_advice",  label: "Orientación Profesional" },
+  { key: "networking",     label: "Networking" },
+  { key: "volunteering",   label: "Voluntariado" },
+  { key: "proyecto",       label: "Proyecto Empresarial" },
+  { key: "donacion",       label: "Donación Económica" },
 ];
 
 const BG_COLORS = ["bg-ucr-celeste-medium", "bg-ucr-celeste", "bg-ucr-amarillo", "bg-ucr-naranja", "bg-slate-900"];
 
 function getSupportTags(al: AlumniItem): string[] {
   const tags: string[] = [];
-  if (al.ofrece_mentoria) tags.push("MENTORSHIP");
-  if (al.ofrece_empleo) tags.push("HIRING");
-  if (al.ofrece_guest_speaking) tags.push("GUEST SPEAKING");
-  if (al.ofrece_volunteering) tags.push("VOLUNTEERING");
-  if (al.ofrece_career_advice) tags.push("CAREER ADVICE");
-  if (al.ofrece_networking) tags.push("NETWORKING");
-  if (tags.length === 0) tags.push("NETWORKING");
+  if (al.ofrece_mentoria)        tags.push("MENTORÍA");
+  if (al.ofrece_empleo)          tags.push("EMPLEO");
+  if (al.ofrece_pasantia)        tags.push("PASANTÍA");
+  if (al.ofrece_guest_speaking)  tags.push("CHARLA");
+  if (al.ofrece_career_advice)   tags.push("ORIENTACIÓN");
+  if (al.ofrece_networking)      tags.push("NETWORKING");
+  if (al.ofrece_volunteering)    tags.push("VOLUNTARIADO");
+  if (al.ofrece_proyecto)        tags.push("PROYECTO");
+  if (al.ofrece_donacion_dinero) tags.push("DONACIÓN");
+  if (tags.length === 0)         tags.push("NETWORKING");
   return tags;
 }
 
 export function AlumniDirectoryClient() {
+  const { data: session } = useSession();
+  const isEstudiante = (session?.user as any)?.tipo === "ESTUDIANTE";
   const [alumni, setAlumni] = useState<AlumniItem[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -106,7 +126,7 @@ export function AlumniDirectoryClient() {
   const hasFilters = searchQuery || selectedCarrera || selectedEmpresa || selectedSupport || locationQuery;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-6 md:gap-8">
 
       {/* Sidebar Filters */}
       <div className="w-full md:w-64 shrink-0 space-y-6">
@@ -122,13 +142,15 @@ export function AlumniDirectoryClient() {
 
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Carrera</label>
-              <Input
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase">Área de Especialidad</label>
+              <select
                 value={selectedCarrera}
                 onChange={(e) => setSelectedCarrera(e.target.value)}
-                placeholder="Ej. Ingeniería Eléctrica"
-                className="h-9 text-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-              />
+                className="w-full h-9 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-md px-3 text-sm focus:outline-none focus:border-ucr-celeste-medium"
+              >
+                <option value="">Todas las áreas</option>
+                {CATALOGO_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
             </div>
 
             <div>
@@ -172,11 +194,11 @@ export function AlumniDirectoryClient() {
           </div>
         </div>
 
-        <div className="bg-ucr-celeste-medium text-white p-5 rounded-xl shadow-sm">
+        <div className="bg-ucr-celeste-medium dark:bg-slate-800/80 text-white p-5 rounded-xl shadow-sm border border-transparent dark:border-slate-700">
           <h4 className="font-bold mb-2">Sé un Mentor</h4>
           <p className="text-sm text-blue-100 mb-4">Comparte tu experiencia con las nuevas generaciones.</p>
           <Link href="/perfil/editar">
-            <Button className="w-full bg-white text-ucr-celeste-medium hover:bg-slate-100 border-0">Actualizar Perfil</Button>
+            <Button className="w-full bg-white dark:bg-slate-900 text-ucr-celeste-medium dark:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 border-0">Actualizar Perfil</Button>
           </Link>
         </div>
       </div>
@@ -185,16 +207,16 @@ export function AlumniDirectoryClient() {
       <div className="flex-1">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Directorio de Exalumnos</h1>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Directorio de Exalumnos</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              {loading ? "Cargando..." : <><span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> profesionales conectados</>}
+              {loading ? "Cargando..." : <><span className="font-bold text-slate-700 dark:text-slate-300">{total}</span> profesionales conectados{isEstudiante && " · ordenados por mayor afinidad"}</>}
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-1 shadow-sm">
-            <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
+            <button aria-label="Vista de cuadrícula" onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
               <LayoutGrid className="w-4 h-4" />
             </button>
-            <button onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
+            <button aria-label="Vista de lista" onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-ucr-celeste-medium text-white" : "text-slate-400 hover:text-slate-600"}`}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -212,7 +234,7 @@ export function AlumniDirectoryClient() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm mb-4">
             {error} — <button onClick={() => fetchAlumni(page)} className="underline font-medium">Reintentar</button>
           </div>
         )}
@@ -222,7 +244,7 @@ export function AlumniDirectoryClient() {
             <Loader2 className="w-8 h-8 text-ucr-celeste-medium animate-spin" />
           </div>
         ) : alumni.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center shadow-sm">
             <p className="text-slate-500 text-lg">No se encontraron exalumnos con los filtros seleccionados.</p>
             {hasFilters && (
               <Button onClick={handleClearFilters} className="mt-4 bg-ucr-celeste-medium hover:bg-ucr-celeste-medium/90 text-white">
@@ -242,7 +264,18 @@ export function AlumniDirectoryClient() {
 
                 if (viewMode === "list") {
                   return (
-                    <Card key={al.user_id} className="p-4 border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                    <motion.div
+                      key={al.user_id}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: "-30px" }}
+                      transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
+                      whileHover={{ x: 4 }}
+                    >
+                    <Card className="relative p-4 border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm hover:shadow-fu-lg bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center gap-4">
+                      {al.matchScore !== undefined && (
+                        <MatchScoreBadge score={al.matchScore} breakdown={al.matchBreakdown} reasons={al.matchReasons} className="absolute -top-3 -right-3 z-10" />
+                      )}
                       <div className="h-16 w-16 rounded-md bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border dark:border-slate-700 shadow-sm">
                         <img src={u.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`} alt={name} className="h-full w-full object-cover" />
                       </div>
@@ -262,11 +295,24 @@ export function AlumniDirectoryClient() {
                         </Button>
                       </Link>
                     </Card>
+                    </motion.div>
                   );
                 }
 
                 return (
-                  <Card key={al.user_id} className="overflow-hidden border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm hover:shadow-md flex flex-col bg-white dark:bg-slate-900">
+                  <motion.div
+                    key={al.user_id}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+                    whileHover={{ y: -6 }}
+                    className="h-full"
+                  >
+                  <Card className="relative overflow-hidden border-slate-200 dark:border-slate-800 hover:border-ucr-celeste-medium/30 transition-all shadow-sm hover:shadow-fu-lg flex flex-col bg-white dark:bg-slate-900 h-full">
+                    {al.matchScore !== undefined && (
+                      <MatchScoreBadge score={al.matchScore} breakdown={al.matchBreakdown} reasons={al.matchReasons} className="absolute top-3 right-3 z-10" />
+                    )}
                     <div className={`h-20 ${bgCover} w-full`} />
                     <div className="px-5 pb-5 flex-1 flex flex-col relative pt-10">
                       <div className="absolute -top-8 left-5 h-16 w-16 rounded-md border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 overflow-hidden shadow-sm">
@@ -292,6 +338,7 @@ export function AlumniDirectoryClient() {
                       </Link>
                     </div>
                   </Card>
+                  </motion.div>
                 );
               })}
             </div>

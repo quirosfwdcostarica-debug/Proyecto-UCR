@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { extractMontoObjetivo } from "@/lib/funding";
+import { getExchangeRate, usdToCrc } from "@/lib/exchangeRate";
 
 // GET — vista pública del proyecto de un estudiante específico (por su user_id)
 export async function GET(
@@ -11,35 +13,45 @@ export async function GET(
   if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   try {
-    const estudiante = await prisma.estudiante.findUnique({
-      where: { user_id: params.id },
-      select: {
-        carrera: true,
-        escuela_facultad: true,
-        sede: true,
-        nivel_academico: true,
-        proyecto_titulo: true,
-        proyecto_tipo: true,
-        proyecto_descripcion: true,
-        proyecto_porcentaje_avance: true,
-        proyecto_necesidades: true,
-        busca_financiamiento: true,
-        busca_mentoria: true,
-        busca_empleo: true,
-        busca_pasantia: true,
-        visible_en_directorio: true,
-        user: { select: { nombre: true, foto_url: true } },
-      },
-    });
+    const { data: estudiante, error } = await supabaseAdmin
+      .from("ESTUDIANTES")
+      .select(`
+        carrera, escuela_facultad, sede, nivel_academico,
+        proyecto_titulo, proyecto_tipo, proyecto_descripcion,
+        proyecto_porcentaje_avance, proyecto_necesidades,
+        busca_financiamiento, busca_mentoria, busca_empleo, busca_pasantia,
+        visible_en_directorio,
+        user:USERS!ESTUDIANTES_user_id_fkey(nombre, foto_url)
+      `)
+      .eq("user_id", params.id)
+      .maybeSingle();
 
+    if (error) throw error;
     if (!estudiante) return NextResponse.json({ message: "Estudiante no encontrado" }, { status: 404 });
+
+    const u = Array.isArray(estudiante.user) ? estudiante.user[0] : estudiante.user;
+
     if (!estudiante.visible_en_directorio || !estudiante.proyecto_titulo)
       return NextResponse.json({ message: "Proyecto no disponible" }, { status: 404 });
 
+    const montoObjetivoUsd = extractMontoObjetivo(estudiante.proyecto_necesidades);
+    let montoObjetivo = 0;
+    let montoRecaudado = 0;
+    if (estudiante.busca_financiamiento && montoObjetivoUsd > 0) {
+      const rate = await getExchangeRate();
+      montoObjetivo = usdToCrc(montoObjetivoUsd, rate);
+      const { data: donaciones } = await supabaseAdmin
+        .from("DONACIONES")
+        .select("monto")
+        .eq("proyecto_estudiante_id", params.id)
+        .eq("estado", "CONFIRMADA");
+      montoRecaudado = (donaciones ?? []).reduce((sum, d: any) => sum + Number(d.monto), 0);
+    }
+
     return NextResponse.json({
       studentId: params.id,
-      nombre: estudiante.user.nombre,
-      foto_url: estudiante.user.foto_url,
+      nombre: u?.nombre,
+      foto_url: u?.foto_url,
       carrera: estudiante.carrera,
       escuela_facultad: estudiante.escuela_facultad,
       sede: estudiante.sede,
@@ -53,6 +65,9 @@ export async function GET(
       busca_mentoria: !!estudiante.busca_mentoria,
       busca_empleo: !!estudiante.busca_empleo,
       busca_pasantia: !!estudiante.busca_pasantia,
+      montoObjetivo,
+      montoObjetivoUsd,
+      montoRecaudado,
     });
   } catch (error) {
     console.error("[GET /api/proyectos/[id]]", error);

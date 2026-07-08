@@ -6,12 +6,16 @@ import Link from "next/link";
 import {
   ArrowLeft, Users, Search, Loader2, RefreshCw,
   UserCheck, UserX, ShieldAlert, CheckCircle2,
-  Mail, Calendar, Briefcase, GraduationCap,
+  Mail, Calendar, Briefcase, GraduationCap, Trash2, AlertTriangle,
+  Award, FileText,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 import { Input } from "@/components/ui/input";
+import { useDialog } from "@/hooks/useDialog";
 
 interface Usuario {
   id: string;
@@ -26,6 +30,10 @@ interface Usuario {
   carrera: string | null;
   carnet_ucr: string | null;
   empresa_actual: string | null;
+  anio_ingreso: number | null;
+  nivel_beca: string | null;
+  comprobante_beca_url: string | null;
+  coherencia_alerta: boolean;
 }
 
 const TIPO_CFG: Record<string, { label: string; cls: string }> = {
@@ -43,13 +51,17 @@ function Avatar({ nombre }: { nombre: string }) {
   );
 }
 
+const AUTO_REFRESH_MS = 8000;
+
 export default function AdminUsuariosPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { showConfirm } = useDialog();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Filtros
   const [nombre, setNombre] = useState("");
@@ -66,8 +78,8 @@ export default function AdminUsuariosPage() {
     load();
   }, [status, session, tipo, statusFiltro, page]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     const qs = new URLSearchParams();
     if (nombre) qs.set("nombre", nombre);
     if (tipo) qs.set("tipo", tipo);
@@ -77,8 +89,21 @@ export default function AdminUsuariosPage() {
     const d = await res.json();
     setUsuarios(d.data ?? []);
     setTotal(d.total ?? 0);
-    setLoading(false);
+    setLastUpdated(new Date());
+    if (!opts?.silent) setLoading(false);
   }, [nombre, tipo, statusFiltro, page]);
+
+  // Auto-refresh: revisa cada pocos segundos si hay usuarios nuevos (registros
+  // desde celulares u otras PCs) sin que el admin tenga que refrescar a mano.
+  // Se pausa si la pestaña no está visible para no gastar requests de más.
+  useEffect(() => {
+    if (status !== "authenticated" || (session?.user as any)?.tipo !== "ADMIN") return;
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      load({ silent: true });
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, [status, session, load]);
 
   function buscar() { setPage(1); load(); }
 
@@ -86,7 +111,7 @@ export default function AdminUsuariosPage() {
     const nuevoStatus = u.status === "SUSPENDIDO" ? "ACTIVO" : "SUSPENDIDO";
     setWorking(u.id);
     setMsg(null);
-    const res = await fetch(`/api/admin/users/${u.id}/status`, {
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: nuevoStatus }),
@@ -100,16 +125,55 @@ export default function AdminUsuariosPage() {
     setWorking(null);
   }
 
+  async function cambiarRol(u: Usuario, nuevoTipo: string) {
+    if (nuevoTipo === u.tipo) return;
+    setWorking(u.id + "_rol");
+    setMsg(null);
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo: nuevoTipo }),
+    });
+    if (res.ok) {
+      setMsg({ type: "ok", text: `Rol de ${u.nombre} cambiado a ${nuevoTipo}.` });
+      load();
+    } else {
+      setMsg({ type: "err", text: "Error al cambiar el rol." });
+    }
+    setWorking(null);
+  }
+
+  async function eliminarUsuario(u: Usuario) {
+    const ok = await showConfirm(
+      `Vas a eliminar permanentemente la cuenta de ${u.nombre} (${u.email}). ` +
+      "Se borrarán su perfil, matches, mensajes y demás datos asociados. Esta acción NO se puede deshacer.",
+      { title: "Eliminar usuario permanentemente", confirmLabel: "Eliminar", variant: "error" }
+    );
+    if (!ok) return;
+
+    setWorking(u.id + "_del");
+    setMsg(null);
+    const res = await fetch(`/api/admin/usuarios/${u.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setMsg({ type: "ok", text: `Usuario ${u.nombre} eliminado permanentemente.` });
+      load();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setMsg({ type: "err", text: d.message || "Error al eliminar el usuario." });
+    }
+    setWorking(null);
+  }
+
   if (status === "loading") return (
-    <div className="min-h-full bg-[#f8fafc] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-[#0f4c81] animate-spin" />
-    </div>
+    <ParallaxBackground className="min-h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-[#0f4c81] dark:text-fu-blue-sky animate-spin" />
+    </ParallaxBackground>
   );
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 p-8">
+    <ParallaxBackground className="min-h-full p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81] mb-6">
           <ArrowLeft className="w-4 h-4" /> Volver al panel
@@ -117,15 +181,29 @@ export default function AdminUsuariosPage() {
 
         <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold text-[#0f4c81] tracking-wider uppercase mb-1">Administración</p>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Gestión de Usuarios</h1>
+            <p className="text-xs font-bold text-[#0f4c81] dark:text-fu-blue-sky tracking-wider uppercase mb-1">Administración</p>
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl">Gestión de Usuarios</AnimatedHeading>
             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
               Busca, filtra y gestiona el estado de los usuarios registrados.
             </p>
           </div>
-          <button onClick={load} className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81]">
-            <RefreshCw className="w-4 h-4" /> Actualizar
-          </button>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              </span>
+              En vivo — se actualiza solo cada {AUTO_REFRESH_MS / 1000}s
+            </div>
+            <button onClick={() => load()} className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0f4c81]">
+              <RefreshCw className="w-4 h-4" /> Actualizar ahora
+              {lastUpdated && (
+                <span className="text-xs text-slate-400 font-normal">
+                  · {lastUpdated.toLocaleTimeString("es-CR")}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -160,7 +238,7 @@ export default function AdminUsuariosPage() {
               <option value="ACTIVO">Activo</option>
               <option value="SUSPENDIDO">Suspendido</option>
             </select>
-            <Button onClick={buscar} className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white h-10">
+            <Button onClick={buscar} className="bg-primary hover:bg-primary/90 text-primary-foreground h-10">
               <Search className="w-4 h-4 mr-2" /> Buscar
             </Button>
           </div>
@@ -249,6 +327,31 @@ export default function AdminUsuariosPage() {
                                 <CheckCircle2 className="w-3 h-3" /> Email verificado
                               </p>
                             )}
+                            {u.nivel_beca && (
+                              <p className="flex items-center gap-1.5 text-[#005da4] font-semibold">
+                                <Award className="w-3 h-3" />
+                                <span className="truncate max-w-[110px]">{u.nivel_beca}</span>
+                                {u.comprobante_beca_url && (
+                                  <a
+                                    href={u.comprobante_beca_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Ver comprobante de beca"
+                                    className="text-[#005da4] hover:text-[#003b6d]"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </p>
+                            )}
+                            {u.coherencia_alerta && (
+                              <p
+                                className="flex items-center gap-1 text-amber-600 font-semibold mt-0.5"
+                                title={`Ingresó en ${u.anio_ingreso}: más de 8 años sin actualizar su nivel académico. Requiere revisión (RF-09.2).`}
+                              >
+                                <AlertTriangle className="w-3 h-3" /> Coherencia: +8 años
+                              </p>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-center">
                             {isSuspended ? (
@@ -281,32 +384,64 @@ export default function AdminUsuariosPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="px-4 py-3">
                             {isMe ? (
                               <span className="text-xs text-slate-300 italic">Tú</span>
                             ) : u.tipo === "ADMIN" ? (
                               <span className="text-xs text-slate-300">—</span>
                             ) : (
-                              <Button
-                                size="sm"
-                                disabled={working === u.id}
-                                onClick={() => toggleStatus(u)}
-                                variant="outline"
-                                className={`text-xs h-8 ${
-                                  isSuspended
-                                    ? "border-green-200 text-green-700 hover:bg-green-50"
-                                    : "border-red-200 text-red-600 hover:bg-red-50"
-                                }`}
-                              >
-                                {working === u.id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : isSuspended ? (
-                                  <UserCheck className="w-3 h-3" />
-                                ) : (
-                                  <UserX className="w-3 h-3" />
-                                )}
-                                &nbsp;{isSuspended ? "Reactivar" : "Suspender"}
-                              </Button>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {/* Cambiar rol */}
+                                <select
+                                  value={u.tipo}
+                                  disabled={working === u.id + "_rol"}
+                                  onChange={(e) => cambiarRol(u, e.target.value)}
+                                  className="h-8 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-800 dark:text-slate-200 outline-none focus:border-[#0f4c81] cursor-pointer"
+                                  title="Cambiar rol"
+                                >
+                                  <option value="ESTUDIANTE">Estudiante</option>
+                                  <option value="EXALUMNO">Exalumno</option>
+                                </select>
+                                {working === u.id + "_rol" && <Loader2 className="w-3 h-3 animate-spin text-[#0f4c81]" />}
+
+                                {/* Suspender / Reactivar */}
+                                <Button
+                                  size="sm"
+                                  disabled={!!working}
+                                  onClick={() => toggleStatus(u)}
+                                  variant="outline"
+                                  className={`text-xs h-8 ${
+                                    isSuspended
+                                      ? "border-green-200 text-green-700 hover:bg-green-50"
+                                      : "border-red-200 text-red-600 hover:bg-red-50"
+                                  }`}
+                                >
+                                  {working === u.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : isSuspended ? (
+                                    <UserCheck className="w-3 h-3" />
+                                  ) : (
+                                    <UserX className="w-3 h-3" />
+                                  )}
+                                  &nbsp;{isSuspended ? "Reactivar" : "Suspender"}
+                                </Button>
+
+                                {/* Eliminar permanentemente */}
+                                <Button
+                                  size="sm"
+                                  disabled={!!working}
+                                  onClick={() => eliminarUsuario(u)}
+                                  variant="outline"
+                                  className="text-xs h-8 border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+                                  title="Eliminar permanentemente"
+                                >
+                                  {working === u.id + "_del" ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -344,6 +479,6 @@ export default function AdminUsuariosPage() {
           </>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

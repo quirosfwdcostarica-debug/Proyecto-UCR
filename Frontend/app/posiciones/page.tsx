@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { NewJobModal } from "@/components/posiciones/NewJobModal";
 import { MyJobsList } from "@/components/posiciones/MyJobsList";
 import { AvailableJobsList } from "@/components/posiciones/AvailableJobsList";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { AnimatedHeading } from "@/components/fu/AnimatedHeading";
 
 export default async function PosicionesPage({ searchParams }: { searchParams: { role?: string } }) {
   const session = await auth();
@@ -20,19 +22,19 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div className="min-h-full bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
-      <div className="p-8 max-w-7xl mx-auto space-y-6">
-        
+    <ParallaxBackground className="min-h-screen">
+      <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+
         {/* VISTA PARA EXALUMNOS */}
         {role === "EXALUMNO" && (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-4xl shadow-sm mb-2">
+            <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-4xl shadow-sm mb-2 animate-fu-float">
               💼
             </div>
-            <h1 className="text-4xl font-extrabold text-primary">
+            <AnimatedHeading as="h1" hoverColor="#F37021" className="text-3xl sm:text-4xl text-primary">
               Conecta con el Talento UCR
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
+            </AnimatedHeading>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl px-2">
               Hola {userName}, publica oportunidades de empleo o pasantías para los estudiantes de la universidad. 
               Impulsa el crecimiento profesional de la próxima generación.
             </p>
@@ -50,6 +52,6 @@ export default async function PosicionesPage({ searchParams }: { searchParams: {
           </div>
         )}
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }

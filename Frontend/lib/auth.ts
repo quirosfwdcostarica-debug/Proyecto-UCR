@@ -36,12 +36,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             );
           }
 
-          // 2. Buscar usuario en la BD con Prisma
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email as string },
-          });
+          // 2. Buscar usuario en la BD con Supabase Admin
+          const { data: user, error: userError } = await supabaseAdmin
+            .from('USERS')
+            .select('id, email, nombre, tipo, foto_url, email_verified, status')
+            .eq('email', credentials.email as string)
+            .maybeSingle();
 
-          if (!user) {
+          if (userError || !user) {
             throw new InvalidCredentials("Usuario no encontrado en el sistema.");
           }
 
@@ -51,10 +53,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               await supabaseAdmin.auth.admin.getUserById(user.id);
 
             if (supabaseUser?.user?.email_confirmed_at) {
-              await prisma.user.update({
-                where: { id: user.id },
-                data: { email_verified: true },
-              });
+              await supabaseAdmin
+                .from('USERS')
+                .update({ email_verified: true })
+                .eq('id', user.id);
             } else {
               throw new InvalidCredentials(
                 "Debes verificar tu correo antes de iniciar sesión."
@@ -94,6 +96,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 días
+    updateAge: 24 * 60 * 60, // refrescar cada 24h
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 días
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
@@ -104,6 +110,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.foto_url = (user as any).foto_url;
         token.accessToken = (user as any).accessToken;
         delete (token as any).refreshToken;
+      }
+
+      // Si el token no tiene tipo (sesión creada antes de que se agregara el campo),
+      // lo buscamos en la BD para que el sidebar y el middleware tengan el rol correcto.
+      if (!token.tipo && token.id) {
+        try {
+          const { data: dbUser } = await supabaseAdmin
+            .from('USERS')
+            .select('tipo, foto_url')
+            .eq('id', token.id as string)
+            .maybeSingle();
+            
+          if (dbUser) {
+            token.tipo = dbUser.tipo;
+            token.role = dbUser.tipo;
+            if (!token.foto_url) token.foto_url = dbUser.foto_url;
+          }
+        } catch {}
       }
 
       if (trigger === "update" && session?.user?.image) {

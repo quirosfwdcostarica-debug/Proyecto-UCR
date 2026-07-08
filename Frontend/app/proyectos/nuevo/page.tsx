@@ -10,6 +10,8 @@ import {
   DollarSign, Briefcase, GraduationCap, Lightbulb,
   Tag, X, Save, Zap, Users,
 } from "lucide-react";
+import { ParallaxBackground } from "@/components/fu/ParallaxBackground";
+import { SunflowerImage } from "@/components/fu/SunflowerImage";
 
 // ──────────────────────────────────────────────
 // UCR color palette
@@ -107,7 +109,7 @@ const STEPS = [
 function StepSidebar({ current, completed }: { current: number; completed: boolean[] }) {
   return (
     <aside className="w-60 shrink-0 hidden md:flex flex-col gap-2">
-      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200" style={{ background: "#fff" }}>
+      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="px-5 py-4" style={{ background: UCR.blue }}>
           <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Publicación de Proyecto</p>
           <p className="text-lg font-extrabold text-white mt-0.5">Nueva Posición</p>
@@ -315,37 +317,36 @@ export default function PublicarProyectoPage() {
   function prevStep() { setStep((s) => Math.max(s - 1, 0)); }
 
   if (status === "loading" || loadingInfo) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       <Loader2 className="w-8 h-8 animate-spin" style={{ color: UCR.blue }} />
     </div>
   );
 
   if (published) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f8fafc" }}>
-      <div className="bg-white rounded-3xl shadow-lg p-12 text-center max-w-md">
-        <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-6"
-          style={{ background: UCR.softYellow }}>
-          <Rocket className="w-10 h-10" style={{ color: UCR.blue }} />
+    <ParallaxBackground className="min-h-screen flex items-center justify-center py-16">
+      <div className="fu-card p-10 text-center max-w-md mx-4 animate-fu-fade-up">
+        <div className="flex justify-center">
+          <SunflowerImage size={220} />
         </div>
-        <h2 className="text-2xl font-extrabold mb-2" style={{ color: UCR.blue }}>¡Proyecto Publicado!</h2>
-        <p className="text-slate-500 mb-6 text-sm">Tu proyecto ya es visible para la red de exalumnos, mentores y donantes de la UCR.</p>
+        <h2 className="text-2xl font-extrabold mt-4 mb-2 fu-text-gradient">¡Proyecto Publicado!</h2>
+        <p className="fu-text-2 mb-6 text-sm">Tu proyecto ya es visible para la red de exalumnos, mentores y donantes de la UCR.</p>
         <button
           onClick={() => router.push("/")}
-          className="px-8 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90"
-          style={{ background: UCR.blue }}
+          className="px-8 py-3 rounded-xl font-bold text-white transition-all hover:opacity-90 hover:scale-[1.03]"
+          style={{ background: `linear-gradient(135deg, ${UCR.blue}, ${UCR.sky})` }}
         >
           Ir al Tablero
         </button>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 
   const infoNombreCorto = info?.user?.nombre?.split(" ")[0] ?? "Estudiante";
 
   return (
-    <div className="min-h-screen" style={{ background: "#f8fafc" }}>
+    <ParallaxBackground className="min-h-screen">
       {/* Mobile step indicator */}
-      <div className="md:hidden flex items-center gap-2 px-4 pt-4 pb-2 bg-white border-b border-slate-100">
+      <div className="md:hidden flex items-center gap-2 px-4 pt-4 pb-2 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
         {STEPS.map((_, i) => (
           <div key={i} className="flex-1 h-1.5 rounded-full transition-all"
             style={{ background: i <= step ? UCR.blue : "#e2e8f0" }} />
@@ -373,7 +374,7 @@ export default function PublicarProyectoPage() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                   Paso 1: Información Académica
                 </h2>
@@ -382,7 +383,7 @@ export default function PublicarProyectoPage() {
                 </p>
 
                 {/* Student card */}
-                <div className="rounded-xl border border-slate-200 p-5 mb-6 flex flex-col sm:flex-row gap-5">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5 mb-6 flex flex-col sm:flex-row gap-5">
                   {info?.user?.foto_url ? (
                     <Image src={info.user.foto_url} alt={info.user.nombre} width={72} height={72}
                       className="rounded-full object-cover shrink-0" />
@@ -449,7 +450,7 @@ export default function PublicarProyectoPage() {
           {/* ── STEP 2: Detalles del Proyecto ─────────────── */}
           {step === 1 && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                   Paso 2: Detalles del Proyecto
                 </h2>
@@ -468,7 +469,7 @@ export default function PublicarProyectoPage() {
                       value={titulo}
                       onChange={(e) => setTitulo(e.target.value)}
                       placeholder="Ej. Desarrollo de un sistema de monitoreo hídrico basado en IoT"
-                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all"
+                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       style={{ borderColor: titulo ? UCR.sky : "#e2e8f0", boxShadow: titulo ? `0 0 0 3px ${UCR.sky}20` : "" }}
                     />
                   </div>
@@ -481,7 +482,7 @@ export default function PublicarProyectoPage() {
                     <select
                       value={areaTematica}
                       onChange={(e) => setAreaTematica(e.target.value)}
-                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white"
+                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                       style={{ borderColor: "#e2e8f0" }}
                     >
                       <option value="">Seleccionar área...</option>
@@ -499,7 +500,7 @@ export default function PublicarProyectoPage() {
                       onChange={(e) => setDescripcion(e.target.value.slice(0, 2000))}
                       placeholder="Describe los objetivos, metodología e impacto esperado..."
                       rows={6}
-                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none transition-all"
+                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       style={{ borderColor: "#e2e8f0" }}
                     />
                     <p className="text-xs text-right text-slate-400 mt-1">{descripcion.length} / 2000 caracteres</p>
@@ -513,7 +514,7 @@ export default function PublicarProyectoPage() {
                     <select
                       value={porcentajeAvance}
                       onChange={(e) => setPorcentajeAvance(Number(e.target.value))}
-                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white"
+                      className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                       style={{ borderColor: "#e2e8f0" }}
                     >
                       {ESTADOS_AVANCE.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
@@ -589,7 +590,7 @@ export default function PublicarProyectoPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-8">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-8">
                 <div>
                   <h2 className="text-xl font-extrabold mb-1" style={{ color: UCR.blue }}>
                     Paso 3: Detalles del Apoyo Necesitado
@@ -612,14 +613,14 @@ export default function PublicarProyectoPage() {
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
                           <input type="number" value={montoRequerido} onChange={(e) => setMontoRequerido(e.target.value)}
-                            placeholder="0.00" className="w-full border rounded-xl pl-7 pr-4 py-3 text-sm outline-none"
+                            placeholder="0.00" className="w-full border rounded-xl pl-7 pr-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                             style={{ borderColor: "#e2e8f0" }} />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5">Fecha Límite de Recaudación</label>
                         <input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)}
-                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none"
+                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                           style={{ borderColor: "#e2e8f0" }} />
                       </div>
                     </div>
@@ -627,7 +628,7 @@ export default function PublicarProyectoPage() {
                       <label className="block text-xs font-bold text-slate-600 mb-1.5">Desglose de Gastos</label>
                       <textarea value={desgloseGastos} onChange={(e) => setDesgloseGastos(e.target.value)}
                         placeholder="Ej: Adquisición de materiales (40%), Pago de servicios externos (30%), Logística (30%)..."
-                        rows={4} className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none"
+                        rows={4} className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         style={{ borderColor: "#e2e8f0" }} />
                       <p className="text-xs text-slate-400 mt-1 italic">Sea específico para aumentar la confianza del donante.</p>
                     </div>
@@ -666,7 +667,7 @@ export default function PublicarProyectoPage() {
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5">Horas Sugeridas al Mes</label>
                         <select value={horasMentoria} onChange={(e) => setHorasMentoria(e.target.value)}
-                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white"
+                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                           style={{ borderColor: "#e2e8f0" }}>
                           {HORAS_MENTORIA.map((h) => <option key={h} value={h}>{h}</option>)}
                         </select>
@@ -677,7 +678,7 @@ export default function PublicarProyectoPage() {
                       <label className="block text-xs font-bold text-slate-600 mb-1.5">Perfil de Mentor Ideal</label>
                       <textarea value={perfilMentor} onChange={(e) => setPerfilMentor(e.target.value)}
                         placeholder="Describa la experiencia previa que esperaría de un mentor para este proyecto..."
-                        rows={4} className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none"
+                        rows={4} className="w-full border rounded-xl px-4 py-3 text-sm outline-none resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         style={{ borderColor: "#e2e8f0" }} />
                     </div>
                   </section>
@@ -694,14 +695,14 @@ export default function PublicarProyectoPage() {
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5">Disponibilidad Horaria</label>
                         <select value={disponibilidad} onChange={(e) => setDisponibilidad(e.target.value)}
-                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white"
+                          className="w-full border rounded-xl px-4 py-3 text-sm outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                           style={{ borderColor: "#e2e8f0" }}>
                           {DISPONIBILIDAD.map((d) => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1.5">Interés en Contratación Post-Proyecto</label>
-                        <div className="flex gap-4 mt-2">
+                        <div className="flex flex-wrap gap-4 mt-2">
                           {["Sí", "No", "A discutir"].map((opt) => (
                             <label key={opt} className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
                               <input type="radio" name="contratacion" value={opt}
@@ -749,8 +750,8 @@ export default function PublicarProyectoPage() {
               </div>
 
               {/* Preview card — internal */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div className="flex items-center justify-between mb-5">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                   <h2 className="text-xl font-extrabold" style={{ color: UCR.blue }}>Vista Previa del Proyecto</h2>
                   <button type="button" onClick={() => setStep(1)}
                     className="text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5 hover:opacity-80"
@@ -761,9 +762,9 @@ export default function PublicarProyectoPage() {
 
                 <div className="grid md:grid-cols-3 gap-5">
                   {/* Left - project info */}
-                  <div className="md:col-span-2 rounded-xl border border-slate-200 p-5">
+                  <div className="md:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Título del Proyecto</p>
-                    <h3 className="text-xl font-extrabold leading-snug mb-3" style={{ color: UCR.blue }}>
+                    <h3 className="text-xl font-extrabold leading-snug mb-3 break-words" style={{ color: UCR.blue }}>
                       {titulo || "Sin título aún"}
                     </h3>
                     {areaTematica && (
@@ -902,14 +903,14 @@ export default function PublicarProyectoPage() {
                       style={{ background: `linear-gradient(180deg, ${UCR.sky}, ${UCR.blue})` }} />
                     <div className="p-5 flex-1 bg-white">
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <div>
+                        <div className="min-w-0">
                           {areaTematica && (
                             <span className="text-xs font-bold px-2 py-0.5 rounded uppercase tracking-widest"
                               style={{ background: UCR.sky, color: "#fff" }}>
                               {areaTematica}
                             </span>
                           )}
-                          <h3 className="text-lg font-extrabold mt-1 leading-snug" style={{ color: UCR.blue }}>
+                          <h3 className="text-lg font-extrabold mt-1 leading-snug break-words" style={{ color: UCR.blue }}>
                             {titulo || "Título del Proyecto"}
                           </h3>
                         </div>
@@ -969,7 +970,7 @@ export default function PublicarProyectoPage() {
           )}
         </main>
       </div>
-    </div>
+    </ParallaxBackground>
   );
 }
 

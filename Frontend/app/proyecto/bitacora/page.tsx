@@ -205,24 +205,24 @@ export default function BitacoraPage() {
     <div className="min-h-screen bg-[#f8fafc] pb-12">
       {/* Header Bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2 text-slate-600 hover:text-slate-900">
                 <ArrowLeft className="h-4 w-4" />
                 <span>Volver al Tablero</span>
               </Button>
             </Link>
-            <div className="h-6 w-px bg-slate-200" />
-            <h1 className="text-lg font-bold text-[#0f4c81]">Bitácora de Trabajo</h1>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <h1 className="text-base sm:text-lg font-bold text-[#0f4c81] truncate">Bitácora de Trabajo</h1>
           </div>
-          <Badge className="bg-blue-50 text-[#0f4c81] hover:bg-blue-50 border-0 font-medium px-3 py-1">
+          <Badge className="bg-blue-50 text-[#0f4c81] hover:bg-blue-50 border-0 font-medium px-3 py-1 text-xs sm:text-sm">
             Gabriel Solano • Estudiante UCR
           </Badge>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 mt-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 space-y-6">
         
         {/* Statistics Panels */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -281,7 +281,7 @@ export default function BitacoraPage() {
             {/* Category Filter Select */}
             <div className="relative w-full sm:w-48">
               <select
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-700 font-medium"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-700 dark:text-slate-100 font-medium"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -298,7 +298,7 @@ export default function BitacoraPage() {
           {/* Add New Button Trigger Dialog */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs font-semibold py-2 px-4 gap-2 w-full sm:w-auto">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold py-2 px-4 gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Nuevo Registro
               </Button>
@@ -327,7 +327,7 @@ export default function BitacoraPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label htmlFor="category" className="text-xs font-bold text-slate-700">Categoría</Label>
                     <select
@@ -358,7 +358,7 @@ export default function BitacoraPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label htmlFor="date" className="text-xs font-bold text-slate-700">Fecha de Actividad</Label>
                     <Input 
@@ -400,7 +400,7 @@ export default function BitacoraPage() {
                   <DialogClose asChild>
                     <Button type="button" variant="outline" className="text-xs font-semibold">Cancelar</Button>
                   </DialogClose>
-                  <Button type="submit" className="bg-[#0f4c81] hover:bg-[#0b3a63] text-white text-xs font-semibold">
+                  <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold">
                     Guardar Avance
                   </Button>
                 </DialogFooter>

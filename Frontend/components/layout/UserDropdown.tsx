@@ -5,12 +5,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useCallback, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, User } from "lucide-react";
-import { logoutAction } from "@/actions/auth.actions";
+import { signOut } from "next-auth/react";
 
 export function UserDropdown() {
   const { data: session } = useSession();
   const imageUrl = session?.user?.image || "https://github.com/shadcn.png";
-
   const [open, setOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
   const [mounted, setMounted] = useState(false);
@@ -37,12 +36,12 @@ export function UserDropdown() {
     if (!open) return;
 
     function handleClose(e: MouseEvent) {
-      // Si el click fue en el botón del avatar, lo ignora (el toggle lo maneja)
       if (buttonRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     }
 
-    function handleScrollResize() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function handleScrollResize(e: Event) {
       setOpen(false);
     }
 
@@ -110,9 +109,10 @@ export function UserDropdown() {
           <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
           <button
-            onClick={() => {
-              startTransition(() => {
-                logoutAction();
+            onClick={async () => {
+              startTransition(async () => {
+                await signOut({ redirect: false });
+                window.location.href = "/login";
               });
             }}
             disabled={isPending}

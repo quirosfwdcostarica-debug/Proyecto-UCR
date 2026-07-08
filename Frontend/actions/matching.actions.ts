@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { calcularAfinidad } from "@/lib/matching";
+import { calcularAfinidad, calcularScorePosicion, toApoyoBuscado, toApoyoOfrecido } from "@/lib/matching";
 import {
   sendMatchAceptado,
   sendMatchRechazado,
@@ -15,32 +15,28 @@ export type MatchEstado = "SUGERIDO" | "CONTACTADO" | "ACTIVO" | "CERRADO";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toApoyoBuscado(est: any): string[] {
-  const a: string[] = [];
-  if (est.busca_mentoria) a.push("mentoria");
-  if (est.busca_empleo) a.push("empleo");
-  if (est.busca_pasantia) a.push("pasantia");
-  if (est.busca_financiamiento) a.push("financiamiento");
-  return a;
-}
-
-function toApoyoOfrecido(exa: any): string[] {
-  const a: string[] = [];
-  if (exa.ofrece_mentoria) a.push("mentoria");
-  if (exa.ofrece_empleo) a.push("empleo");
-  if (exa.ofrece_pasantia) a.push("pasantia");
-  if (exa.ofrece_donacion_dinero) a.push("financiamiento");
-  if (exa.ofrece_guest_speaking) a.push("guest speaking");
-  if (exa.ofrece_volunteering) a.push("volunteering");
-  if (exa.ofrece_career_advice) a.push("career advice");
-  if (exa.ofrece_networking) a.push("networking");
-  return a;
+// T-11: las áreas de interés viven en la tabla relacional USUARIOS_AREAS
+// (catálogo fijo de 14 códigos), no en el campo Json `areas_interes`.
+async function getAreasInteresCodigos(userId: string): Promise<string[]> {
+  const rows = await prisma.usuarioArea.findMany({
+    where: { user_id: userId },
+    select: { area_codigo: true },
+  });
+  return rows.map((r) => r.area_codigo);
 }
 
 function parseJsonArray(val: any): string[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val as string[];
-  try { return JSON.parse(val as string) as string[]; } catch { return []; }
+  let arr: any;
+  if (Array.isArray(val)) {
+    arr = val;
+  } else {
+    try { arr = JSON.parse(val as string); } catch { return []; }
+  }
+  if (!Array.isArray(arr)) return [];
+  // Los campos Json son de texto libre; algunos registros reales tienen
+  // elementos no-string (null, objetos) que rompen .toLowerCase() aguas abajo.
+  return arr.filter((x): x is string => typeof x === "string");
 }
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@alumni.ucr.ac.cr";
@@ -102,34 +98,37 @@ export async function contactarMatch(matchId: string) {
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado === "CERRADO") throw new Error("Esta conexión fue cerrada previamente. No puede reactivarse.");
   if (match.estado !== "SUGERIDO") throw new Error("El match ya no está en estado sugerido");
   if (match.estudiante_id !== userId) throw new Error("Solo el estudiante puede contactar");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CONTACTADO", initiated_by: userId },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "CONTACTADO", initiated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+  
+  if (updateError) throw updateError;
 
-  const receptorEmail = match.exalumno.user.email;
-  const receptorNombre = match.exalumno.user.nombre || "Exalumno";
-  const emisorNombre = match.estudiante.user.nombre || "Estudiante";
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
+
+  const receptorEmail = exaUser?.email;
+  const receptorNombre = exaUser?.nombre || "Exalumno";
+  const emisorNombre = estUser?.nombre || "Estudiante";
 
   if (receptorEmail) {
     await sendMatchConnectionRequest(receptorEmail, receptorNombre, emisorNombre);
   }
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CONTACTADO" };
 }
 
 export async function aceptarMatch(matchId: string) {
@@ -137,26 +136,29 @@ export async function aceptarMatch(matchId: string) {
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "CONTACTADO") throw new Error("El match no está en estado contactado");
   if (match.initiated_by === userId) throw new Error("No puedes aceptar tu propia solicitud");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "ACTIVO", accepted_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "ACTIVO", accepted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+    
+  if (updateError) throw updateError;
 
-  const estudianteEmail = match.estudiante.user.email;
-  const estudianteNombre = match.estudiante.user.nombre || "Estudiante";
-  const exalumnoNombre = match.exalumno.user.nombre || "Exalumno";
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
+
+  const estudianteEmail = estUser?.email;
+  const estudianteNombre = estUser?.nombre || "Estudiante";
+  const exalumnoNombre = exaUser?.nombre || "Exalumno";
 
   if (estudianteEmail) {
     await sendMatchAceptado(estudianteEmail, estudianteNombre, exalumnoNombre);
@@ -164,7 +166,7 @@ export async function aceptarMatch(matchId: string) {
   await sendAdminNewActiveMatch(ADMIN_EMAIL, estudianteNombre, exalumnoNombre);
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "ACTIVO" };
 }
 
 export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | "exalumno") {
@@ -172,58 +174,69 @@ export async function rechazarMatch(matchId: string, rejectedBy: "estudiante" | 
   if (!session?.user?.id) throw new Error("No autenticado");
   const userId = session.user.id;
 
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
-    select: {
-      id: true, estado: true, estudiante_id: true, exalumno_id: true, initiated_by: true,
-      estudiante: { select: { user: { select: { nombre: true, email: true } } } },
-      exalumno: { select: { user: { select: { nombre: true, email: true } } } },
-    },
-  });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "CONTACTADO") throw new Error("El match no está en estado contactado");
   if (match.initiated_by === userId) throw new Error("No puedes rechazar tu propia solicitud");
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CERRADO", rejected_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({
+      estado: "CERRADO",
+      rejected_at: new Date().toISOString(),
+      rechazado_por_estudiante: rejectedBy === "estudiante",
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', matchId);
+
+  if (updateError) throw updateError;
+
+  const { data: estUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.estudiante_id).maybeSingle();
+  const { data: exaUser } = await supabaseAdmin.from('USERS').select('nombre, email').eq('id', match.exalumno_id).maybeSingle();
 
   const initiatorId = match.initiated_by;
   const isStudentInitiated = initiatorId === match.estudiante_id;
-  const emisorEmail = isStudentInitiated
-    ? match.estudiante.user.email
-    : match.exalumno.user.email;
-  const emisorNombre = isStudentInitiated
-    ? match.estudiante.user.nombre || "Estudiante"
-    : match.exalumno.user.nombre || "Exalumno";
+  const emisorEmail = isStudentInitiated ? estUser?.email : exaUser?.email;
+  const emisorNombre = isStudentInitiated ? (estUser?.nombre || "Estudiante") : (exaUser?.nombre || "Exalumno");
 
   if (emisorEmail) {
     await sendMatchRechazado(emisorEmail, emisorNombre);
   }
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CERRADO" };
 }
 
 export async function cerrarMatch(matchId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("No autenticado");
 
-  const match = await prisma.match.findUnique({ where: { id: matchId } });
+  const { createClient } = require("@supabase/supabase-js");
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { data: match } = await supabaseAdmin.from('MATCHES').select('*').eq('id', matchId).maybeSingle();
   if (!match) throw new Error("Match no encontrado");
   if (match.estado !== "ACTIVO") throw new Error("Solo puedes cerrar matches activos");
   if (match.estudiante_id !== session.user.id && match.exalumno_id !== session.user.id) {
     throw new Error("No autorizado");
   }
 
-  const updated = await prisma.match.update({
-    where: { id: matchId },
-    data: { estado: "CERRADO", closed_at: new Date() },
-  });
+  const { error: updateError } = await supabaseAdmin.from('MATCHES')
+    .update({ estado: "CERRADO", closed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', matchId);
+
+  if (updateError) throw updateError;
 
   revalidatePath("/mis-matches");
-  return updated;
+  return { estado: "CERRADO" };
 }
 
 /**
@@ -258,38 +271,40 @@ export async function ofrecerApoyo(estudianteId: string) {
   }
   // CERRADO match exists → will re-open via upsert below (fall through)
 
-  // Compute affinity score using only existing DB columns
-  const [estudianteData, exalumnoData] = await Promise.all([
+  // Compute affinity score con los 4 criterios completos (T-18)
+  const [estudianteData, exalumnoData, areasEstudiante, areasExalumno] = await Promise.all([
     prisma.estudiante.findUnique({
       where: { user_id: estudianteId },
       select: {
-        carrera: true, proyecto_tipo: true,
+        carrera: true, area_tematica: true, proyecto_tipo: true,
         busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
       },
     }),
     prisma.exalumno.findUnique({
       where: { user_id: exalumnoId },
       select: {
-        escuela_facultad: true,
+        carrera: true, escuela_facultad: true, sector: true,
         ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
         ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
         ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
       },
     }),
+    getAreasInteresCodigos(estudianteId),
+    getAreasInteresCodigos(exalumnoId),
   ]);
 
   const { score, reasons, breakdown } = calcularAfinidad(
     {
       carrera: estudianteData?.carrera,
       apoyoBuscado: toApoyoBuscado(estudianteData ?? {}),
-      areaProyecto: estudianteData?.proyecto_tipo ?? null,
-      areasInteres: [],
+      areaProyecto: estudianteData?.area_tematica ?? estudianteData?.proyecto_tipo ?? null,
+      areasInteres: areasEstudiante,
     },
     {
-      carrera: exalumnoData?.escuela_facultad ?? null,
-      sector: null,
+      carrera: exalumnoData?.carrera ?? exalumnoData?.escuela_facultad ?? null,
+      sector: exalumnoData?.sector ?? null,
       apoyoOfrecido: toApoyoOfrecido(exalumnoData ?? {}),
-      areasInteres: [],
+      areasInteres: areasExalumno,
     }
   );
 
@@ -339,33 +354,46 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
   const estudianteData = await prisma.estudiante.findUnique({
     where: { user_id: estudianteId },
     select: {
-      carrera: true, proyecto_tipo: true,
+      carrera: true, area_tematica: true, proyecto_tipo: true,
       busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
     },
   });
   if (!estudianteData) return [];
 
-  // Solo columnas existentes en BD (sin visible_en_directorio, status)
+  // Solo exalumnos visibles en el directorio (perfil completo) y no suspendidos
   const exalumnos = await prisma.exalumno.findMany({
     where: {
-      escuela_facultad: { not: null },
-      empresa_actual: { not: null },
-      user: { status: { not: "SUSPENDIDO" as const } },
+      visible_en_directorio: true,
+      user: { activo: true, status: { not: "SUSPENDIDO" as const } },
     },
     select: {
       user_id: true,
-      escuela_facultad: true,
+      carrera: true, escuela_facultad: true, sector: true,
       ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
       ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
       ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
     },
   });
 
+  const [areasEstudiante, areasExalumnosRows] = await Promise.all([
+    getAreasInteresCodigos(estudianteId),
+    prisma.usuarioArea.findMany({
+      where: { user_id: { in: exalumnos.map((e) => e.user_id) } },
+      select: { user_id: true, area_codigo: true },
+    }),
+  ]);
+  const areasPorExalumno = new Map<string, string[]>();
+  for (const row of areasExalumnosRows) {
+    const actuales = areasPorExalumno.get(row.user_id) ?? [];
+    actuales.push(row.area_codigo);
+    areasPorExalumno.set(row.user_id, actuales);
+  }
+
   const estCompat = {
     carrera: estudianteData.carrera,
     apoyoBuscado: toApoyoBuscado(estudianteData),
-    areaProyecto: estudianteData.proyecto_tipo ?? null,
-    areasInteres: [],
+    areaProyecto: estudianteData.area_tematica ?? estudianteData.proyecto_tipo ?? null,
+    areasInteres: areasEstudiante,
   };
 
   const results = await Promise.allSettled(
@@ -377,10 +405,10 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
       if (rejected) return null;
 
       const { score, reasons, breakdown } = calcularAfinidad(estCompat, {
-        carrera: exa.escuela_facultad ?? null,
-        sector: null,
+        carrera: exa.carrera ?? exa.escuela_facultad ?? null,
+        sector: exa.sector ?? null,
         apoyoOfrecido: toApoyoOfrecido(exa),
-        areasInteres: [],
+        areasInteres: areasPorExalumno.get(exa.user_id) ?? [],
       });
 
       if (score === 0) return null;
@@ -404,4 +432,67 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
 
   revalidatePath("/mis-matches");
   return results.flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
+}
+
+/**
+ * Calcula el score estudiante ↔ posición para todas las posiciones activas
+ * y devuelve solo las que superan 50 puntos, ordenadas de mayor a menor.
+ * Se calcula al vuelo (sin cache) — el volumen de posiciones activas no
+ * justifica todavía una tabla de cache tipo POSICION_SCORES.
+ */
+export async function generarScoresPosiciones(estudianteId?: string) {
+  const session = await auth();
+  const id = estudianteId ?? session?.user?.id;
+  if (!id) throw new Error("No autenticado");
+
+  const estudianteData = await prisma.estudiante.findUnique({
+    where: { user_id: id },
+    select: {
+      carrera: true, escuela_facultad: true, habilidades: true, soft_skills: true,
+      busca_empleo: true, busca_pasantia: true,
+    },
+  });
+  if (!estudianteData) return [];
+
+  const posiciones = await prisma.posicion.findMany({
+    where: { estado: "activa" },
+    select: {
+      id: true, titulo: true, empresa: true, tipo: true, modalidad: true, jornada: true,
+      area_estudio: true, hard_skills: true, soft_skills: true, estado: true, fecha_limite: true,
+    },
+  });
+
+  const estCompat = {
+    carrera: estudianteData.carrera,
+    escuela_facultad: estudianteData.escuela_facultad,
+    habilidades: parseJsonArray(estudianteData.habilidades),
+    soft_skills: parseJsonArray(estudianteData.soft_skills),
+    busca_empleo: estudianteData.busca_empleo,
+    busca_pasantia: estudianteData.busca_pasantia,
+  };
+
+  return posiciones
+    .map((p) => {
+      const { score, breakdown, reasons } = calcularScorePosicion(estCompat, {
+        tipo: p.tipo,
+        area_estudio: p.area_estudio,
+        hard_skills: parseJsonArray(p.hard_skills),
+        soft_skills: parseJsonArray(p.soft_skills),
+        estado: p.estado,
+      });
+      return {
+        id: p.id,
+        titulo: p.titulo,
+        empresa: p.empresa,
+        tipo: p.tipo,
+        modalidad: p.modalidad,
+        jornada: p.jornada,
+        fecha_limite: p.fecha_limite,
+        score,
+        breakdown,
+        reasons,
+      };
+    })
+    .filter((p) => p.score > 50)
+    .sort((a, b) => b.score - a.score);
 }

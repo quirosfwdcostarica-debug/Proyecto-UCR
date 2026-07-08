@@ -18,7 +18,7 @@ export default async function CompletarPerfilPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto w-full relative bg-ucr-gris-1/30 min-h-screen">
+    <div className="flex-1 w-full relative bg-ucr-gris-1/30 min-h-screen">
       {/* Fondo Dinámico con Blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-ucr-celeste/20 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
@@ -27,7 +27,7 @@ export default async function CompletarPerfilPage() {
       </div>
       
       {/* Hero Header Estilizado */}
-      <div className="w-full bg-[#e0f2fe] pt-16 pb-24 px-8 relative shadow-sm overflow-hidden">
+      <div className="w-full bg-[#e0f2fe] pt-16 pb-24 px-4 sm:px-6 md:px-8 relative shadow-sm overflow-hidden">
         {/* Imagen de fondo patrón */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-80 mix-blend-multiply pointer-events-none select-none" 
@@ -38,15 +38,15 @@ export default async function CompletarPerfilPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-sky-200/80 via-sky-100/40 to-transparent z-0"></div>
         <div className="absolute inset-0 bg-white/10 backdrop-blur-[0.5px] z-0"></div>
         
-        <div className="max-w-5xl mx-auto relative z-10 flex items-center gap-6">
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
           <div className="p-4 bg-white/70 rounded-2xl backdrop-blur-md border border-white/60 shadow-sm">
             <UserCheck className="w-10 h-10 text-[#005eb8]" />
           </div>
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] drop-shadow-sm">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#02477B] drop-shadow-sm">
               ¡Cuenta Activada!
             </h1>
-            <p className="text-[#005eb8] font-semibold text-lg mt-2 flex items-center gap-2">
+            <p className="text-[#005eb8] font-semibold text-lg mt-2 flex items-center justify-center sm:justify-start gap-2">
               <span className="w-8 h-[2px] bg-[#005eb8] rounded-full"></span>
               Completa tu perfil para formar parte de la red
             </p>

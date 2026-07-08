@@ -30,6 +30,28 @@ export interface ExalumnoCompat {
  * +20: Sector del exalumno ↔ área temática del proyecto
  * +20: Tipo de apoyo ofrecido ↔ buscado (cualquier coincidencia)
  */
+export function toApoyoBuscado(est: any): string[] {
+  const a: string[] = [];
+  if (est.busca_mentoria) a.push("mentoria");
+  if (est.busca_empleo) a.push("empleo");
+  if (est.busca_pasantia) a.push("pasantia");
+  if (est.busca_financiamiento) a.push("financiamiento");
+  return a;
+}
+
+export function toApoyoOfrecido(exa: any): string[] {
+  const a: string[] = [];
+  if (exa.ofrece_mentoria) a.push("mentoria");
+  if (exa.ofrece_empleo) a.push("empleo");
+  if (exa.ofrece_pasantia) a.push("pasantia");
+  if (exa.ofrece_donacion_dinero) a.push("financiamiento");
+  if (exa.ofrece_guest_speaking) a.push("guest speaking");
+  if (exa.ofrece_volunteering) a.push("volunteering");
+  if (exa.ofrece_career_advice) a.push("career advice");
+  if (exa.ofrece_networking) a.push("networking");
+  return a;
+}
+
 export function calcularAfinidad(
   estudiante: EstudianteCompat,
   exalumno: ExalumnoCompat
@@ -75,4 +97,96 @@ export function calcularAfinidad(
 
   const score = Math.min(breakdown.carrera + breakdown.intereses + breakdown.sector + breakdown.apoyo, 100);
   return { score, reasons, breakdown };
+}
+
+// ─── Matching estudiante ↔ posición (RF-06 extendido) ──────────────────────────
+// Scoring: areaEstudio(35) + habilidadesDuras(35 prop) + habilidadesBlandas(20 prop) + apoyo(10) = 100
+//
+// Nota: a diferencia del diseño original de referencia (que asumía un campo
+// `sector` tipo array en POSICIONES), el schema real de esta app no tiene ese
+// campo. Se usa `area_estudio` (string) para el criterio de carrera/área, y
+// `hard_skills`/`soft_skills` (ambos en POSICIONES y en ESTUDIANTES) para los
+// dos criterios de habilidades.
+
+export interface EstudiantePosicionCompat {
+  carrera?: string | null;
+  escuela_facultad?: string | null;
+  habilidades?: string[];       // habilidades técnicas (hard skills) del estudiante
+  soft_skills?: string[];
+  busca_empleo?: boolean;
+  busca_pasantia?: boolean;
+}
+
+export interface PosicionCompat {
+  tipo?: string | null;               // "EMPLEO" | "PASANTIA" | "PRACTICA" | "VOLUNTARIADO"
+  area_estudio?: string | null;
+  hard_skills?: string[];
+  soft_skills?: string[];
+  estado?: string | null;             // valor real: "activa" (no "ACTIVA")
+}
+
+/**
+ * Calcula la afinidad entre un estudiante y una posición publicada.
+ * Devuelve { score, breakdown, reasons } donde score máximo es 100.
+ *
+ * Criterios:
+ * +35: Carrera/escuela compatible con el área de estudio de la posición
+ * +35: Habilidades técnicas requeridas (proporcional al overlap)
+ * +20: Habilidades blandas (proporcional al overlap)
+ * +10: Tipo de posición (empleo/pasantía) ↔ lo que busca el estudiante
+ */
+export function calcularScorePosicion(
+  estudiante: EstudiantePosicionCompat,
+  posicion: PosicionCompat
+): { score: number; breakdown: Record<string, number>; reasons: string[] } {
+  const breakdown = { areaSector: 0, habilidades: 0, areas: 0, apoyo: 0 };
+  const reasons: string[] = [];
+
+  if (posicion.estado !== "activa") {
+    return { score: 0, breakdown, reasons };
+  }
+
+  // 1. Carrera/escuela ↔ área de estudio de la posición (+35)
+  const escuela = (estudiante.escuela_facultad || estudiante.carrera || "").toLowerCase().trim();
+  const areaPosicion = (posicion.area_estudio || "").toLowerCase().trim();
+  if (escuela && areaPosicion && (areaPosicion.includes(escuela) || escuela.includes(areaPosicion))) {
+    breakdown.areaSector = 35;
+    reasons.push("Carrera compatible con el área de la posición");
+  }
+
+  // 2. Habilidades técnicas requeridas (+35 proporcional)
+  // Los campos Json son de texto libre; se filtran elementos no-string antes
+  // de normalizar, ya que algunos registros reales traen valores inválidos.
+  const toLowerStrings = (arr?: string[]) =>
+    (arr || []).filter((h): h is string => typeof h === "string").map((h) => h.toLowerCase().trim()).filter(Boolean);
+
+  const hardReq = toLowerStrings(posicion.hard_skills);
+  const hardEst = toLowerStrings(estudiante.habilidades);
+  const interseccionHard = hardReq.filter((h) => hardEst.includes(h));
+  if (hardReq.length > 0 && interseccionHard.length > 0) {
+    breakdown.habilidades = Math.round(35 * (interseccionHard.length / hardReq.length));
+    reasons.push(`Habilidades: ${interseccionHard.slice(0, 3).join(", ")}`);
+  }
+
+  // 3. Habilidades blandas requeridas (+20 proporcional)
+  const softReq = toLowerStrings(posicion.soft_skills);
+  const softEst = toLowerStrings(estudiante.soft_skills);
+  const interseccionSoft = softReq.filter((s) => softEst.includes(s));
+  if (softReq.length > 0 && interseccionSoft.length > 0) {
+    breakdown.areas = Math.round(20 * (interseccionSoft.length / softReq.length));
+    reasons.push("Habilidades blandas alineadas");
+  }
+
+  // 4. Tipo de posición ↔ lo que busca el estudiante (+10)
+  const tipo = (posicion.tipo || "").toUpperCase();
+  const matchApoyo =
+    (tipo === "EMPLEO" && estudiante.busca_empleo) ||
+    ((tipo === "PASANTIA" || tipo === "PRACTICA") && estudiante.busca_pasantia);
+  if (matchApoyo) {
+    breakdown.apoyo = 10;
+    reasons.push(tipo === "EMPLEO" ? "Buscas empleo" : "Buscas pasantía");
+  }
+
+  const score = Math.min(breakdown.areaSector + breakdown.habilidades + breakdown.areas + breakdown.apoyo, 100);
+  return { score, breakdown, reasons };
 }
