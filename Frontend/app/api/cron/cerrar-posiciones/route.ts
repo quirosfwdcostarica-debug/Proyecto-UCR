@@ -60,8 +60,10 @@ export async function GET(request: Request) {
           const u = Array.isArray(a.estudiante) ? a.estudiante[0]?.user : a.estudiante?.user;
           const userInfo = Array.isArray(u) ? u[0] : u;
           if (!userInfo?.email) return Promise.resolve();
-          const titulo = tituloPorPosicion.get(a.posicion_id) ?? "la posición";
-          return sendAplicacionDescartada(userInfo.email, userInfo.nombre ?? "Estudiante", titulo);
+          const titulo = String(tituloPorPosicion.get(a.posicion_id) ?? "la posición");
+          const nombreUsuario = typeof userInfo.nombre === "string" ? userInfo.nombre : "Estudiante";
+          const emailUsuario = typeof userInfo.email === "string" ? userInfo.email : "";
+          return sendAplicacionDescartada(emailUsuario, nombreUsuario, titulo);
         })
       );
     }

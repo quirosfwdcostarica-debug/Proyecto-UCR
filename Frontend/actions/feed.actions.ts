@@ -27,10 +27,11 @@ export async function getFeed(limit = 30) {
 
   if (error) throw new Error(`Error al cargar el feed: ${error.message}`);
 
-  const ids = (publicaciones ?? []).map((p) => p.id);
+  const publicacionesList = (publicaciones ?? []) as Array<any>;
+  const ids = publicacionesList.map((p) => p.id);
   const { reaccionesCount, misReacciones, comentariosCount } = await getContadores(ids, userId);
 
-  return (publicaciones ?? []).map((p: any) => {
+  return publicacionesList.map((p: any) => {
     const autor = Array.isArray(p.autor) ? p.autor[0] : p.autor;
     return {
       id: p.id,
@@ -61,11 +62,14 @@ async function getContadores(publicacionIds: string[], userId: string) {
     supabaseAdmin.from("PUBLICACION_COMENTARIOS").select("publicacion_id").in("publicacion_id", publicacionIds),
   ]);
 
-  for (const r of reacciones ?? []) {
+  const reaccionesList = (reacciones ?? []) as Array<any>;
+  const comentariosList = (comentarios ?? []) as Array<any>;
+
+  for (const r of reaccionesList) {
     reaccionesCount.set(r.publicacion_id, (reaccionesCount.get(r.publicacion_id) ?? 0) + 1);
     if (r.user_id === userId) misReacciones.add(r.publicacion_id);
   }
-  for (const c of comentarios ?? []) {
+  for (const c of comentariosList) {
     comentariosCount.set(c.publicacion_id, (comentariosCount.get(c.publicacion_id) ?? 0) + 1);
   }
   return { reaccionesCount, misReacciones, comentariosCount };

@@ -323,7 +323,7 @@ export async function sendTallerCupoConfirmado(
 async function sendApplicantEmailJS(
   toEmail: string,
   templateId: string,
-  templateParams: Record<string, string>
+  templateParams: Record<string, string | number>
 ): Promise<void> {
   devLog(toEmail);
 
