@@ -155,15 +155,15 @@ export default function LandingPage() {
           </nav>
 
           {/* Center Logo (Desktop & Mobile) */}
-          <div className="flex flex-col items-center justify-center z-10 shrink-0 mx-auto md:mx-0">
+          <div className="flex flex-col items-center justify-center z-10 shrink-0 mx-auto md:mx-0 mt-6">
             <Link href="/" className="flex flex-col items-center gap-1 group">
               <img 
                 src="/logo.png" 
                 alt="Logo U" 
-                className="h-16 w-auto object-contain dark:brightness-110 group-hover:scale-105 transition-transform duration-300"
+                className="h-24 w-auto object-contain dark:brightness-110 group-hover:scale-105 transition-transform duration-300"
               />
               <div className="text-center">
-                <span className="text-sm sm:text-base font-bold tracking-widest text-white font-display block leading-none">EXALUMNOS U</span>
+                <span className="text-sm sm:text-base font-bold tracking-widest text-white font-hero block leading-none">EXALUMNOS U</span>
                 <span className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-widest block mt-0.5">Impacto y Legado</span>
               </div>
             </Link>
@@ -232,7 +232,7 @@ export default function LandingPage() {
               COMUNIDAD OFICIAL ALUMNI U
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight font-display leading-[1.2] text-white max-w-4xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] text-center uppercase">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight font-hero leading-[1.2] text-white max-w-4xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)] text-center uppercase">
               Fundación <br/>
               <span className="text-ucr-celeste">Exalumnos de la U</span>
             </h1>
@@ -263,7 +263,7 @@ export default function LandingPage() {
             <UCRUElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-60 pointer-events-none z-0 rotate-12" />
             <div className="relative z-10 space-y-3">
               <h2 className="text-xs font-bold text-sky-200 dark:text-sky-300 uppercase tracking-widest font-body">¿CÓMO DESEAS PARTICIPAR?</h2>
-              <h3 className="text-3xl font-medium font-display text-white dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
+              <h3 className="text-3xl font-medium font-hero text-white dark:text-white uppercase leading-tight">SELECCIONA TU ROL DE INGRESO</h3>
               <p className="text-sm text-blue-100 dark:text-slate-300 font-medium max-w-xl mx-auto">
                 Únete a la plataforma oficial de vinculación de la Universidad según tu perfil.
               </p>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                     <GraduationCap className="h-9 w-9" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-xl text-slate-900 dark:text-white font-display flex items-center gap-2 uppercase">
+                    <h3 className="font-semibold text-xl text-slate-900 dark:text-white font-hero flex items-center gap-2 uppercase">
                       Soy Estudiante
                       <ArrowUpRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all" />
                     </h3>
@@ -301,7 +301,7 @@ export default function LandingPage() {
                     <Briefcase className="h-9 w-9" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-xl text-slate-900 dark:text-white font-display flex items-center gap-2 uppercase">
+                    <h3 className="font-semibold text-xl text-slate-900 dark:text-white font-hero flex items-center gap-2 uppercase">
                       Soy Exalumno
                       <ArrowUpRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all" />
                     </h3>
@@ -325,7 +325,7 @@ export default function LandingPage() {
           <UCRFlowerElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 opacity-80 dark:opacity-50 pointer-events-none z-0 animate-[spin_180s_linear_infinite]" />
           <div className="relative z-10 space-y-4">
             <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">¿CÓMO FUNCIONA LA RED?</h2>
-            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-hero text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
               LOS TRES PILARES DE NUESTRO IMPACTO
             </h3>
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
@@ -346,7 +346,7 @@ export default function LandingPage() {
             </div>
             <div className="p-8 pt-6 flex-1 flex flex-col justify-between">
               <div>
-                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-display uppercase">
+                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-hero uppercase">
                   MENTORÍAS Y CAFÉS VIRTUALES
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
@@ -370,7 +370,7 @@ export default function LandingPage() {
             </div>
             <div className="p-8 pt-6 flex-1 flex flex-col justify-between">
               <div>
-                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-display uppercase">
+                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-hero uppercase">
                   OPORTUNIDADES LABORALES
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
@@ -394,7 +394,7 @@ export default function LandingPage() {
             </div>
             <div className="p-8 pt-6 flex-1 flex flex-col justify-between">
               <div>
-                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-display uppercase">
+                <h4 className="text-lg font-semibold text-ucr-texto-oscuro dark:text-white mb-3 font-hero uppercase">
                   FILANTROPÍA Y BECAS DE IMPULSO
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
@@ -415,7 +415,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">EL PROCESO</h2>
-            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-hero text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
               ¿CÓMO FUNCIONA LA PLATAFORMA?
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -433,7 +433,7 @@ export default function LandingPage() {
                 <Users className="w-7 h-7" />
               </div>
               <span className="text-xs font-bold text-[#006AD3] uppercase tracking-wider">Paso 01</span>
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-display uppercase">Registro de Perfil</h4>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-hero uppercase">Registro de Perfil</h4>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed font-medium">
                 Crea tu cuenta oficial como estudiante o exalumno y define tus intereses, carrera y metas.
               </p>
@@ -445,7 +445,7 @@ export default function LandingPage() {
                 <Sparkles className="w-7 h-7" />
               </div>
               <span className="text-xs font-bold text-ucr-esmeralda uppercase tracking-wider">Paso 02</span>
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-display uppercase">Match Inteligente</h4>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-hero uppercase">Match Inteligente</h4>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed font-medium">
                 El sistema sugiere conexiones ideales según perfiles académicos, laborales y de especialidad.
               </p>
@@ -457,7 +457,7 @@ export default function LandingPage() {
                 <Coffee className="w-7 h-7" />
               </div>
               <span className="text-xs font-bold text-[#F34B26] uppercase tracking-wider">Paso 03</span>
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-display uppercase">Café y Mentoría</h4>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-hero uppercase">Café y Mentoría</h4>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed font-medium">
                 Coordina una sesión virtual corta de 30 minutos para mentoría, consejos prácticos o guía de tesis.
               </p>
@@ -469,7 +469,7 @@ export default function LandingPage() {
                 <Award className="w-7 h-7" />
               </div>
               <span className="text-xs font-bold text-ucr-amarillo uppercase tracking-wider">Paso 04</span>
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-display uppercase">Impulso y Logro</h4>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mt-2 mb-2 font-hero uppercase">Impulso y Logro</h4>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed font-medium">
                 Postula a becas financiadas, accede a la bolsa de trabajo y alcanza tu graduación y éxito laboral.
               </p>
@@ -487,7 +487,7 @@ export default function LandingPage() {
             {/* Text left */}
             <div className="lg:col-span-5 space-y-6">
               <h2 className="text-xs font-bold text-white/90 uppercase tracking-widest font-body">CIFRAS QUE INSPIRAN</h2>
-              <h3 className="text-3xl sm:text-4xl font-medium font-display leading-tight uppercase text-white">
+              <h3 className="text-3xl sm:text-4xl font-medium font-hero leading-tight uppercase text-white">
                 EL IMPACTO DE NUESTRA RED DE EXALUMNOS DE LA U
               </h3>
               <p className="text-sm text-white/85 leading-relaxed font-medium font-body">
@@ -507,7 +507,7 @@ export default function LandingPage() {
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Users className="h-6 w-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-semibold font-display text-white">5,000+</h4>
+                <h4 className="text-3xl sm:text-4xl font-semibold font-hero text-white">5,000+</h4>
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Exalumnos Activos</p>
               </div>
 
@@ -515,7 +515,7 @@ export default function LandingPage() {
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Coffee className="h-6 w-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-semibold font-display text-white">12,000+</h4>
+                <h4 className="text-3xl sm:text-4xl font-semibold font-hero text-white">12,000+</h4>
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Horas de Mentoría</p>
               </div>
 
@@ -523,7 +523,7 @@ export default function LandingPage() {
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <Award className="h-6 w-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-semibold font-display text-white">₡15M+</h4>
+                <h4 className="text-3xl sm:text-4xl font-semibold font-hero text-white">₡15M+</h4>
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Fondos Recaudados</p>
               </div>
 
@@ -531,7 +531,7 @@ export default function LandingPage() {
                 <div className="bg-white/15 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-inner">
                   <GraduationCap className="h-6 w-6" />
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-semibold font-display text-white">350+</h4>
+                <h4 className="text-3xl sm:text-4xl font-semibold font-hero text-white">350+</h4>
                 <p className="text-xs text-white/80 font-semibold uppercase tracking-wider font-body">Becas Concedidas</p>
               </div>
             </div>
@@ -548,7 +548,7 @@ export default function LandingPage() {
           <UCRSlantedBarElement color="#006AD3" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-28 opacity-80 dark:opacity-50 pointer-events-none z-0" />
           <div className="relative z-10 space-y-4">
             <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">TESTIMONIOS</h2>
-            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+            <h3 className="text-3xl sm:text-4xl font-medium tracking-tight font-hero text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
               NUESTRA RED EN LA VOZ DE SUS PROTAGONISTAS
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -575,7 +575,7 @@ export default function LandingPage() {
                   {t.iniciales}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-slate-900 dark:text-white font-display leading-tight">{t.nombre}</h4>
+                  <h4 className="font-semibold text-sm text-slate-900 dark:text-white font-hero leading-tight">{t.nombre}</h4>
                   <p className="text-[11px] font-semibold text-slate-400 mt-0.5 font-body">{t.rol}</p>
                 </div>
               </div>
@@ -590,7 +590,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-xs font-bold text-ucr-esmeralda dark:text-ucr-celeste uppercase tracking-widest font-body">PREGUNTAS FRECUENTES</h2>
-            <h3 className="text-3xl font-medium font-display text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
+            <h3 className="text-3xl font-medium font-hero text-ucr-texto-oscuro dark:text-white leading-tight uppercase">
               RESOLVEMOS TUS DUDAS
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -636,7 +636,7 @@ export default function LandingPage() {
         <UCRFlowerElement className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 opacity-80 pointer-events-none z-0 animate-[spin_240s_linear_infinite]" />
 
         <div className="max-w-4xl mx-auto px-6 relative z-10 space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-medium font-display leading-tight text-white uppercase">
+          <h2 className="text-3xl sm:text-4xl font-medium font-hero leading-tight text-white uppercase">
             ¿LISTO PARA FORMAR PARTE DE LA RED DE IMPACTO DE LA U?
           </h2>
           <p className="text-sm sm:text-base text-slate-200/80 max-w-xl mx-auto leading-relaxed font-medium font-body">
@@ -669,7 +669,7 @@ export default function LandingPage() {
               className="h-10 w-auto object-contain brightness-90 dark:brightness-110"
             />
             <div>
-              <span className="text-sm font-medium tracking-tight text-white font-display block">La Universidad</span>
+              <span className="text-sm font-medium tracking-tight text-white font-hero block">La Universidad</span>
               <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-0.5 font-body">Fundación Exalumnos U</span>
             </div>
           </div>

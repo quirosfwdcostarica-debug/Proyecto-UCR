@@ -61,8 +61,6 @@ export function TopBar({ title, titleKey }: TopBarProps) {
           )}
         </div>
       </header>
-      {/* FWD accent bar — only on inner pages, not home */}
-      {!isHome && <div className="fwd-accent-bar" />}
     </div>
   );
 }

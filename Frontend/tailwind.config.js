@@ -19,6 +19,8 @@ module.exports = {
       fontFamily: {
         display: ["'Outfit'", "sans-serif"],
         body: ["'Inter'", "sans-serif"],
+        hero: ["'Quicksand'", "sans-serif"],
+        cute: ["'Fredoka'", "sans-serif"],
       },
       colors: {
         // FWD Costa Rica brand colors (logo)

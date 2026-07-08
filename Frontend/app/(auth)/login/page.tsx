@@ -144,7 +144,7 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <div className="relative w-full min-h-screen overflow-hidden bg-ucr-naranja font-body">
+      <div className="relative w-full min-h-screen overflow-hidden bg-ucr-naranja font-cute">
         
         {/* ===== IMAGEN DE FONDO (se mueve entre izquierda y derecha) ===== */}
         <div
@@ -175,12 +175,12 @@ export default function LoginPage() {
           }`}
         >
           <div>
-            <h1 className="text-4xl md:text-5xl font-display font-medium text-white drop-shadow-md leading-[1.2] uppercase">
+            <h1 className="text-4xl md:text-5xl font-cute font-medium text-white drop-shadow-md leading-[1.2] uppercase">
               Fundación<br />Exalumnos
             </h1>
           </div>
           <div>
-            <p className="text-lg text-sky-100 max-w-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-body">
+            <p className="text-lg text-sky-100 max-w-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] leading-relaxed font-cute">
               Conectando el talento, fomentando el legado y construyendo el futuro de nuestra comunidad universitaria.
             </p>
           </div>
@@ -239,10 +239,10 @@ export default function LoginPage() {
                   aria-label="Logo Alumni U"
                   role="img"
                 />
-                <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
+                <h2 className="text-3xl font-medium tracking-tight text-white font-cute mb-3 uppercase">
                   Bienvenido de vuelta
                 </h2>
-                <p className="text-orange-100 font-medium font-body">
+                <p className="text-orange-100 font-medium font-cute">
                   Ingresa a la plataforma de Exalumnos UCR
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="font-bold text-white">Contraseña</Label>
-                    <Link href="/forgot-password" className="text-sm font-semibold text-white/80 hover:text-white hover:underline transition-colors font-body">
+                    <Link href="/forgot-password" className="text-sm font-semibold text-white/80 hover:text-white hover:underline transition-colors font-cute">
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
@@ -307,7 +307,7 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <div className="mt-10 text-center text-white/80 font-medium font-body">
+              <div className="mt-10 text-center text-white/80 font-medium font-cute">
                 ¿No tienes cuenta?{" "}
                 <button
                   onClick={switchToRegistro}
@@ -335,10 +335,10 @@ export default function LoginPage() {
                   aria-label="Logo Alumni U"
                   role="img"
                 />
-                <h2 className="text-3xl font-medium tracking-tight text-white font-display mb-3 uppercase">
+                <h2 className="text-3xl font-medium tracking-tight text-white font-cute mb-3 uppercase">
                   Únete a la Comunidad
                 </h2>
-                <p className="text-orange-100 font-medium font-body">
+                <p className="text-orange-100 font-medium font-cute">
                   Selecciona cómo deseas participar en la plataforma.
                 </p>
               </div>
@@ -352,11 +352,11 @@ export default function LoginPage() {
                       <div className="bg-ucr-celeste-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
                         <GraduationCap className="h-10 w-10 text-ucr-esmeralda" />
                       </div>
-                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Estudiante</h3>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-cute uppercase">Soy Estudiante</h3>
                       <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
                         Busco mentoría, pasantías o apoyo para mi proyecto de graduación.
                       </p>
-                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-esmeralda font-body">
+                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-esmeralda font-cute">
                         Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -371,11 +371,11 @@ export default function LoginPage() {
                       <div className="bg-ucr-beige-tint w-20 h-20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300">
                         <Briefcase className="h-10 w-10 text-ucr-amarillo" />
                       </div>
-                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-display uppercase">Soy Exalumno</h3>
+                      <h3 className="text-xl font-medium text-slate-800 mb-2 font-cute uppercase">Soy Exalumno</h3>
                       <p className="text-xs sm:text-sm text-slate-500 mb-6 font-medium">
                         Deseo ofrecer mentoría, empleo o apoyar proyectos de nuevos talentos.
                       </p>
-                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-amarillo font-body">
+                      <div className="mt-auto inline-flex items-center text-sm font-bold text-ucr-amarillo font-cute">
                         Registrarme <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -383,7 +383,7 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <div className="mt-6 text-center text-white/80 font-medium font-body">
+              <div className="mt-6 text-center text-white/80 font-medium font-cute">
                 ¿Ya tienes una cuenta?{" "}
                 <button
                   onClick={switchToLogin}

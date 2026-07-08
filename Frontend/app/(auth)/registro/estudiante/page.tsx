@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function RegistroEstudiantePage() {
   return (
-    <div className="flex min-h-screen bg-ucr-naranja font-body relative overflow-hidden justify-center items-center">
+    <div className="flex min-h-screen bg-ucr-naranja font-cute relative overflow-hidden justify-center items-center">
 
       {/* Panel Derecho (Formulario) */}
       <div className="w-full flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto z-20">
@@ -31,17 +31,17 @@ export default function RegistroEstudiantePage() {
         
         <div className="w-full max-w-3xl bg-white/95 backdrop-blur-sm p-6 sm:p-10 rounded-[2rem] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.15)] relative z-10 my-4">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-medium tracking-tight text-slate-800 font-display mb-3 uppercase">
+            <h2 className="text-3xl font-medium tracking-tight text-slate-800 font-cute mb-3 uppercase">
               Únete como Estudiante
             </h2>
-            <p className="text-slate-500 font-medium font-body">
+            <p className="text-slate-500 font-medium font-cute">
               Crea tu cuenta institucional para recibir mentoría, pasantías y apoyo en tu proyecto de graduación.
             </p>
           </div>
 
           <EstudianteRegisterForm />
 
-          <div className="mt-8 text-center text-slate-500 font-medium font-body">
+          <div className="mt-8 text-center text-slate-500 font-medium font-cute">
             ¿Ya tienes una cuenta?{" "}
             <Link href="/login" className="font-bold text-ucr-celeste hover:underline transition-colors">
               Inicia sesión aquí
