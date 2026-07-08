@@ -86,8 +86,6 @@ export function TopBar({ title, titleKey }: TopBarProps) {
 
   return (
     <div className={`sticky top-0 z-50 transition-all duration-300 ${isHome ? '-mb-16' : ''}`}>
-      {/* Decorative gradient line */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#005da4] via-sky-400 to-emerald-400 opacity-90 z-10" />
       
       <header className="h-16 flex items-center justify-between px-8 transition-all duration-300 relative bg-transparent">
         <div className="flex items-center gap-4">
@@ -120,8 +118,6 @@ export function TopBar({ title, titleKey }: TopBarProps) {
           )}
         </div>
       </header>
-      {/* FWD accent bar — only on inner pages, not home */}
-      {!isHome && <div className="fwd-accent-bar" />}
     </div>
   );
 }

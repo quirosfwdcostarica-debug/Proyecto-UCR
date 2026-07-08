@@ -109,7 +109,7 @@ export default function NuevaPosicionPage() {
     router.replace("/posiciones"); return null;
   }
   if (status === "loading") return (
-    <div className="min-h-full flex items-center justify-center" style={{ background: "#f0f7ff" }}>
+    <div className="min-h-[80vh] flex items-center justify-center" style={{ background: "#f0f7ff" }}>
       <Loader2 className="w-8 h-8 animate-spin" style={{ color: UCR.blue }} />
     </div>
   );

@@ -62,7 +62,7 @@ export default async function MatchesExalumnoPage() {
         estudiante: {
           user: { name: m.estudiante?.user?.nombre ?? null },
           carrera: m.estudiante?.carrera ?? "",
-          avanceProyecto: m.score_match ?? 0,
+          avanceProyecto: m.estudiante?.proyecto_porcentaje_avance ?? 0,
           apoyoBuscado: [
             m.estudiante?.busca_mentoria       ? "Mentoría"       : null,
             m.estudiante?.busca_empleo         ? "Empleo"         : null,

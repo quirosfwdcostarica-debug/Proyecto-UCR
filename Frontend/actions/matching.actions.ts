@@ -276,14 +276,14 @@ export async function ofrecerApoyo(estudianteId: string) {
     prisma.estudiante.findUnique({
       where: { user_id: estudianteId },
       select: {
-        carrera: true, area_tematica: true, proyecto_tipo: true,
+        carrera: true, escuela_facultad: true, habilidades: true, area_tematica: true, proyecto_tipo: true,
         busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
       },
     }),
     prisma.exalumno.findUnique({
       where: { user_id: exalumnoId },
       select: {
-        carrera: true, escuela_facultad: true, sector: true,
+        carrera: true, escuela_facultad: true, sector: true, habilidades: true,
         ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
         ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
         ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
@@ -296,12 +296,16 @@ export async function ofrecerApoyo(estudianteId: string) {
   const { score, reasons, breakdown } = calcularAfinidad(
     {
       carrera: estudianteData?.carrera,
+      escuela_facultad: estudianteData?.escuela_facultad,
+      habilidades: parseJsonArray(estudianteData?.habilidades),
       apoyoBuscado: toApoyoBuscado(estudianteData ?? {}),
       areaProyecto: estudianteData?.area_tematica ?? estudianteData?.proyecto_tipo ?? null,
       areasInteres: areasEstudiante,
     },
     {
-      carrera: exalumnoData?.carrera ?? exalumnoData?.escuela_facultad ?? null,
+      carrera: exalumnoData?.carrera,
+      escuela_facultad: exalumnoData?.escuela_facultad,
+      habilidades: parseJsonArray(exalumnoData?.habilidades),
       sector: exalumnoData?.sector ?? null,
       apoyoOfrecido: toApoyoOfrecido(exalumnoData ?? {}),
       areasInteres: areasExalumno,
@@ -354,7 +358,7 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
   const estudianteData = await prisma.estudiante.findUnique({
     where: { user_id: estudianteId },
     select: {
-      carrera: true, area_tematica: true, proyecto_tipo: true,
+      carrera: true, escuela_facultad: true, habilidades: true, area_tematica: true, proyecto_tipo: true,
       busca_mentoria: true, busca_empleo: true, busca_pasantia: true, busca_financiamiento: true,
     },
   });
@@ -368,7 +372,7 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
     },
     select: {
       user_id: true,
-      carrera: true, escuela_facultad: true, sector: true,
+      carrera: true, escuela_facultad: true, sector: true, habilidades: true,
       ofrece_mentoria: true, ofrece_empleo: true, ofrece_pasantia: true,
       ofrece_donacion_dinero: true, ofrece_guest_speaking: true,
       ofrece_volunteering: true, ofrece_career_advice: true, ofrece_networking: true,
@@ -391,6 +395,8 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
 
   const estCompat = {
     carrera: estudianteData.carrera,
+    escuela_facultad: estudianteData.escuela_facultad,
+    habilidades: parseJsonArray(estudianteData.habilidades),
     apoyoBuscado: toApoyoBuscado(estudianteData),
     areaProyecto: estudianteData.area_tematica ?? estudianteData.proyecto_tipo ?? null,
     areasInteres: areasEstudiante,
@@ -405,7 +411,9 @@ export async function generarSugerenciasParaEstudiante(estudianteId: string) {
       if (rejected) return null;
 
       const { score, reasons, breakdown } = calcularAfinidad(estCompat, {
-        carrera: exa.carrera ?? exa.escuela_facultad ?? null,
+        carrera: exa.carrera,
+        escuela_facultad: exa.escuela_facultad,
+        habilidades: parseJsonArray(exa.habilidades),
         sector: exa.sector ?? null,
         apoyoOfrecido: toApoyoOfrecido(exa),
         areasInteres: areasPorExalumno.get(exa.user_id) ?? [],
